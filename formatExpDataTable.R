@@ -11,9 +11,7 @@ protSelectionPath <- "phosphoSTY_subset.txt"
 protSelection <- read.csv(protSelectionPath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
 protSelectionVec <- unique(sub(".*\\|","", sub('\\|([^\\|]*)$', '', protSelection$Leading.proteins)))
 
-
 ex <- strsplit(basename(filepath), split="\\.")[[1]][2]
-
 filepaths <- c("SharmaTxtFiles/pYSharma/txt/", # pTyr
                 "SharmaTxtFiles/proteomeSharma/txt/", # unmodified
                 "SharmaTxtFiles/TiO2Sharma/txt/") # pSerThr
@@ -31,10 +29,6 @@ getCleanTable <- function(filepath){
         pepStart <- fread(filepath_peptides, select = c("Sequence", "Start position"))
         mtx <- merge(mtx, pepStart, by="Sequence")
         
-        
-        
-        #dat <- read.csv(filepath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
-        
         if (grepl("proteomeSharma", filepath)){
             # remove unmodified peptides
             mtx <- mtx[!grepl("Phospho", mtx$Modifications),]
@@ -47,19 +41,12 @@ getCleanTable <- function(filepath){
             mtx$prep <- "pY"
         }
         
-        #mtx <- as.matrix(dat[, grepl("^LFQ", names(dat))])
-        #mtx <- dat[, grepl("Sequence|Leading\ razor\ protein$|Modified\ sequence$|Experiment|Intensity", names(dat))]
         mtx$`Leading razor protein` <- sub(".*\\|","", sub('\\|([^\\|]*)$', '', mtx$`Leading razor protein`))
-        
         mtx <- subset(mtx, `Leading razor protein` %in% protSelectionVec)
-        
-        #mtx$`Modified sequence`[duplicated(mtx)]
-        #temp <- dat[dat$`Modified sequence` == "_EEDEEPES(ph)PPEK_",]
         
         # Summarize rows with same modification and same experiment id by taking average of intensities
         mtx.aggr <- aggregate(Intensity ~ Sequence + `Start position` + `Leading razor protein` +`Modified sequence`+ Experiment  + prep, data=mtx, sum, na.rm=TRUE)
-    
-        # Transform to table with columns pepseq, PTMs, PTM type, accs, quant1, quant2, ...
+
 }
 
 formattedDF <- do.call(rbind,lapply(filepaths, getCleanTable))
@@ -70,10 +57,6 @@ formattedDF <- do.call(rbind,lapply(filepaths, getCleanTable))
 formattedDF <- formattedDF[order(formattedDF$prep),]
 # keep only non-duplicated
 formattedDF <- formattedDF[!duplicated(formattedDF[,-which(names(formattedDF) =="prep")]),]
-
-#experimentMapping <- formattedDF[,c("Raw file", "Experiment")]
-#experimentMapping <- experimentMapping[!duplicated(experimentMapping),]
-
 
 exPlanPath <- "ExperimentalPlanSharma.txt"
 exPlan <- read.csv(exPlanPath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
@@ -113,4 +96,4 @@ formattedDFcast$PTMpos <- lapply(seq_along(PTMinfo$PTM_pos), function(x) {
     PTMinfo$PTM_pos[[x]] + formattedDFcast$`Start position`[x] - 1
 })
 
-save(formattedDFcast, file="expDataFrame.RData")
+# save(formattedDFcast, file="expDataFrame.RData")
