@@ -34,6 +34,9 @@ Param$NumReps <- 5
 # General noise level of all quantitative values (standard deviation of normal distribution)
 Param$QuantNoise <- 1
 
+# Fraction of "differentially" regulated proteoforms
+Param$DiffRegFrac <- 0.2
+
 
 ## Sample preparation
 
