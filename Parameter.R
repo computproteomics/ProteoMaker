@@ -36,7 +36,14 @@ Param$QuantNoise <- 1
 # Fraction of "differentially" regulated proteoforms
 Param$DiffRegFrac <- 0.2
 
-# TODO way of defining the amplitude of difference
+# max. amplitude of difference (differentially regulated proteins). 
+#Will be taken from uniform distribution with randomly chosen directions
+Param$DiffRegMax <- 2
+
+# threshold to remove quantitative values (proteoform level)
+Param$ThreshNAProteoform <- -2
+
+
 
 # 
 
