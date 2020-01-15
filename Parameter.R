@@ -12,15 +12,23 @@ Param$FracModProt <- 0.3
 # fraction of modifiable proteins to be sampled for modifications  (might require more dedicated function 
 # taking into account protein properties)
 Param$FracModPerProt <- 2
-# PTM types
+# PTM types and fraction of PTMs (with respect to protein chosen to be modified)
 Param$PTMTypes <- c("ph")
-# residues for PTM type and probabilities to set them
+Param$PTMNumber <- c("2")
+
+# Distribution of multiply modified proteins is Poisson. Setting lambda
+Param$PTMMultipleLambda <- 2
+
+# residues for PTM type and relative distribution to set them
 Param$ModifiableResidues <- list()
 Param$ModifiableResiduesProb <- list()
+
 for (mod in Param$PTMTypes) {
   Param$ModifiableResidues$mod <- c("S","T","Y")
-  Param$ModifiableResiduesProb$mod <- c(0.7,0.2,0.1)*0.1
+  Param$ModifiableResiduesDistr$mod <- c(0.7,0.2,0.1)
 }
+
+
 
 # percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2
