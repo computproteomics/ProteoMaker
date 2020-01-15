@@ -17,7 +17,8 @@ Param$PTMTypes <- c("ph")
 Param$PTMNumber <- c("2")
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
-Param$PTMMultipleLambda <- 2
+# Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
+Param$PTMMultipleLambda <- 0.5
 
 # residues for PTM type and relative distribution to set them
 Param$ModifiableResidues <- list()
