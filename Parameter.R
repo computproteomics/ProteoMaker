@@ -22,7 +22,7 @@ for (mod in Param$PTMTypes) {
 # fraction of modifiable proteins to be samples for modifications
 Param$ModSamplingFrac <- 2
 
-# percentabe of modifiable protein without non-modified forms
+# percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2
 
 #
