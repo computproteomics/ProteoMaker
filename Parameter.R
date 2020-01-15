@@ -1,3 +1,5 @@
+source("SamplePrep.R")
+
 # Variables
 ExpDesign <- rep(1:2,3)
 Param <- list()
@@ -18,7 +20,7 @@ Param$PTMNumber <- c("2")
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
 # Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
-Param$PTMMultipleLambda <- 0.5
+Param$PTMMultipleLambda <- 0.1
 
 # residues for PTM type and relative distribution to set them
 Param$ModifiableResidues <- list()
@@ -26,7 +28,7 @@ Param$ModifiableResiduesDistr <- list()
 
 for (mod in Param$PTMTypes) {
   Param$ModifiableResidues$mod <- c("S","T","Y")
-  Param$ModifiableResiduesDistr$mod <- c(0.7,0.2,0.1)
+  Param$ModifiableResiduesDistr$mod <- c(0.86,0.13,0.01)
 }
 
 # percentage of modifiable protein without non-modified forms
@@ -51,6 +53,9 @@ Param$DiffRegMax <- 2
 Param$ThreshNAProteoform <- -2
 
 ## Sample preparation
+#####################
+proteoforms <- samplePreparation(fasta.path = "fasta.fasta", parameters = Param)
+#####################
 
 # filter for min and max of peptide length
 Param$PepMinLength <- 7
