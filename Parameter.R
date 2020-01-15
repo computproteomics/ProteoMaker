@@ -28,8 +28,6 @@ for (mod in Param$PTMTypes) {
   Param$ModifiableResiduesDistr$mod <- c(0.7,0.2,0.1)
 }
 
-
-
 # percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2
 
@@ -51,12 +49,11 @@ Param$DiffRegMax <- 2
 # threshold to remove quantitative values (proteoform level)
 Param$ThreshNAProteoform <- -2
 
-
-
-# 
-
-
 ## Sample preparation
+
+# Higher miscleavage ratio for PTM
+Param$MiscleavageRatio <- c(1.8)
+
 
 
 ## MS run
