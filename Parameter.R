@@ -7,17 +7,23 @@ Digested <- data.table()
 ### Parameter setting
 ## Ground truth
 # Fraction of proteins getting PTMs
-Param$FracModProt <- 1
+Param$FracModProt <- 0.3
 # Fraction of modifiable proteins that get a PTM
 Param$FracModPerProt <- 2
 # PTM types
 Param$PTMTypes <- c("ph")
-# residues for PTM type
+# residues for PTM type and probabilities to set them
 Param$ModifiableResidues <- list()
-for (mod in Param$PTMTypes) 
+Param$ModifiableResiduesProb <- list()
+for (mod in Param$PTMTypes) {
   Param$ModifiableResidues$mod <- c("S","T","Y")
+  Param$ModifiableResiduesProb$mod <- c(0.7,0.2,0.1)*0.1
+}
+# fraction of modifiable proteins to be samples for modifications
+Param$ModSamplingFrac <- 2
 
-Param$NumProteoforms <- 0
+# percentabe of modifiable protein without non-modified forms
+Param$RemoveNonModFormFrac <- 0.2
 
 #
 
