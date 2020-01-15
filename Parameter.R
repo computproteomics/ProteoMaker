@@ -26,7 +26,14 @@ Param$ModSamplingFrac <- 2
 # percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2
 
-#
+# Number of conditions
+Param$NumCond <- 2
+# Number of replicates
+Param$NumReps <- 5
+
+# General noise level of all quantitative values (standard deviation of normal distribution)
+Param$QuantNoise <- 1
+
 
 ## Sample preparation
 
