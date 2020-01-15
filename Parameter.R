@@ -21,7 +21,7 @@ Param$PTMMultipleLambda <- 2
 
 # residues for PTM type and relative distribution to set them
 Param$ModifiableResidues <- list()
-Param$ModifiableResiduesProb <- list()
+Param$ModifiableResiduesDistr <- list()
 
 for (mod in Param$PTMTypes) {
   Param$ModifiableResidues$mod <- c("S","T","Y")
@@ -54,7 +54,9 @@ Param$ThreshNAProteoform <- -2
 # Higher miscleavage ratio for PTM
 Param$MiscleavageRatio <- c(1.8)
 
-
+# filter for min and max of peptide length
+Param$PepMinLength <- 7
+Param$PepMaxLength <- 30
 
 ## MS run
 
