@@ -51,9 +51,6 @@ Param$ThreshNAProteoform <- -2
 
 ## Sample preparation
 
-# Higher miscleavage ratio for PTM
-Param$MiscleavageRatio <- c(1.8)
-
 # filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
@@ -79,7 +76,11 @@ Param$PercDetectedVal <- 0.8
 # Weights for intensity-dependence of non-detection
 Param$WeightDetectVal <- 0
 
+# Wrong identifications
+Param$WrongIDs <- 0.01
 
+# Wrong localizations
+Param$WrongLocalizations <- 0.01
 
 
 
