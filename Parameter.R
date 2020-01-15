@@ -59,10 +59,10 @@ Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
 
 # Loss of phosphorylated peptides during enrichment
-Param$PhosphoLossEnrichment
+Param$EnrichmentLoss <- 0.2
 
 # Enrichment efficiency: how many non-modified still enter the enriched fraction
-Param$EnrichmentEfficiency
+Param$EnrichmentEfficiency <- 0.8
 
 
 ## MS run
