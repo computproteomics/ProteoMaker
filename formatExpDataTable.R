@@ -33,13 +33,13 @@ getCleanTable <- function(filepath){
         if (grepl("proteomeSharma", filepath)){
             # remove unmodified peptides
             mtx <- mtx[!grepl("Phospho", mtx$Modifications),]
-            mtx$prep <- "proteomeSharma"
+            mtx$prep <- "proteome"
         } else if (grepl("TiO2Sharma", filepath)){
             mtx <- mtx[grepl("Phospho", mtx$Modifications),]
-            mtx$prep <- "TiO2Sharma"
+            mtx$prep <- "TiO2"
         } else if (grepl("pYSharma", filepath)){
             mtx <- mtx[grepl("Y(ph)", mtx$`Modified sequence`, fixed = T),]
-            mtx$prep <- "pYSharma"
+            mtx$prep <- "pY"
         }
         
         #mtx <- as.matrix(dat[, grepl("^LFQ", names(dat))])
@@ -52,7 +52,7 @@ getCleanTable <- function(filepath){
         #temp <- dat[dat$`Modified sequence` == "_EEDEEPES(ph)PPEK_",]
         
         # Summarize rows with same modification and same experiment id by taking average of intensities
-        mtx.aggr <- aggregate(Intensity ~ Sequence + `Leading razor protein` +`Modified sequence` + Experiment + prep, data=mtx, sum, na.rm=TRUE)
+        mtx.aggr <- aggregate(Intensity ~ Sequence + `Leading razor protein` +`Modified sequence`+ Experiment  + prep, data=mtx, sum, na.rm=TRUE)
     
         # Transform to table with columns pepseq, PTMs, PTM type, accs, quant1, quant2, ...
         
@@ -71,6 +71,19 @@ formattedDF <- formattedDF[order(formattedDF$prep),]
 # keep only non-duplicated
 formattedDF <- formattedDF[!duplicated(formattedDF[,-which(names(formattedDF) =="prep")]),]
 
-# mtx[mtx == 0] <- NA
-# mtx[mtx == "NaN"] <- NA
+#experimentMapping <- formattedDF[,c("Raw file", "Experiment")]
+#experimentMapping <- experimentMapping[!duplicated(experimentMapping),]
+
+
+exPlanPath <- "ExperimentalPlanSharma.txt"
+exPlan <- read.csv(exPlanPath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
+mapping <- data.frame(key=exPlan$label,value=exPlan$condition)
+replicate <- gsub(".*(\\d+)", "\\1", formattedDF$Experiment)
+mapping <- setNames(exPlan$condition, exPlan$label)[formattedDF$Experiment]
+
+formattedDF$expGroup <- paste(mapping, replicate, sep="_")
+formattedDF <- formattedDF[formattedDF$prep == "TiO2",]
+
+library(reshape2)
+formattedDFcast <- dcast(formattedDF, Sequence + `Leading razor protein` + `Modified sequence` ~ expGroup, value.var = c("Intensity"))
 
