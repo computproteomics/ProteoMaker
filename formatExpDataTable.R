@@ -1,3 +1,5 @@
+
+
 #setwd("/Users/Eva/Desktop/PhD/EuBIC")
  
 # Set filepath:
@@ -19,19 +21,29 @@ filepaths <- c("SharmaTxtFiles/pYSharma/txt/evidence.txt", # pTyr
                 "SharmaTxtFiles/proteomeSharma/txt/evidence.txt", # unmodified
                 "SharmaTxtFiles/TiO2Sharma/txt/evidence.txt") # pSerThr
 
+library(data.table)
 
 getCleanTable <- function(filepath){
     if (ex == "txt"){
         # Read file
-        dat <- read.csv(filepath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
+        mtx <- fread(filepath, select = c("Sequence", "Leading razor protein", "Modified sequence", "Experiment", "Intensity", "Modifications"))
+
+        #dat <- read.csv(filepath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
         
-        if (!grepl("proteomeSharma", filepath)){
+        if (grepl("proteomeSharma", filepath)){
             # remove unmodified peptides
-            dat<-dat[!(dat$Modifications == "Unmodified"),]
+            mtx <- mtx[!grepl("Phospho", mtx$Modifications),]
+            mtx$prep <- "proteomeSharma"
+        } else if (grepl("TiO2Sharma", filepath)){
+            mtx <- mtx[grepl("Phospho", mtx$Modifications),]
+            mtx$prep <- "TiO2Sharma"
+        } else if (grepl("pYSharma", filepath)){
+            mtx <- mtx[grepl("Y(ph)", mtx$`Modified sequence`, fixed = T),]
+            mtx$prep <- "pYSharma"
         }
         
         #mtx <- as.matrix(dat[, grepl("^LFQ", names(dat))])
-        mtx <- dat[, grepl("Sequence|Leading\ razor\ protein$|Modified\ sequence$|Experiment|Intensity", names(dat))]
+        #mtx <- dat[, grepl("Sequence|Leading\ razor\ protein$|Modified\ sequence$|Experiment|Intensity", names(dat))]
         mtx$`Leading razor protein` <- sub(".*\\|","", sub('\\|([^\\|]*)$', '', mtx$`Leading razor protein`))
         
         mtx <- subset(mtx, `Leading razor protein` %in% protSelectionVec)
@@ -40,7 +52,7 @@ getCleanTable <- function(filepath){
         #temp <- dat[dat$`Modified sequence` == "_EEDEEPES(ph)PPEK_",]
         
         # Summarize rows with same modification and same experiment id by taking average of intensities
-        mtx.aggr <- aggregate(Intensity ~ Sequence + `Leading razor protein` +`Modified sequence` + Experiment, data=mtx, sum, na.rm=TRUE)
+        mtx.aggr <- aggregate(Intensity ~ Sequence + `Leading razor protein` +`Modified sequence` + Experiment + prep, data=mtx, sum, na.rm=TRUE)
     
         # Transform to table with columns pepseq, PTMs, PTM type, accs, quant1, quant2, ...
         
@@ -49,6 +61,15 @@ getCleanTable <- function(filepath){
         dat <- read_excel(filepath)
     }
 }
+
+formattedDF <- do.call(rbind,lapply(filepaths, getCleanTable))
+#write.csv(formattedDF, file=)
+#save(formattedDF, file="formattedDF.RData")
+
+# order prep increasing (phTyr before pThrSer)
+formattedDF <- formattedDF[order(formattedDF$prep),]
+# keep only non-duplicated
+formattedDF <- formattedDF[!duplicated(formattedDF[,-which(names(formattedDF) =="prep")]),]
 
 # mtx[mtx == 0] <- NA
 # mtx[mtx == "NaN"] <- NA
