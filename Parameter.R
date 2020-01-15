@@ -19,7 +19,8 @@ for (mod in Param$PTMTypes) {
   Param$ModifiableResidues$mod <- c("S","T","Y")
   Param$ModifiableResiduesProb$mod <- c(0.7,0.2,0.1)*0.1
 }
-# fraction of modifiable proteins to be samples for modifications
+# fraction of modifiable proteins to be sampled for modifications  (might require more dedicated function 
+# taking into account protein properties)
 Param$ModSamplingFrac <- 2
 
 # percentage of modifiable protein without non-modified forms
