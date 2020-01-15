@@ -68,9 +68,18 @@ Param$EnrichmentEfficiency <- 0.8
 Param$EnrichmentNoise <- 0.2
 
 
-
-
 ## MS run
+
+# Percentage of detected peptides
+Param$PercDetectedPep <- 0.8
+
+# Percentage of detected values (replicate/condition)
+Param$PercDetectedVal <- 0.8
+
+# Weights for intensity-dependence of non-detection
+Param$WeightDetectVal <- 0
+
+
 
 
 
