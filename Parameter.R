@@ -58,6 +58,13 @@ Param$MiscleavageRatio <- c(1.8)
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
 
+# Loss of phosphorylated peptides during enrichment
+Param$PhosphoLossEnrichment
+
+# Enrichment efficiency: how many non-modified still enter the enriched fraction
+Param$EnrichmentEfficiency
+
+
 ## MS run
 
 
