@@ -64,6 +64,11 @@ Param$EnrichmentLoss <- 0.2
 # Enrichment efficiency: how many non-modified still enter the enriched fraction
 Param$EnrichmentEfficiency <- 0.8
 
+# Noise due to enrichment protocol
+Param$EnrichmentNoise <- 0.2
+
+
+
 
 ## MS run
 
