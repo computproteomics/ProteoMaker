@@ -7,9 +7,6 @@
 #filepath <- "SharmaTxtFiles/proteomeSharma/txt/evidence.txt" # unmodified
 #filepath <- "SharmaTxtFiles/TiO2Sharma/txt/evidence.txt" # pSerThr
 
-#filepath <- "Phospho_data_TMT_PXD007871/HBT_PARK2_nonmod_PSMs.xlsx"
-#filepath <- "Phospho_data_TMT_PXD007871/HBT\ PARK2\ phospho_PSMs.xlsx"
-
 protSelectionPath <- "phosphoSTY_subset.txt"
 protSelection <- read.csv(protSelectionPath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
 protSelectionVec <- unique(sub(".*\\|","", sub('\\|([^\\|]*)$', '', protSelection$Leading.proteins)))
@@ -17,17 +14,25 @@ protSelectionVec <- unique(sub(".*\\|","", sub('\\|([^\\|]*)$', '', protSelectio
 
 ex <- strsplit(basename(filepath), split="\\.")[[1]][2]
 
-filepaths <- c("SharmaTxtFiles/pYSharma/txt/evidence.txt", # pTyr
-                "SharmaTxtFiles/proteomeSharma/txt/evidence.txt", # unmodified
-                "SharmaTxtFiles/TiO2Sharma/txt/evidence.txt") # pSerThr
+filepaths <- c("SharmaTxtFiles/pYSharma/txt/", # pTyr
+                "SharmaTxtFiles/proteomeSharma/txt/", # unmodified
+                "SharmaTxtFiles/TiO2Sharma/txt/") # pSerThr
 
 library(data.table)
 
 getCleanTable <- function(filepath){
-    if (ex == "txt"){
-        # Read file
-        mtx <- fread(filepath, select = c("Sequence", "Leading razor protein", "Modified sequence", "Experiment", "Intensity", "Modifications"))
 
+        filepath_evidence <- paste0(filepath, "evidence.txt")
+        filepath_peptides <- paste0(filepath, "peptides.txt")
+
+        # Read file
+        mtx <- fread(filepath_evidence, select = c("Sequence", "Leading razor protein", "Modified sequence", "Experiment", "Intensity", "Modifications"))
+
+        pepStart <- fread(filepath_peptides, select = c("Sequence", "Start position"))
+        mtx <- merge(mtx, pepStart, by="Sequence")
+        
+        
+        
         #dat <- read.csv(filepath, allowEscapes = TRUE, check.names = FALSE,sep = "\t")
         
         if (grepl("proteomeSharma", filepath)){
@@ -52,14 +57,9 @@ getCleanTable <- function(filepath){
         #temp <- dat[dat$`Modified sequence` == "_EEDEEPES(ph)PPEK_",]
         
         # Summarize rows with same modification and same experiment id by taking average of intensities
-        mtx.aggr <- aggregate(Intensity ~ Sequence + `Leading razor protein` +`Modified sequence`+ Experiment  + prep, data=mtx, sum, na.rm=TRUE)
+        mtx.aggr <- aggregate(Intensity ~ Sequence + `Start position` + `Leading razor protein` +`Modified sequence`+ Experiment  + prep, data=mtx, sum, na.rm=TRUE)
     
         # Transform to table with columns pepseq, PTMs, PTM type, accs, quant1, quant2, ...
-        
-    } else if (ex == "xlsx"){
-        library("readxl")
-        dat <- read_excel(filepath)
-    }
 }
 
 formattedDF <- do.call(rbind,lapply(filepaths, getCleanTable))
@@ -82,8 +82,35 @@ replicate <- gsub(".*(\\d+)", "\\1", formattedDF$Experiment)
 mapping <- setNames(exPlan$condition, exPlan$label)[formattedDF$Experiment]
 
 formattedDF$expGroup <- paste(mapping, replicate, sep="_")
-formattedDF <- formattedDF[formattedDF$prep == "TiO2",]
+formattedDF <- formattedDF[grepl("control|EGF15|mitosis",formattedDF$expGroup),]
 
 library(reshape2)
-formattedDFcast <- dcast(formattedDF, Sequence + `Leading razor protein` + `Modified sequence` ~ expGroup, value.var = c("Intensity"))
+formattedDFcast <- dcast(formattedDF, Sequence + `Start position` + `Leading razor protein` + `Modified sequence` ~ expGroup, value.var = c("Intensity"))
 
+library(stringr)
+parse_modseq <- function(modified_sequences) {
+    PTM_pos <- vector(mode = "list")
+    PTM_type <- vector(mode = "list")
+    for(i in seq_along(modified_sequences)) {
+        seq <- modified_sequences[i]
+        if (grepl(")", seq, fixed = T)) {
+            modif <- strsplit(seq, ")", fixed = T)[[1]]
+            modif <- modif[grepl("(", modif, fixed = T)]
+            PTM_type[[i]] <- gsub("^.+\\(", "", modif, perl = T)
+            PTM_pos[[i]] <- as.numeric(str_locate(gsub("_", "", modif, fixed = T), "\\(..$")[,1] - 1)
+        } else {
+            PTM_pos[[i]] <- NA
+            PTM_type[[i]] <- NA
+        }
+    }
+    return(list("PTM_type" = PTM_type, "PTM_pos" = PTM_pos))
+}
+
+PTMinfo <- parse_modseq(formattedDFcast$`Modified sequence`)
+formattedDFcast$PTMtype <- PTMinfo$PTM_type
+
+formattedDFcast$PTMpos <- lapply(seq_along(PTMinfo$PTM_pos), function(x) {
+    PTMinfo$PTM_pos[[x]] + formattedDFcast$`Start position`[x] - 1
+})
+
+save(formattedDFcast, file="expDataFrame.RData")
