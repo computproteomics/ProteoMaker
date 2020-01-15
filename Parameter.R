@@ -6,7 +6,7 @@ Digested <- data.table()
 
 ### Parameter setting
 ## Ground truth
-# Fraction of proteins getting PTMs
+# Fraction of proteins selected for getting PTMs
 Param$FracModProt <- 0.3
 # Fraction of modifiable proteins that get a PTM
 Param$FracModPerProt <- 2
@@ -36,6 +36,10 @@ Param$QuantNoise <- 1
 
 # Fraction of "differentially" regulated proteoforms
 Param$DiffRegFrac <- 0.2
+
+# TODO way of defining the amplitude of difference
+
+# 
 
 
 ## Sample preparation
