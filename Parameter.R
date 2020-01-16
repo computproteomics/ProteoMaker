@@ -3,8 +3,8 @@ source("SamplePrep.R")
 # Variables
 ExpDesign <- rep(1:2,3)
 Param <- list()
-GroundTruth <- data.table()
-Digested <- data.table()
+GroundTruth <- data.frame()
+Digested <- data.frame()
 
 ### Parameter setting
 
@@ -16,7 +16,7 @@ Param$FracModProt <- 0.3
 Param$FracModPerProt <- 2
 # PTM types and fraction of PTMs (with respect to protein chosen to be modified)
 Param$PTMTypes <- c("ph")
-Param$PTMNumber <- c("2")
+#Param$PTMNumber <- c("2")
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
 # Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
@@ -67,12 +67,11 @@ Param$PepMaxLength <- 30
 # Loss of phosphorylated peptides during enrichment
 Param$EnrichmentLoss <- 0.2
 
-# Enrichment efficiency: how many non-modified still enter the enriched fraction
+# Enrichment efficiency: number of phosphorylated peptides with respect tohow many non-modified still enter the enriched fraction
 Param$EnrichmentEfficiency <- 0.8
 
 # Noise due to enrichment protocol
 Param$EnrichmentNoise <- 0.2
-
 
 ## MS run
 
