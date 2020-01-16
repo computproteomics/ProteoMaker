@@ -110,9 +110,10 @@ finalDF <- formattedDFcast %>%
     select("Sequence", "Leading razor protein", "PTMpos", "PTMtype", everything())
 finalDF$`Modified sequence` <- NULL
 
+names(finalDF)[names(finalDF) == 'Sequence'] <- 'PepSequence'
 names(finalDF)[names(finalDF) == 'Leading razor protein'] <- 'Accession'
 names(finalDF)[names(finalDF) == 'PTMpos'] <- 'PTMPos'
 names(finalDF)[names(finalDF) == 'PTMtype'] <- 'PTMType'
-names(finalDF)[names(finalDF) == 'Start position'] <- 'StartPosition'
+names(finalDF)[names(finalDF) == 'Start position'] <- 'PepStart'
 
 # save(finalDF, file="expDataFrame.RData")
