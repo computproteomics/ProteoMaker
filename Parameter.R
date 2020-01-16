@@ -58,7 +58,8 @@ Param$ThreshNAProteoform <- -2
 ## Sample preparation
 #####################
 # proteoforms <- samplePreparation(fasta.path = "fasta.fasta", parameters = Param)
-GroundTruth = addProteoformAbundance(proteoforms = samplePreparation(fasta.path = "fasta.fasta", parameters = Param), parameters = Param)
+#GroundTruth = addProteoformAbundance(proteoforms = samplePreparation(fasta.path = "fasta.fasta", parameters = Param), parameters = Param)
+GroundTruth = addProteoformAbundance(proteoforms = samplePreparation(fasta.path = "fasta3.fasta", parameters = Param), parameters = Param)
 
 #####################
 
