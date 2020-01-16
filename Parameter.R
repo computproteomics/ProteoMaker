@@ -39,6 +39,9 @@ Param$NumCond <- 2
 # Number of replicates
 Param$NumReps <- 5
 
+# vector for column names
+quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
+
 # General noise level of all quantitative values (standard deviation of normal distribution)
 Param$QuantNoise <- 1
 
