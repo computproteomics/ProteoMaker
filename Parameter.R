@@ -57,9 +57,14 @@ Param$ThreshNAProteoform <- -2
 
 ## Sample preparation
 #####################
+#Use just to create proteoforms (modified and unmodified)
 # proteoforms <- samplePreparation(fasta.path = "fasta.fasta", parameters = Param)
-#GroundTruth = addProteoformAbundance(proteoforms = samplePreparation(fasta.path = "fasta.fasta", parameters = Param), parameters = Param)
-GroundTruth = addProteoformAbundance(proteoforms = samplePreparation(fasta.path = "fasta3.fasta", parameters = Param), parameters = Param)
+#Use to create the full structure of proteoforms along with abundances and ground truth expression patterns.
+
+# #For example file (50 proteins)
+# GroundTruth = addProteoformAbundance(proteoforms = samplePreparation(fasta.path = "fasta_example.fasta", parameters = Param), parameters = Param)
+#For whole human proteome
+GroundTruth = addProteoformAbundance(proteoforms = samplePreparation(fasta.path = "fasta_full_human.fasta", parameters = Param), parameters = Param)
 
 #####################
 

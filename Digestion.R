@@ -61,8 +61,39 @@ for (i in seq_along(iterID)) {
 redundanttab <- do.call(rbind,list_quan)
 peptable <- rbind(redundanttab, uniquetab)
 
+ 
+#insilico_peptides <- peptable
+#save(insilico_peptides, file = "data/insilicoPep.RData")
 
-  
-insilico_peptides <- peptable
+##############################################################
+#FILTERING
 
-save(insilico_peptides, file = "data/insilicoPep.RData")
+pepLength <- nchar(peptable$PepSequence)
+peptable <- peptable[(pepLength >= Param$PepMinLength & pepLength <= Param$PepMaxLength),]
+
+peptable$Enriched <- grepl("ph", peptable$PTMType)
+numRemove <- floor(sum(peptable$Enriched) * Param$EnrichmentLoss)
+idx <- sample(which(peptable$Enriched == TRUE), size = numRemove)
+tokeep <- setdiff(seq_len(nrow(peptable)), idx)
+peptable <- peptable[tokeep,]
+
+numRemove <- floor(sum(!(peptable$Enriched)) * (1 - Param$EnrichmentEfficiency))
+idx <- sample(which(peptable$Enriched == FALSE), size = numRemove)
+noise <- peptable[idx,]
+noise$Enriched <- TRUE
+peptable <- rbind(peptable, noise)
+
+#unique_pep <- names(table(peptable$ID)[table(peptable$ID) == 1])
+enrichedtab <- peptable[peptable$Enriched,]
+nonenrichedtab <- peptable[!peptable$Enriched,]
+nrowTab <- nrow(enrichedtab)
+ncolTab <- length(grepl( "^C_" , names( proteoformsRow ) ))
+mtx <- matrix(nrow = nrowTab, ncol= ncolTab, data=rnorm(n=ncolTab * nrowTab, mean=0, sd=Param$EnrichmentNoise))
+enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ] <- apply(enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ], 2, as.numeric)
+enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ] <- enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ] + mtx
+
+#insilico_peptides_enriched <- enrichedtab
+#save(insilico_peptides_enriched, file = "data/insilicoPepEnriched.RData")
+
+
+
