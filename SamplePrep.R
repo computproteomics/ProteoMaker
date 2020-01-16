@@ -1,4 +1,3 @@
-
 #Import protein sequences and split proteins to two sets (to get modified and to remain unmodified)
 proteinInput <- function(fasta.path, parameters){
   
@@ -57,6 +56,11 @@ phosphorylate <- function(seq, param){
   possible.phospho.sites <- lapply(seq, function(x){ string = strsplit(x, split = "")
   return(lapply(param$ModifiableResidues$mod, function(y) which(string[[1]] == y)))})
   
+  #print(possible.phospho.sites)
+  #print(which(lengths(possible.phospho.sites)) == 0)
+  
+  #print(which(unlist(lapply(1:length(seq), function(x) lengths(possible.phospho.sites[[x]]))) == 0))
+  
   adjusted.phospho.probability <- lapply(possible.phospho.sites, function(x) length(unlist(x))/lengths(x)*param$ModifiableResiduesDistr$mod)
   
   selected.phospho.sites <- lapply(1:length(seq), function(x) {
@@ -103,3 +107,55 @@ samplePreparation <- function(fasta.path, parameters){
   return(proteoforms)
   
 }
+
+createRegulationPattern = function(NumCond){
+  # select 0.5 because division by 2 is already indluced this way
+  # this ensures that the differentiation amplitude is as speciefied by the user
+  regulation_direction <- sample(unlist(lapply(1:NumCond, function(x) c(0.5,-0.5)*x))[1:NumCond], size = NumCond)
+  return(regulation_direction)
+}
+
+addProteoformAbundance <- function(proteoforms, parameters){
+  
+  # vector for column names
+  parameters$quant_colnames <- paste0("C_",rep(1:parameters$NumCond, each = parameters$NumReps),"_R_", rep(1:parameters$NumReps, parameters$NumCond))
+  
+  # populate the matrix with random noise
+  for (name in parameters$quant_colnames) {
+    
+    proteoforms[name] = rnorm(n = nrow(proteoforms), mean = 0, sd = parameters$QuantNoise)
+    
+  }
+  
+  # select differentially regulated proteoforms
+  diff_reg_indices = sample(1:nrow(proteoforms),size = parameters$DiffRegFrac*nrow(proteoforms))
+  
+  # determine amplitude of regulation for regulated proteoforms
+  proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min =1, max = parameters$DiffRegMax, n = length(diff_reg_indices))
+  
+  regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
+  proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
+  proteoforms$Regulation_Pattern[diff_reg_indices] = regulationPatterns
+  #[diff_reg_indices, "Regulation_Pattern"]
+  proteoforms[diff_reg_indices, parameters$quant_colnames] = 
+    # add regulation pattern*regulation amplitude to random noise
+    proteoforms[diff_reg_indices, parameters$quant_colnames] +
+    
+    #generate regulation patterns for all regulated proteoforms
+    t(sapply(1:length(diff_reg_indices), function(x) {
+      rep(regulationPatterns[[x]], each = parameters$NumReps)
+      
+      # multiply regulation pattern with Regulation amplitude
+    })) * proteoforms[diff_reg_indices, "Regulation_Amplitude"]
+  
+  # Remove Values below the threshold set in the Parameters file
+  
+  
+  proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < parameters$ThreshNAProteoform]  = NA
+  
+  return(proteoforms)
+}
+
+
+
+
