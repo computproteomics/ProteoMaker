@@ -5,23 +5,26 @@ library(OrgMassSpecR)
 # proteoformsRow <- GroundTruth[1,]
 
 getDigestTables <- function(proteoformsRow) {
-  df <- Digest(proteoformsRow$Sequence,enzyme = "trypsin", missed = 0)
-  df$Accession <- proteoformsRow$Accession
-  df$PTMPos <- NA
-  df$PTMType <- NA
-  vecquan <- proteoformsRow[grepl( "^C_" , names( proteoformsRow ) ) ]
-  quan <- matrix(nrow = nrow(df), ncol = length(vecquan), byrow = T, data = vecquan)
-  df <- cbind(df, quan)
-  names(df)[(ncol(df) - ncol(quan) + 1):ncol(df)] <- names(vecquan)
-  if (!is.null(proteoformsRow$PTMPos)) {
-    for (i in seq_len(nrow(df))) {
-      sel <- unlist(proteoformsRow$PTMPos) >= df$start[i] & unlist(proteoformsRow$PTMPos) <= df$stop[i]
-      if (any(sel)) {
-        df$PTMType[i] <- c(unlist(proteoformsRow$PTMType)[sel])
-        df$PTMPos[i] <- c(unlist(proteoformsRow$PTMPos)[sel])
-      } else {
-        df$PTMPos[i] <- NA
-        df$PTMType[i] <- NA
+  # print(proteoformsRow$Sequence)
+  if (grepl("K|R", proteoformsRow$Sequence) & !grepl("U", proteoformsRow$Sequence)) {
+    df <- Digest(proteoformsRow$Sequence,enzyme = "trypsin", missed = 0)
+    df$Accession <- proteoformsRow$Accession
+    df$PTMPos <- NA
+    df$PTMType <- NA
+    vecquan <- proteoformsRow[grepl( "^C_" , names( proteoformsRow ) ) ]
+    quan <- matrix(nrow = nrow(df), ncol = length(vecquan), byrow = T, data = vecquan)
+    df <- cbind(df, quan)
+    names(df)[(ncol(df) - ncol(quan) + 1):ncol(df)] <- names(vecquan)
+    if (!is.null(proteoformsRow$PTMPos)) {
+      for (i in seq_len(nrow(df))) {
+        sel <- unlist(proteoformsRow$PTMPos) >= df$start[i] & unlist(proteoformsRow$PTMPos) <= df$stop[i]
+        if (any(sel)) {
+          df$PTMType[i] <- c(unlist(proteoformsRow$PTMType)[sel])
+          df$PTMPos[i] <- c(unlist(proteoformsRow$PTMPos)[sel])
+        } else {
+          df$PTMPos[i] <- NA
+          df$PTMType[i] <- NA
+        }
       }
     }
   }
