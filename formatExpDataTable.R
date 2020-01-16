@@ -1,5 +1,4 @@
 
-
 #setwd("/Users/Eva/Desktop/PhD/EuBIC")
  
 # Set filepath:
@@ -112,5 +111,8 @@ finalDF <- formattedDFcast %>%
 finalDF$`Modified sequence` <- NULL
 
 names(finalDF)[names(finalDF) == 'Leading razor protein'] <- 'Accession'
+names(finalDF)[names(finalDF) == 'PTMpos'] <- 'PTMPos'
+names(finalDF)[names(finalDF) == 'PTMtype'] <- 'PTMType'
+names(finalDF)[names(finalDF) == 'Start position'] <- 'StartPosition'
 
 # save(finalDF, file="expDataFrame.RData")
