@@ -60,6 +60,12 @@ Param$ThreshNAProteoform <- -2
 proteoforms <- samplePreparation(fasta.path = "fasta.fasta", parameters = Param)
 #####################
 
+# Proportion of missed cleavages peptides
+Param$PropMissedCleavages <- 0.25
+
+# Maximum number of missed cleavaged peptides
+Param$MaxNumMissedCleavages <- 0
+
 # filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
