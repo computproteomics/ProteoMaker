@@ -87,7 +87,7 @@ parse_modseq <- function(modified_sequences) {
             modif <- strsplit(seq, ")", fixed = T)[[1]]
             modif <- modif[grepl("(", modif, fixed = T)]
             PTM_type[[i]] <- gsub("^.+\\(", "", modif, perl = T)
-            PTM_pos[[i]] <- as.numeric(str_locate(gsub("_", "", modif, fixed = T), "\\(..$")[,1] - 1)
+            PTM_pos[[i]] <- cumsum(as.numeric(str_locate(gsub("_", "", modif, fixed = T), "\\(..$")[,1] - 1))
         } else {
             PTM_pos[[i]] <- NA
             PTM_type[[i]] <- NA

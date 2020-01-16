@@ -5,6 +5,8 @@ library(OrgMassSpecR)
 getDigestTables <- function(proteoformsRow) {
     df <- Digest(proteoformsRow$Sequence,enzyme = "trypsin", missed = 0)
     df$Accession <- proteoformsRow$Accession
+    df$PTMPos <- proteoformsRow$PTMPos
+    df$PTMType <- proteoformsRow$PTMType
     df
 }
 
