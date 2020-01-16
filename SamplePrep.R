@@ -6,7 +6,14 @@ proteinInput <- function(fasta.path, parameters){
   fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
   rownames(fasta) <- 1:nrow(fasta)
   
-  to.modify.indices <- sample(1:nrow(fasta), size = parameters$FracModProt * nrow(fasta))
+  #Should be properly done in future. Not considering proteins that cannot be modified
+  #at all parameters$ModifiableResidues$mod AAs, for modification process.
+  possible.phospho.sites <- as.data.frame(t(sapply(fasta$Sequence, function(x){ string = strsplit(x, split = "")
+  return(sapply(parameters$ModifiableResidues$mod, function(y) length(which(string[[1]] == y))))})))
+  possible.phospho.sites$zeros <- sapply(1:nrow(possible.phospho.sites),function(x) length(which(possible.phospho.sites[x,] == 0)))
+  zero.indices <- which(possible.phospho.sites$zeros > 0)
+  
+  to.modify.indices <- sample(setdiff(1:nrow(fasta), zero.indices), size = parameters$FracModProt * nrow(fasta))
   
   to.Modify <- fasta[to.modify.indices,]
   rownames(to.Modify) <- 1:nrow(to.Modify)
@@ -149,8 +156,6 @@ addProteoformAbundance <- function(proteoforms, parameters){
     })) * proteoforms[diff_reg_indices, "Regulation_Amplitude"]
   
   # Remove Values below the threshold set in the Parameters file
-  
-  
   proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < parameters$ThreshNAProteoform]  = NA
   
   return(proteoforms)
