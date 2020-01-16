@@ -81,7 +81,8 @@ Param$PercDetectedPep <- 0.8
 # Percentage of detected values (replicate/condition)
 Param$PercDetectedVal <- 0.8
 
-# Weights for intensity-dependence of non-detection
+# Weights for intensity-dependence of non-detection (0 means no dependence). 
+# Parameter is the power to the ranks (given by number 0 to 1)
 Param$WeightDetectVal <- 0
 
 # Wrong identifications

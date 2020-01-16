@@ -7,7 +7,7 @@ Param$PercDetectedPep <- 0.8
 # Percentage of detected values (replicate/condition)
 Param$PercDetectedVal <- 0.8
 
-# Weights for intensity-dependence of non-detection
+# Weights for intensity-dependence of non-detection 
 Param$WeightDetectVal <- 0
 
 # Wrong identifications
@@ -28,8 +28,8 @@ quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep
 
 ### will be removed ###
 load("data/expDataFrame.RData")
-Digested <- formattedDFcast[,c(1:8,11:20)]
-colnames(Digested)[5:16] <- paste0("C_",rep(1:3,each=4),"_R_", rep(1:4, 3))
+Digested <- finalDF
+Digested[, quant_colnames] <- log2 (Digested[, quant_colnames])
 ######################
 # TODO: what about multiples from different fractions?
 
@@ -40,11 +40,11 @@ MSRun <- Digested[-remove,]
 
 # Sample number of values to be remo  ved
 allVals <- as.vector(unlist(MSRun[,quant_colnames]))
-
-hist(allVals)
-remove <- sample(1:length(allVals), size=Param$PercDetectedVal*length(allVals), prob = rank(allVals)/length(allVals)  ^  Param$WeightDetectVal)
+par(mfrow=c(1,2))
+hist(allVals,100)
+remove <- sample(1:length(allVals), size=Param$PercDetectedVal*length(allVals), prob = (rank(-allVals)/length(allVals))  ^  Param$WeightDetectVal)
 allVals[remove] <- NA
-hist(allVals)
+hist(allVals,100)
+par(mfrow=c(1,1))
+MSRun[,quant_colnames] <- allVals
 
-remove <- sample(1:nrow(Digested), Param$PercDetectedPep)
-MSRun <- Digested[-remove,]
