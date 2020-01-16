@@ -43,12 +43,12 @@ Param$ModifiableResiduesDistr[["ox"]] <- c(1)
 ############################# 
 
 ### will be removed ###
-load("data/expDataFrame.RData")
+load("C:/Users/Nina/Documents/Doctoraat/EUBIC/PhosFake/data/expDataFrame.RData")
 Digested <- finalDF
 Digested[, Param$quant_colnames] <- log2 (Digested[, Param$quant_colnames])
 ######################
 
-MSRun <- function(Digested, Param) {
+MSRunSim <- function(Digested, Param) {
   
   # TODO: what about multiples from different fractions?
   
@@ -117,6 +117,8 @@ MSRun <- function(Digested, Param) {
       }
     }
   }
+  return(MSRun)
+  
 }
 
-
+MSRun = MSRunSim(Digested, Param)
