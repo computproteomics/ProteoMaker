@@ -36,7 +36,9 @@ ldig <- lapply(seq_len(nrow(GroundTruth)), function(x) {
 })
 peptable <- ldig[[1]]
 for (i in 2:length(ldig)) {
-  peptable <- rbind(peptable, ldig[[i]])
+  if (length(ldig[[i]]) > 1) {
+    peptable <- rbind(peptable, ldig[[i]])
+  }
 }
 
 names(peptable)[names(peptable) == "peptide"] <- "PepSequence"
