@@ -68,8 +68,8 @@ MSRun[,quant_colnames] <- allVals
 shuffle <- sample(1:nrow(MSRun), Param$WrongIDs*nrow(MSRun))
 for (i in 1:floor(length(shuffle)/2)) {
   temp <-  MSRun[shuffle[(i-1)*2+1], quant_colnames]
-   MSRun[shuffle[(i-1)*2+1], quant_colnames] <- MSRun[shuffle[i*2],quant_colnames]
-   MSRun[shuffle[i*2],quant_colnames] <- temp
+  MSRun[shuffle[(i-1)*2+1], quant_colnames] <- MSRun[shuffle[i*2],quant_colnames]
+  MSRun[shuffle[i*2],quant_colnames] <- temp
 }
 if (length(shuffle)%%2 == 1) {
   temp <-  MSRun[shuffle[1], quant_colnames]
@@ -83,25 +83,36 @@ MSRun$WrongID[shuffle] <- T
 ## false localizations
 
 # loop over PTM types
+MSRun$IsMisLocated <- F
 for (mod in Param$PTMTypes) {
   isModified <- which(sapply(MSRun$PTMType, function(x) any(x == mod,na.rm=T)))
   modified <- MSRun[isModified, c("PepSequence", "PTMPos", "PTMType")]
   # count number of modifiable residues
-    tmpModPosCount <- str_locate_all(modified$PepSequence, paste0(Param$ModifiableResidues[[mod]],collapse="|"))
-    ModifiableCount <- sapply(tmpModPosCount, function(x) length(x[,1]))
-    ModCount <- sapply(modified$PTMType, function(x) sum(x == mod))
-    # positions in original table where modified peptide can get mislocated PTM
-    CanMisLoc <- sum(ModifiableCount > ModCount)
-    # number of modified peptides where we change localization
-    NumForMisLoc <- round(Param$WrongLocalizations*CanMisLoc)
-    print(paste0(NumForMisLoc))
-    
-    # mislocate NOW
+  tmpModPosCount <- str_locate_all(modified$PepSequence, paste0(Param$ModifiableResidues[[mod]],collapse="|"))
+  ModifiableCount <- sapply(tmpModPosCount, function(x) length(x[,1]))
+  ModCount <- sapply(modified$PTMType, function(x) sum(x == mod))
+  # positions in original table where modified peptide can get mislocated PTM
+  CanMisLoc <- sum(ModifiableCount > ModCount)
+  # number of modified peptides where we change localization
+  NumForMisLoc <- round(Param$WrongLocalizations*CanMisLoc)
+  print(paste0(NumForMisLoc))
+  
+  # mislocate NOW
+  if (NumForMisLoc > 0) {
     for (ind in sample(isModified[ModifiableCount > ModCount], NumForMisLoc)) {
       curr_pep <- MSRun[ind,]
-      str_locate_all(curr_pep$Sequence, paste0(Param$ModifiableResidues[[mod]],collapse="|"))[[1]][,1]
-      PTMpos <- curr_pep$PTMPos - curr_pep$PepStart
+      available_pos <- str_locate_all(curr_pep$PepSequence, paste0(Param$ModifiableResidues[[mod]],collapse="|"))[[1]][,1]
+      PTMFullPos <- curr_pep$PTMPos[[1]][curr_pep$PTMType[[1]] == mod][1]
+      PTMpos <-  PTMFullPos - curr_pep$PepStart + 1
+      newPos <- sample(available_pos[!(available_pos %in% PTMpos)],1)
+      newFullPos <- newPos + curr_pep$PepStart - 1
+      tPTMvec <- curr_pep$PTMPos[[1]]
+      tPTMvec[tPTMvec == PTMFullPos] <- newFullPos
+      curr_pep$PTMPos <- list(tPTMvec)
+      curr_pep$IsMisLocated <- T
+      MSRun[ind,] <- curr_pep
     }
+  }
 }
 
 
