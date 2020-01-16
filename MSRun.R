@@ -43,9 +43,13 @@ Param$ModifiableResiduesDistr[["ox"]] <- c(1)
 ############################# 
 
 ### will be removed ###
-load("C:/Users/Nina/Documents/Doctoraat/EUBIC/PhosFake/data/expDataFrame.RData")
-Digested <- finalDF
-Digested[, Param$quant_colnames] <- log2 (Digested[, Param$quant_colnames])
+#load("C:/Users/Nina/Documents/Doctoraat/EUBIC/PhosFake/data/expDataFrame.RData")
+load("data/insilicoPep.RData")
+#Digested <- finalDF
+#Digested[, Param$quant_colnames] <- log2 (Digested[, Param$quant_colnames])
+Digested <- insilico_peptides
+Digested[, Param$quant_colnames] <- 0
+
 ######################
 
 MSRunSim <- function(Digested, Param) {
