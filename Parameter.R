@@ -3,8 +3,8 @@ source("SamplePrep.R")
 # Variables
 ExpDesign <- rep(1:2,3)
 Param <- list()
-GroundTruth <- data.table()
-Digested <- data.table()
+GroundTruth <- data.frame()
+Digested <- data.frame()
 
 ### Parameter setting
 
@@ -16,7 +16,7 @@ Param$FracModProt <- 0.3
 Param$FracModPerProt <- 2
 # PTM types and fraction of PTMs (with respect to protein chosen to be modified)
 Param$PTMTypes <- c("ph")
-Param$PTMNumber <- c("2")
+#Param$PTMNumber <- c("2")
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
 # Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
@@ -39,6 +39,9 @@ Param$NumCond <- 2
 # Number of replicates
 Param$NumReps <- 5
 
+# vector for column names
+Param$quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
+
 # General noise level of all quantitative values (standard deviation of normal distribution)
 Param$QuantNoise <- 1
 
@@ -57,6 +60,12 @@ Param$ThreshNAProteoform <- -2
 proteoforms <- samplePreparation(fasta.path = "fasta.fasta", parameters = Param)
 #####################
 
+# Proportion of peptides with missed cleavages
+Param$PropMissedCleavages <- 0.25
+
+# Maximum number of missed cleavages per peptide
+Param$MaxNumMissedCleavages <- 0
+
 # filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
@@ -64,12 +73,11 @@ Param$PepMaxLength <- 30
 # Loss of phosphorylated peptides during enrichment
 Param$EnrichmentLoss <- 0.2
 
-# Enrichment efficiency: how many non-modified still enter the enriched fraction
+# Enrichment efficiency: number of phosphorylated peptides with respect tohow many non-modified still enter the enriched fraction
 Param$EnrichmentEfficiency <- 0.8
 
 # Noise due to enrichment protocol
 Param$EnrichmentNoise <- 0.2
-
 
 ## MS run
 
@@ -79,7 +87,8 @@ Param$PercDetectedPep <- 0.8
 # Percentage of detected values (replicate/condition)
 Param$PercDetectedVal <- 0.8
 
-# Weights for intensity-dependence of non-detection
+# Weights for intensity-dependence of non-detection (0 means no dependence). 
+# Parameter is the power to the ranks (given by number 0 to 1)
 Param$WeightDetectVal <- 0
 
 # Wrong identifications
