@@ -6,4 +6,4 @@ All the parameters that are used to generate the data are listed in `Parameter.R
 
 The pipeline is described in the figure `PhosFakeLayout.svg` and can be described as follows:
 
-1) Generation of ground truth data at the proteoform level:
+1) Generation of ground truth data at the proteoform level (`01_GenerateGroundTruth.R`):
