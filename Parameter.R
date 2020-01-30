@@ -11,7 +11,7 @@ Param <- list()
 # Number of conditions
 Param$NumCond <- 3
 # Number of replicates
-Param$NumReps <- 5
+Param$NumReps <- 3
 # ExpDesign <- rep(1:2,3)
 
 # GroundTruth <- data.frame()
