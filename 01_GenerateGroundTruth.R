@@ -11,27 +11,32 @@ proteinInput <- function(fasta.path, parameters){
   fasta <- protr::readFASTA(file = fasta.path, legacy.mode = TRUE, seqonly = FALSE)
   fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
   rownames(fasta) <- 1:nrow(fasta)
-  
-  # >> Should be properly done in future. Not considering proteins that cannot be modified
-  # at all parameters$ModifiableResidues$mod AAs, for modification process.
-  possible.modif <- as.data.frame(t(sapply(fasta$Sequence, function(x){ 
-    string = strsplit(x, split = "")
-    return(sapply(parameters$ModifiableResidues$mod, function(y) length(which(string[[1]] == y))))
-  }))) # -> returns a list with the numper of all possible modified residues per modifiable aminoacid.
-  possible.modif$zeros <- sapply(1:nrow(possible.modif),function(x) length(which(possible.modif[x,] == 0))) # -> lists when there is no modification
-  zero.indices <- which(possible.modif$zeros > 0) # -> proteins with no modifiable aminoacid.
-  # Randomly select a set of proteins to modify (only in the proteins that can be modified) according to the parameter FracModProt (fraction of proteins to modify)
-  # >> CAN BE CHANGED TO A LIST OF PROTEINS OF INTEREST IN THE FUTURE << #
-  to.modify.indices <- sample(setdiff(1:nrow(fasta), zero.indices), size = parameters$FracModProt * nrow(fasta))
-  to.Modify <- fasta[to.modify.indices,]
-  rownames(to.Modify) <- 1:nrow(to.Modify)
-  to.be.Unmodified <- fasta[-to.modify.indices,]
-  rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
-  
-  to.be.Unmodified$PTMPos = vector(mode = "list", length = nrow(to.be.Unmodified))
-  to.be.Unmodified$PTMType = vector(mode = "list", length = nrow(to.be.Unmodified))
-  
-  return(list(to.Modify = to.Modify, to.be.Unmodified = to.be.Unmodified))
+  if (parameters$FracModProt > 0) {
+    # >> Should be properly done in future. Not considering proteins that cannot be modified
+    # at all parameters$ModifiableResidues$mod AAs, for modification process.
+    possible.modif <- as.data.frame(t(sapply(fasta$Sequence, function(x){ 
+      string = strsplit(x, split = "")
+      return(sapply(parameters$ModifiableResidues$mod, function(y) length(which(string[[1]] == y))))
+    }))) # -> returns a list with the numper of all possible modified residues per modifiable aminoacid.
+    possible.modif$zeros <- sapply(1:nrow(possible.modif),function(x) length(which(possible.modif[x,] == 0))) # -> lists when there is no modification
+    zero.indices <- which(possible.modif$zeros > 0) # -> proteins with no modifiable aminoacid.
+    # Randomly select a set of proteins to modify (only in the proteins that can be modified) according to the parameter FracModProt (fraction of proteins to modify)
+    # >> CAN BE CHANGED TO A LIST OF PROTEINS OF INTEREST IN THE FUTURE << #
+    to.modify.indices <- sample(setdiff(1:nrow(fasta), zero.indices), size = parameters$FracModProt * nrow(fasta))
+    to.Modify <- fasta[to.modify.indices,]
+    rownames(to.Modify) <- 1:nrow(to.Modify)
+    to.be.Unmodified <- fasta[-to.modify.indices,]
+    rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
+    
+    to.be.Unmodified$PTMPos = vector(mode = "list", length = nrow(to.be.Unmodified))
+    to.be.Unmodified$PTMType = vector(mode = "list", length = nrow(to.be.Unmodified))
+    
+    return(list(to.Modify = to.Modify, to.be.Unmodified = to.be.Unmodified))
+  } else {
+    to.be.Unmodified <- fasta
+    rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
+    return(list(to.Modify = NULL, to.be.Unmodified = to.be.Unmodified))
+  }
 }
 #####################
 
@@ -116,15 +121,23 @@ samplePreparation <- function(fasta.path, parameters){
   
   protein.Sets <- proteinInput(fasta.path = fasta.path, parameters = parameters)
   
-  proteoforms.after.phosphorylation <- perform.modification(to.Modify = protein.Sets$to.Modify, parameters = parameters)
-  
-  proteoforms <- rbind(protein.Sets$to.be.Unmodified, 
-                       proteoforms.after.phosphorylation$mod.proteoform, 
-                       proteoforms.after.phosphorylation$unmod.proteoforms)
-  rownames(proteoforms) <- 1:nrow(proteoforms)
-  
-  cat("Modified AA frequencies for: ", parameters$ModifiableResidues$mod, "\n")
-  cat(proteoforms.after.phosphorylation$counts, "\n")
+  if (Param$FracModProt > 0) {
+    proteoforms.after.phosphorylation <- perform.modification(to.Modify = protein.Sets$to.Modify, parameters = parameters)
+    
+    proteoforms <- rbind(protein.Sets$to.be.Unmodified, 
+                         proteoforms.after.phosphorylation$mod.proteoform, 
+                         proteoforms.after.phosphorylation$unmod.proteoforms)
+    rownames(proteoforms) <- 1:nrow(proteoforms)
+
+    cat("Modified AA frequencies for: ", parameters$ModifiableResidues$mod, "\n")
+    cat(proteoforms.after.phosphorylation$counts, "\n")
+
+  } else {
+    proteoforms <- protein.Sets$to.be.Unmodified
+    rownames(proteoforms) <- 1:nrow(proteoforms)
+    
+    cat("No modified proteins in these data\n")
+  }
   
   return(proteoforms)
   
@@ -151,13 +164,26 @@ addProteoformAbundance <- function(proteoforms, parameters){
     
   }
   
-  # select differentially regulated proteoforms
-  diff_reg_indices = sample(1:nrow(proteoforms),size = parameters$DiffRegFrac*nrow(proteoforms))
+  if (is.null(parameters$UserInputFoldChanges)) {
+    # select differentially regulated proteoforms
+    diff_reg_indices = sample(1:nrow(proteoforms),size = parameters$DiffRegFrac*nrow(proteoforms))
+    
+    # determine amplitude of regulation for regulated proteoforms
+    proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min =1, max = parameters$DiffRegMax, n = length(diff_reg_indices))
+    
+    regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
+  } else {
+    # select differentially regulated proteoforms
+    diff_reg_indices = sample(1:nrow(proteoforms),size = sum(parameters$UserInputFoldChanges$NumRegProteoforms))
+    
+    # determine amplitude of regulation for regulated proteoforms
+    for (refFC in seq_along(parameters$UserInputFoldChanges$RegulationFC)) {
+      proteoforms[diff_reg_indices[1:parameters$UserInputFoldChanges$NumRegProteoforms[refFC]], "Regulation_Amplitude"] = parameters$UserInputFoldChanges$RegulationFC
+    }
+    
+    regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
+  }
   
-  # determine amplitude of regulation for regulated proteoforms
-  proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min =1, max = parameters$DiffRegMax, n = length(diff_reg_indices))
-  
-  regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
   proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
   proteoforms$Regulation_Pattern[diff_reg_indices] = regulationPatterns
   #[diff_reg_indices, "Regulation_Pattern"]

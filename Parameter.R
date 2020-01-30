@@ -9,9 +9,9 @@ Param <- list()
 ## Variables for generating an experimental design:
 #####################
 # Number of conditions
-Param$NumCond <- 3
+Param$NumCond <- 2
 # Number of replicates
-Param$NumReps <- 3
+Param$NumReps <- 4
 # ExpDesign <- rep(1:2,3)
 
 # GroundTruth <- data.frame()
@@ -29,7 +29,7 @@ Param$PathToFasta <- c("InputData/fasta_full_human.fasta")
 #####################
 ## Generation of proteoform IDs:
 # Fraction of the proteins selected to be modified:
-Param$FracModProt <- 0.3
+Param$FracModProt <- 0 # Set to 0 if no modified proteins should be generated
 # fraction of modifiable proteins to be sampled for modifications >> (might require more dedicated function
 # taking into account protein properties)
 Param$FracModPerProt <- 2 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
@@ -59,12 +59,19 @@ Param$RemoveNonModFormFrac <- 0.2
 # vector for column names
 Param$quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 # General noise level of all quantitative values (standard deviation of normal distribution)
-Param$QuantNoise <- 1
+Param$QuantNoise <- 0.1
 # Fraction of "differentially" regulated proteoforms
-Param$DiffRegFrac <- 0.2
+Param$DiffRegFrac <- 0.01
 # max. amplitude of difference (differentially regulated proteins). 
 # Will be taken from uniform distribution with randomly chosen directions
-Param$DiffRegMax <- 2
+Param$DiffRegMax <- 6
+
+# >>>> For input of custom set of regulated proteoforms:
+Param$UserInputFoldChanges <- NULL
+# I use the UPS1 setup (Ramus et al. 2015)
+Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(48, 3),
+                                   "RegulationFC" = log2(c(100, 10, 2)))
+
 # threshold to remove quantitative values (proteoform level)
 Param$ThreshNAProteoform <- -2
 #####################
