@@ -73,6 +73,10 @@ Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(48, 3),
                                    "RegulationFC" = log2(c(100, 10, 2)))
 
 # threshold to remove quantitative values (proteoform level)
+# COMMENT FROM MLP: I still think this is not right. A very abundant protein could 
+# have a FC a lot higher and we'll still detect the conditions where it is the 
+# lower intensity. Removing the values under the detection threshold cannot be 
+# done on relative quan..
 Param$ThreshNAProteoform <- -2
 #####################
 
