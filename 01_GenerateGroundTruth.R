@@ -198,8 +198,20 @@ addProteoformAbundance <- function(proteoforms, parameters){
       # multiply regulation pattern with Regulation amplitude
     })) * proteoforms[diff_reg_indices, "Regulation_Amplitude"]
   
-  # Remove Values below the threshold set in the Parameters file
-  proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < parameters$ThreshNAProteoform]  = NA
+  if (is.null(Param$AbsoluteQuanMean)) {
+    # Remove Values below the threshold set in the Parameters file
+    proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < parameters$ThreshNAProteoform]  = NA
+  } else {
+    cat("Add quan. distribution: Relative -> absolute\n")
+    vec <- rnorm(n = nrow(proteoforms), mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
+    for (name in parameters$quant_colnames) {
+      proteoforms[name] = proteoforms[name] + vec
+    }
+    # Remove Values below the threshold set in the Parameters file
+    thresh <- quantile(x = vec, probs = parameters$ThreshNAQuantileProt)
+    proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < thresh]  = NA
+  }
+  
   
   return(proteoforms)
 }

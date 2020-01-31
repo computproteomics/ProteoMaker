@@ -18,7 +18,7 @@ proteoforms <- samplePreparation(fasta.path = Param$PathToFasta, parameters = Pa
 GroundTruth <- addProteoformAbundance(proteoforms = proteoforms, parameters = Param)
 rm(proteoforms)
 # # Save GroundTruth for analysis:
-save(GroundTruth, file = "RData/GroundTruth.RData")
+save(GroundTruth, file = "RData/GroundTruthAbs.RData")
 #####################
 
 #####################

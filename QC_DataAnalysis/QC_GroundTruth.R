@@ -13,7 +13,7 @@ source("Parameter.R")
 #####################
 ## Load ground truth data (needs to be saved after beeing generated in RunAll.R)
 #####################
-load("RData/GroundTruth.RData")
+load("RData/GroundTruthAbs.RData")
 #####################
 
 #####################

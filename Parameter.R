@@ -78,6 +78,10 @@ Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(48, 3),
 # lower intensity. Removing the values under the detection threshold cannot be 
 # done on relative quan..
 Param$ThreshNAProteoform <- -2
+# So if we want to add absolute quan:
+Param$AbsoluteQuanMean <- 30.5
+Param$AbsoluteQuanSD <- 3.6
+Param$ThreshNAQuantileProt <- 0.01
 #####################
 
 #####################
