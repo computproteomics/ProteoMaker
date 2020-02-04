@@ -127,3 +127,19 @@ BeforeMS <- filterDigestedProt(peptable, Param)
 # # Save peptable before filter for analysis:
 save(BeforeMS, file = "RData/BeforeMS.RData")
 #####################
+
+
+#####################
+## Simulate MS analysis
+#####################
+# >> WAITING FOR THIS BIT TO BE DONE << #
+# populate the matrix with random noise
+noise <- rnorm(n = nrow(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]) * ncol(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]), mean = 0, sd = Param$MSNoise)
+noise <- matrix(noise, nrow = nrow(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]), ncol = ncol(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]))
+for (c in seq_len(ncol(noise))) {
+  BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))][,c] <- unlist(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))][,c]) + noise[,c]
+}
+# # Save peptable before filter for analysis:
+tosave <- BeforeMS[[1]]
+save(tosave, file = "RData/peptides.RData")
+#####################
