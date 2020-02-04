@@ -84,15 +84,15 @@ getDigestTablesWithMC <- function(proteoformsRow, parameters) {
 DigestGroundTruth <- function(GroundTruth, parameters) {
   
   if (parameters$MaxNumMissedCleavages == 0) {
-    peptable <- getDigestTablesNoMC(GroundTruth[1,], parameters)
-    for (i in 2:nrow(GroundTruth)) {
-      peptable <- rbind(peptable, getDigestTablesNoMC(GroundTruth[i,], parameters))
-    }
+    d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
+      getDigestTablesNoMC(GroundTruth[x,], parameters)
+    })
+    peptable <- as.data.frame(data.table::rbindlist(d))
   } else {
-    peptable <- getDigestTablesWithMC(GroundTruth[1,], parameters)
-    for (i in 2:nrow(GroundTruth)) {
-      peptable <- rbind(peptable, getDigestTablesWithMC(GroundTruth[i,], parameters))
-    }
+    d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
+      getDigestTablesWithMC(GroundTruth[x,], parameters)
+    })
+    peptable <- as.data.frame(data.table::rbindlist(d))
   }
   names(peptable)[names(peptable) == "peptide"] <- "PepSequence"
   names(peptable)[names(peptable) == "start"] <- "PepStart"

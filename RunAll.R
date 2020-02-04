@@ -117,7 +117,7 @@ rm(proteoforms)
 # #####################
 
 #####################
-## Digestion:
+## Digestion and sample peptide enrichment:
 #####################
 source("02_Digestion.R")
 # Digest all the proteoforms and get peptide table:
