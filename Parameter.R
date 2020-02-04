@@ -12,10 +12,6 @@ Param <- list()
 Param$NumCond <- 2
 # Number of replicates
 Param$NumReps <- 4
-# ExpDesign <- rep(1:2,3)
-
-# GroundTruth <- data.frame()
-# Digested <- data.frame()
 #####################
 
 #####################
@@ -59,7 +55,7 @@ Param$RemoveNonModFormFrac <- 0.2
 # vector for column names
 Param$quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 # General noise level of all quantitative values (standard deviation of normal distribution)
-Param$QuantNoise <- 0.1
+Param$QuantNoise <- 0.25
 # Fraction of "differentially" regulated proteoforms
 Param$DiffRegFrac <- 0.01
 # max. amplitude of difference (differentially regulated proteins). 
@@ -68,7 +64,7 @@ Param$DiffRegMax <- 6
 
 # >>>> For input of custom set of regulated proteoforms:
 Param$UserInputFoldChanges <- NULL
-# I use the UPS1 setup (Ramus et al. 2015)
+# I use the UPS1 setup (Ramus et al. 2016). KEPP NULL ID DO NOT WANT.
 Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(48, 3),
                                    "RegulationFC" = log2(c(100, 10, 2)))
 
@@ -78,10 +74,14 @@ Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(48, 3),
 # lower intensity. Removing the values under the detection threshold cannot be 
 # done on relative quan..
 Param$ThreshNAProteoform <- -2
-# So if we want to add absolute quan:
+## So if we want to add absolute quan:
 Param$AbsoluteQuanMean <- 30.5
 Param$AbsoluteQuanSD <- 3.6
 Param$ThreshNAQuantileProt <- 0.01
+## With this, we'll need to set up a strategy for proteoform distributions. Like:
+# the proteoforms with the same accession will have a portion of the total signal of one
+# point of the distribution? -> generate a distribution based on the parameters for
+# each unique accession, and then devide it for each of the proteoforms of this accession?
 #####################
 
 #####################

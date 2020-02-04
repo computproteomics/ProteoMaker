@@ -47,12 +47,13 @@ if (Param$FracModProt > 0) {
   GroundTruth$modProt <- !(sapply(GroundTruth$PTMType, is.null))
 }
 
-
+GroundTruth$colour <- 2^GroundTruth$Regulation_Amplitude
+GroundTruth$colour[is.na(GroundTruth$colour)] <- 1
 library(ggplot2)
-g <- ggplot(data = GroundTruth, aes(y = -log10(qvalues), x = Mean_Diff, col = Regulated)) +
+g <- ggplot(data = GroundTruth, aes(y = -log10(qvalues), x = Mean_Diff, col = factor(colour))) +
   geom_hline(yintercept = -log10(0.05)) +
-  geom_point(alpha = 0.3) +
-  scale_color_manual(values = c("black", "red")) +
+  geom_point(alpha = 0.8) +
+  scale_color_manual(values = c("black", "red", "darkorange", "gold")) +
   theme_bw()
 print(g)
 
