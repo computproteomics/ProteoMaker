@@ -103,6 +103,8 @@ Param$PepMaxLength <- 30
 Param$EnrichmentLoss <- 0.2
 # Enrichment efficiency: number of phosphorylated peptides with respect tohow many non-modified still enter the enriched fraction
 Param$EnrichmentEfficiency <- 0.8
+# Loss of signal for the non-modified peptides poluting the enriched fraction
+Param$EnrichmentNonModSignalLoss <- 0.7
 # Noise due to enrichment protocol
 Param$EnrichmentNoise <- 0.2
 #####################
