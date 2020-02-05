@@ -65,8 +65,8 @@ Param$DiffRegMax <- 6
 # >>>> For input of custom set of regulated proteoforms:
 Param$UserInputFoldChanges <- NULL
 # I use the UPS1 setup (Ramus et al. 2016). KEPP NULL ID DO NOT WANT.
-Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(48, 3),
-                                   "RegulationFC" = log2(c(100, 10, 2)))
+Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(96, 3),
+                                   "RegulationFC" = rep(log2(c(100, 10, 2)), rep(96, 3)))
 
 # threshold to remove quantitative values (proteoform level)
 # COMMENT FROM MLP: I still think this is not right. A very abundant protein could 

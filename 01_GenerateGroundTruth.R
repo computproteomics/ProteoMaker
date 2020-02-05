@@ -177,9 +177,8 @@ addProteoformAbundance <- function(proteoforms, parameters){
     diff_reg_indices = sample(1:nrow(proteoforms),size = sum(parameters$UserInputFoldChanges$NumRegProteoforms))
     
     # determine amplitude of regulation for regulated proteoforms
-    for (refFC in seq_along(parameters$UserInputFoldChanges$RegulationFC)) {
-      proteoforms[diff_reg_indices[1:parameters$UserInputFoldChanges$NumRegProteoforms[refFC]], "Regulation_Amplitude"] = parameters$UserInputFoldChanges$RegulationFC
-    }
+    proteoforms[diff_reg_indices, "Regulation_Amplitude"] = parameters$UserInputFoldChanges$RegulationFC
+    
     
     regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
   }
@@ -198,7 +197,7 @@ addProteoformAbundance <- function(proteoforms, parameters){
       # multiply regulation pattern with Regulation amplitude
     })) * proteoforms[diff_reg_indices, "Regulation_Amplitude"]
   
-  if (is.null(Param$AbsoluteQuanMean)) {
+  if (is.null(parameters$AbsoluteQuanMean)) {
     # Remove Values below the threshold set in the Parameters file
     proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < parameters$ThreshNAProteoform]  = NA
   } else {
@@ -207,11 +206,12 @@ addProteoformAbundance <- function(proteoforms, parameters){
     for (name in parameters$quant_colnames) {
       proteoforms[name] = proteoforms[name] + vec
     }
-    # Remove Values below the threshold set in the Parameters file
-    thresh <- quantile(x = vec, probs = parameters$ThreshNAQuantileProt)
-    proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < thresh]  = NA
+    if (parameters$ThreshNAQuantileProt > 0) {
+      # Remove Values below the threshold set in the Parameters file
+      thresh <- quantile(x = vec, probs = parameters$ThreshNAQuantileProt)
+      proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < thresh]  = NA
+    }
   }
-  
   
   return(proteoforms)
 }
