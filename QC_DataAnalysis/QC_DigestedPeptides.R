@@ -33,6 +33,7 @@ cat("There are", sum(is.na(peptable[,grepl("^C_", names(peptable))])), "missing 
 uAcc <- sort(unique(peptable$Accession))
 protmat <- matrix(ncol = Param$NumCond*Param$NumReps, nrow = length(uAcc))
 row.names(protmat) <- uAcc
+cat("Protein summarisation using the sum of top 3 most intense peptides.\n")
 for (acc in uAcc) {
   tmp <- peptable[peptable$Accession == acc,grepl("^C_", names(peptable))]
   tmp <- tmp[order(rowSums(tmp), decreasing = T),]
@@ -57,6 +58,7 @@ pval <- vector()
 means <- matrix(ncol = length(conditions), nrow = nrow(protmat))
 missval <- matrix(ncol = ncol(protmat), nrow = nrow(protmat))
 colnames(means) <- paste0("Mean_", conditions)
+protmat[is.infinite(protmat)] <- NA
 for (i in seq_len(nrow(protmat))) {
   mv <- is.na(protmat[i,])
   # Number of missing values per condition:
@@ -95,8 +97,4 @@ g <- ggplot(data = protmat, aes(y = -log10(qvalues), x = Mean_Diff, col = colour
   scale_color_manual(values = c("black", "red", "darkorange", "gold")) +
   theme_bw()
 print(g)
-
-passTest <- protmat[protmat$qvalues <= 0.05 & !is.na(protmat$qvalues),]
-# hist(table(passTest$Accession))
-cat("Number of regulated proteoforms that are not modified and modified:", paste(table(passTest$modProt), collapse = ", "))
 #####################
