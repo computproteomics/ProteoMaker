@@ -30,23 +30,8 @@ cat("There are", sum(is.na(peptable[,grepl("^C_", names(peptable))])), "missing 
 #####################
 ## Peptide -> protein
 #####################
-uAcc <- sort(unique(peptable$Accession))
-protmat <- matrix(ncol = Param$NumCond*Param$NumReps, nrow = length(uAcc))
-row.names(protmat) <- uAcc
-cat("Protein summarisation using the sum of top 3 most intense peptides.\n")
-for (acc in uAcc) {
-  tmp <- peptable[peptable$Accession == acc,grepl("^C_", names(peptable))]
-  tmp <- tmp[order(rowSums(tmp), decreasing = T),]
-  if (nrow(tmp) >= 3) {
-  protmat[row.names(protmat) == acc,] <- colSums(tmp[1:3,])
-  } else {
-  protmat[row.names(protmat) == acc,] <- colSums(tmp)
-  }
-  # protmat[row.names(protmat) == acc,] <- sapply(1:ncol(tmp), function(x) {
-  #   mean(tmp[,x], na.rm = T)
-  # })
-}
-colnames(protmat) <- names((peptable[,grepl("^C_", names(peptable))]))
+source("03_DataAnalysis.R")
+protmat <- proteinSummarisation(peptable = peptable, minUniquePep = 2, parameters = Param)
 boxplot(protmat, col = "cornflowerblue", main = "Protein values after summarisation")
 #####################
 
