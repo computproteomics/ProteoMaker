@@ -120,7 +120,7 @@ Param$PercDetectedVal <- 0.8
 # Parameter is the power to the ranks (given by number 0 to 1)
 Param$WeightDetectVal <- 0
 # Add noise due to MS instrument:
-Param$MSNoise <- 0.01
+Param$MSNoise <- 0
 #####################
 
 #####################

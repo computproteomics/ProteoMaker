@@ -9,53 +9,8 @@ library(OrgMassSpecR)
 getDigestTablesNoMC <- function(proteoformsRow, parameters) {
   # print(proteoformsRow$Sequence)
   if (grepl("K|R", proteoformsRow$Sequence) & !grepl("U", proteoformsRow$Sequence)) {
-      df <- Digest(proteoformsRow$Sequence,enzyme = "trypsin", missed = 0)
-      df$Accession <- proteoformsRow$Accession
-      df$PTMPos <- NA
-      df$PTMType <- NA
-      vecquan <- proteoformsRow[grepl( "^C_" , names( proteoformsRow ) ) ]
-      quan <- matrix(nrow = nrow(df), ncol = length(vecquan), byrow = T, data = vecquan)
-      df <- cbind(df, quan)
-      names(df)[(ncol(df) - ncol(quan) + 1):ncol(df)] <- names(vecquan)
-      if (!is.null(proteoformsRow$PTMPos)) {
-        for (i in seq_len(nrow(df))) {
-          sel <- unlist(proteoformsRow$PTMPos) >= df$start[i] & unlist(proteoformsRow$PTMPos) <= df$stop[i]
-          if (any(sel)) {
-            df$PTMType[i] <- c(unlist(proteoformsRow$PTMType)[sel])
-            df$PTMPos[i] <- c(unlist(proteoformsRow$PTMPos)[sel])
-          } else {
-            df$PTMPos[i] <- NA
-            df$PTMType[i] <- NA
-          }
-        }
-      }
-      #FILTERING
-      pepLength <- nchar(df$peptide)
-      df <- df[(pepLength >= parameters$PepMinLength & pepLength <= parameters$PepMaxLength),]
-      return(df)
-  }
-}
-
-getDigestTablesWithMC <- function(proteoformsRow, parameters) {
-  
-  if (grepl("K|R", proteoformsRow$Sequence) & !grepl("U", proteoformsRow$Sequence)) {
     df <- Digest(proteoformsRow$Sequence,enzyme = "trypsin", missed = 0)
     df$Accession <- proteoformsRow$Accession
-    ## Generate missed cleavages:
-    for (iter in 1:(parameters$PropMissedCleavages * nrow(df))) {
-      mc <- sample(1:parameters$MaxNumMissedCleavages, size = 1)
-      idx <- sample(1:(nrow(df) - mc), size = 1)
-      mat <- df[idx:(idx + mc),]
-      df <- df[-(idx:(idx + mc)),]
-      newpep <- mat[1,]
-      newpep$peptide <- paste(mat$peptide, collapse = "")
-      newpep$start <- min(mat$start)
-      newpep$stop <- max(mat$stop)
-      newpep$mc <- mc
-      df <- rbind(df, newpep)
-      df <- df[order(df$start),]
-    }
-    
     df$PTMPos <- NA
     df$PTMType <- NA
     vecquan <- proteoformsRow[grepl( "^C_" , names( proteoformsRow ) ) ]
@@ -74,36 +29,57 @@ getDigestTablesWithMC <- function(proteoformsRow, parameters) {
         }
       }
     }
-    #FILTERING
-    pepLength <- nchar(df$peptide)
-    df <- df[(pepLength >= parameters$PepMinLength & pepLength <= parameters$PepMaxLength),]
     return(df)
   }
 }
 
 DigestGroundTruth <- function(GroundTruth, parameters) {
   
-  if (parameters$MaxNumMissedCleavages == 0) {
-    d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
-      getDigestTablesNoMC(GroundTruth[x,], parameters)
-    })
-    peptable <- as.data.frame(data.table::rbindlist(d))
-  } else {
-    d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
-      getDigestTablesWithMC(GroundTruth[x,], parameters)
-    })
-    peptable <- as.data.frame(data.table::rbindlist(d))
-  }
+  # Get all the peptides without missed cleavage:
+  d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
+    getDigestTablesNoMC(GroundTruth[x,], parameters)
+  })
+  peptable <- as.data.frame(data.table::rbindlist(d))
   names(peptable)[names(peptable) == "peptide"] <- "PepSequence"
   names(peptable)[names(peptable) == "start"] <- "PepStart"
   names(peptable)[names(peptable) == "stop"] <- "PepStop"
   peptable$ID <- paste(peptable$PepSequence, peptable$PTMPos, peptable$PTMType, sep="_")
+  
+  if (parameters$MaxNumMissedCleavages > 0) {
+    ## Generate missed cleavages:
+    nmc <- parameters$PropMissedCleavages * nrow(peptable)
+    iter <- 0
+    lpep <- vector(mode = "list")
+    peptable <- peptable[order(paste(peptable$Accession, peptable$PepStart)),]
+    while (iter < nmc) {
+      mc <- sample(1:parameters$MaxNumMissedCleavages, size = 1)
+      idx <- sample(1:(nrow(peptable)), size = 1)
+      if (peptable$Accession[idx] == peptable$Accession[idx + mc]) {
+        mat <- peptable[idx:(idx + mc),]
+        peptable <- peptable[-(idx:(idx + mc)),]
+        newpep <- mat[1,]
+        newpep$PepSequence <- paste(mat$PepSequence, collapse = "")
+        newpep$PepStart <- min(mat$PepStart)
+        newpep$PepStop <- max(mat$PepStop)
+        newpep$mc <- mc
+        lpep <- c(lpep, newpep)
+        iter <- iter + 1
+      }
+    }
+    peptable <- rbind(peptable, as.data.frame(data.table::rbindlist(lpep)))
+  }
+  
+  #FILTERING
+  pepLength <- nchar(peptable$PepSequence)
+  peptable <- peptable[(pepLength >= parameters$PepMinLength & pepLength <= parameters$PepMaxLength),]
   
   return(peptable)
   
 }
 
 mapQuanToDigestionProd <- function(DigestedProt) {
+  # For each unique peptide, get the sum of intensities in all conditions
+  # >> Do we want to change all I in L or reverse? << #
   unique_pep <- names(table(DigestedProt$ID)[table(DigestedProt$ID) == 1])
   uniquetab <- DigestedProt[DigestedProt$ID %in% unique_pep,]
   redundanttab <- DigestedProt[!(DigestedProt$ID %in% unique_pep),]

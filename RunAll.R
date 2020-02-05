@@ -122,6 +122,7 @@ rm(proteoforms)
 source("02_Digestion.R")
 # Digest all the proteoforms and get peptide table:
 peptable <- DigestGroundTruth(GroundTruth = GroundTruth, parameters = Param)
+save(peptable, file = "RData/AllPep.RData")
 peptable <- mapQuanToDigestionProd(DigestedProt = peptable)
 BeforeMS <- filterDigestedProt(peptable, Param)
 # # Save peptable before filter for analysis:
