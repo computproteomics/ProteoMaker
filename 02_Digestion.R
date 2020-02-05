@@ -92,6 +92,8 @@ mapQuanToDigestionProd <- function(DigestedProt) {
     vec <- sapply(1:ncol(mtx),function(x) {
       log2(sum(2^as.numeric(mtx[,x]), na.rm=T))
     })
+    df$Accession[1] <- paste(df$Accession, collapse = ";")
+    df$ID[1] <- paste(sort(df$ID), collapse = ";")
     df <- df[1,]
     df[, grepl( "^C_" , names( df ) ) ] <- vec
     list_quan[[i]] <- df
