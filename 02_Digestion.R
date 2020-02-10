@@ -8,7 +8,7 @@ library(OrgMassSpecR)
 
 getDigestTablesNoMC <- function(proteoformsRow, parameters) {
   # print(proteoformsRow$Sequence)
-  if (grepl("K|R", proteoformsRow$Sequence) & !grepl("U", proteoformsRow$Sequence)) {
+  if (grepl("K|R", proteoformsRow$Sequence)) {
     df <- Digest(proteoformsRow$Sequence,enzyme = "trypsin", missed = 0)
     df$Accession <- proteoformsRow$Accession
     df$PTMPos <- NA
@@ -21,7 +21,7 @@ getDigestTablesNoMC <- function(proteoformsRow, parameters) {
     colnames(quan) <- names(vecquan)
     df <- cbind(df, quan)
     names(df)[(ncol(df) - ncol(quan) + 1):ncol(df)] <- names(vecquan)
-    if (!is.null(proteoformsRow$PTMPos)) {
+    if (sum(sapply(proteoformsRow$PTMPos, is.null)) == 0) {
       for (i in seq_len(nrow(df))) {
         sel <- unlist(proteoformsRow$PTMPos) >= df$start[i] & unlist(proteoformsRow$PTMPos) <= df$stop[i]
         if (any(sel)) {
@@ -42,6 +42,7 @@ DigestGroundTruth <- function(GroundTruth, parameters) {
   cat("Start digestion\n")
   # Get all the peptides without missed cleavage:
   d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
+    # print(GroundTruth[x,]$Sequence)
     getDigestTablesNoMC(GroundTruth[x,], parameters)
   })
   

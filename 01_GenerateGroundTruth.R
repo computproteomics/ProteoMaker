@@ -11,6 +11,13 @@ proteinInput <- function(fasta.path, parameters){
   fasta <- protr::readFASTA(file = fasta.path, legacy.mode = TRUE, seqonly = FALSE)
   fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
   rownames(fasta) <- 1:nrow(fasta)
+  
+  knownAA <- c("A",	"L", "R",	"K", "N",	"M", "D", "F", "C",	"P", "E",	"S", "Q", "T", "G", "W", "H", "Y", "I", "V")
+  unknownAA <- setdiff(LETTERS, knownAA)
+  cat("Remove from fasta the protein sequences with non-usual amino-acids:", unknownAA, "\n")
+  
+  fasta <- fasta[rowSums(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0,]
+  
   if (parameters$FracModProt > 0) {
     # >> Should be properly done in future. Not considering proteins that cannot be modified
     # at all parameters$ModifiableResidues$mod AAs, for modification process.
@@ -135,6 +142,8 @@ samplePreparation <- function(fasta.path, parameters){
   } else {
     proteoforms <- protein.Sets$to.be.Unmodified
     rownames(proteoforms) <- 1:nrow(proteoforms)
+    proteoforms$PTMPos <- vector(mode = "list", length = nrow(proteoforms))
+    proteoforms$PTMType <- vector(mode = "list", length = nrow(proteoforms))
     
     cat("No modified proteins in these data\n")
   }
