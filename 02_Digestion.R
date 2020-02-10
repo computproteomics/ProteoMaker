@@ -14,7 +14,11 @@ getDigestTablesNoMC <- function(proteoformsRow, parameters) {
     df$PTMPos <- NA
     df$PTMType <- NA
     vecquan <- proteoformsRow[grepl( "^C_" , names( proteoformsRow ) ) ]
-    quan <- matrix(nrow = nrow(df), ncol = length(vecquan), byrow = T, data = vecquan)
+    quan <- matrix(nrow = nrow(df), 
+                   ncol = length(vecquan), 
+                   byrow = T, 
+                   data = rep(as.numeric(vecquan), nrow(df)))
+    colnames(quan) <- names(vecquan)
     df <- cbind(df, quan)
     names(df)[(ncol(df) - ncol(quan) + 1):ncol(df)] <- names(vecquan)
     if (!is.null(proteoformsRow$PTMPos)) {
@@ -35,43 +39,59 @@ getDigestTablesNoMC <- function(proteoformsRow, parameters) {
 
 DigestGroundTruth <- function(GroundTruth, parameters) {
   
+  cat("Start digestion\n")
   # Get all the peptides without missed cleavage:
   d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
     getDigestTablesNoMC(GroundTruth[x,], parameters)
   })
-  peptable <- as.data.frame(data.table::rbindlist(d))
+  
+  if (parameters$MaxNumMissedCleavages > 0) {
+    ## Generate missed cleavages:
+    cat("Start generation of missed-cleavages\n")
+    nmc <- parameters$PropMissedCleavages * sum(unlist(sapply(d, nrow)))
+    cat("Number = ", nmc, "\n")
+    iter <- 0
+    lpep <- vector(mode = "list")
+    while (iter < nmc) {
+      mc <- sample(1:parameters$MaxNumMissedCleavages, size = 1)
+      idxlist <- sample(seq_along(d), size = 1)
+      if (!is.null(d[[idxlist]])) {
+        dl <- d[[idxlist]]
+        if (nrow(dl) > mc) {
+          idx <- sample(seq_len((nrow(dl) - mc)), size = 1)
+          mat <- dl[idx:(idx + mc),]
+          # dl <- dl[-(idx:(idx + mc)),]
+          # Split tables to avoid matching non-contiguous peptides in future iterations:
+          dl1 <- dl[1:(idx - 1),]
+          dl2 <- dl[(idx + mc + 1):nrow(dl),]
+          newpep <- mat[1,]
+          newpep$peptide <- paste(mat$peptide, collapse = "")
+          newpep$start <- min(mat$start)
+          newpep$stop <- max(mat$stop)
+          newpep$mc <- mc
+          lpep[[length(lpep) + 1]] <- newpep
+          d <- c(d[1:(idxlist - 1)], d[(idxlist + 1):length(d)], list(dl1, dl2))
+          iter <- iter + 1
+        }
+      }
+    }
+    cat("Row-bind missed cleavages\n")
+    peptable <- as.data.frame(data.table::rbindlist(c(d, lpep)))
+    cat("Table done\n")
+  } else {
+    cat("Start row-bind\n")
+    peptable <- as.data.frame(data.table::rbindlist(d))
+  }
   names(peptable)[names(peptable) == "peptide"] <- "PepSequence"
   names(peptable)[names(peptable) == "start"] <- "PepStart"
   names(peptable)[names(peptable) == "stop"] <- "PepStop"
   peptable$ID <- paste(peptable$PepSequence, peptable$PTMPos, peptable$PTMType, sep="_")
-  
-  if (parameters$MaxNumMissedCleavages > 0) {
-    ## Generate missed cleavages:
-    nmc <- parameters$PropMissedCleavages * nrow(peptable)
-    iter <- 0
-    lpep <- vector(mode = "list")
-    peptable <- peptable[order(paste(peptable$Accession, peptable$PepStart)),]
-    while (iter < nmc) {
-      mc <- sample(1:parameters$MaxNumMissedCleavages, size = 1)
-      idx <- sample(1:(nrow(peptable)), size = 1)
-      if (peptable$Accession[idx] == peptable$Accession[idx + mc]) {
-        mat <- peptable[idx:(idx + mc),]
-        peptable <- peptable[-(idx:(idx + mc)),]
-        newpep <- mat[1,]
-        newpep$PepSequence <- paste(mat$PepSequence, collapse = "")
-        newpep$PepStart <- min(mat$PepStart)
-        newpep$PepStop <- max(mat$PepStop)
-        newpep$mc <- mc
-        lpep <- c(lpep, newpep)
-        iter <- iter + 1
-      }
-    }
-    peptable <- rbind(peptable, as.data.frame(data.table::rbindlist(lpep)))
-  }
-  
+  peptable <- peptable[order(paste(peptable$Accession, peptable$PepStart)),]
+  cat("Start filtering\n")
   #FILTERING
   pepLength <- nchar(peptable$PepSequence)
   peptable <- peptable[(pepLength >= parameters$PepMinLength & pepLength <= parameters$PepMaxLength),]
+  peptable <- peptable[!is.na(peptable$ID),]
   
   return(peptable)
   
@@ -99,8 +119,8 @@ mapQuanToDigestionProd <- function(DigestedProt) {
     list_quan[[i]] <- df
   }
   
-  redundanttab <- do.call(rbind,list_quan)
-  peptable <- rbind(redundanttab, uniquetab)
+  redundanttab <- as.data.frame(data.table::rbindlist(list_quan))
+  peptable <- as.data.frame(data.table::rbindlist(list(redundanttab, uniquetab)))
   return(peptable)
 }
 
