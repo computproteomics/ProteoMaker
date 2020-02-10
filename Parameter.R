@@ -132,9 +132,12 @@ Param$WrongIDs <- 0.01
 Param$WrongLocalizations <- 0.01
 #####################
 
+#####################
+## Output description:
+#####################
 cat("Load Parameter:\n")
 cat("Quan. noise at proteoform level =", Param$QuantNoise, "(standard deviation of mean(log2(values)) = 0)\n")
 cat("Loss due to detection threshold =", Param$ThreshNAQuantileProt, "(quantile of the quan. values)\n")
 cat("Max. number of missed cleavages =", Param$MaxNumMissedCleavages, "occuring on", Param$PropMissedCleavages * 100, "% of the digested peptides\n")
 cat("Min. peptide length =", Param$PepMinLength, "and max. peptide length =", Param$PepMaxLength, "\n")
-
+#####################
