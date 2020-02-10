@@ -1,12 +1,13 @@
-################################################################################
-#                     Analysis of PhosFake mimicking UPS1                      #
-################################################################################
+#' ---
+#' title: "Analysis of PhosFake mimicking UPS1"
+#' ---
+#' 
 
 #####################
 ## Load parameters
 #####################
-source("../Parameters/Parameter00.R")
-name <- "UPS1_00"
+source("../Parameters/Parameter04.R")
+name <- "UPS1_04"
 pathToRes <- "../RData/"
 #####################
 
@@ -101,7 +102,11 @@ cat("Number of non-ambigous accession submitted to statistical analysis:\n")
 print(nrow(peptable[peptable$AccessionCount == 1,]))
 
 cat("Number of missing proteins after in silico digestion:\n")
-print(length(unique(GroundTruth$Accession)) - length(unique(peptable$Accession[peptable$AccessionCount == 1])))
+invisible <- setdiff(unique(GroundTruth$Accession), unique(peptable$Accession[peptable$AccessionCount == 1]))
+print(length(invisible))
+# Save the proteins that cannot be identified:
+# invisible <- GroundTruth[GroundTruth$Accession %in% invisible,1:2]
+# save(invisible, file = "../RData/ProtNoPep.RData")
 
 protmat_minPep1 <- proteinSummarisation(peptable = peptable[peptable$AccessionCount == 1,], minUniquePep = 1, parameters = Param)
 protmat_minPep2 <- proteinSummarisation(peptable = peptable[peptable$AccessionCount == 1,], minUniquePep = 2, parameters = Param)
@@ -116,56 +121,68 @@ print(nrow(na.omit(protmat_minPep2)))
 #####################
 
 
-# #####################
-# ## Statistical analysis of the proteoforms. 
-# #####################
-# conditions <- unique(gsub("_R.+", "", Param$quant_colnames))
-# lprot <- list(protmat_minPep1, protmat_minPep2)
-# lout <- vector(mode = "list")
-# library(qvalue)
-# 
-# for (j in 1:2) {
-#   protmat <- lprot[[j]]
-#   pval <- vector()
-#   means <- matrix(ncol = length(conditions), nrow = nrow(protmat))
-#   missval <- matrix(ncol = ncol(protmat), nrow = nrow(protmat))
-#   colnames(means) <- paste0("Mean_", conditions)
-#   protmat[is.infinite(protmat)] <- NA
-#   for (i in seq_len(nrow(protmat))) {
-#     mv <- is.na(protmat[i,])
-#     # Number of missing values per condition:
-#     numpercond <- colSums(!(sapply(conditions, function(x) mv[grepl(x, colnames(protmat))])))
-#     if (sum(numpercond >= 2) == length(numpercond)) {
-#       tres <- t.test(as.numeric(protmat[i,grepl(conditions[1], colnames(protmat))]), as.numeric(protmat[i,grepl(conditions[2], colnames(protmat))]))
-#       pval[i] <- tres$p.value
-#       means[i,] <- tres$estimate
-#     }
-#     missval[i,] <- mv
-#   }
-#   
-#   protmat <- cbind(protmat, means)
-#   protmat <- as.data.frame(protmat)
-#   protmat$pvalues <- pval
-#   
-#   protmat$qvalues <- qvalue(pval)$qvalues
-#   protmat$Mean_Diff <- means[,2] - means[,1]
-#   protmat$Accession <- row.names(protmat)
-#   protmat$Regulated <- !is.na(GroundTruth$Regulation_Amplitude)[match(protmat$Accession, GroundTruth$Accession)]
-#   
-#   protmat$colour <- 2^GroundTruth$Regulation_Amplitude[match(protmat$Accession, GroundTruth$Accession)]
-#   protmat$colour[is.na(protmat$colour)] <- 1
-#   protmat$colour <- factor(protmat$colour)
-#   
-#   lout[[j]] <- protmat
-# }
-# 
-# g <- ggplot(data = protmat, aes(y = -log10(qvalues), x = Mean_Diff, col = colour)) +
-#   geom_hline(yintercept = -log10(0.05)) +
-#   geom_point(alpha = 0.8) +
-#   scale_color_manual(values = c("black", "red", "darkorange", "gold")) +
-#   theme_bw()
-# print(g)
-# #####################
+#####################
+## Statistical analysis of the proteoforms.
+#####################
+conditions <- unique(gsub("_R.+", "", Param$quant_colnames))
+lprot <- list(protmat_minPep1, protmat_minPep2)
+lout <- vector(mode = "list")
+library(qvalue)
+
+for (j in 1:2) {
+  protmat <- lprot[[j]]
+  pval <- vector()
+  means <- matrix(ncol = length(conditions), nrow = nrow(protmat))
+  missval <- matrix(ncol = ncol(protmat), nrow = nrow(protmat))
+  colnames(means) <- paste0("Mean_", conditions)
+  protmat[is.infinite(protmat)] <- NA
+  for (i in seq_len(nrow(protmat))) {
+    mv <- is.na(protmat[i,])
+    # Number of missing values per condition:
+    numpercond <- colSums(!(sapply(conditions, function(x) mv[grepl(x, colnames(protmat))])))
+    if (sum(numpercond >= 2) == length(numpercond)) {
+      tres <- t.test(as.numeric(protmat[i,grepl(conditions[1], colnames(protmat))]), as.numeric(protmat[i,grepl(conditions[2], colnames(protmat))]))
+      pval[i] <- tres$p.value
+      means[i,] <- tres$estimate
+    }
+    missval[i,] <- mv
+  }
+
+  protmat <- cbind(protmat, means)
+  protmat <- as.data.frame(protmat)
+  protmat$pvalues <- pval
+
+  protmat$qvalues <- qvalue(pval)$qvalues
+  protmat$Mean_Diff <- means[,2] - means[,1]
+  protmat$Accession <- row.names(protmat)
+  protmat$Regulated <- !is.na(GroundTruth$Regulation_Amplitude)[match(protmat$Accession, GroundTruth$Accession)]
+
+  protmat$colour <- 2^GroundTruth$Regulation_Amplitude[match(protmat$Accession, GroundTruth$Accession)]
+  protmat$colour[is.na(protmat$colour)] <- 1
+  protmat$colour <- factor(protmat$colour)
+
+  lout[[j]] <- protmat
+}
+
+g <- ggplot(data = lout[[1]], aes(y = -log10(qvalues), x = Mean_Diff, col = colour)) +
+  geom_hline(yintercept = -log10(0.05), alpha = 0.6) +
+  geom_hline(yintercept = -log10(0.01), alpha = 0.6, linetype = "dashed") +
+  geom_point(alpha = 0.8) +
+  scale_color_manual(values = c("black", "red", "darkorange", "gold")) +
+  labs(title = "Min. 1 unique peptide") +
+  theme_bw()
+print(g)
+
+g <- ggplot(data = lout[[2]], aes(y = -log10(qvalues), x = Mean_Diff, col = colour)) +
+  geom_hline(yintercept = -log10(0.05), alpha = 0.6) +
+  geom_hline(yintercept = -log10(0.01), alpha = 0.6, linetype = "dashed") +
+  geom_point(alpha = 0.8) +
+  scale_color_manual(values = c("black", "red", "darkorange", "gold")) +
+  labs(title = "Min. 2 unique peptide") +
+  theme_bw()
+print(g)
+
+#####################
 
 
 sessionInfo()
