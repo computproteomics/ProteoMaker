@@ -8,6 +8,7 @@ The pipeline is described in the figure `PhosFakeLayout.svg` and can be describe
 
 1) Generation of ground truth data at the proteoform level (`01_GenerateGroundTruth.R`).
 2) Digestion of the proteoforms from the Ground Truth table (`02_Digestion.R`).
-3) Functions for data analysis from the peptide data: `03_DataAnalysis.R`.
+3) In silico MS run (`03_MSRun.R`).
+4) Functions for data analysis from the peptide data: `04_DataAnalysis.R`.
 
 The folder `Benchmarking` contains the scripts used for proof of concept and benchmarking.
