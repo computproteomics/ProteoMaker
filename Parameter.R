@@ -118,7 +118,7 @@ Param$PercDetectedPep <- 0.8
 Param$PercDetectedVal <- 0.8
 # Weights for intensity-dependence of non-detection (0 means no dependence). 
 # Parameter is the power to the ranks (given by number 0 to 1)
-Param$WeightDetectVal <- 0
+Param$WeightDetectVal <- 1
 # Add noise due to MS instrument:
 Param$MSNoise <- 0
 #####################
@@ -140,4 +140,6 @@ cat("Quan. noise at proteoform level =", Param$QuantNoise, "(standard deviation 
 cat("Loss due to detection threshold =", Param$ThreshNAQuantileProt, "(quantile of the quan. values)\n")
 cat("Max. number of missed cleavages =", Param$MaxNumMissedCleavages, "occuring on", Param$PropMissedCleavages * 100, "% of the digested peptides\n")
 cat("Min. peptide length =", Param$PepMinLength, "and max. peptide length =", Param$PepMaxLength, "\n")
+cat("Loss in the mass spectrometer =", (1 - Param$PercDetectedPep) * 100, "% of the peptides, and", (1 - Param$PercDetectedVal) * 100, "% of the individual quantitative values (with a weigth based on inverse signal - power =", Param$WeightDetectVal, ")\n")
+cat("MS noise =", Param$MSNoise, "\n")
 #####################

@@ -17,8 +17,8 @@ proteoforms <- samplePreparation(fasta.path = Param$PathToFasta, parameters = Pa
 # Create the full structure of proteoforms along with abundances and ground truth expression patterns:
 GroundTruth <- addProteoformAbundance(proteoforms = proteoforms, parameters = Param)
 rm(proteoforms)
-# # Save GroundTruth for analysis:
-# save(GroundTruth, file = "RData/GroundTruthAbs.RData")
+# Save GroundTruth for analysis:
+save(GroundTruth, file = "RData/GroundTruthAbs.RData")
 #####################
 
 # #####################
@@ -122,10 +122,11 @@ rm(proteoforms)
 source("02_Digestion.R")
 # Digest all the proteoforms and get peptide table:
 peptable <- DigestGroundTruth(GroundTruth = GroundTruth, parameters = Param)
+# Save peptable before filter for analysis:
 save(peptable, file = "RData/AllPep.RData")
 peptable <- mapQuanToDigestionProd(DigestedProt = peptable)
 BeforeMS <- filterDigestedProt(peptable, Param)
-# # Save peptable before filter for analysis:
+# Save peptable before in silico MS run:
 save(BeforeMS, file = "RData/BeforeMS.RData")
 #####################
 
@@ -133,14 +134,12 @@ save(BeforeMS, file = "RData/BeforeMS.RData")
 #####################
 ## Simulate MS analysis
 #####################
-# >> WAITING FOR THIS BIT TO BE DONE << #
-# populate the matrix with random noise
-noise <- rnorm(n = nrow(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]) * ncol(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]), mean = 0, sd = Param$MSNoise)
-noise <- matrix(noise, nrow = nrow(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]), ncol = ncol(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))]))
-for (c in seq_len(ncol(noise))) {
-  BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))][,c] <- unlist(BeforeMS[[1]][,grepl("^C_",names(BeforeMS[[1]]))][,c]) + noise[,c]
+source("03_MSRun.R")
+AfterMSRun <- vector(mode = "list")
+for (i in which(sapply(BeforeMS, length) > 0)) {
+  AfterMSRun[[length(AfterMSRun) + 1]] <- MSRunSim(Digested = BeforeMS[[i]], parameters = Param)
 }
-# # Save peptable before filter for analysis:
-tosave <- BeforeMS[[1]]
-save(tosave, file = "RData/peptides.RData")
+names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
+# Save final peptable tables for analysis:
+save(AfterMSRun, file = "RData/AfterMSRun.RData")
 #####################
