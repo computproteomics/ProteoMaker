@@ -11,7 +11,7 @@ Param <- list()
 # Number of conditions
 Param$NumCond <- 2
 # Number of replicates
-Param$NumReps <- 4
+Param$NumReps <- 3
 #####################
 
 #####################
@@ -77,7 +77,7 @@ Param$ThreshNAProteoform <- -2
 ## So if we want to add absolute quan:
 Param$AbsoluteQuanMean <- 30.5
 Param$AbsoluteQuanSD <- 3.6
-Param$ThreshNAQuantileProt <- 0.01
+Param$ThreshNAQuantileProt <- 0
 ## With this, we'll need to set up a strategy for proteoform distributions. Like:
 # the proteoforms with the same accession will have a portion of the total signal of one
 # point of the distribution? -> generate a distribution based on the parameters for
