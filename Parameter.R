@@ -11,13 +11,15 @@ Param <- list()
 # Number of conditions
 Param$NumCond <- 2
 # Number of replicates
-Param$NumReps <- 3
+Param$NumReps <- 4
 #####################
 
 #####################
 ## Path to input data
 #####################
 Param$PathToFasta <- c("InputData/fasta_full_human.fasta")
+Param$PathToProteinList <- NULL
+#Param$PathToProteinList <- c("InputData/Accessions.txt")
 #####################
 
 #####################
@@ -25,7 +27,7 @@ Param$PathToFasta <- c("InputData/fasta_full_human.fasta")
 #####################
 ## Generation of proteoform IDs:
 # Fraction of the proteins selected to be modified:
-Param$FracModProt <- 0 # Set to 0 if no modified proteins should be generated
+Param$FracModProt <- 0.3 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
 # fraction of modifiable proteins to be sampled for modifications >> (might require more dedicated function
 # taking into account protein properties)
 Param$FracModPerProt <- 2 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
@@ -45,6 +47,7 @@ for (mod in Param$PTMTypes) {
   Param$ModifiableResidues$mod <- c("S","T","Y")
   Param$ModifiableResiduesDistr$mod <- c(0.86,0.13,0.01)
 }
+
 # percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2
 #####################
@@ -77,7 +80,7 @@ Param$ThreshNAProteoform <- -2
 ## So if we want to add absolute quan:
 Param$AbsoluteQuanMean <- 30.5
 Param$AbsoluteQuanSD <- 3.6
-Param$ThreshNAQuantileProt <- 0
+Param$ThreshNAQuantileProt <- 0.01
 ## With this, we'll need to set up a strategy for proteoform distributions. Like:
 # the proteoforms with the same accession will have a portion of the total signal of one
 # point of the distribution? -> generate a distribution based on the parameters for
