@@ -136,6 +136,15 @@ Param$WrongLocalizations <- 0.01
 #####################
 
 #####################
+## For using local test parameters
+#####################
+if (file.exists("Parameter_mytests.R")) {
+  source("Parameter_mytests.R") # No version control on this test file.
+}
+#####################
+
+
+#####################
 ## Output description:
 #####################
 cat("Load Parameter:\n")
