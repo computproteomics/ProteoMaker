@@ -9,7 +9,7 @@
 ## - Validates imported files (fasta, txt). (only possible warning is "incomplete final line found on" when fasta file doesnt have final white space line)
 ## - Filters out sequences with unusual amino acids.
 ## - Filters out duplicate protein accessions.
-## - Fractionates initial protein set to unmodified set and modified set, either with FracModProt % or a list of selected protein accesions.
+## - Fractionates initial protein set to unmodified set and modified set, either with FracModProt % or a list of selected protein accessions.
 ## - Checks if the protein set is too small to be fractionated in case of FracModProt parameter is used and additionally works
 ##   for fractions of modified proteins of 0 and 100%.
 ## - When any of the files is corrupted, protein set is empty after filtering or too small to be fractionated then to.Modify = NULL and to.be.Unmodified = NULL.
