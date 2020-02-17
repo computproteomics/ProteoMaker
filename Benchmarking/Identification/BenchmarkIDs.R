@@ -3,13 +3,21 @@
 ################################################################################
 
 #####################
+## Set path:
+#####################
+wd <- getwd()
+pathToRes <- paste0(wd, "/RData")
+pathToFasta <- paste0(wd, "/input_data")
+pathToFasta <- list.files(path = pathToFasta, full.names = T, pattern = ".fasta")
+pathToFunctions <- paste0(wd, "/Functions/")
+#####################
+
+#####################
 ## Load parameters
 #####################
-source("../../Parameter.R")
-pathToRes <- "RData/"
+sapply(list.files(pathToFunctions, full.names = T), source)
 # Parameters to test:
-fastapath <- list.files(path = "input_data", full.names = T)
-paramToTest <- list("PathToFasta" = fastapath, 
+paramToTest <- list("PathToFasta" = pathToFasta, 
                     "PropMissedCleavages" = seq(from = 0, to = 1, by = 0.05), 
                     "MaxNumMissedCleavages" = 0:4,
                     "PepMinLength" = seq(from = 4, to = 12, by = 1),
@@ -19,20 +27,16 @@ paramToTest <- list("PathToFasta" = fastapath,
 #####################
 ## Run the sample preparation simulation:
 #####################
-source("../../01_GenerateGroundTruth.R")
 # Create the initial list of proteoforms for each fasta file tested:
 lp <- vector(mode = "list")
 for (i in 1:length(paramToTest$PathToFasta)) {
   Param$PathToFasta <- paramToTest$PathToFasta[i]
-  lp[[i]] <- samplePreparation(fasta.path = Param$PathToFasta, parameters = Param)
+  lp[[i]] <- samplePreparation(parameters = Param)
   fasname <- gsub(getwd(), "", paramToTest$PathToFasta[i])
   fasname <- gsub(".fasta", "", fasname)
   names(lp)[i] <- gsub("^.+/", "", fasname)
   rm(fasname)
 }
-
-cat("Number of proteoforms per fasta:\n")
-print(sapply(lp, dim))
 
 GroundTruth <- lapply(lp, addProteoformAbundance, parameters = Param)
 
@@ -42,26 +46,27 @@ paramToTest <- paramToTest[-1]
 #####################
 ## Digestion and sample peptide enrichment:
 #####################
-source("../../02_Digestion.R")
 library(purrr)
 listtotest <- cross(paramToTest)
 cat("Start generation of", length(listtotest), "parameter sets for digestion\n")
 # Digest all the proteoforms and get peptide table:
-ld <- vector(mode = "list")
-for (f in GroundTruth) {
+iter <- 1
+for (i in seq_along(GroundTruth)) {
+  f <- GroundTruth[[i]]
   for (x in listtotest) {
     d <- DigestGroundTruth(GroundTruth = f, parameters = c(Param[!(names(Param) %in% names(x))], x))
     upep <- names(table(d$PepSequence))[table(d$PepSequence) == 1]
     utab <- d[d$PepSequence %in% upep,]
-    ld[[length(ld) + 1]] <- list("Param" = x, 
-                                 "NumUniquePep" = length(unique(d$PepSequence)), 
-                                 "NumPepOneAcc" = length(upep), 
-                                 "NumAccPerMinPepNum" = table(table(utab$Accession)))
+    output <- list("Fasta" = names(GroundTruth)[i],
+                   "Param" = x, 
+                   "NumUniquePep" = length(unique(d$PepSequence)), 
+                   "NumPepOneAcc" = length(upep), 
+                   "NumAccPerMinPepNum" = table(table(utab$Accession)))
+    save(output,
+         file = paste0(pathToRes, "/ouptut", iter, ".RData"))
+    iter <- iter + 1
   }
 }
-names(ld) <- names(GroundTruth)
-
-save(ld, file = paste0(pathToRes, "ouptut.RData"))
 #####################
 
 sessionInfo()
