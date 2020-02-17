@@ -77,18 +77,20 @@ pairs(as.matrix(df[,3:ncol(df)]))
 
 li <- lf[grepl("Quan", names(lf), fixed = T)]
 
-npar <- length(li[[1]]$Param)
+parOfInterest <- c( "NumReps", "QuantNoise", "ThreshNAQuantileProt", "AbsoluteQuanSD", "Threshqval" )
+npar <- length(parOfInterest)
 cat("Column names for results of identification:\n")
 print(names(li[[1]]))
 df <- matrix(nrow = length(li), ncol = length(li[[1]]) + npar - 1)
 row.names(df) <- names(li)
-colnames(df) <- c(names(li[[1]])[names(li[[1]]) != "NumberRegPerAmplitude"], names(li[[1]]$Param))
+colnames(df) <- c(names(li[[1]])[names(li[[1]]) != "NumberRegPerAmplitude"], parOfInterest)
 colnames(df)[colnames(df) == "Param"] <- "outputName"
 df <- as.data.frame(df)
 for (r in seq_along(li)) {
   df$Fasta[r] <- li[[r]]$Fasta
   df$outputName[r] <- names(li)[r]
-  df[r,3:ncol(df)] <- c(unlist(li[[r]][!(names(li[[r]]) %in% c("Fasta", "Param", "NumberRegPerAmplitude"))]), unlist(li[[r]]$Param))
+  cn <- c(unlist(li[[r]][!(names(li[[r]]) %in% c("Fasta", "Param", "NumberRegPerAmplitude"))]), unlist(li[[r]]$Param)[names(unlist(li[[r]]$Param)) %in% parOfInterest])
+  df[r,3:ncol(df)] <- cn[match(colnames(df)[3:ncol(df)], names(cn))]
 }
 for (i in seq_len(nrow(li[[1]]$NumberRegPerAmplitude))) {
   df <- cbind(df, sapply(li, function(x) {
@@ -100,7 +102,9 @@ for (i in seq_len(nrow(li[[1]]$NumberRegPerAmplitude))) {
 
 #--------------------
 
-pairs(as.matrix(df[,3:ncol(df)]), col = df$NumReps)
+mat <- as.matrix(df[,3:ncol(df)])
+mat <- apply(mat, 2, as.numeric)
+pairs(mat, col = df$NumReps)
 
 library(ggplot2)
 ggplot(data = df, aes(x = NumberTotRegulated, y = NumberTrueRegulated)) +

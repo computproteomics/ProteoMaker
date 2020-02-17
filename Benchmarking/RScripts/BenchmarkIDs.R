@@ -7,6 +7,9 @@
 #####################
 
 wd <- getwd()
+# # For Computerome:
+# wd <- "/home/projects/jensenlab/people/malopa/PhosFake/BenchmarkingNoMod"
+# #
 pathToRes <- paste0(wd, "/Output/BenchmarkIDs")
 pathToFasta <- paste0(wd, "/input_fasta")
 pathToFasta <- list.files(path = pathToFasta, full.names = T, pattern = ".fasta")
