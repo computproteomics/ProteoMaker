@@ -106,10 +106,10 @@ for (j in seq_along(lp)) {
     # d$Accession <- row.names(d)
     d$Regulated <- !is.na(d$Regulation_Amplitude)
     
-    numRegTrue <- sum(d$Regulated & d$qvalues <= x$Threshqval)
-    numRegTot <- sum(d$qvalues <= x$Threshqval)
+    numRegTrue <- sum(d$Regulated & d$qvalues <= x$Threshqval, na.rm = T)
+    numRegTot <- sum(d$qvalues <= x$Threshqval, na.rm = T)
     numRegTruePerAmplitude <- sapply(unique(d$Regulation_Amplitude)[!is.na(unique(d$Regulation_Amplitude))], function(amp) {
-      sum(d$Regulated[d$Regulation_Amplitude == amp & d$qvalues <= x$Threshqval & !is.na(d$Regulation_Amplitude)])
+      sum(d$Regulated[d$Regulation_Amplitude == amp & d$qvalues <= x$Threshqval & !is.na(d$Regulation_Amplitude)], na.rm = T)
     })
     matRegPerAmp <- data.frame("Regulation_Amplitude" = unique(d$Regulation_Amplitude)[!is.na(unique(d$Regulation_Amplitude))],
                                "numRegTrue" = numRegTruePerAmplitude)
