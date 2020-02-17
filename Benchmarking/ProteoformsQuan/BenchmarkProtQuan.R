@@ -2,14 +2,23 @@
 #                     TO RUN THE ENTIRE PHOSFAKE PIPELINE                      #
 ################################################################################
 
+
+#####################
+## Set path:
+#####################
+wd <- getwd()
+pathToRes <- paste0(wd, "/RData")
+pathToFasta <- paste0(wd, "/input_data")
+pathToFasta <- list.files(path = pathToFasta, full.names = T, pattern = ".fasta")
+pathToFunctions <- paste0(wd, "/Functions/")
+#####################
+
 #####################
 ## Load parameters
 #####################
-source("input_data/Parameter.R")
-pathToRes <- "RData/"
+sapply(list.files(pathToFunctions, full.names = T), source)
 # Parameters to test:
-fastapath <- list.files(path = "../Identification/input_data", full.names = T)
-paramToTest <- list("PathToFasta" = fastapath, 
+paramToTest <- list("PathToFasta" = pathToFasta, 
                     "NumReps" = seq(from = 3, to = 8, by = 1), 
                     "QuantNoise" = seq(from = 0.01, to = Param$AbsoluteQuanSD, by = 0.1), # I take as max sd the sd of the proteoform quan. values.
                     "ThreshNAQuantileProt" = seq(from = 0, to = 0.6, by = 0.05),
@@ -20,20 +29,16 @@ paramToTest <- list("PathToFasta" = fastapath,
 #####################
 ## Run the sample preparation simulation:
 #####################
-source("../../01_GenerateGroundTruth.R")
 # Create the initial list of proteoforms for each fasta file tested:
 lp <- vector(mode = "list")
 for (i in 1:length(paramToTest$PathToFasta)) {
   Param$PathToFasta <- paramToTest$PathToFasta[i]
-  lp[[i]] <- samplePreparation(fasta.path = Param$PathToFasta, parameters = Param)
+  lp[[i]] <- samplePreparation(parameters = Param)
   fasname <- gsub(getwd(), "", paramToTest$PathToFasta[i])
   fasname <- gsub(".fasta", "", fasname)
   names(lp)[i] <- gsub("^.+/", "", fasname)
   rm(fasname)
 }
-
-cat("Number of proteoforms per fasta:\n")
-print(sapply(lp, dim))
 #####################
 
 #####################
@@ -47,8 +52,9 @@ cat("Start generation of", length(listtotest), "parameter sets for digestion\n")
 conditions <- unique(gsub("_R.+", "", Param$quant_colnames))
 library(qvalue)
 
-lgt <- vector(mode = "list")
-for (f in lp) {
+iter <- 1
+for (j in seq_along(lp)) {
+  f <- lp[[j]]
   for (x in listtotest) {
     d <- addProteoformAbundance(proteoforms = f, parameters = c(Param[!(names(Param) %in% names(x))], x))
     for (na in c("PTMPos", "PTMType")) {
@@ -93,19 +99,19 @@ for (f in lp) {
     matRegPerAmp <- data.frame("Regulation_Amplitude" = unique(d$Regulation_Amplitude)[!is.na(unique(d$Regulation_Amplitude))],
                                "numRegTrue" = numRegTruePerAmplitude)
     
-    lgt[[legtn(lgt) + 1]] <- list("Param" = x, 
-                                  "numberUniqueAccessions" = nacc,
-                                  "NumberUniqueProteoform" = nprot,
-                                  "NumberMissingValues" = nMC,
-                                  "NumberTrueRegulated" = numRegTrue,
-                                  "NumberTotRegulated" = numRegTot, 
-                                  "NumberRegPerAmplitude" = matRegPerAmp)
+    output <- list("Fasta" = names(lp)[j],
+                   "Param" = x, 
+                   "numberUniqueAccessions" = nacc,
+                   "NumberUniqueProteoform" = nprot,
+                   "NumberMissingValues" = nMC,
+                   "NumberTrueRegulated" = numRegTrue,
+                   "NumberTotRegulated" = numRegTot, 
+                   "NumberRegPerAmplitude" = matRegPerAmp)
+    save(output,
+         file = paste0(pathToRes, "/ouptut", iter, ".RData"))
+    iter <- iter + 1
   }
 }
-
-names(lgt) <- names(lp)
-
-save(lgt, file = paste0(pathToRes, "ouptut.RData"))
 #####################
 
 sessionInfo()
