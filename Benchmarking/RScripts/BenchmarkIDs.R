@@ -7,21 +7,23 @@
 #####################
 
 wd <- getwd()
-pathToInput <- "ProteoformsQuan/RData"
-
-#--------------------
-
-pathToInput <- paste0(wd, "/", pathToInput)
-
+pathToRes <- paste0(wd, "/Output/BenchmarkIDs")
+pathToFasta <- paste0(wd, "/input_fasta")
+pathToFasta <- list.files(path = pathToFasta, full.names = T, pattern = ".fasta")
+pathToFunctions <- paste0(wd, "/Functions")
+if (!dir.exists(pathToRes)) {
+  cat("Create result directory:", pathToRes, "\n")
+  dir.create(pathToRes)
+}
 #####################
 
 #####################
 ## Load results
 #####################
-sapply(list.files(pathToInput, full.names = T), load)
+sapply(list.files(pathToFunctions, full.names = T), source)
 # Parameters to test:
 paramToTest <- list("PathToFasta" = pathToFasta, 
-                    "PropMissedCleavages" = seq(from = 0, to = 1, by = 0.05), 
+                    "PropMissedCleavages" = seq(from = 0, to = 1, by = 0.2), 
                     "MaxNumMissedCleavages" = 0:4,
                     "PepMinLength" = seq(from = 4, to = 12, by = 1),
                     "PepMaxLength" = seq(from = 16, to = 35, by = 1))
@@ -66,7 +68,8 @@ for (i in seq_along(GroundTruth)) {
                    "NumPepOneAcc" = length(upep), 
                    "NumAccPerMinPepNum" = table(table(utab$Accession)))
     save(output,
-         file = paste0(pathToRes, "/ouptut", iter, ".RData"))
+         file = paste0(pathToRes, "/output", iter, ".RData"))
+    cat("Save output", iter, "over", length(listtotest), "\n")
     iter <- iter + 1
   }
 }

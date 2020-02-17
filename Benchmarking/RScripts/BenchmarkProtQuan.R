@@ -7,10 +7,14 @@
 ## Set path:
 #####################
 wd <- getwd()
-pathToRes <- paste0(wd, "/RData")
-pathToFasta <- paste0(wd, "/input_data")
+pathToRes <- paste0(wd, "/Output/BenchmarkProtQuan")
+pathToFasta <- paste0(wd, "/input_fasta")
 pathToFasta <- list.files(path = pathToFasta, full.names = T, pattern = ".fasta")
-pathToFunctions <- paste0(wd, "/Functions/")
+pathToFunctions <- paste0(wd, "/Functions")
+if (!dir.exists(pathToRes)) {
+  cat("Create result directory:", pathToRes, "\n")
+  dir.create(pathToRes)
+}
 #####################
 
 #####################
@@ -20,10 +24,11 @@ sapply(list.files(pathToFunctions, full.names = T), source)
 # Parameters to test:
 paramToTest <- list("PathToFasta" = pathToFasta, 
                     "NumReps" = seq(from = 3, to = 8, by = 1), 
-                    "QuantNoise" = seq(from = 0.01, to = Param$AbsoluteQuanSD, by = 0.1), # I take as max sd the sd of the proteoform quan. values.
-                    "ThreshNAQuantileProt" = seq(from = 0, to = 0.6, by = 0.05),
-                    "AbsoluteQuanSD" = seq(from = 0.01, to = 6, by = 0.2), 
+                    "QuantNoise" = seq(from = 0.01, to = Param$AbsoluteQuanSD, by = 0.5), # I take as max sd the sd of the proteoform quan. values.
+                    "ThreshNAQuantileProt" = seq(from = 0, to = 0.6, by = 0.1),
+                    "AbsoluteQuanSD" = seq(from = 0.01, to = 6, by = 0.5), 
                     "Threshqval" = c(0.01, 0.05)) 
+Param$quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 #####################
 
 #####################
@@ -52,10 +57,18 @@ cat("Start generation of", length(listtotest), "parameter sets for digestion\n")
 conditions <- unique(gsub("_R.+", "", Param$quant_colnames))
 library(qvalue)
 
+# iter <- 53 # Reset to 1
 iter <- 1
 for (j in seq_along(lp)) {
   f <- lp[[j]]
-  for (x in listtotest) {
+  # Custom: # To reset
+  # if (j == 1) {
+  #   listtotest2 <- listtotest[53:length(listtotest)]
+  # } else (
+    listtotest2 <- listtotest
+  # )
+  #
+  for (x in listtotest2) {
     d <- addProteoformAbundance(proteoforms = f, parameters = c(Param[!(names(Param) %in% names(x))], x))
     for (na in c("PTMPos", "PTMType")) {
       d[,names(d) == na] <- unlist(d[,names(d) == na])
@@ -78,6 +91,8 @@ for (j in seq_along(lp)) {
         tres <- t.test(as.numeric(d[i,grepl(conditions[1], colnames(d))]), as.numeric(d[i,grepl(conditions[2], colnames(d))]))
         pval[i] <- tres$p.value
         means[i,] <- tres$estimate
+      } else {
+        pval[i] <- NA
       }
       missval[i,] <- mv
     }
@@ -108,7 +123,8 @@ for (j in seq_along(lp)) {
                    "NumberTotRegulated" = numRegTot, 
                    "NumberRegPerAmplitude" = matRegPerAmp)
     save(output,
-         file = paste0(pathToRes, "/ouptut", iter, ".RData"))
+         file = paste0(pathToRes, "/output", iter, ".RData"))
+    cat("Save output", iter, "over", length(listtotest), "\n")
     iter <- iter + 1
   }
 }
