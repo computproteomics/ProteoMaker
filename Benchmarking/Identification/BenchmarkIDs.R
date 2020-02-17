@@ -5,17 +5,20 @@
 #####################
 ## Set path:
 #####################
+
 wd <- getwd()
-pathToRes <- paste0(wd, "/RData")
-pathToFasta <- paste0(wd, "/input_data")
-pathToFasta <- list.files(path = pathToFasta, full.names = T, pattern = ".fasta")
-pathToFunctions <- paste0(wd, "/Functions/")
+pathToInput <- "ProteoformsQuan/RData"
+
+#--------------------
+
+pathToInput <- paste0(wd, "/", pathToInput)
+
 #####################
 
 #####################
-## Load parameters
+## Load results
 #####################
-sapply(list.files(pathToFunctions, full.names = T), source)
+sapply(list.files(pathToInput, full.names = T), load)
 # Parameters to test:
 paramToTest <- list("PathToFasta" = pathToFasta, 
                     "PropMissedCleavages" = seq(from = 0, to = 1, by = 0.05), 
