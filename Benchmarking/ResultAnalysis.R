@@ -21,6 +21,7 @@ pathToInput <- paste0(wd, pathToInput)
 #####################
 
 fnames <- list.files(pathToInput, full.names = T, recursive = T)
+fnames <- fnames[!grepl(".txt$", fnames)] # Remove the reports
 lf <- vector(mode = "list", length = length(fnames))
 for (i in seq_along(fnames)) {
   load(fnames[i])
@@ -98,6 +99,8 @@ for (i in seq_len(nrow(li[[1]]$NumberRegPerAmplitude))) {
 
 
 #--------------------
+
+pairs(as.matrix(df[,3:ncol(df)]), col = df$NumReps)
 
 library(ggplot2)
 ggplot(data = df, aes(x = NumberTotRegulated, y = NumberTrueRegulated)) +

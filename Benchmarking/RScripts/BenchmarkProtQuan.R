@@ -7,6 +7,9 @@
 ## Set path:
 #####################
 wd <- getwd()
+# # For Computerome:
+# wd <- "/home/projects/jensenlab/people/malopa/PhosFake/BenchmarkingNoMod"
+# #
 pathToRes <- paste0(wd, "/Output/BenchmarkProtQuan")
 pathToFasta <- paste0(wd, "/input_fasta")
 pathToFasta <- list.files(path = pathToFasta, full.names = T, pattern = ".fasta")
@@ -22,13 +25,12 @@ if (!dir.exists(pathToRes)) {
 #####################
 sapply(list.files(pathToFunctions, full.names = T), source)
 # Parameters to test:
-paramToTest <- list("PathToFasta" = pathToFasta, 
-                    "NumReps" = seq(from = 3, to = 8, by = 1), 
+paramToTest <- list("PathToFasta" = pathToFasta,
+                    "NumReps" = seq(from = 3, to = 8, by = 1),
                     "QuantNoise" = seq(from = 0.01, to = Param$AbsoluteQuanSD, by = 0.5), # I take as max sd the sd of the proteoform quan. values.
                     "ThreshNAQuantileProt" = seq(from = 0, to = 0.6, by = 0.1),
                     "AbsoluteQuanSD" = seq(from = 0.01, to = 6, by = 0.5), 
                     "Threshqval" = c(0.01, 0.05)) 
-Param$quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 #####################
 
 #####################
@@ -69,7 +71,9 @@ for (j in seq_along(lp)) {
   # )
   #
   for (x in listtotest2) {
-    d <- addProteoformAbundance(proteoforms = f, parameters = c(Param[!(names(Param) %in% names(x))], x))
+    x <- c(Param[!(names(Param) %in% names(x))], x)
+    x$quant_colnames <- paste0("C_",rep(1:x$NumCond,each=x$NumReps),"_R_", rep(1:x$NumReps, x$NumCond))
+    d <- addProteoformAbundance(proteoforms = f, parameters = x)
     for (na in c("PTMPos", "PTMType")) {
       d[,names(d) == na] <- unlist(d[,names(d) == na])
     }
