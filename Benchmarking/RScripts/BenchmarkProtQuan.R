@@ -27,9 +27,8 @@ sapply(list.files(pathToFunctions, full.names = T), source)
 # Parameters to test:
 paramToTest <- list("PathToFasta" = pathToFasta,
                     "NumReps" = seq(from = 3, to = 8, by = 1),
-                    "QuantNoise" = seq(from = 0.01, to = Param$AbsoluteQuanSD, by = 0.5), # I take as max sd the sd of the proteoform quan. values.
-                    "ThreshNAQuantileProt" = seq(from = 0, to = 0.6, by = 0.1),
-                    "AbsoluteQuanSD" = seq(from = 0.01, to = 6, by = 0.5), 
+                    "QuantNoise" = seq(from = 0.01, to = 2, by = 0.25), # I take as max sd the sd of the proteoform quan. values.
+                    "ThreshNAQuantileProt" = seq(from = 0, to = 0.3, by = 0.05),
                     "Threshqval" = c(0.01, 0.05)) 
 #####################
 
@@ -127,7 +126,7 @@ for (j in seq_along(lp)) {
                    "NumberTotRegulated" = numRegTot, 
                    "NumberRegPerAmplitude" = matRegPerAmp)
     save(output,
-         file = paste0(pathToRes, "/output", iter, ".RData"))
+         file = paste0(pathToRes, "/output_2_", iter, ".RData"))
     cat("Save output", iter, "over", length(listtotest), "\n")
     iter <- iter + 1
   }
