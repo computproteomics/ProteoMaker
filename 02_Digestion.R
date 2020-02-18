@@ -46,12 +46,12 @@ DigestGroundTruth <- function(GroundTruth, parameters) {
     getDigestTablesNoMC(GroundTruth[x,], parameters)
   })
   
-  if (parameters$MaxNumMissedCleavages > 0) {
+  if (parameters$MaxNumMissedCleavages > 0 & parameters$PropMissedCleavages > 0) {
     ## Generate missed cleavages:
     cat("Start generation of missed-cleavages\n")
     for (el in seq_along(d)) {
       x <- d[[el]]
-      if (nrow(x) > 1) {
+      if (!is.null(x)) {
         iter_mc <- 0
         r <- 1
         while (r < nrow(x)) {
