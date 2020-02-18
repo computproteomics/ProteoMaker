@@ -49,40 +49,34 @@ DigestGroundTruth <- function(GroundTruth, parameters) {
   if (parameters$MaxNumMissedCleavages > 0) {
     ## Generate missed cleavages:
     cat("Start generation of missed-cleavages\n")
-    nmc <- parameters$PropMissedCleavages * sum(unlist(sapply(d, nrow)))
-    cat("Number = ", nmc, "\n")
-    iter <- 0
-    lpep <- vector(mode = "list")
-    while (iter < nmc) {
-      mc <- sample(1:parameters$MaxNumMissedCleavages, size = 1)
-      idxlist <- sample(seq_along(d), size = 1)
-      if (!is.null(d[[idxlist]])) {
-        dl <- d[[idxlist]]
-        if (nrow(dl) > mc) {
-          idx <- sample(seq_len((nrow(dl) - mc)), size = 1)
-          mat <- dl[idx:(idx + mc),]
-          # dl <- dl[-(idx:(idx + mc)),]
-          # Split tables to avoid matching non-contiguous peptides in future iterations:
-          dl1 <- dl[1:(idx - 1),]
-          dl2 <- dl[(idx + mc + 1):nrow(dl),]
-          newpep <- mat[1,]
-          newpep$peptide <- paste(mat$peptide, collapse = "")
-          newpep$start <- min(mat$start)
-          newpep$stop <- max(mat$stop)
-          newpep$mc <- mc
-          lpep[[length(lpep) + 1]] <- newpep
-          d <- c(d[1:(idxlist - 1)], d[(idxlist + 1):length(d)], list(dl1, dl2))
-          iter <- iter + 1
+    for (el in seq_along(d)) {
+      x <- d[[el]]
+      if (nrow(x) > 1) {
+        iter_mc <- 0
+        r <- 1
+        while (r < nrow(x)) {
+          if (runif(1, 0, 1) <= parameters$PropMissedCleavages & iter_mc < parameters$MaxNumMissedCleavages & (nrow(x) - r) >= iter_mc) {
+            newpep <- x[r+1,]
+            x <- x[-(r+1),]
+            newpep$peptide <- paste(c(x$peptide[r], newpep$peptide), collapse = "")
+            newpep$start <- x$start[r]
+            iter_mc <- iter_mc + 1
+            newpep$mc <- iter_mc
+            x[r,] <- newpep
+            r <- r + 1
+          } else {
+            iter_mc <- 0
+            r <- r + 1
+          }
         }
       }
+      d[[el]] <- x
     }
-    cat("Row-bind missed cleavages\n")
-    peptable <- as.data.frame(data.table::rbindlist(c(d, lpep)))
-    cat("Table done\n")
-  } else {
-    cat("Start row-bind\n")
-    peptable <- as.data.frame(data.table::rbindlist(d))
-  }
+  }  
+  cat("Row-bind missed cleavages\n")
+  peptable <- as.data.frame(data.table::rbindlist(d))
+  cat("Table done\n")
+  
   names(peptable)[names(peptable) == "peptide"] <- "PepSequence"
   names(peptable)[names(peptable) == "start"] <- "PepStart"
   names(peptable)[names(peptable) == "stop"] <- "PepStop"
