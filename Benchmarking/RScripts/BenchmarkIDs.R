@@ -110,7 +110,7 @@ for (i in seq_along(GroundTruth)) {
     cat("Start filtering\n")
     #FILTERING
     pepLength <- nchar(peptable$PepSequence)
-    peptable <- peptable[(pepLength >= parameters$PepMinLength & pepLength <= parameters$PepMaxLength),]
+    peptable <- peptable[(pepLength >= x$PepMinLength & pepLength <= x$PepMaxLength),]
     peptable <- peptable[!is.na(peptable$ID),]
     
     upep <- names(table(peptable$PepSequence))[table(peptable$PepSequence) == 1]

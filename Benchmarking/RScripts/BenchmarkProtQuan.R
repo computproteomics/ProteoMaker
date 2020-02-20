@@ -26,9 +26,9 @@ if (!dir.exists(pathToRes)) {
 sapply(list.files(pathToFunctions, full.names = T), source)
 # Parameters to test:
 paramToTest <- list("PathToFasta" = pathToFasta,
-                    "NumReps" = seq(from = 3, to = 8, by = 1),
+                    "NumReps" = seq(from = 3, to = 6, by = 1),
                     "QuantNoise" = seq(from = 0.01, to = 2, by = 0.25), # I take as max sd the sd of the proteoform quan. values.
-                    "ThreshNAQuantileProt" = seq(from = 0, to = 0.3, by = 0.05),
+                    "ThreshNAQuantileProt" = seq(from = 0, to = 0.2, by = 0.05),
                     "Threshqval" = c(0.01, 0.05)) 
 #####################
 
@@ -66,7 +66,7 @@ for (j in seq_along(lp)) {
   # if (j == 1) {
   #   listtotest2 <- listtotest[53:length(listtotest)]
   # } else (
-    listtotest2 <- listtotest
+  listtotest2 <- listtotest
   # )
   #
   for (x in listtotest2) {
@@ -78,7 +78,7 @@ for (j in seq_along(lp)) {
     }
     nacc <- length(unique(d$Accession))
     nprot <-nrow(d)
-    nMC <-sum(is.na(d[,grepl("^C_", names(d))]))
+    nMV <-sum(is.na(d[,grepl("^C_", names(d))]))
     
     ## Stat:
     pval <- vector()
@@ -90,15 +90,18 @@ for (j in seq_along(lp)) {
       mv <- is.na(d[i,])
       # Number of missing values per condition:
       numpercond <- colSums(!(sapply(conditions, function(x) mv[grepl(x, colnames(d))])))
-      if (sum(numpercond >= 2) == length(numpercond)) {
-        tres <- t.test(as.numeric(d[i,grepl(conditions[1], colnames(d))]), as.numeric(d[i,grepl(conditions[2], colnames(d))]))
-        pval[i] <- tres$p.value
-        means[i,] <- tres$estimate
-      } else {
+      # if (sum(numpercond >= 2) == length(numpercond)) {
+      mytest <- try(t.test(as.numeric(d[i,grepl(conditions[1], colnames(d))]), as.numeric(d[i,grepl(conditions[2], colnames(d))])), TRUE)
+      if (inherits(mytest, "try-error")) {
         pval[i] <- NA
+      } else {
+        # } else {
+        pval[i] <- mytest$p.value
+        means[i,] <- mytest$estimate
       }
       missval[i,] <- mv
     }
+    
     
     d <- cbind(d, means)
     d <- as.data.frame(d)
@@ -121,13 +124,13 @@ for (j in seq_along(lp)) {
                    "Param" = x, 
                    "numberUniqueAccessions" = nacc,
                    "NumberUniqueProteoform" = nprot,
-                   "NumberMissingValues" = nMC,
+                   "NumberMissingValues" = nMV,
                    "NumberTrueRegulated" = numRegTrue,
                    "NumberTotRegulated" = numRegTot, 
                    "NumberRegPerAmplitude" = matRegPerAmp)
     save(output,
          file = paste0(pathToRes, "/output_2_", iter, ".RData"))
-    cat("Save output", iter, "over", length(listtotest), "\n")
+    cat("Save output", iter, "over", length(listtotest)*length(lp), "\n")
     iter <- iter + 1
   }
 }

@@ -21,7 +21,8 @@ getDigestTablesNoMC <- function(proteoformsRow, parameters) {
     colnames(quan) <- names(vecquan)
     df <- cbind(df, quan)
     names(df)[(ncol(df) - ncol(quan) + 1):ncol(df)] <- names(vecquan)
-    if (sum(sapply(proteoformsRow$PTMPos, is.null)) == 0) {
+    # if (sum(sapply(proteoformsRow$PTMPos, is.null)) == 0) {
+    if (is.null(proteoformsRow$PTMPos)) {
       for (i in seq_len(nrow(df))) {
         sel <- unlist(proteoformsRow$PTMPos) >= df$start[i] & unlist(proteoformsRow$PTMPos) <= df$stop[i]
         if (any(sel)) {

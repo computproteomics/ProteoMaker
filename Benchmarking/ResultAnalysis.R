@@ -24,6 +24,7 @@ pathToInput <- paste0(wd, pathToInput)
 
 fnames <- list.files(pathToInput, full.names = T, recursive = T)
 fnames <- fnames[!grepl(".txt$", fnames)] # Remove the reports
+fnames <- fnames[!grepl("Output/old", fnames)] # Remove the reports
 lf <- vector(mode = "list", length = length(fnames))
 for (i in seq_along(fnames)) {
   load(fnames[i])
@@ -43,6 +44,8 @@ names(lf) <- gsub("/", "", names(lf), fixed = T)
 #####################
 
 li <- lf[grepl("IDs", names(lf), fixed = T)]
+
+library(zoo)
 
 npar <- length(li[[1]]$Param)
 cat("Column names for results of identification:\n")
@@ -70,6 +73,55 @@ df$NumAccPerMinPepNum_3 <- sapply(li, function(x) {
 #--------------------
 
 pairs(as.matrix(df[,3:ncol(df)]))
+
+# mat <- as.matrix(df[,3:ncol(df)])
+# mat <- apply(mat, 2, as.numeric)
+# 
+# pcamat <- mat
+# pcamat <- pcamat[,colnames(pcamat) != "PepMaxLength"]
+# pcamat <- scale(pcamat)
+# pca <- prcomp(pcamat)
+# # biplot(pca)
+# 
+# barplot(summary(pca)$importance[2,1:5], main = "Proportion of variance")
+# gtab <- as.data.frame(pca$rotation)
+# gtab$labels <- row.names(gtab)
+# ggplot(gtab, aes(x = PC1, y = PC2, label = labels)) +
+#   geom_text() +
+#   theme_bw()
+
+gtab <- df
+
+ggplot(data = gtab, aes(y = NumUniquePep, x = PropMissedCleavages, col = factor(PepMinLength))) +
+  geom_point(alpha = 0.8) +
+  geom_smooth() +
+  theme_bw() +
+  facet_wrap(~MaxNumMissedCleavages) +
+  labs(title = "Facets = MaxNumMissedCleavages")
+
+ggplot(data = gtab, aes(y = NumPepOneAcc, x = PropMissedCleavages, col = factor(PepMinLength))) +
+  geom_point(alpha = 0.8) +
+  geom_smooth() +
+  theme_bw() +
+  facet_wrap(~MaxNumMissedCleavages) +
+  labs(title = "Facets = MaxNumMissedCleavages")
+
+gtab1 <-  melt(gtab, 
+               id.vars = names(gtab)[1:(ncol(gtab)-3)])
+
+ggplot(data = gtab1, aes(y = value, x = PropMissedCleavages, col = variable)) +
+  geom_point(alpha = 0.8) +
+  geom_smooth() +
+  theme_bw() +
+  facet_wrap(~MaxNumMissedCleavages) +
+  labs(title = "Facets = MaxNumMissedCleavages")
+
+ggplot(data = gtab, aes(y = NumAccPerMinPepNum_2, x = PropMissedCleavages, col = factor(PepMinLength))) +
+  geom_point(alpha = 0.8) +
+  geom_smooth() +
+  theme_bw() +
+  facet_wrap(~MaxNumMissedCleavages) +
+  labs(title = "Facets = MaxNumMissedCleavages")
 
 #####################
 
@@ -106,24 +158,9 @@ df$RelMV <- as.numeric(df$NumberMissingValues) / as.numeric(df$NumReps)
 
 #--------------------
 
-mat <- as.matrix(df[,3:ncol(df)])
-mat <- apply(mat, 2, as.numeric)
-pairs(mat, col = df$NumReps)
-
-pcamat <- mat[,3:(ncol(mat)-1)]
-pcamat <- pcamat[,colnames(pcamat) != "Threshqval"]
-pcamat <- scale(pcamat)
-pca <- prcomp(pcamat)
-# biplot(pca)
-
-barplot(summary(pca)$importance[2,1:5], main = "Proportion of variance")
-gtab <- as.data.frame(pca$rotation)
-gtab$labels <- row.names(gtab)
-ggplot(gtab, aes(x = PC1, y = PC2, label = labels)) +
-  geom_text() +
-  theme_bw()
 
 for (qthresh in sort(unique(df$Threshqval))) {
+  cat("q-value threshold:", qthresh, "\n")
   gtab <- df[df$Threshqval == qthresh,]
   gtab$NumberTrueRegulated <- as.numeric(gtab$NumberTrueRegulated)
   gtab$NumberTotRegulated <- as.numeric(gtab$NumberTotRegulated)
@@ -134,15 +171,15 @@ for (qthresh in sort(unique(df$Threshqval))) {
   gtab <- gtab[order(gtab$NumberTotRegulated, decreasing = T),]
   gtab$outputName <- factor(as.character(gtab$outputName), levels = as.character(gtab$outputName))
   
-  ggplot(data = gtab, aes(y = NumberTotRegulated, x = outputName, fill = NumReps)) +
-    geom_bar(stat = "identity") +
-    theme_classic() +
-    theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
+  # ggplot(data = gtab, aes(y = NumberTotRegulated, x = outputName, fill = NumReps)) +
+  #   geom_bar(stat = "identity") +
+  #   theme_classic() +
+  #   theme(axis.title.x=element_blank(),
+  #         axis.text.x=element_blank(),
+  #         axis.ticks.x=element_blank())
   
-  gtab1 <- melt(gtab[,c("RelMV", "NumberTotRegulated", "6.64385618977472", "1", "3.32192809488736", "NumReps", "ThreshNAQuantileProt", "QuantNoise", "NumberTrueRegulated", "AbsoluteQuanSD")], 
-                id.vars = c("NumReps", "RelMV", "NumberTotRegulated", "ThreshNAQuantileProt", "QuantNoise", "NumberTrueRegulated", "AbsoluteQuanSD"))
+  gtab1 <- melt(gtab[,c("FRR", "RelMV", "NumberTotRegulated", "6.64385618977472", "1", "3.32192809488736", "NumReps", "ThreshNAQuantileProt", "QuantNoise", "NumberTrueRegulated", "AbsoluteQuanSD")], 
+                id.vars = c("FRR", "NumReps", "RelMV", "NumberTotRegulated", "ThreshNAQuantileProt", "QuantNoise", "NumberTrueRegulated", "AbsoluteQuanSD"))
   # gtab1$NumberTotRegulated[gtab1$NumberTotRegulated == 0] <- NA
   g <- ggplot(data = gtab1, aes(x = RelMV, y = NumberTotRegulated, col = QuantNoise)) +
     geom_point(alpha = 0.4) +
@@ -151,13 +188,7 @@ for (qthresh in sort(unique(df$Threshqval))) {
     labs(title = "Facets = number of replicate")
   print(g)
   g <- ggplot(data = gtab1, aes(x = QuantNoise, y = NumberTotRegulated, col = NumReps)) +
-    geom_point(alpha = 0.4) +
-    geom_smooth() +
-    facet_wrap(~ ThreshNAQuantileProt) +
-    theme_bw() +
-    labs(title = "Facets = Detection threshold at the proteoform level")
-  print(g)
-  g <- ggplot(data = gtab1, aes(x = AbsoluteQuanSD, y = NumberTotRegulated, col = NumReps)) +
+    geom_hline(yintercept = 300, linetype = "dashed") +
     geom_point(alpha = 0.4) +
     geom_smooth() +
     facet_wrap(~ ThreshNAQuantileProt) +
@@ -178,6 +209,15 @@ for (qthresh in sort(unique(df$Threshqval))) {
     facet_wrap(~ NumReps) +
     theme_bw() +
     labs(title = "Facets = Number of replicates")
+  print(g)
+  
+  g <- ggplot(data = gtab[gtab$ThreshNAQuantileProt == 0 | gtab$ThreshNAQuantileProt == 0.1,], aes(x = FRR, y = NumberTotRegulated, col = factor(QuantNoise))) +
+    geom_point(alpha = 0.4) +
+    # stat_summary(geom = "line", fun.y = "mean") +
+    geom_line(aes(y=rollmean(NumberTotRegulated, 3, na.pad=TRUE))) +
+    facet_wrap(~ NumReps + ThreshNAQuantileProt) +
+    theme_bw() +
+    labs(title = "Facets = NumReps + ThreshNAQuantileProt")
   print(g)
 }
 
