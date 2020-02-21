@@ -32,21 +32,25 @@ Param$FracModProt <- 0.3 # Set to 0 if no modified proteins should be generated 
 # taking into account protein properties)
 Param$FracModPerProt <- 2 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
 # PTM types and fraction of PTMs (with respect to protein chosen to be modified)
-Param$PTMTypes <- c("ph")
+Param$PTMTypes <- c("ph") #Only phosphorylation
+#Param$PTMTypes <- c("ph", "ub") # phosphorylation and ubiquitination (Example for multiple modification types)
 #Param$PTMNumber <- c("2")
+#Background distribution of PTM types.
+Param$PTMTypesDist <- c(1) # 100% of modifications are phosphorylation.
+#Param$PTMTypesDist <- c(0.83, 0.17) # 83% of modifications are phosphorylation and 17% ubiquitination. (Example for multiple modification types)
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
 # Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
 Param$PTMMultipleLambda <- 0.1
-# residues for PTM type and relative distribution 
-Param$ModifiableResidues <- list()
-Param$ModifiableResiduesDistr <- list()
+# Residues for PTM type and relative distribution 
 # For the moment, we only consider "usual" phosphorylation on serine, threonine and tyrosines. 
 # We use the proportion of each phosphorylation type based on what is observed in the literature.
-for (mod in Param$PTMTypes) {
-  Param$ModifiableResidues$mod <- c("S","T","Y")
-  Param$ModifiableResiduesDistr$mod <- c(0.86,0.13,0.01)
-}
+Param$ModifiableResidues <- list(c("S","T","Y"))
+Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01))
+#Example for multiple modification types
+#Param$ModifiableResidues <- list(c("S","T","Y"), c("K"))
+#Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01), c(1))
+
 
 # percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2

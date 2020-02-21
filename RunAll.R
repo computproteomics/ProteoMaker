@@ -13,7 +13,7 @@ source("Parameter.R")
 #####################
 source("01_GenerateGroundTruth.R")
 # Create the initial list of proteoforms:
-proteoforms <- samplePreparation(fasta.path = Param$PathToFasta, parameters = Param)
+proteoforms <- samplePreparation(parameters = Param)
 # Create the full structure of proteoforms along with abundances and ground truth expression patterns:
 GroundTruth <- addProteoformAbundance(proteoforms = proteoforms, parameters = Param)
 rm(proteoforms)
