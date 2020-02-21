@@ -8,7 +8,7 @@
 #####################
 wd <- getwd()
 # # For Computerome:
-# wd <- "/home/projects/jensenlab/people/malopa/PhosFake/BenchmarkingNoMod"
+wd <- "/home/projects/jensenlab/people/malopa/PhosFake/BenchmarkingNoMod"
 # #
 pathToRes <- paste0(wd, "/Output/BenchmarkProtQuan")
 pathToFasta <- paste0(wd, "/input_fasta")
@@ -127,9 +127,10 @@ for (j in seq_along(lp)) {
                    "NumberMissingValues" = nMV,
                    "NumberTrueRegulated" = numRegTrue,
                    "NumberTotRegulated" = numRegTot, 
-                   "NumberRegPerAmplitude" = matRegPerAmp)
+                   "NumberRegPerAmplitude" = matRegPerAmp,
+                   "data" = d)
     save(output,
-         file = paste0(pathToRes, "/output_2_", iter, ".RData"))
+         file = paste0(pathToRes, "/output_4_", iter, ".RData"))
     cat("Save output", iter, "over", length(listtotest)*length(lp), "\n")
     iter <- iter + 1
   }
