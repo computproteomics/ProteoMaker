@@ -26,11 +26,11 @@ save(GroundTruth, file = "RData/GroundTruthAbs.RData")
 #####################
 source("02_Digestion.R")
 # Digest all the proteoforms and get peptide table:
-peptable <- DigestGroundTruth(GroundTruth = GroundTruth, parameters = Param)
+peptable <- digestGroundTruth(proteoforms = GroundTruth, parameters = Param)
 # Save peptable before filter for analysis:
 save(peptable, file = "RData/AllPep.RData")
-peptable <- mapQuanToDigestionProd(DigestedProt = peptable)
-BeforeMS <- filterDigestedProt(peptable, Param)
+peptable <- digestionProductSummarization(peptides = peptable, parameters = Param)
+BeforeMS <- filterDigestedProt(DigestedProt = peptable, parameters = Param)
 # Save peptable before in silico MS run:
 save(BeforeMS, file = "RData/BeforeMS.RData")
 #####################

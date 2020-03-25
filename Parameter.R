@@ -37,7 +37,10 @@ Param$PTMTypes <- c("ph") #Only phosphorylation
 #Param$PTMNumber <- c("2")
 #Background distribution of PTM types.
 Param$PTMTypesDist <- c(1) # 100% of modifications are phosphorylation.
+Param$PTMTypesMass <- c(79.9663) #Phospho
+#Example for multiple modification types
 #Param$PTMTypesDist <- c(0.83, 0.17) # 83% of modifications are phosphorylation and 17% ubiquitination. (Example for multiple modification types)
+#Param$PTMTypesMass <- c(79.996, 114.043) #Phosphorylation and ubiquitination mass shifts
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
 # Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
@@ -51,7 +54,6 @@ Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01))
 #Param$ModifiableResidues <- list(c("S","T","Y"), c("K"))
 #Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01), c(1))
 
-
 # percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2
 #####################
@@ -59,8 +61,8 @@ Param$RemoveNonModFormFrac <- 0.2
 #####################
 ## Generation of proteoform quantities:
 #####################
-# vector for column names
-Param$quant_colnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
+# Vector for column names
+Param$QuantColnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 # General noise level of all quantitative values (standard deviation of normal distribution)
 Param$QuantNoise <- 0.25
 # Fraction of "differentially" regulated proteoforms
@@ -94,13 +96,23 @@ Param$ThreshNAQuantileProt <- 0.01
 #####################
 ## Parameters for enzymatic digestion (proteoforms -> peptides)
 #####################
+# Enzyme
+Param$Enzyme <- "trypsin"
 # Proportion of peptides with missed cleavages
-Param$PropMissedCleavages <- 0.25
+Param$PropMissedCleavages <- 1 #Not used anymore
+Param$PropMissedCleavages <- 0 #Not used anymore
 # Maximum number of missed cleavages per peptide
-Param$MaxNumMissedCleavages <- 0
-# filter for min and max of peptide length
+Param$MaxNumMissedCleavages <- 2
+# Miss cleavage abundance proportion from parental proteoform
+Param$PropMissedCleavagesAbundance <- c(0.80, 0.15, 0.05)
+# Filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
+# For parallel computing
+Param$Cores <- NA
+Param$ClusterType <- NA
+#Param$Cores <- 10
+#Param$ClusterType <- "PSOCK" #"FORK" for linux. PSOCK works for both linux and windows
 #####################
 
 #####################
@@ -138,15 +150,6 @@ Param$WrongIDs <- 0.01
 # Wrong localizations
 Param$WrongLocalizations <- 0.01
 #####################
-
-#####################
-## For using local test parameters
-#####################
-if (file.exists("Parameter_mytests.R")) {
-  source("Parameter_mytests.R") # No version control on this test file.
-}
-#####################
-
 
 #####################
 ## Output description:

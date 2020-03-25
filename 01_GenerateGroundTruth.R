@@ -221,10 +221,17 @@ performModification <- function(to.Modify, parameters){
     
   }
   
-  # Randomly selects a set of proteoforms from the imported to.Modify set. The size of mod.proteoforms set
-  # depends to FracModPerProt. (When 1 a proteoform set of size equal to to.Modify is created, when 2 the size is double etc etc)
-  mod.proteoforms <- to.Modify[sample(x = 1:nrow(to.Modify), size = parameters$FracModPerProt*nrow(to.Modify), replace = T),]
-  mod.proteoforms <- mod.proteoforms[order(mod.proteoforms$Accession),]
+  # All proteins in to.Modify set are selected to be modified at least once.
+  # Then randomly a set of proteoforms from the imported to.Modify set is selected based on the fraction multiplier FracModPerProt - 1.
+  # The size of mod.proteoforms set depends to FracModPerProt. (When 1 a proteoform set of size equal to to.Modify is created, when 2 the size is double etc etc)
+  mod.proteoforms <- to.Modify
+  
+  if(parameters$FracModPerProt >= 2){
+    
+    mod.proteoforms <- rbind(mod.proteoforms, to.Modify[sample(x = 1:nrow(to.Modify), size = (parameters$FracModPerProt - 1)*nrow(to.Modify), replace = T),])
+    mod.proteoforms <- mod.proteoforms[order(mod.proteoforms$Accession),]
+    
+  }
   
   #Create additional columns for modification positions and modification type.
   mod.proteoforms$PTMPos <- vector(mode = "list", length = nrow(mod.proteoforms))
@@ -361,6 +368,10 @@ samplePreparation <- function(parameters){
                            proteoforms.after.modification$mod.proteoform, 
                            proteoforms.after.modification$unmod.proteoforms)
       
+      proteoforms$Proteoform_ID <- make.unique(proteoforms$Accession)
+      proteoforms$Proteoform_ID  <- rowSums(cbind(as.numeric(sub("\\.", "", sub("^[^.]*", "", proteoforms$Proteoform_ID))), rep(1, nrow(proteoforms))), na.rm = T)
+      proteoforms <- proteoforms[,c(1,2,5,3,4)]
+      
       rownames(proteoforms) <- 1:nrow(proteoforms)
       
       cat("#SAMPLE PREPARATION - Finish")
@@ -371,8 +382,10 @@ samplePreparation <- function(parameters){
       rownames(proteoforms) <- 1:nrow(proteoforms)
       proteoforms$PTMPos <- vector(mode = "list", length = nrow(proteoforms))
       proteoforms$PTMType <- vector(mode = "list", length = nrow(proteoforms))
+      proteoforms$Proteoform_ID <- rep(1, nrow(proteoforms))
+      proteoforms <- proteoforms[,c(1,2,5,3,4)]
       
-      cat("#SAMPLE PREPARATION - Finish")
+      cat("#SAMPLE PREPARATION - Finish\n\n")
       
     }
     
@@ -383,7 +396,7 @@ samplePreparation <- function(parameters){
 }
 #####################
 
-#Below: to be expanded.
+#Below: will be developed further.
 #####################
 createRegulationPattern = function(NumCond){
   # select 0.5 because division by 2 is already induced this way
@@ -397,7 +410,7 @@ createRegulationPattern = function(NumCond){
 addProteoformAbundance <- function(proteoforms, parameters){
   
   # populate the matrix with random noise
-  for (name in parameters$quant_colnames) {
+  for (name in parameters$QuantColnames) {
     
     proteoforms[name] = rnorm(n = nrow(proteoforms), mean = 0, sd = parameters$QuantNoise)
     
@@ -425,9 +438,9 @@ addProteoformAbundance <- function(proteoforms, parameters){
   proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
   proteoforms$Regulation_Pattern[diff_reg_indices] = regulationPatterns
   #[diff_reg_indices, "Regulation_Pattern"]
-  proteoforms[diff_reg_indices, parameters$quant_colnames] = 
+  proteoforms[diff_reg_indices, parameters$QuantColnames] = 
     # add regulation pattern*regulation amplitude to random noise
-    proteoforms[diff_reg_indices, parameters$quant_colnames] +
+    proteoforms[diff_reg_indices, parameters$QuantColnames] +
     
     #generate regulation patterns for all regulated proteoforms
     t(sapply(1:length(diff_reg_indices), function(x) {
@@ -438,17 +451,17 @@ addProteoformAbundance <- function(proteoforms, parameters){
   
   if (is.null(parameters$AbsoluteQuanMean)) {
     # Remove Values below the threshold set in the Parameters file
-    proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < parameters$ThreshNAProteoform]  = NA
+    proteoforms[,parameters$QuantColnames][proteoforms[,parameters$QuantColnames] < parameters$ThreshNAProteoform]  = NA
   } else {
     cat("Add quan. distribution: Relative -> absolute\n")
     vec <- rnorm(n = nrow(proteoforms), mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
-    for (name in parameters$quant_colnames) {
+    for (name in parameters$QuantColnames) {
       proteoforms[name] = proteoforms[name] + vec
     }
     if (parameters$ThreshNAQuantileProt > 0) {
       # Remove Values below the threshold set in the Parameters file
       thresh <- quantile(x = vec, probs = parameters$ThreshNAQuantileProt)
-      proteoforms[,parameters$quant_colnames][proteoforms[,parameters$quant_colnames] < thresh]  = NA
+      proteoforms[,parameters$QuantColnames][proteoforms[,parameters$QuantColnames] < thresh]  = NA
     }
   }
   
