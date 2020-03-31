@@ -33,14 +33,14 @@ Param$FracModProt <- 0.3 # Set to 0 if no modified proteins should be generated 
 Param$FracModPerProt <- 2 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
 # PTM types and fraction of PTMs (with respect to protein chosen to be modified)
 Param$PTMTypes <- c("ph") #Only phosphorylation
-#Param$PTMTypes <- c("ph", "ub") # phosphorylation and ubiquitination (Example for multiple modification types)
-#Param$PTMNumber <- c("2")
+#Param$PTMNumber <- c("2") #It is not used.
 #Background distribution of PTM types.
 Param$PTMTypesDist <- c(1) # 100% of modifications are phosphorylation.
 Param$PTMTypesMass <- c(79.9663) #Phospho
 #Example for multiple modification types
-#Param$PTMTypesDist <- c(0.83, 0.17) # 83% of modifications are phosphorylation and 17% ubiquitination. (Example for multiple modification types)
-#Param$PTMTypesMass <- c(79.996, 114.043) #Phosphorylation and ubiquitination mass shifts
+# Param$PTMTypes <- c("ph", "ub") # phosphorylation and ubiquitination (Example for multiple modification types)
+# Param$PTMTypesDist <- c(0.83, 0.17) # 83% of modifications are phosphorylation and 17% ubiquitination. (Example for multiple modification types)
+# Param$PTMTypesMass <- c(79.996, 114.043) #Phosphorylation and ubiquitination mass shifts
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
 # Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
@@ -51,8 +51,8 @@ Param$PTMMultipleLambda <- 0.1
 Param$ModifiableResidues <- list(c("S","T","Y"))
 Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01))
 #Example for multiple modification types
-#Param$ModifiableResidues <- list(c("S","T","Y"), c("K"))
-#Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01), c(1))
+# Param$ModifiableResidues <- list(c("S","T","Y"), c("K"))
+# Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01), c(1))
 
 # percentage of modifiable protein without non-modified forms
 Param$RemoveNonModFormFrac <- 0.2
@@ -134,12 +134,12 @@ Param$EnrichmentNoise <- 0.2
 # Percentage of detected peptides
 Param$PercDetectedPep <- 0.8
 # Percentage of detected values (replicate/condition)
-Param$PercDetectedVal <- 0.8
+Param$PercDetectedVal <- 0.2
 # Weights for intensity-dependence of non-detection (0 means no dependence). 
 # Parameter is the power to the ranks (given by number 0 to 1)
 Param$WeightDetectVal <- 1
 # Add noise due to MS instrument:
-Param$MSNoise <- 0
+Param$MSNoise <- 0.1
 #####################
 
 #####################
@@ -150,6 +150,13 @@ Param$WrongIDs <- 0.01
 # Wrong localizations
 Param$WrongLocalizations <- 0.01
 #####################
+
+#####################
+## Filter MS results
+#####################
+#Removes peptides that have more NA values than a specific number.
+Param$MaxNAPerPep <- 5
+
 
 #####################
 ## Output description:
