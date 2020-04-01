@@ -99,12 +99,11 @@ Param$ThreshNAQuantileProt <- 0.01
 # Enzyme
 Param$Enzyme <- "trypsin"
 # Proportion of peptides with missed cleavages
-Param$PropMissedCleavages <- 1 #Not used anymore
-Param$PropMissedCleavages <- 0 #Not used anymore
+Param$PropMissedCleavages <- 0.2
 # Maximum number of missed cleavages per peptide
 Param$MaxNumMissedCleavages <- 2
 # Miss cleavage abundance proportion from parental proteoform
-Param$PropMissedCleavagesAbundance <- c(0.80, 0.15, 0.05)
+#Param$PropMissedCleavagesAbundance <- c(0.8, 0.15, 0.5)
 # Filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
@@ -113,6 +112,8 @@ Param$Cores <- NA
 Param$ClusterType <- NA
 #Param$Cores <- 10
 #Param$ClusterType <- "PSOCK" #"FORK" for linux. PSOCK works for both linux and windows
+# Remove percentage of least abundant peptides (0-1).
+Param$LeastAbundantLoss <- 0.5
 #####################
 
 #####################
@@ -134,7 +135,7 @@ Param$EnrichmentNoise <- 0.2
 # Percentage of detected peptides
 Param$PercDetectedPep <- 0.8
 # Percentage of detected values (replicate/condition)
-Param$PercDetectedVal <- 0.2
+Param$PercDetectedVal <- 0.8
 # Weights for intensity-dependence of non-detection (0 means no dependence). 
 # Parameter is the power to the ranks (given by number 0 to 1)
 Param$WeightDetectVal <- 1

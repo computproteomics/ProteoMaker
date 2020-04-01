@@ -162,18 +162,25 @@ proteoformDigestion <- function(proteoform, parameters){
     }
     
     #Add proportional abundances to peptides based on MC and parent proteoform abundance.
-    MC.proportions <- parameters$PropMissedCleavagesAbundance
-    MC.max <- length(unique(peptides$MC))
+    # MC.proportions <- parameters$PropMissedCleavagesAbundance
+    # MC.max <- length(unique(peptides$MC))
+    # 
+    # #This covers the case when the maximum possible MC is less than the wished.
+    # if(length(MC.proportions) > MC.max){
+    #   
+    #   MC.proportions[1] <- sum(MC.proportions[1], MC.proportions[(MC.max + 1):length(MC.proportions)])
+    #   MC.proportions <- MC.proportions[1:(MC.max)]
+    #   
+    # }
+    # 
+    # proportional.abundance <- as.data.frame(MC.proportions[peptides$MC + 1] %*% t(as.numeric(proteoform[parameters$QuantColnames])))
+    # colnames(proportional.abundance) <- parameters$QuantColnames
     
-    #This covers the case when the maximum possible MC is less than the wished.
-    if(length(MC.proportions) > MC.max){
-      
-      MC.proportions[1] <- sum(MC.proportions[1], MC.proportions[(MC.max + 1):length(MC.proportions)])
-      MC.proportions <- MC.proportions[1:(MC.max)]
-      
-    }
+    MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^2 * parameters$PropMissedCleavages^x)
+    MC.proportions <- MC.proportions[peptides$MC + 1]
     
-    proportional.abundance <- as.data.frame(MC.proportions[peptides$MC + 1] %*% t(as.numeric(proteoform[parameters$QuantColnames])))
+    MC.proportions[peptides$Stop == max(peptides$Stop)] <- MC.proportions[peptides$Stop == max(peptides$Stop)]/(1 - parameters$PropMissedCleavages)
+    proportional.abundance <- as.data.frame(MC.proportions %*% t(as.numeric(proteoform[parameters$QuantColnames])))
     colnames(proportional.abundance) <- parameters$QuantColnames
     
     #Bind everything.
@@ -264,12 +271,22 @@ digestionProductSummarization <- function(peptides, parameters){
   
   cat("#PEPTIDE SUMMARIZATION - Start\n\n")
   cat(" + Summarization input:\n")
+  
+  #Remove the 
+  remove <- order(rowMeans(peptides[ ,parameters$QuantColnames], na.rm = T))[1:(nrow(peptides)*parameters$LeastAbundantLoss)]
+  if(length(remove) != 0){
+    
+    peptides <- peptides[-remove,]
+    
+  }
+
+  cat("  - Remove",   parameters$LeastAbundantLoss*100, "% of the least abundant peptides, which corresponds to", length(remove), "peptides.\n")
   cat("  - A total number of", nrow(peptides), "peptides is proceed for summarization.\n")
   
   #Create unique ID for each peptide based on the PTMType and PTMPos. No aggregation technique in any package supports lists...
   peptides$pep_id <- as.character(mapply(list, peptides$PTMType, peptides$PTMPos, SIMPLIFY = F))
   
-  cat("  - Unique peptides IDs are generated.\n")
+  cat("  - Unique peptide IDs are generated.\n")
   
   #Create a Sequence column where isoleucine is substituted by leucine.
   peptides$Sequence <- gsub("[I]", "L", peptides$Peptide)
