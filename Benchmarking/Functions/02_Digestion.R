@@ -2,158 +2,378 @@
 #                    PEPTIDE DIGESTION OF PROTEOFORM TABLE                     #
 ################################################################################
 
-library(OrgMassSpecR)
+library(dplyr)
+library(stringi)
+library(crayon)
+library(parallel)
+library(purrr)
 
-# proteoformsRow <- GroundTruth[1,]
-
-getDigestTablesNoMC <- function(proteoformsRow, parameters) {
-  # print(proteoformsRow$Sequence)
-  if (grepl("K|R", proteoformsRow$Sequence)) {
-    df <- Digest(proteoformsRow$Sequence,enzyme = "trypsin", missed = 0)
-    df$Accession <- proteoformsRow$Accession
-    df$PTMPos <- NA
-    df$PTMType <- NA
-    vecquan <- proteoformsRow[grepl( "^C_" , names( proteoformsRow ) ) ]
-    quan <- matrix(nrow = nrow(df), 
-                   ncol = length(vecquan), 
-                   byrow = T, 
-                   data = rep(as.numeric(vecquan), nrow(df)))
-    colnames(quan) <- names(vecquan)
-    df <- cbind(df, quan)
-    names(df)[(ncol(df) - ncol(quan) + 1):ncol(df)] <- names(vecquan)
-    # if (sum(sapply(proteoformsRow$PTMPos, is.null)) == 0) {
-    if (is.null(proteoformsRow$PTMPos)) {
-      for (i in seq_len(nrow(df))) {
-        sel <- unlist(proteoformsRow$PTMPos) >= df$start[i] & unlist(proteoformsRow$PTMPos) <= df$stop[i]
-        if (any(sel)) {
-          df$PTMType[i] <- c(unlist(proteoformsRow$PTMType)[sel])
-          df$PTMPos[i] <- c(unlist(proteoformsRow$PTMPos)[sel])
-        } else {
-          df$PTMPos[i] <- NA
-          df$PTMType[i] <- NA
-        }
-      }
-    }
-    return(df)
-  }
-}
-
-DigestGroundTruth <- function(GroundTruth, parameters) {
+#####################
+## Function to perform enzymatic digestion on a single protein sequence.
+## - Supports 8 different cleavage rules, for trypsin (considering proline or just cleavage after lysine and arginine), chymotrypsin (high and low specificity),
+##   pepsin (pH 2 and pH 1.3), lysC and argC.
+#    Enzyme rules according to: https://www.nature.com/articles/srep22286/tables/1
+#                               https://web.expasy.org/peptide_cutter/peptidecutter_enzymes.html#exceptions
+## - Digests the sequence to the maximum possible number of miss-cleavages based on the argument missed.
+## - Filters proteolytic peptides according to their length.
+## - Calculates the mass for every yielded peptide for charges +1, +2 and +3.
+## - Filters the single charged peptides based on a upper and lower mass threshold.
+## - If there are no cleavage sites on a sequence, or if the filtering removed or peptides, the output is NULL. 
+#####################
+fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA, length.min = NA, mass.max = NA, mass.min = NA){
   
-  cat("Start digestion\n")
-  # Get all the peptides without missed cleavage:
-  d <- lapply(seq_len(nrow(GroundTruth)),function(x) {
-    # print(GroundTruth[x,]$Sequence)
-    getDigestTablesNoMC(GroundTruth[x,], parameters)
-  })
+  cleavage_rules <- dplyr::case_when(
+    
+    enzyme == "trypsin" ~ "(?!(RP|KP))(?=(K|R))(?!(K|R)$)",
+    enzyme == "trypsin.strict" ~ "(?=(K|R))(?!(K|R)$)",
+    enzyme == "chymotrypsin.h" ~ "(?!(FP|YP|PY|WP))(?=(F|Y|W))(?!(F|Y|W)$)",
+    enzyme == "chymotrypsin.l" ~ "(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)",
+    enzyme == "pepsin.2" ~ "(?=(F|L|W|Y|A|E|Q))(?!(F|L|W|Y|A|E|Q)$)",
+    enzyme == "pepsin.1.3" ~ "(?=(F|L))(?!(F|L)$)",
+    enzyme == "lysC" ~ "(?=(K))(?!(K)$)",
+    enzyme == "argC" ~ "(?!(RP))(?=(R))(?!(R)$)"
+    
+  )
   
-  if (parameters$MaxNumMissedCleavages > 0 & parameters$PropMissedCleavages > 0) {
-    ## Generate missed cleavages:
-    cat("Start generation of missed-cleavages\n")
-    for (el in seq_along(d)) {
-      x <- d[[el]]
-      if (!is.null(x)) {
-        iter_mc <- 0
-        r <- 1
-        while (r < nrow(x)) {
-          if (runif(1, 0, 1) <= parameters$PropMissedCleavages & iter_mc < parameters$MaxNumMissedCleavages & (nrow(x) - r) >= iter_mc) {
-            newpep <- x[r+1,]
-            x <- x[-(r+1),]
-            newpep$peptide <- paste(c(x$peptide[r], newpep$peptide), collapse = "")
-            newpep$start <- x$start[r]
-            iter_mc <- iter_mc + 1
-            newpep$mc <- iter_mc
-            x[r,] <- newpep
-            r <- r + 1
-          } else {
-            iter_mc <- 0
-            r <- r + 1
-          }
-        }
-      }
-      d[[el]] <- x
-    }
-  }  
-  cat("Row-bind missed cleavages\n")
-  peptable <- as.data.frame(data.table::rbindlist(d))
-  cat("Table done\n")
-  
-  names(peptable)[names(peptable) == "peptide"] <- "PepSequence"
-  names(peptable)[names(peptable) == "start"] <- "PepStart"
-  names(peptable)[names(peptable) == "stop"] <- "PepStop"
-  peptable$ID <- paste(peptable$PepSequence, peptable$PTMPos, peptable$PTMType, sep="_")
-  peptable <- peptable[order(paste(peptable$Accession, peptable$PepStart)),]
-  cat("Start filtering\n")
-  #FILTERING
-  pepLength <- nchar(peptable$PepSequence)
-  peptable <- peptable[(pepLength >= parameters$PepMinLength & pepLength <= parameters$PepMaxLength),]
-  peptable <- peptable[!is.na(peptable$ID),]
-  
-  return(peptable)
-  
-}
-
-mapQuanToDigestionProd <- function(DigestedProt) {
-  # For each unique peptide, get the sum of intensities in all conditions
-  # >> Do we want to change all I in L or reverse? << #
-  unique_pep <- names(table(DigestedProt$ID)[table(DigestedProt$ID) == 1])
-  uniquetab <- DigestedProt[DigestedProt$ID %in% unique_pep,]
-  redundanttab <- DigestedProt[!(DigestedProt$ID %in% unique_pep),]
-  
-  iterID <- unique(redundanttab$ID)
-  list_quan <- vector(mode = "list")
-  for (i in seq_along(iterID)) {
-    df <- redundanttab[redundanttab$ID == iterID[i],]
-    mtx <- df[, grepl( "^C_" , names( df ) ) ]
-    vec <- sapply(1:ncol(mtx),function(x) {
-      log2(sum(2^as.numeric(mtx[,x]), na.rm=T))
-    })
-    df$Accession[1] <- paste(df$Accession, collapse = ";")
-    df$ID[1] <- paste(sort(df$ID), collapse = ";")
-    df <- df[1,]
-    df[, grepl( "^C_" , names( df ) ) ] <- vec
-    list_quan[[i]] <- df
-  }
-  
-  redundanttab <- as.data.frame(data.table::rbindlist(list_quan))
-  peptable <- as.data.frame(data.table::rbindlist(list(redundanttab, uniquetab)))
-  return(peptable)
-}
-
-filterDigestedProt <- function(DigestedProt, parameters) {
-  ## Enrichment loss:
-  # >> Set up for phospho only << #
-  ## Peptide lost at the enrichment step:
-  enriched <- grepl("ph", DigestedProt$PTMType)
-  if (sum(DigestedProt$Enriched) == 0) {
-    return(list("NonEnriched" = DigestedProt, "Enriched" = NULL))
+  if(!is.na(cleavage_rules)){
+    
+    cleave <- stringi::stri_locate_all_regex(str = sequence, pattern = cleavage_rules)[[1]][,1]
+    
   } else {
+    
+    cat(crayon::red(enzyme,"is invalid enzyme argument!\n\n"))
+    return(NULL)
+    
+  }
+  
+  start <- c(1, cleave + 1)                          
+  stop <- c(cleave, nchar(sequence))
+  
+  if(is.na(cleave[1])){
+    
+    return(NULL)
+    
+  }
+
+  missed <- min(length(start) - 2, missed)
+  
+  peptides <- lapply(0:missed, function(x) data.frame(Peptide = substring(sequence, start[1:(length(start)-x)], stop[(x+1):length(stop)]),
+                                                      Start = start[1:(length(start)-x)],
+                                                      Stop = stop[(x+1):length(stop)],
+                                                      MC = x, stringsAsFactors = F))
+  peptides <- dplyr::bind_rows(peptides)
+  
+  if(!is.na(length.max) & !is.na(length.min)){
+    
+    lengths <- nchar(peptides$Peptide)
+    peptides <- peptides[(lengths >= length.min & lengths <= length.max),]
+    
+  }
+  
+  if(nrow(peptides) > 0){
+    
+    AAs <- strsplit(peptides$Peptide, split = "")
+    
+    AA.mass <- c("A"= 71.03711, "R" = 156.10111, "N" = 114.04293, "D" = 115.02694, "C" = 103.00919,
+                 "E" = 129.04259, "Q" = 128.05858, "G" = 57.02146, "H" = 137.05891, "I" = 113.08406,
+                 "L" = 113.08406, "K" = 128.09496, "M" = 131.04049, "F" = 147.06841, "P" = 97.05276,
+                 "S" = 87.03203, "T" = 101.04768, "W" = 186.07931, "Y" = 163.06333, "V" = 99.06841)
+    
+    peptide.mass <- sapply(AAs, function(x) sum(AA.mass[x], 18.01528))
+    peptides$MZ1 <- peptide.mass + 1.007276466
+    peptides$MZ2 <- (peptide.mass +  (1.007276466*2))/2
+    peptides$MZ3 <- (peptide.mass +  (1.007276466*3))/3
+    
+  } else {
+    
+    return(NULL)
+    
+  }
+  
+  if(!is.na(mass.max) & !is.na(mass.min)){
+    
+    peptides <- peptides[(peptides$MZ1 >= mass.min & peptides$MZ1 <= mass.max),]
+    
+  }
+  
+  if(nrow(peptides) > 0){
+    
+    rownames(peptides) <- 1:nrow(peptides)
+    
+  } else {
+    
+    return(NULL)
+    
+  }
+  
+  return(peptides)
+  
+}
+#####################
+
+#####################
+## Function to perform enzymatic digestion on a set of proteoforms.
+## - Calls fastDigest to digest a set of proteoforms.
+## - Maps the modification sites on peptide sequences.
+## - Adds the mass addition per peptide based on the modifications they have.
+## - Peptide abundance depends on the parental proteoform and the number of miss cleavages. Proportionally is assigned based on the distribution of PropMissedCleavagesAbundance.
+##   In case the maximum possible MC of a peptide is less than the argument, PropMissedCleavagesAbundance is redistributed with a favor to 0 miss-cleavage.
+#####################
+proteoformDigestion <- function(proteoform, parameters){
+  
+  
+  peptides <- fastDigest(sequence = proteoform$Sequence, enzyme = parameters$Enzyme, missed = parameters$MaxNumMissedCleavages, length.max = parameters$PepMaxLength, length.min = parameters$PepMinLength)
+  
+  if(!is.null(peptides)){
+    
+    peptides$Accession <- proteoform$Accession
+    peptides$Proteoform_ID <- proteoform$Proteoform_ID
+    
+    peptides$PTMPos <- vector(mode = "list", length = nrow(peptides))
+    peptides$PTMType <- vector(mode = "list", length = nrow(peptides))
+    peptides$Regulation_Amplitude <- proteoform$Regulation_Amplitude
+    peptides$Regulation_Pattern <- proteoform$Regulation_Pattern
+    
+    #Map modification sites on peptides.
+    if(!is.null(proteoform$PTMPos[[1]])){
+      
+      proteoform.position <- unlist(proteoform$PTMPos)
+      proteoform.type <- unlist(proteoform$PTMType)
+      pep.indices <- lapply(proteoform.position, function(x) which(x >= peptides$Start & x <= peptides$Stop))
+      
+      if(sum(lengths(pep.indices)) != 0){
+        
+        pep.position <- lapply(1:length(pep.indices), function(x) sapply(pep.indices[[x]], function(y) proteoform.position[x] - peptides$Start[y] + 1 ))
+        pep.type <- lapply(1:length(pep.indices), function(x) rep(proteoform.type[x], length(pep.indices[[x]])))
+        
+        to.aggregate <- data.frame(unlist(pep.indices), unlist(pep.position), unlist(pep.type), stringsAsFactors = F)
+        to.aggregate <- aggregate(to.aggregate[,2:3], by = list(to.aggregate[,1]), FUN = list)
+        
+        #Calculate and add the mass addition due to modifications per modified peptide.
+        modification.mass <- parameters$PTMTypesMass
+        names(modification.mass) <- parameters$PTMTypes
+        to.aggregate$mass_shift <- sapply(to.aggregate[,3], function(x) sum(modification.mass[x], na.rm = T) )
+        
+        peptides[to.aggregate[,1], c("PTMPos", "PTMType")] <- to.aggregate[,2:3]
+        peptides[to.aggregate[,1], c("MZ1", "MZ2", "MZ3")] <- peptides[to.aggregate[,1], c("MZ1", "MZ2", "MZ3")] + as.numeric(to.aggregate[,4]) %*% t(c(1, 0.5, 1/3))
+        
+      }
+      
+    }
+    
+    #Add proportional abundances to peptides based on MC and parent proteoform abundance.
+    MC.proportions <- parameters$PropMissedCleavagesAbundance
+    MC.max <- length(unique(peptides$MC))
+    
+    #This covers the case when the maximum possible MC is less than the wished.
+    if(length(MC.proportions) > MC.max){
+      
+      MC.proportions[1] <- sum(MC.proportions[1], MC.proportions[(MC.max + 1):length(MC.proportions)])
+      MC.proportions <- MC.proportions[1:(MC.max)]
+      
+    }
+    
+    proportional.abundance <- as.data.frame(MC.proportions[peptides$MC + 1] %*% t(as.numeric(proteoform[parameters$QuantColnames])))
+    colnames(proportional.abundance) <- parameters$QuantColnames
+    
+    #Bind everything.
+    peptides <- dplyr::bind_cols(peptides, proportional.abundance)
+  }
+  
+  return(peptides)
+  
+}
+#####################
+
+#####################
+## Function that wraps proteoformDigestion function to perform digestion on a set of proteoforms.
+## - Gives the option of parallel computing.
+#####################
+digestGroundTruth <- function(proteoforms, parameters){
+  
+  cat("#PROTEOFORM DIGESTION - Start\n\n")
+  cat(" + Digestion input:\n")
+  cat("  - A total number of", nrow(proteoforms), "proteoforms, is proceed for proteolytic digestion.\n")
+  cat("  - Unmodified fraction contains", sum(lengths(proteoforms$PTMType) == 0), "proteoforms and modified fraction", sum(lengths(proteoforms$PTMType) != 0),"proteoforms.\n")
+  cat("  - Cleavage will be performed by", parameters$Enzyme, "with a maximum of", parameters$MaxNumMissedCleavages, 
+      "miss-cleavages, to create peptides of length", parameters$PepMinLength, "to", parameters$PepMaxLength,"amino acids.\n")
+  
+  if(!is.na(parameters$Cores)){
+    
+    cores <- parameters$Cores
+    
+    if(parallel::detectCores() <= parameters$Cores){
+      
+      cores <- parallel::detectCores() - 1
+      
+    }
+    
+    cluster <- parallel::makePSOCKcluster(cores)
+    parallel::setDefaultCluster(cluster)
+    parallel::clusterExport(cluster, c("proteoforms", "parameters", "proteoformDigestion", "fastDigest"), envir = environment())
+    peptides <- parallel::parLapply(cluster, 1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters))
+    parallel::stopCluster(cluster)
+    
+  } else {
+    
+    peptides <- lapply(1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters))
+    
+  }
+  
+  cat("  - All proteoforms are digested successfully!\n\n")
+  
+  peptides <- dplyr::bind_rows(peptides)
+  
+  cat(" + Digestion output:\n")
+  cat("  - A total number of", nrow(peptides), "peptides is generated.\n")
+  cat("  - Unmodified fraction contains", sum(lengths(peptides$PTMType) == 0), "peptides and modified fraction", sum(lengths(peptides$PTMType) != 0),"peptides.\n")
+  cat("  - The amount of peptides with", paste0(0:parameters$MaxNumMissedCleavages, collapse = ", "), "miss-cleavages is",
+      paste0(sapply(0:parameters$MaxNumMissedCleavages, function(x) sum(peptides$MC == x)), collapse = ", ") ,"respectively.\n\n")
+
+  cat("#PROTEOFORM DIGESTION - Finish\n\n")
+  
+  return(peptides)
+  
+}
+#####################
+
+#####################
+## Function that groups peptides and summarizes their abundance.
+## - Creates unique ids for each peptide based on the modifications type and position (pep_id column).
+## - Substitutes leucine to isoleucine residues (Sequence column).
+## - Create groups of peptides and aggregates them.
+##   The output structure is:
+##   
+##   Sequence                 <character>  Contains the unique peptide sequence after I to L substitution.
+##   Peptide                  <list of character vectors> Contains the peptides that are grouped based on Sequence, but prior to I to L substitution
+##   Start                    <list of integer vectors> Contains the starting position of the peptides in the Peptide vectors on the protein sequence.
+##   Stop                     <list of integer vectors> Contains the ending position of the peptides in the Peptide vectors on the protein sequence.
+##   MC                       <list of integer vectors> Contains MC of the peptides in the Peptide vectors on the protein sequence.
+##   MZ1                      <integer> Peptide mass for charge +1.
+##   MZ2                      <integer> Peptide mass for charge +2.
+##   MZ3                      <integer> Peptide mass for charge +3.
+##   Accession                <list of character vectors> Contains the parental protein Accession of the peptides in Peptide vectors.
+##   Proteoform_ID            <list of integer vectors> Contains the unique protoform identifiers of the Accession vectors.
+##   PTMPos                   <list of integer vectors> Contains the position of the modifications on the peptides in the Peptide vectors.
+##   PTMType                  <list of character vectors> Contains the modification types of the modifications of PTMPos vectors.
+##   Regulation_Amplitude     <list of numeric vectors> Contains the regulation amplitudes of the proteoforms in Accession vectors.   
+##   Regulation_Pattern       <list of numeric vectors> Contains the regulation patterns of the proteoforms in Accession vectors.
+##   Quantitative Columns     <numeric> Contains the abundances of the peptide group of Sequence.
+#####################
+digestionProductSummarization <- function(peptides, parameters){
+  
+  cat("#PEPTIDE SUMMARIZATION - Start\n\n")
+  cat(" + Summarization input:\n")
+  cat("  - A total number of", nrow(peptides), "peptides is proceed for summarization.\n")
+  
+  #Create unique ID for each peptide based on the PTMType and PTMPos. No aggregation technique in any package supports lists...
+  peptides$pep_id <- as.character(mapply(list, peptides$PTMType, peptides$PTMPos, SIMPLIFY = F))
+  
+  cat("  - Unique peptides IDs are generated.\n")
+  
+  #Create a Sequence column where isoleucine is substituted by leucine.
+  peptides$Sequence <- gsub("[I]", "L", peptides$Peptide)
+  
+  cat("  - Isoleucine substitution to leucine is done.\n")
+  
+  #Helping functions for summarization per group for specific columns.
+  log2.sum <- function(x){
+    
+    x <- log2(sum(2^x, na.rm = T))
+    if(is.finite(x)){return(x)} else {return(NA)}
+    
+  }
+  
+  select.first <- function(x){
+    
+    return(x[1])
+    
+  }
+  
+  #Create groups based on Sequence and pep_id
+  peptides <- dplyr::group_by(.data = peptides, Sequence, pep_id)
+  
+  cat("  - Peptide groups are generated.\n")
+  
+  peptides.1 <- peptides %>% dplyr::summarise(Peptide = list(Peptide),
+                                              Start = list(Start), 
+                                              Stop = list(Stop),
+                                              MC = list(MC),
+                                              MZ1 = select.first(MZ1),
+                                              MZ2 = select.first(MZ2), 
+                                              MZ3 = select.first(MZ3),
+                                              Accession = list(Accession),
+                                              Proteoform_ID = list(Proteoform_ID),
+                                              PTMPos = select.first(PTMPos),
+                                              PTMType = select.first(PTMType),
+                                              Regulation_Amplitude = list(Regulation_Amplitude),
+                                              Regulation_Pattern = list(Regulation_Pattern))
+  
+  
+  peptides.2 <- peptides %>% dplyr::summarise_at(.vars = dplyr::vars(Param$QuantColnames), .funs = c("log2.sum"))
+  
+  peptides <- dplyr::inner_join(peptides.1, peptides.2, by = c("Sequence", "pep_id"))
+  peptides <- dplyr::select(peptides, -c("pep_id"))
+  
+  cat("  - Peptide groups summarization is done.\n\n")
+  cat(" + Summarization output:\n")
+  cat("  - A total number of ", nrow(peptides), "summarized peptides is generated.\n\n")
+  cat("#PEPTIDE SUMMARIZATION - Finish\n\n")
+  
+  return(peptides)
+  
+}
+#####################
+
+#####################
+## Function that creates enriched and non-enriched fractions of the proteolytic peptides. 
+## - Separates modified peptides and reduce the set based on the EnrichmentLoss parameter.
+## - Simulates enrichment efficiency as an addition of non-modified peptides to the enriched set.
+##   The abundance of these spiked peptides is reduced according to EnrichmentEfficiency parameter.
+## - Introduces noise due to modification enrichment process to the abundances of the enrich fraction. 
+## - Returns two a list that contains the two sets.
+#####################
+filterDigestedProt <- function(DigestedProt, parameters) {
+  
+  
+  enriched <- lengths(DigestedProt$PTMType) != 0
+  
+  if(sum(enriched) == 0){
+    
+    return(list("NonEnriched" = DigestedProt, "Enriched" = NULL))
+    
+  } else {
+    
     DigestedProt$Enriched <- enriched
+    
     enrichedtab <- DigestedProt[DigestedProt$Enriched,]
     nonenrichedtab <- DigestedProt[!DigestedProt$Enriched,]
     numRemove <- floor(nrow(enrichedtab) * parameters$EnrichmentLoss)
     cat("Remove", numRemove, "modified peptides according to parameter EnrichmentLoss (", parameters$EnrichmentLoss, ")")
-    idx <- sample(seq_len(nrow(enrichedtab)), size = numRemove)
+    idx <- sample(seq_len(nrow(enrichedtab)), size = numRemove, replace = F)
     tokeep <- setdiff(seq_len(nrow(enrichedtab)), idx)
-    enrichedtab <- enrichedtab[tokeep,]
+    
     ## Add non-modified peptides to mimic pollution from non-modified peptides:
     numRemove <- floor((nrow(enrichedtab) * (1/parameters$EnrichmentEfficiency)) * (1 - parameters$EnrichmentEfficiency))
-    idx <- sample(seq_len(nrow(nonenrichedtab)), size = numRemove)
+    idx <- sample(seq_len(nrow(nonenrichedtab)), size = numRemove, replace = F)
     noise <- nonenrichedtab[idx,]
     noise$Enriched <- TRUE
+    
     # Reduce signal of non-phospho:
-    noise[, grepl( "^C_" , names( noise ) ) ] <- noise[, grepl( "^C_" , names( noise ) ) ] * (1 - parameters$EnrichmentNonModSignalLoss)
+    noise[, parameters$QuantColnames] <- noise[, parameters$QuantColnames] * (1 - parameters$EnrichmentNonModSignalLoss)
     enrichedtab <- rbind(enrichedtab, noise)
-    ## Noise do to enrichment procedure:
+    
+    ## Noise due to enrichment procedure:
     nrowTab <- nrow(enrichedtab)
-    ncolTab <- length(grepl( "^C_" , names( DigestedProt ) ))
+    ncolTab <- length(parameters$QuantColnames)
     mtx <- matrix(nrow = nrowTab, ncol= ncolTab, data=rnorm(n=ncolTab * nrowTab, mean=0, sd=parameters$EnrichmentNoise))
-    enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ] <- apply(enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ], 2, as.numeric)
-    enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ] <- enrichedtab[, grepl( "^C_" , names( enrichedtab ) ) ] + mtx
-    return(list("NonEnriched" = nonenrichedtab, "Enriched" = enrichedtable))
+    enrichedtab[, parameters$QuantColnames] <- apply(enrichedtab[,parameters$QuantColnames], 2, as.numeric)
+    enrichedtab[, parameters$QuantColnames] <- enrichedtab[, parameters$QuantColnames] + mtx
+    
+    return(list("NonEnriched" = nonenrichedtab, "Enriched" = enrichedtab))
+    
   }
+  
+  
 }
-
-
-
-
+#####################

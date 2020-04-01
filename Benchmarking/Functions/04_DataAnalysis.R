@@ -9,25 +9,33 @@ proteinSummarisation <- function(peptable, method = "sum.top3", minUniquePep = 2
   if (method == "sum.top3") {
     cat("Protein sumarisation using the", method, "approach.\n")
     
-    uAcc <- sort(unique(peptable$Accession))
-    protmat <- matrix(ncol = parameters$NumCond*parameters$NumReps, nrow = length(uAcc))
-    row.names(protmat) <- uAcc
+    uAcc <- sort(unique(unlist(peptable$Accession)))
+    protmat <- matrix(ncol = length(parameters$QuantColnames), nrow = length(uAcc))
     
-    for (acc in uAcc) {
-      tmp <- peptable[peptable$Accession == acc,grepl("^C_", names(peptable))]
+    for (i in 1:length(uAcc)){
+      
+      tmp <- peptable[which(sapply(peptable$Accession, function(x) any(x == uAcc[i]))), parameters$QuantColnames]
+      
       if (nrow(tmp) >= minUniquePep) {
+        
         tmp <- tmp[order(rowSums(tmp), decreasing = T),]
+        
         if (nrow(tmp) >= 3) {
-          protmat[row.names(protmat) == acc,] <- log2(colSums(2^tmp[1:3,]))
+          
+          protmat[i,] <- log2(colSums(2^tmp[1:3,], na.rm = T))
+          
         } else {
-          protmat[row.names(protmat) == acc,] <- log2(colSums(2^tmp))
+          
+          protmat[i,] <- log2(colSums(2^tmp, na.rm = T))
+          
         }
-        # protmat[row.names(protmat) == acc,] <- sapply(1:ncol(tmp), function(x) {
-        #   mean(tmp[,x], na.rm = T)
-        # })
       }
     }
-    colnames(protmat) <- names((peptable[,grepl("^C_", names(peptable))]))
+    
+    protmat[protmat == -Inf] <- NA
+    colnames(protmat) <- parameters$QuantColnames
+    protmat <- data.frame(Accession = uAcc, protmat)
+
   } else {
     
   }
@@ -35,3 +43,7 @@ proteinSummarisation <- function(peptable, method = "sum.top3", minUniquePep = 2
   return(protmat)
   
 }
+
+
+
+
