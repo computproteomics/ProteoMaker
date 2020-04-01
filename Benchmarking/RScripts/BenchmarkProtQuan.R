@@ -8,7 +8,7 @@
 #####################
 wd <- getwd()
 # # For Computerome:
-wd <- "/home/projects/jensenlab/people/malopa/PhosFake/BenchmarkingNoMod"
+# wd <- "/home/projects/jensenlab/people/malopa/PhosFake/BenchmarkingNoMod"
 # #
 pathToRes <- paste0(wd, "/Output/BenchmarkProtQuan")
 pathToFasta <- paste0(wd, "/input_fasta")
