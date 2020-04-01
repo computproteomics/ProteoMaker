@@ -48,3 +48,10 @@ names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
 # Save final peptable tables for analysis:
 save(AfterMSRun, file = "RData/AfterMSRun.RData")
 #####################
+
+
+#####################
+## Protein abundance calculation
+#####################
+source("04_DataAnalysis.R")
+Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
