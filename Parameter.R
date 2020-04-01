@@ -152,13 +152,6 @@ Param$WrongLocalizations <- 0.01
 #####################
 
 #####################
-## Filter MS results
-#####################
-#Removes peptides that have more NA values than a specific number.
-Param$MaxNAPerPep <- 5
-
-
-#####################
 ## Output description:
 #####################
 cat("Load Parameter:\n")
