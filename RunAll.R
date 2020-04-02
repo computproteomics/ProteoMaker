@@ -9,6 +9,14 @@ source("Parameter.R")
 #####################
 
 #####################
+## Option to save data:
+#####################
+if (!exists("saveData")) {
+  saveData <- FALSE
+}
+#####################
+
+#####################
 ## Run the sample preparation simulation:
 #####################
 source("01_GenerateGroundTruth.R")
@@ -18,7 +26,9 @@ proteoforms <- samplePreparation(parameters = Param)
 GroundTruth <- addProteoformAbundance(proteoforms = proteoforms, parameters = Param)
 rm(proteoforms)
 # Save GroundTruth for analysis:
-save(GroundTruth, file = "RData/GroundTruthAbs.RData")
+if (saveData) {
+  save(GroundTruth, file = "RData/GroundTruthAbs.RData")
+}
 #####################
 
 #####################
@@ -28,11 +38,15 @@ source("02_Digestion.R")
 # Digest all the proteoforms and get peptide table:
 peptable <- digestGroundTruth(proteoforms = GroundTruth, parameters = Param)
 # Save peptable before filter for analysis:
+if (saveData) {
 save(peptable, file = "RData/AllPep.RData")
+}
 peptable <- digestionProductSummarization(peptides = peptable, parameters = Param)
 BeforeMS <- filterDigestedProt(DigestedProt = peptable, parameters = Param)
 # Save peptable before in silico MS run:
-save(BeforeMS, file = "RData/BeforeMS.RData")
+if (saveData) {
+  save(BeforeMS, file = "RData/BeforeMS.RData")
+}
 #####################
 
 
@@ -46,12 +60,14 @@ for (i in which(sapply(BeforeMS, length) > 0)) {
 }
 names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
 # Save final peptable tables for analysis:
-save(AfterMSRun, file = "RData/AfterMSRun.RData")
+if (saveData) {
+  save(AfterMSRun, file = "RData/AfterMSRun.RData")
+}
 #####################
 
 
-#####################
-## Protein abundance calculation
-#####################
-source("04_DataAnalysis.R")
-Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
+# #####################
+# ## Protein abundance calculation
+# #####################
+# source("04_DataAnalysis.R")
+# Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
