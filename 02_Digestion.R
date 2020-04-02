@@ -178,8 +178,7 @@ proteoformDigestion <- function(proteoform, parameters){
     
     MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^2 * parameters$PropMissedCleavages^x)
     MC.proportions <- MC.proportions[peptides$MC + 1]
-    
-    MC.proportions[peptides$Stop == max(peptides$Stop)] <- MC.proportions[peptides$Stop == max(peptides$Stop)]/(1 - parameters$PropMissedCleavages)
+    MC.proportions[peptides$Stop == nchar(proteoform$Sequence) | peptides$Start == 1] <- MC.proportions[peptides$Stop == nchar(proteoform$Sequence) | peptides$Start == 1]/(1 - parameters$PropMissedCleavages)
     proportional.abundance <- as.data.frame(MC.proportions %*% t(as.numeric(proteoform[parameters$QuantColnames])))
     colnames(proportional.abundance) <- parameters$QuantColnames
     
