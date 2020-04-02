@@ -153,6 +153,14 @@ Param$WrongLocalizations <- 0.01
 #####################
 
 #####################
+## Load local test parameters if available:
+#####################
+if (file.exists("Parameter_mytests.R")) {
+  source("Parameter_mytests.R")
+}
+#####################
+
+#####################
 ## Output description:
 #####################
 cat("Load Parameter:\n")
