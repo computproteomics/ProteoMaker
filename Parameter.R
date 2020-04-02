@@ -104,6 +104,7 @@ Param$PropMissedCleavages <- 0.2
 Param$MaxNumMissedCleavages <- 2
 # Miss cleavage abundance proportion from parental proteoform
 #Param$PropMissedCleavagesAbundance <- c(0.8, 0.15, 0.5)
+Param$PropMissedCleavagesAbundance <- c(0.35, 0.33, 0.32)
 # Filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
@@ -112,7 +113,7 @@ Param$Cores <- NA
 Param$ClusterType <- NA
 #Param$Cores <- 10
 #Param$ClusterType <- "PSOCK" #"FORK" for linux. PSOCK works for both linux and windows
-# Remove percentage of least abundant peptides (0-1).
+# Remove percentage of least summarized abundant peptides (0-1).
 Param$LeastAbundantLoss <- 0.5
 #####################
 
@@ -137,7 +138,7 @@ Param$PercDetectedPep <- 0.8
 # Percentage of detected values (replicate/condition)
 Param$PercDetectedVal <- 0.8
 # Weights for intensity-dependence of non-detection (0 means no dependence). 
-# Parameter is the power to the ranks (given by number 0 to 1)
+# Parameter is the power to the ranks (given by number 0 to 1) (Maximum of 40)
 Param$WeightDetectVal <- 1
 # Add noise due to MS instrument:
 Param$MSNoise <- 0.1
@@ -151,6 +152,12 @@ Param$WrongIDs <- 0.01
 # Wrong localizations
 Param$WrongLocalizations <- 0.01
 #####################
+
+#####################
+## Filter MS search results
+#####################
+#Removes peptides that have more NA values than a specific number.
+Param$MaxNAPerPep <- 5
 
 #####################
 ## Load local test parameters if available:
