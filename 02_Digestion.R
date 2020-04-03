@@ -214,7 +214,7 @@ digestGroundTruth <- function(proteoforms, parameters){
       
     }
     
-    cluster <- parallel::makePSOCKcluster(cores)
+    cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
     parallel::setDefaultCluster(cluster)
     parallel::clusterExport(cluster, c("proteoforms", "parameters", "proteoformDigestion", "fastDigest"), envir = environment())
     peptides <- parallel::parLapply(cluster, 1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters))
@@ -270,16 +270,6 @@ digestionProductSummarization <- function(peptides, parameters){
   
   cat("#PEPTIDE SUMMARIZATION - Start\n\n")
   cat(" + Summarization input:\n")
-  
-  #Remove the 
-  remove <- order(rowMeans(peptides[ ,parameters$QuantColnames], na.rm = T))[1:(nrow(peptides)*parameters$LeastAbundantLoss)]
-  if(length(remove) != 0){
-    
-    peptides <- peptides[-remove,]
-    
-  }
-
-  cat("  - Remove",   parameters$LeastAbundantLoss*100, "% of the least abundant peptides, which corresponds to", length(remove), "peptides.\n")
   cat("  - A total number of", nrow(peptides), "peptides is proceed for summarization.\n")
   
   #Create unique ID for each peptide based on the PTMType and PTMPos. No aggregation technique in any package supports lists...
@@ -331,7 +321,18 @@ digestionProductSummarization <- function(peptides, parameters){
   peptides <- dplyr::inner_join(peptides.1, peptides.2, by = c("Sequence", "pep_id"))
   peptides <- dplyr::select(peptides, -c("pep_id"))
   
-  cat("  - Peptide groups summarization is done.\n\n")
+  cat("  - Peptide groups summarization is done.\n")
+  
+  #Remove a percentage of summarized peptides. 
+  remove <- order(rowMeans(peptides[ ,parameters$QuantColnames], na.rm = T))[1:(nrow(peptides)*parameters$LeastAbundantLoss)]
+  if(length(remove) != 0){
+    
+    peptides <- peptides[-remove,]
+    
+  }
+  
+  cat("  - Remove",   parameters$LeastAbundantLoss*100, "% of the least abundant peptides, which corresponds to", length(remove), "peptides.\n\n")
+  
   cat(" + Summarization output:\n")
   cat("  - A total number of ", nrow(peptides), "summarized peptides is generated.\n\n")
   cat("#PEPTIDE SUMMARIZATION - Finish\n\n")

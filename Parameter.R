@@ -104,7 +104,6 @@ Param$PropMissedCleavages <- 0.2
 Param$MaxNumMissedCleavages <- 2
 # Miss cleavage abundance proportion from parental proteoform
 #Param$PropMissedCleavagesAbundance <- c(0.8, 0.15, 0.5)
-Param$PropMissedCleavagesAbundance <- c(0.35, 0.33, 0.32)
 # Filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
@@ -157,7 +156,7 @@ Param$WrongLocalizations <- 0.01
 ## Filter MS search results
 #####################
 #Removes peptides that have more NA values than a specific number.
-Param$MaxNAPerPep <- 5
+Param$MaxNAPerPep <- 7
 
 #####################
 ## Load local test parameters if available:
