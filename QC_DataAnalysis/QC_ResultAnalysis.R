@@ -73,6 +73,50 @@ col_rep <- wes_palette("FantasticFox1", 4, type = "discrete")
 col_mc <- wes_palette("Darjeeling2", 5, type = "discrete")[c(5,1,3,4,2)]
 #####################
 
+#####################
+# General numbers based on the different sets of parameters:
+#####################
+
+col_param <- c(3:8)
+
+## Peptides:
+
+data <- reshape2::melt(tab[,c(col_param, 
+                              which(grepl("NumberUniquePeptide", names(tab))))], 
+                       id.vars = names(tab)[col_param])
+
+g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+  geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "Peptide count",
+       fill = "Fasta ID") +
+  ylab("Number of peptides") +
+  xlab("")
+print(g)
+
+#--------------------
+
+## Proteins and proteoforms:
+
+data <- reshape2::melt(tab[,c(col_param, 
+                              which(grepl("NumberUniqueProte", names(tab))))], 
+                       id.vars = names(tab)[col_param])
+
+g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+  geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "",
+       subtitle = "Numbers at the end of labels are the number of unique peptides/ID",
+       fill = "Fasta ID") +
+  ylab("Number of proteins and proteoforms") +
+  xlab("")
+print(g)
+
+
+#####################
+
 
 #####################
 # Impact of PropMissedCleavages and LeastAbundantLoss on intensity distributions:
@@ -87,6 +131,7 @@ refgroup <- lapply(seq_len(nrow(paircond)), function(x) {
   tab$OutputNumber[tab$PropMissedCleavages == paircond[x,1] & tab$LeastAbundantLoss == paircond[x,2]]
 })
 
+# Make plots:
 for (iter in seq_along(refgroup)) {
 
   paramID <- refgroup[[iter]]
