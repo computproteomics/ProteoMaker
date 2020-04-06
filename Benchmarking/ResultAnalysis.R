@@ -11,7 +11,7 @@ library("wesanderson")
 #####################
 
 wd <- getwd()
-pathToInput <- "/Output"
+pathToInput <- "QC_DataAnalysis/QC_output"
 
 #--------------------
 
