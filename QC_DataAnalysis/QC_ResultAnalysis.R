@@ -114,6 +114,30 @@ g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID)))
   xlab("")
 print(g)
 
+data <- lapply(seq_along(lf), function(x) {
+  data.frame("NumProteinPerPep" = lf[[x]]$NumProteinPerPep, 
+             "NumProteoformPerPep" = lf[[x]]$NumProteoformPerPep, 
+             "outputID" = rep(names(lf)[x], length(lf[[x]]$NumProteinPerPep)))
+})
+data <- rbindlist(data)
+data <- reshape2::melt(data, id.vars = "outputID")
+
+g <- ggplot(data = data, aes(x = value, fill = outputID)) +
+  geom_density(alpha = 0.4, col = "black") +
+  facet_wrap(~variable) +
+  theme_bw()
+print(g)
+g <- ggplot(data = data, aes(x = value, fill = outputID)) +
+  geom_histogram(alpha = 0.8, col = "black", position = position_dodge()) +
+  facet_wrap(~variable) +
+  theme_bw() +
+  xlim(c(0,10)) +
+  labs(title = "",
+       subtitle = "x-axis cropped after 10",
+       fill = "Output ID") +
+  # ylab("Number of proteins and proteoforms") +
+  xlab("")
+print(g)
 
 #####################
 
