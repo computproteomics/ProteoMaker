@@ -11,11 +11,70 @@ library("wesanderson")
 #####################
 
 wd <- getwd()
-pathToInput <- "/QC_DataAnalysis/QC_output"
+# pathToInput <- "/QC_DataAnalysis/QC_output"
+# pathToInput <- paste0(wd, pathToInput)
+pathToInput <- "/Volumes/Houdini/Projects/PhosFake/QC_DataAnalysis/QC_output"
 
-#--------------------
+#####################
 
-pathToInput <- paste0(wd, pathToInput)
+#####################
+## Data description
+#####################
+
+fnames <- list.files(pathToInput, full.names = T, recursive = T, pattern = ".RData")
+
+cat("There are", length(fnames), "output files.\n")
+
+cat("The input parameters were the following:\n")
+log <- list.files(pathToInput, full.names = T, recursive = T, pattern = ".txt")
+log <- log[!grepl("TestedParam", log)]
+readLines(log)
+
+rm(log)
+
+cat("---------------------------\n")
+
+#####################
+
+#####################
+# Retrieve parameters:
+#####################
+
+parnames <- list.files(pathToInput, full.names = T, 
+                       recursive = T, pattern = "TestedParam.txt")
+
+param <- lapply(parnames, read.table, sep = "\t", 
+                header = T, stringsAsFactors = F)
+
+PathToFasta1 <- unique(sapply(param, function(x) {x$PathToFasta}))[,1]
+PathToFasta <- PathToFasta1
+
+library(PTXQC)
+
+doIter <- T
+while (doIter) {
+  toremove <- LCSn(PathToFasta, 3)
+  # print(nchar(toremove))
+  if (nchar(toremove) == 0) { doIter <- FALSE }
+  PathToFasta <- gsub(toremove, "", PathToFasta)
+  toremove <- NULL
+}
+
+fastaMapping <- data.frame("PathToFasta" = PathToFasta1, "SpeciesName" = PathToFasta)
+
+rm(parnames)
+
+for (i in seq_along(param)) {
+  
+  cat("---------------------\n\n")
+  cat("Parameter set", i, ":\n")
+  
+  paramlist <- sapply(seq_len(ncol(param[[i]])-1), function(x) {unique(param[[i]][,x])})
+  names(paramlist) <- names(param[[i]])[seq_len(ncol(param[[i]])-1)]
+  print(paramlist)
+  cat("---------------------\n")
+  
+}
 
 #####################
 
@@ -23,9 +82,28 @@ pathToInput <- paste0(wd, pathToInput)
 ## Load results
 #####################
 
-fnames <- list.files(pathToInput, full.names = T, recursive = T, pattern = ".RData")
-# fnames <- fnames[!grepl(".txt$", fnames)] # Remove the reports
-# fnames <- fnames[!grepl("Output/old", fnames)] # Remove the reports
+#--------------------
+## Subset selection
+#--------------------
+
+PepMinLength <- 7
+PepMaxLength <- 30
+
+cat("I select only the outputs with a min. peptide length of", PepMinLength,
+    "and a maximum peptide length of", PepMaxLength, "\n")
+
+outputNumbers <- param[[1]]$OutputNumber[param[[1]]$PepMinLength == PepMinLength & param[[1]]$PepMaxLength == PepMaxLength]
+
+cat("This corresponds to", length(outputNumbers), "output files.\n")
+
+tokeep <- sapply(outputNumbers, function(x) {
+  which(grepl(paste0("_", x, ".RData"), fnames))
+})
+
+fnames <- fnames[tokeep]
+
+#--------------------
+
 lf <- vector(mode = "list", length = length(fnames))
 ltab <- vector(mode = "list", length = length(fnames))
 for (i in seq_along(fnames)) {
@@ -51,26 +129,27 @@ tab$AnalysisName <- sapply(names(lf), function(x) {
 names(lf) <- sapply(names(lf), function(x) {
   strsplit(x, "_", fixed = T)[[1]][length(strsplit(x, "_", fixed = T)[[1]])]
 })
+
 #####################
 
 #####################
-# Match parameters:
+# Merge parameters:
 #####################
-fnames <- list.files(pathToInput, full.names = T, recursive = T, pattern = "TestedParam.txt")
-
-param <- lapply(fnames, read.table, sep = "\t", header = T, stringsAsFactors = F)
 
 tab <- merge(param, tab, by.y = "AnalysisName", by.x = "OutputNumber")
 
-# pairs(as.matrix(tab[,-c(1:2)]))
+tab$SpeciesName <- fastaMapping$SpeciesName[match(tab$PathToFasta, fastaMapping$PathToFasta)]
+
 #####################
 
 #####################
 # My param:
 #####################
+
 col_gd <- colorRampPalette(colors = c("darkred", "red", "gold"))
 col_rep <- wes_palette("FantasticFox1", 4, type = "discrete")
 col_mc <- wes_palette("Darjeeling2", 5, type = "discrete")[c(5,1,3,4,2)]
+
 #####################
 
 #####################
@@ -79,21 +158,79 @@ col_mc <- wes_palette("Darjeeling2", 5, type = "discrete")[c(5,1,3,4,2)]
 
 col_param <- c(3:8)
 
+ggplot(data = tab, aes(x = LeastAbundantLoss, y = NumberUniquePeptide, col = factor(PropMissedCleavages))) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~SpeciesName) +
+  theme_bw()
+
+ggplot(data = tab, aes(x = PropMissedCleavages, y = NumberUniquePeptide, col = factor(LeastAbundantLoss))) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~SpeciesName) +
+  theme_bw()
+
+ggplot(data = tab, aes(x = LeastAbundantLoss, y = NumberUniqueProtein1, col = factor(PropMissedCleavages))) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~SpeciesName) +
+  theme_bw()
+
+ggplot(data = tab, aes(x = PropMissedCleavages, y = NumberUniqueProtein1, col = factor(LeastAbundantLoss))) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~SpeciesName) +
+  theme_bw()
+
+ggplot(data = tab, aes(x = LeastAbundantLoss, y = NumberUniqueProtein2, col = factor(PropMissedCleavages))) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~SpeciesName) +
+  theme_bw()
+
+ggplot(data = tab, aes(x = PropMissedCleavages, y = NumberUniqueProtein2, col = factor(LeastAbundantLoss))) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~SpeciesName) +
+  theme_bw()
+
+tabMC <- tab[,grepl("NumberUniquePeptide.MC", names(tab))]
+tabMC <- cbind(tabMC, tab[,c(col_param, which(names(tab) == "SpeciesName"))])
+tabMC <- reshape2::melt(tabMC, id.vars = c(names(tab)[col_param], "SpeciesName"))
+tabMC$NumMC <- gsub("NumberUniquePeptide", "", tabMC$variable)
+
+ggplot(data = tabMC[tabMC$SpeciesName == "human",], aes(x = factor(LeastAbundantLoss), y = value, fill = NumMC)) +
+  geom_bar(alpha = 0.8, position = "dodge", stat = "identity") +
+  facet_wrap(~PropMissedCleavages) +
+  theme_bw() +
+  ylab("Number of peptide\nbefore MS") +
+  scale_fill_manual(values = col_mc) +
+  labs(title = "facets = PropMissedCleavages", subtitle = "only peptides from 7 to 30 aa long")
+
 ## Peptides:
 
 data <- reshape2::melt(tab[,c(col_param, 
                               which(grepl("NumberUniquePeptide", names(tab))))], 
                        id.vars = names(tab)[col_param])
 
-g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
-  geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = "Peptide count",
-       fill = "Fasta ID") +
-  ylab("Number of peptides") +
-  xlab("")
-print(g)
+# g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+#   geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) + 
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+#   labs(title = "Peptide count",
+#        fill = "Fasta ID") +
+#   ylab("Number of peptides") +
+#   xlab("")
+# print(g)
+
+for (sp in unique(tab$PathToFasta)) {
+  pairs(tab[tab$PathToFasta == sp,c(4,8:14,20:ncol(tab))], col = tab$PropMissedCleavages*10, main = sp, cex = 0.5)
+}
+
+# g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+#   geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) +
+#   theme_bw() +
+#   facet_wrap(~LeastAbundantLoss + PropMissedCleavages) +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+#   labs(title = "Peptide count",
+#        fill = "Fasta ID") +
+#   ylab("Number of peptides") +
+#   xlab("")
+# print(g)
 
 #--------------------
 
@@ -103,16 +240,28 @@ data <- reshape2::melt(tab[,c(col_param,
                               which(grepl("NumberUniqueProte", names(tab))))], 
                        id.vars = names(tab)[col_param])
 
-g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
-  geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = "",
-       subtitle = "Numbers at the end of labels are the number of unique peptides/ID",
-       fill = "Fasta ID") +
-  ylab("Number of proteins and proteoforms") +
-  xlab("")
-print(g)
+# g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+#   geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) + 
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+#   labs(title = "",
+#        subtitle = "Numbers at the end of labels are the number of unique peptides/ID",
+#        fill = "Fasta ID") +
+#   ylab("Number of proteins and proteoforms") +
+#   xlab("")
+# print(g)
+
+# g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+#   geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) + 
+#   theme_bw() +
+#   facet_wrap(~LeastAbundantLoss + PropMissedCleavages) +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+#   labs(title = "",
+#        subtitle = "Numbers at the end of labels are the number of unique peptides/ID",
+#        fill = "Fasta ID") +
+#   ylab("Number of proteins and proteoforms") +
+#   xlab("")
+# print(g)
 
 data <- lapply(seq_along(lf), function(x) {
   data.frame("NumProteinPerPep" = lf[[x]]$NumProteinPerPep, 
@@ -156,10 +305,60 @@ refgroup <- lapply(seq_len(nrow(paircond)), function(x) {
 })
 
 # Make plots:
+
+
 for (iter in seq_along(refgroup)) {
 
+  pdfname <- paste0(wd, "/QC_DataAnalysis/QC_output/MC_tests_20200408_", iter, ".pdf")
+  pdf(file = pdfname, width = 9, height = 7)
+  
   paramID <- refgroup[[iter]]
-
+  
+  tit <- (paste("Proportion of missed cleavage:",
+                unique(tab$PropMissedCleavages[tab$OutputNumber %in% paramID]),
+                "\nSubsequent signal loss:",
+                unique(tab$LeastAbundantLoss[tab$OutputNumber %in% paramID])
+  ))
+  
+  ## Peptides:
+  
+  data <- reshape2::melt(tab[tab$OutputNumber %in% paramID,c(col_param, 
+                                which(grepl("NumberUniquePeptide", names(tab))))], 
+                         id.vars = names(tab)[col_param])
+  
+  data$SpeciesID <- c("Human", "Yeast", "Ecoli")[match(data$SpeciesID, c(2,3,1))]
+  
+  g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+    geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) +
+    theme_bw() +
+    facet_wrap(~SpeciesID, scales = "free_y") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    labs(title = tit,
+         fill = "Fasta ID") +
+    ylab("Number of peptides") +
+    xlab("")
+  print(g)
+  
+  ## Proteins/proteoforms:
+  
+  data <- reshape2::melt(tab[tab$OutputNumber %in% paramID,c(col_param, 
+                                                             which(grepl("NumberUniqueProt", names(tab))))], 
+                         id.vars = names(tab)[col_param])
+  
+  data$SpeciesID <- c("Human", "Yeast", "Ecoli")[match(data$SpeciesID, c(2,3,1))]
+  
+  g <- ggplot(data = data, aes(x = variable, y = value, fill = factor(SpeciesID))) +
+    geom_bar(stat = "identity", position = position_dodge(), col = "black", alpha = 0.8) +
+    theme_bw() +
+    facet_wrap(~SpeciesID, scales = "free_y") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    labs(title = tit,
+         subtitle = "Numbers (1,2) are the minimum number of unique peptide",
+         fill = "Fasta ID") +
+    ylab("Number of proteins/proteoforms") +
+    xlab("")
+  print(g)
+  
   ldata <- lf[names(lf) %in% paramID]
   names(ldata) <- names(lf)[names(lf) %in% paramID]
   allvalues <- vector(mode = "list")
@@ -176,12 +375,8 @@ for (iter in seq_along(refgroup)) {
   # data$Proportion_MC <- tab$PropMissedCleavages[match(data$param, tab$OutputNumber)]
   # data$Proportion_Loss <- tab$LeastAbundantLoss[match(data$param, tab$OutputNumber)]
   data$Species <- tab$SpeciesID[match(data$param, tab$OutputNumber)]
-  
-  tit <- (paste("Proportion of missed cleavage:",
-                unique(tab$PropMissedCleavages[tab$OutputNumber == paramID]),
-                "\nSubsequent signal loss:",
-                unique(tab$LeastAbundantLoss[tab$OutputNumber == paramID])
-  ))
+  data$Species <- c("Human", "Yeast", "Ecoli")[match(data$Species, c(2,3,1))]
+  data <- data[data$Species != "Ecoli",] # Remove e. coli
   
   g <- ggplot(data = data, aes(x = value, fill = factor(numMC))) +
     geom_histogram(alpha = 0.85, col = "black") +
@@ -194,8 +389,9 @@ for (iter in seq_along(refgroup)) {
     ylab("Number of peptides") +
     xlab("MS signal")
   print(g)
-  
+  dev.off()
 }
+
 
 #####################
 
