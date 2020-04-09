@@ -78,6 +78,7 @@ listtotest <- purrr::cross(paramToTest)
 # Generate table with parameters and results:
 
 res <- dplyr::bind_rows(listtotest)
+listtotest <- listtotest[order(res$PathToFasta)]
 res <- res[order(res$PathToFasta),]
 res$SpeciesID <- unlist(lapply(1:length(pathToFasta), function(x) rep(x, length(listtotest)/length(pathToFasta))))
 res <- res[, c(1, 7, 2, 3, 4, 5, 6)]
@@ -145,6 +146,16 @@ RunBenchmark <- function(GroundTruth, parameters, listtotest, id){
   #Number of unique peptides with lower abundance than the median (including modification) with 4 miss-cleavages:
   metrics$NumberUniquePeptideMedian4MC <- sum(unlist(lapply(peptable$MC[pepLowerThanMedian], function(x) x[1])) == 4)
   
+  #Number of peptides being N or C terminus
+  fasta <- protr::readFASTA(file = parametersLoop$PathToFasta, legacy.mode = TRUE, seqonly = FALSE)
+  last <- nchar(unlist(fasta))
+  names(last) <- sub(".*[|]([^.]+)[|].*", "\\1", names(fasta))
+  rm(fasta)
+  
+  last.mapping <- last[unlist(sapply(peptable$Accession, function(x) x[1]))]
+  metrics$CTerminusPeptides <- sum(unlist(sapply(peptable$Stop, function(x) x[1])) == last.mapping)
+  metrics$NTerminusPeptides <- sum(unlist(sapply(peptable$Start, function(x) x[1])) == 1)
+
   # Intensities of the peptides after summarisation:
   metrics$PeptideIntensities$Values <- as.matrix(peptable[,Param$QuantColnames])
   # Matching number of missed-cleavages:
@@ -176,7 +187,6 @@ RunBenchmark <- function(GroundTruth, parameters, listtotest, id){
   
 }
 
-
 #Set up parallel computing environment
 
 #Set number of clusters, PSOCK in windows and linux, FORK for linux (faster)
@@ -198,4 +208,8 @@ print(sessionInfo())
 sink()
 
 #<<<>>>#
+
+
+
+
 
