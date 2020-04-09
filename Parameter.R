@@ -27,10 +27,10 @@ Param$PathToProteinList <- NULL
 #####################
 ## Generation of proteoform IDs:
 # Fraction of the proteins selected to be modified:
-Param$FracModProt <- 0.3 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
+Param$FracModProt <- 0 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
 # fraction of modifiable proteins to be sampled for modifications >> (might require more dedicated function
 # taking into account protein properties)
-Param$FracModPerProt <- 2 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
+Param$FracModPerProt <- 0 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
 # PTM types and fraction of PTMs (with respect to protein chosen to be modified)
 Param$PTMTypes <- c("ph") #Only phosphorylation
 #Param$PTMNumber <- c("2") #It is not used.
@@ -55,7 +55,7 @@ Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01))
 # Param$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01), c(1))
 
 # percentage of modifiable protein without non-modified forms
-Param$RemoveNonModFormFrac <- 0.2
+Param$RemoveNonModFormFrac <- 0
 #####################
 
 #####################
@@ -66,16 +66,16 @@ Param$QuantColnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_"
 # General noise level of all quantitative values (standard deviation of normal distribution)
 Param$QuantNoise <- 0.25
 # Fraction of "differentially" regulated proteoforms
-Param$DiffRegFrac <- 0.01
+Param$DiffRegFrac <- 0
 # max. amplitude of difference (differentially regulated proteins). 
 # Will be taken from uniform distribution with randomly chosen directions
-Param$DiffRegMax <- 6
+Param$DiffRegMax <- 0
 
 # >>>> For input of custom set of regulated proteoforms:
 Param$UserInputFoldChanges <- NULL
 # I use the UPS1 setup (Ramus et al. 2016). KEPP NULL ID DO NOT WANT.
-Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(96, 3),
-                                   "RegulationFC" = rep(log2(c(100, 10, 2)), rep(96, 3)))
+# Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(96, 3),
+#                                    "RegulationFC" = rep(log2(c(100, 10, 2)), rep(96, 3)))
 
 # threshold to remove quantitative values (proteoform level)
 # COMMENT FROM MLP: I still think this is not right. A very abundant protein could 
@@ -120,11 +120,11 @@ Param$LeastAbundantLoss <- 0.5
 ## Paramters for simulating sample preparation before MS analysis (phospho-enrichment)
 #####################
 # Loss of phosphorylated peptides during enrichment
-Param$EnrichmentLoss <- 0.2
+Param$EnrichmentLoss <- 0
 # Enrichment efficiency: number of phosphorylated peptides with respect tohow many non-modified still enter the enriched fraction
-Param$EnrichmentEfficiency <- 0.8
+Param$EnrichmentEfficiency <- 1
 # Loss of signal for the non-modified peptides poluting the enriched fraction
-Param$EnrichmentNonModSignalLoss <- 0.7
+Param$EnrichmentNonModSignalLoss <- 0
 # Noise due to enrichment protocol
 Param$EnrichmentNoise <- 0.2
 #####################

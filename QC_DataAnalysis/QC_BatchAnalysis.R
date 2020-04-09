@@ -41,11 +41,11 @@ pathToFasta <- list.files(path = "QC_DataAnalysis", full.names = T, pattern = ".
 
 # Generate a list of parameters to test:
 paramToTest <- list("PathToFasta" = pathToFasta,
-                    "PropMissedCleavages" = seq(from = 0.1, to = 0.8, by = 0.1), 
+                    "PropMissedCleavages" = c(0.01, seq(from = 0.1, to = 0.8, by = 0.1), 0.99), 
                     "MaxNumMissedCleavages" = 4,
-                    "PepMinLength" = c(6,7),
-                    "PepMaxLength" = seq(from = 15, to = 35, by = 5),
-                    "LeastAbundantLoss" = seq(from = 0, to = 0.8, by = 0.2))
+                    # "PepMinLength" = c(6,7),
+                    # "PepMaxLength" = seq(from = 15, to = 35, by = 5),
+                    "LeastAbundantLoss" = c(seq(from = 0, to = 0.6, by = 0.2), seq(from = 0.7, to = 0.9, by = 0.05)))
 #####################
 
 #####################
