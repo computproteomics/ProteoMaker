@@ -133,9 +133,9 @@ Param$EnrichmentNoise <- 0.2
 ## MS run
 #####################
 # Percentage of detected peptides
-Param$PercDetectedPep <- 0.8
+Param$PercDetectedPep <- 1
 # Percentage of detected values (replicate/condition)
-Param$PercDetectedVal <- 0.8
+Param$PercDetectedVal <- 1
 # Weights for intensity-dependence of non-detection (0 means no dependence). 
 # Parameter is the power to the ranks (given by number 0 to 1) (Maximum of 40)
 Param$WeightDetectVal <- 1
@@ -147,16 +147,16 @@ Param$MSNoise <- 0.1
 ## MS search
 #####################
 # Wrong identifications
-Param$WrongIDs <- 0.01
+Param$WrongIDs <- 0
 # Wrong localizations
-Param$WrongLocalizations <- 0.01
+Param$WrongLocalizations <- 0
 #####################
 
 #####################
 ## Filter MS search results
 #####################
 #Removes peptides that have more NA values than a specific number.
-Param$MaxNAPerPep <- 7
+Param$MaxNAPerPep <- 100
 
 #####################
 ## Load local test parameters if available:

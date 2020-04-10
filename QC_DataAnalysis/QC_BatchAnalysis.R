@@ -45,7 +45,7 @@ paramToTest <- list("PathToFasta" = pathToFasta,
                     "MaxNumMissedCleavages" = 4,
                     # "PepMinLength" = c(6,7),
                     # "PepMaxLength" = seq(from = 15, to = 35, by = 5),
-                    "LeastAbundantLoss" = c(seq(from = 0, to = 0.6, by = 0.2), seq(from = 0.7, to = 0.9, by = 0.05)))
+                    "LeastAbundantLoss" = c(seq(from = 0, to = 0.6, by = 0.2), seq(from = 0.65, to = 0.9, by = 0.05)))
 #####################
 
 #####################
@@ -81,13 +81,19 @@ res <- dplyr::bind_rows(listtotest)
 listtotest <- listtotest[order(res$PathToFasta)]
 res <- res[order(res$PathToFasta),]
 res$SpeciesID <- unlist(lapply(1:length(pathToFasta), function(x) rep(x, length(listtotest)/length(pathToFasta))))
-res <- res[, c(1, 7, 2, 3, 4, 5, 6)]
+res <- res[, c(1, ncol(res), 2:(ncol(res)-1))] 
 res$OutputNumber <- 1:nrow(res)
+
+# # TROUBLESHOOTING: check ordering of the res table and the list of parameters"
+# vecres <- sapply(1:nrow(res), function(x) {paste(res[x,c(1,3:5)], collapse = " ")})
+# veclisttotest <- sapply(1:length(listtotest), function(x) {paste(listtotest[[x]], collapse = " ")})
+# table(vecres == veclisttotest)
 
 #>>> Start writing report <<<#
 sink(paste0(repportName,".txt"))
 
-cat("Parameter:\n")
+cat("Parameter:\n\n")
+cat("--> these will be overwritten by the specific parameters of each run.\n\n")
 cat("Quan. noise at proteoform level =", Param$QuantNoise, "(standard deviation of mean(log2(values)) = 0)\n")
 cat("Loss due to detection threshold =", Param$ThreshNAQuantileProt, "(quantile of the quan. values)\n")
 cat("Max. number of missed cleavages =", Param$MaxNumMissedCleavages, "occuring on", Param$PropMissedCleavages * 100, "% of the digested peptides\n")
@@ -183,7 +189,7 @@ RunBenchmark <- function(GroundTruth, parameters, listtotest, id){
   save(metrics, file = paste0(repportName, "_", id, ".RData"))
   
   cat("\n\n")
-  cat(crayon::red("Save output", id, "over", length(listtotest), "\n\n"))
+  cat(crayon::red("Save output", id, "\n\n"))
   
 }
 
