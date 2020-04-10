@@ -417,13 +417,27 @@ addProteoformAbundance <- function(proteoforms, parameters){
   }
   
   if (is.null(parameters$UserInputFoldChanges)) {
-    # select differentially regulated proteoforms
-    diff_reg_indices = sample(1:nrow(proteoforms),size = parameters$DiffRegFrac*nrow(proteoforms))
     
-    # determine amplitude of regulation for regulated proteoforms
-    proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min =1, max = parameters$DiffRegMax, n = length(diff_reg_indices))
+    if(parameters$DiffRegFrac != 0){
+      
+      # select differentially regulated proteoforms
+      diff_reg_indices = sample(1:nrow(proteoforms),size = parameters$DiffRegFrac*nrow(proteoforms))
+      
+      print(diff_reg_indices)
+      
+      # determine amplitude of regulation for regulated proteoforms
+      proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min =1, max = parameters$DiffRegMax, n = length(diff_reg_indices))
     
-    regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
+      regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
+    
+    } else {
+      
+      proteoforms$Regulation_Amplitude <- vector(mode = "list", length = nrow(proteoforms))
+      regulationPatterns <- NULL
+    
+    }  
+    
+      
   } else {
     # select differentially regulated proteoforms
     diff_reg_indices = sample(1:nrow(proteoforms),size = sum(parameters$UserInputFoldChanges$NumRegProteoforms))
@@ -436,18 +450,30 @@ addProteoformAbundance <- function(proteoforms, parameters){
   }
   
   proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
-  proteoforms$Regulation_Pattern[diff_reg_indices] = regulationPatterns
-  #[diff_reg_indices, "Regulation_Pattern"]
-  proteoforms[diff_reg_indices, parameters$QuantColnames] = 
-    # add regulation pattern*regulation amplitude to random noise
-    proteoforms[diff_reg_indices, parameters$QuantColnames] +
-    
-    #generate regulation patterns for all regulated proteoforms
-    t(sapply(1:length(diff_reg_indices), function(x) {
-      rep(regulationPatterns[[x]], each = parameters$NumReps)
+  
+  print(length(regulationPatterns))
+  print(regulationPatterns)
+  
+  if(!is.null(regulationPatterns)){
+  
+    proteoforms$Regulation_Pattern[diff_reg_indices] = regulationPatterns
+    #[diff_reg_indices, "Regulation_Pattern"]
+    proteoforms[diff_reg_indices, parameters$QuantColnames] = 
+      # add regulation pattern*regulation amplitude to random noise
+      proteoforms[diff_reg_indices, parameters$QuantColnames] +
       
-      # multiply regulation pattern with Regulation amplitude
-    })) * proteoforms[diff_reg_indices, "Regulation_Amplitude"]
+      #generate regulation patterns for all regulated proteoforms
+      t(sapply(1:length(diff_reg_indices), function(x) {
+        rep(regulationPatterns[[x]], each = parameters$NumReps)
+        
+        # multiply regulation pattern with Regulation amplitude
+      })) * proteoforms[diff_reg_indices, "Regulation_Amplitude"]
+    
+  } else {
+    
+    proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
+    
+  }
   
   if (is.null(parameters$AbsoluteQuanMean)) {
     # Remove Values below the threshold set in the Parameters file
