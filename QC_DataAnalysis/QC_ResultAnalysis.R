@@ -82,27 +82,27 @@ for (i in seq_along(param)) {
 ## Load results
 #####################
 
-#--------------------
-## Subset selection
-#--------------------
-
-PepMinLength <- 7
-PepMaxLength <- 30
-
-cat("I select only the outputs with a min. peptide length of", PepMinLength,
-    "and a maximum peptide length of", PepMaxLength, "\n")
-
-outputNumbers <- param[[1]]$OutputNumber[param[[1]]$PepMinLength == PepMinLength & param[[1]]$PepMaxLength == PepMaxLength]
-
-cat("This corresponds to", length(outputNumbers), "output files.\n")
-
-tokeep <- sapply(outputNumbers, function(x) {
-  which(grepl(paste0("_", x, ".RData"), fnames))
-})
-
-fnames <- fnames[tokeep]
-
-#--------------------
+# #--------------------
+# ## Subset selection
+# #--------------------
+# 
+# PepMinLength <- 7
+# PepMaxLength <- 30
+# 
+# cat("I select only the outputs with a min. peptide length of", PepMinLength,
+#     "and a maximum peptide length of", PepMaxLength, "\n")
+# 
+# outputNumbers <- param[[1]]$OutputNumber[param[[1]]$PepMinLength == PepMinLength & param[[1]]$PepMaxLength == PepMaxLength]
+# 
+# cat("This corresponds to", length(outputNumbers), "output files.\n")
+# 
+# tokeep <- sapply(outputNumbers, function(x) {
+#   which(grepl(paste0("_", x, ".RData"), fnames))
+# })
+# 
+# fnames <- fnames[tokeep]
+# 
+# #--------------------
 
 lf <- vector(mode = "list", length = length(fnames))
 ltab <- vector(mode = "list", length = length(fnames))
@@ -156,36 +156,36 @@ col_mc <- wes_palette("Darjeeling2", 5, type = "discrete")[c(5,1,3,4,2)]
 # General numbers based on the different sets of parameters:
 #####################
 
-col_param <- c(3:8)
+col_param <- c(3:6)
 
 ggplot(data = tab, aes(x = LeastAbundantLoss, y = NumberUniquePeptide, col = factor(PropMissedCleavages))) +
   geom_point(alpha = 0.3) +
-  facet_wrap(~SpeciesName) +
+  facet_wrap(~SpeciesName, scale = "free_y") +
   theme_bw()
 
 ggplot(data = tab, aes(x = PropMissedCleavages, y = NumberUniquePeptide, col = factor(LeastAbundantLoss))) +
   geom_point(alpha = 0.3) +
-  facet_wrap(~SpeciesName) +
+  facet_wrap(~SpeciesName, scale = "free_y") +
   theme_bw()
 
 ggplot(data = tab, aes(x = LeastAbundantLoss, y = NumberUniqueProtein1, col = factor(PropMissedCleavages))) +
   geom_point(alpha = 0.3) +
-  facet_wrap(~SpeciesName) +
+  facet_wrap(~SpeciesName, scale = "free_y") +
   theme_bw()
 
 ggplot(data = tab, aes(x = PropMissedCleavages, y = NumberUniqueProtein1, col = factor(LeastAbundantLoss))) +
   geom_point(alpha = 0.3) +
-  facet_wrap(~SpeciesName) +
+  facet_wrap(~SpeciesName, scale = "free_y") +
   theme_bw()
 
 ggplot(data = tab, aes(x = LeastAbundantLoss, y = NumberUniqueProtein2, col = factor(PropMissedCleavages))) +
   geom_point(alpha = 0.3) +
-  facet_wrap(~SpeciesName) +
+  facet_wrap(~SpeciesName, scale = "free_y") +
   theme_bw()
 
 ggplot(data = tab, aes(x = PropMissedCleavages, y = NumberUniqueProtein2, col = factor(LeastAbundantLoss))) +
   geom_point(alpha = 0.3) +
-  facet_wrap(~SpeciesName) +
+  facet_wrap(~SpeciesName, scale = "free_y") +
   theme_bw()
 
 tabMC <- tab[,grepl("NumberUniquePeptide.MC", names(tab))]
@@ -271,22 +271,22 @@ data <- lapply(seq_along(lf), function(x) {
 data <- rbindlist(data)
 data <- reshape2::melt(data, id.vars = "outputID")
 
-g <- ggplot(data = data, aes(x = value, fill = outputID)) +
-  geom_density(alpha = 0.4, col = "black") +
-  facet_wrap(~variable) +
-  theme_bw()
-print(g)
-g <- ggplot(data = data, aes(x = value, fill = outputID)) +
-  geom_histogram(alpha = 0.8, col = "black", position = position_dodge()) +
-  facet_wrap(~variable) +
-  theme_bw() +
-  xlim(c(0,10)) +
-  labs(title = "",
-       subtitle = "x-axis cropped after 10",
-       fill = "Output ID") +
-  # ylab("Number of proteins and proteoforms") +
-  xlab("")
-print(g)
+# g <- ggplot(data = data, aes(x = value, fill = outputID)) +
+#   geom_density(alpha = 0.4, col = "black") +
+#   facet_wrap(~variable) +
+#   theme_bw()
+# print(g)
+# g <- ggplot(data = data, aes(x = value, fill = outputID)) +
+#   geom_histogram(alpha = 0.8, col = "black", position = position_dodge()) +
+#   facet_wrap(~variable) +
+#   theme_bw() +
+#   xlim(c(0,10)) +
+#   labs(title = "",
+#        subtitle = "x-axis cropped after 10",
+#        fill = "Output ID") +
+#   # ylab("Number of proteins and proteoforms") +
+#   xlab("")
+# print(g)
 
 #####################
 
