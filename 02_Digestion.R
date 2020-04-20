@@ -7,6 +7,7 @@ library(stringi)
 library(crayon)
 library(parallel)
 library(purrr)
+library(scales)
 
 #####################
 ## Function to perform enzymatic digestion on a single protein sequence.
@@ -116,8 +117,7 @@ fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA
 ## - Calls fastDigest to digest a set of proteoforms.
 ## - Maps the modification sites on peptide sequences.
 ## - Adds the mass addition per peptide based on the modifications they have.
-## - Peptide abundance depends on the parental proteoform and the number of miss cleavages. Proportionally is assigned based on the distribution of PropMissedCleavagesAbundance.
-##   In case the maximum possible MC of a peptide is less than the argument, PropMissedCleavagesAbundance is redistributed with a favor to 0 miss-cleavage.
+## - Peptide abundance depends on the parental proteoform.
 #####################
 proteoformDigestion <- function(proteoform, parameters){
   
@@ -161,29 +161,14 @@ proteoformDigestion <- function(proteoform, parameters){
       
     }
     
-    #Add proportional abundances to peptides based on MC and parent proteoform abundance.
-    # MC.proportions <- parameters$PropMissedCleavagesAbundance
-    # MC.max <- length(unique(peptides$MC))
-    # 
-    # #This covers the case when the maximum possible MC is less than the wished.
-    # if(length(MC.proportions) > MC.max){
-    #   
-    #   MC.proportions[1] <- sum(MC.proportions[1], MC.proportions[(MC.max + 1):length(MC.proportions)])
-    #   MC.proportions <- MC.proportions[1:(MC.max)]
-    #   
-    # }
-    # 
-    # proportional.abundance <- as.data.frame(MC.proportions[peptides$MC + 1] %*% t(as.numeric(proteoform[parameters$QuantColnames])))
-    # colnames(proportional.abundance) <- parameters$QuantColnames
-    
-    MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^2 * parameters$PropMissedCleavages^x)
-    MC.proportions <- MC.proportions[peptides$MC + 1]
-    MC.proportions[peptides$Stop == nchar(proteoform$Sequence) | peptides$Start == 1] <- MC.proportions[peptides$Stop == nchar(proteoform$Sequence) | peptides$Start == 1]/(1 - parameters$PropMissedCleavages)
-    proportional.abundance <- as.data.frame(MC.proportions %*% t(as.numeric(proteoform[parameters$QuantColnames])))
-    colnames(proportional.abundance) <- parameters$QuantColnames
+    #Add proteoform abundance to all peptides.
+    peptides.abundance <- as.data.frame(matrix(NA, ncol = length(parameters$QuantColnames), nrow = nrow(peptides)))
+    colnames(peptides.abundance) <- parameters$QuantColnames
+    peptides.abundance[1:nrow(peptides.abundance), parameters$QuantColnames] <- proteoform[parameters$QuantColnames]
     
     #Bind everything.
-    peptides <- dplyr::bind_cols(peptides, proportional.abundance)
+    peptides <- dplyr::bind_cols(peptides, peptides.abundance)
+
   }
   
   return(peptides)
@@ -194,6 +179,7 @@ proteoformDigestion <- function(proteoform, parameters){
 #####################
 ## Function that wraps proteoformDigestion function to perform digestion on a set of proteoforms.
 ## - Gives the option of parallel computing.
+## - Samples peptides based on a distribution derived from PropMissedCleavages according to their MC.
 #####################
 digestGroundTruth <- function(proteoforms, parameters){
   
@@ -230,6 +216,18 @@ digestGroundTruth <- function(proteoforms, parameters){
   
   peptides <- dplyr::bind_rows(peptides)
   
+  #Sample peptides per MC by size determined by PropMissedCleavages.
+  if(parameters$MaxNumMissedCleavages > 0){
+    
+    MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^2 * parameters$PropMissedCleavages^x)
+    MC.proportions <- scales::rescale(x = MC.proportions, to = c(0, 1), from = c(0, max(MC.proportions, na.rm = T)))
+    peptide.indices <- lapply(1:parameters$MaxNumMissedCleavages, function(x) which(peptides$MC == x))
+    peptide.indices <- unlist(lapply(1:parameters$MaxNumMissedCleavages, function(x) sample(peptide.indices[[x]], size = ceiling(sum(peptides$MC == 0) * MC.proportions[x+1]), replace = FALSE)))
+    peptide.indices <- sort(c(which(peptides$MC == 0), peptide.indices))
+    peptides <- peptides[peptide.indices, ]
+  
+  }
+  
   cat(" + Digestion output:\n")
   cat("  - A total number of", nrow(peptides), "peptides is generated.\n")
   cat("  - Unmodified fraction contains", sum(lengths(peptides$PTMType) == 0), "peptides and modified fraction", sum(lengths(peptides$PTMType) != 0),"peptides.\n")
@@ -265,6 +263,7 @@ digestGroundTruth <- function(proteoforms, parameters){
 ##   Regulation_Amplitude     <list of numeric vectors> Contains the regulation amplitudes of the proteoforms in Accession vectors.   
 ##   Regulation_Pattern       <list of numeric vectors> Contains the regulation patterns of the proteoforms in Accession vectors.
 ##   Quantitative Columns     <numeric> Contains the abundances of the peptide group of Sequence.
+## - Removes a percentage of randomly selected summarized peptides.
 #####################
 digestionProductSummarization <- function(peptides, parameters){
   
@@ -322,13 +321,14 @@ digestionProductSummarization <- function(peptides, parameters){
   peptides <- dplyr::select(peptides, -c("pep_id"))
   
   cat("  - Peptide groups summarization is done.\n")
+
+  #Remove a percentage of randomly selected summarized peptides.
+  remove <- sample(1:nrow(peptides), size = nrow(peptides)*parameters$LeastAbundantLoss, replace = FALSE)
   
-  #Remove a percentage of summarized peptides. 
-  remove <- order(rowMeans(peptides[ ,parameters$QuantColnames], na.rm = T))[1:(nrow(peptides)*parameters$LeastAbundantLoss)]
   if(length(remove) != 0){
-    
+
     peptides <- peptides[-remove,]
-    
+
   }
   
   cat("  - Remove",   parameters$LeastAbundantLoss*100, "% of the least abundant peptides, which corresponds to", length(remove), "peptides.\n\n")
