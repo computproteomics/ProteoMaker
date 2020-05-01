@@ -28,7 +28,7 @@ MSRunSim <- function(Digested, parameters) {
 #  for (i in seq_along(parameters$QuantColnames)) {
 
 #    Digested[ ,parameters$QuantColnames[i]] <- Digested[ ,parameters$QuantColnames[i]] + matnoise[i]
-    Digested[ ,parameters$QuantColnames] <- Digested[ ,parameters$QuantColnames] + matnoise[i]
+    Digested[ ,parameters$QuantColnames] <- Digested[ ,parameters$QuantColnames] + matnoise
 
 #  }
   
