@@ -23,15 +23,11 @@ MSRunSim <- function(Digested, parameters) {
   cat("  - The MS noise standard deviation is", parameters$MSNoise, ".\n")
 
   # Introducing random noise to MS analysis due to MS instrument.
-  matnoise <- rnorm(n = nrow(Digested) * length(parameters$QuantColnames), mean = 0, sd = parameters$MSNoise)
+  matnoise <- matrix(rnorm(n = nrow(Digested) * length(parameters$QuantColnames), mean = 0, sd = parameters$MSNoise), 
+                     ncol=length(parameters$QuantColnames))
 
-#  for (i in seq_along(parameters$QuantColnames)) {
+ Digested[ ,parameters$QuantColnames] <- Digested[ ,parameters$QuantColnames] + matnoise
 
-#    Digested[ ,parameters$QuantColnames[i]] <- Digested[ ,parameters$QuantColnames[i]] + matnoise[i]
-    Digested[ ,parameters$QuantColnames] <- Digested[ ,parameters$QuantColnames] + matnoise
-
-#  }
-  
   cat("  - Noise added to all samples!\n\n")
   cat(" + Detection limits:\n")
   cat("  - The percentage of remaining peptides is", parameters$PercDetectedPep*100, "%.\n")

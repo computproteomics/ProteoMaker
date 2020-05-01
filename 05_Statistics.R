@@ -5,7 +5,6 @@ library(fdrtool)
 library(parallel)
 library(qvalue)
 library(limma)
-source("rankprodbounds.R")
 
 NumThreads <- 4
 shiny_threads <- as.numeric(Sys.getenv("SHINY_THREADS"))
@@ -203,142 +202,6 @@ Paired <- function(MAData,NumCond,NumReps) {
               qtvalues=qtvalues, qlvalues=qlvalues, qRPvalues=qRPvalues, qPermutvalues=qPermutvalues,Sds=sqrt(lm.bayesMA$s2.post)))
 }
 
-# for comparison versus first condition in table
-Unpaired <- function(Data,NumCond,NumReps) {
-  ##########################################################
-  # significance analysis
-  Reps <- rep(1:NumCond,NumReps)
-  
-  # Normalize row-wise by mean
-  Data <- Data - rowMeans(Data,na.rm=T)
-  
-
-  ## limma
-  design <- model.matrix(~0+factor(Reps-1))
-  colnames(design)<-paste("i",c(1:NumCond),sep="")
-  contrasts<-NULL
-  First <- 1
-  for (i in (1:NumCond)[-First]) contrasts<-append(contrasts,paste(colnames(design)[i],"-",colnames(design)[First],sep=""))
-  contrast.matrix<-makeContrasts(contrasts=contrasts,levels=design)
-  # print(dim(Data))
-  lm.fitted <- lmFit(Data,design)
-  
-  lm.contr <- contrasts.fit(lm.fitted,contrast.matrix)
-  lm.bayes<-eBayes(lm.contr)
-  topTable(lm.bayes)
-  plvalues <- lm.bayes$p.value
-  qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
-  # qvalue correction
-  for (i in 1:ncol(plvalues)) {
-    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
-    qlvalues[names(tqs),i] <- tqs
-  }
-  
-  ## rank products + t-test
-  ptvalues<-NULL
-  pRPvalues<-matrix(NA,ncol=NumCond-1,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=paste("RP p-values",1:(NumCond-1))))
-  pPermutvalues<-matrix(NA,ncol=NumCond-1,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=paste("Permutation p-values",1:(NumCond-1))))
-  for (vs in 2:NumCond) {
-    if (!is.null(getDefaultReactiveDomain()))
-      setProgress(0.1+0.3/(NumCond-1)*vs, detail = paste("tests for comparison",vs-1,"of",NumCond-1))
-    tData<-Data[,Reps==vs]
-    trefData <- Data[,Reps==1]
-    tptvalues<-NULL
-    ## t-test_pvalues
-    tptvalues <- sapply(1:nrow(tData), function(pep) {
-      ifelse(sum(!is.na(tData[pep,]))>1 & sum(!is.na(trefData[pep,]))>1, 
-             t.test(as.vector(tData[pep,]),as.vector(trefData[pep,]))$p.value,
-             NA)
-    })
-    names(tptvalues)<-rownames(tData)
-    ptvalues <- cbind(ptvalues,tptvalues)
-    
-    ## rank products
-    # calculate NumRPPairs random pairing combinations and then take mean of p-values
-    # NumRPPairs <- 10
-    tpRPvalues<-matrix(NA,ncol=NumRPPairs,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=1:NumRPPairs))
-    cl <- makeCluster(NumThreads)
-    clusterExport(cl=cl,varlist=c("NumReps","tData","trefData","RPStats"),envir=environment())
-    clusterEvalQ(cl=cl, library(matrixStats))  
-    
-    
-    print("rank products")
-    RPparOut <- parallel::parLapply(cl,1:NumRPPairs, function(x) {
-      tRPMAData <- tData[,sample(1:NumReps)] - trefData[,sample(1:NumReps)]
-      #Up
-      RPMAUp_pvalues <- RPStats(tRPMAData,NumReps)
-      #Down
-      RPMADown_pvalues <- RPStats(-tRPMAData,NumReps)
-      ttt <- rowMins(cbind(RPMAUp_pvalues,RPMADown_pvalues),na.rm=T)*2
-      ttt[ttt>1] <- 1
-      names(ttt) <- names(RPMAUp_pvalues)
-      ttt
-    })
-    stopCluster(cl)
-    for (p in 1:NumRPPairs) {
-      # print(RPparOut[[p]])
-      tpRPvalues[names(RPparOut[[p]]),p] <- RPparOut[[p]]
-    }    
-    pRPvalues[,vs-1] <- rowMeans(tpRPvalues,na.rm=T)
-    
-    # print(tail(tpRPvalues,1))
-    
-    ## Permutation tests: add columns from randomized full set to reach min. NumPermCols replicates
-    # randomizing also sign to avoid tendencies to one or the other side
-    # In the unpaired case, also normalize by mean of the entire sample to avoid strange effects
-    print("permutation tests")
-    tData <- tData - mean(as.numeric(unlist(tData)),na.rm=T)
-    trefData <- trefData - mean(as.numeric(unlist(trefData)),na.rm=T)
-    if (ncol(tData)*2<NumPermCols) {
-      AddDat <- matrix(sample(as.vector(unlist(tData)),(NumPermCols*0.5-ncol(tData))*nrow(tData),replace=T),nrow=nrow(tData))
-      PermData <- cbind(tData, AddDat)
-      AddDat <- matrix(sample(as.vector(unlist(trefData)),(NumPermCols*0.5-ncol(trefData))*nrow(trefData),replace=T),nrow=nrow(trefData))
-      PermFullData <- cbind(PermData,trefData, AddDat)
-    } else {
-      PermFullData <- cbind(tData,trefData)
-    }
-    RealStats <- StatsForPermutTest(as.matrix(cbind(trefData,tData)),Paired=F)
-    # print(head(PermFullData))
-    
-    cl <- makeCluster(NumThreads)
-    clusterExport(cl=cl,varlist=c("NumReps","PermFullData","RPStats","StatsForPermutTest"),envir=environment())
-    clusterEvalQ(cl=cl, library(matrixStats))  
-    PermutOut <- parallel::parLapply(cl,1:NTests,function (x) {indat <- apply(PermFullData,1,function(y) sample(y,NumReps*2)*sample(c(1,-1),NumReps*2,replace=T))
-    StatsForPermutTest(t(indat),F)
-    })
-    stopCluster(cl)
-    
-    PermutOut <- matrix(unlist(PermutOut),nrow=nrow(tData))
-    PermutOut[!is.finite(PermutOut)] <- NA
-    RealStats[!is.finite(RealStats)] <- NA
-    pPermutvalues[,vs-1] <- apply(cbind(RealStats,PermutOut), 1 , function(x) ifelse(is.na(x[1]) | sum(!is.na(x)) == 0,NA,(1+sum(x[1] < x[-1],na.rm=T))/(sum(!is.na(x)))))
-    # print(table(apply(cbind(RealStats,PermutOut), 1 , function(x) ifelse(is.na(x[1]) | sum(!is.na(x)) == 0,NA,(1+sum(x[1] < x[-1],na.rm=T))))))
-    # print(hist(PermutOut[1,],plot = F, 50)$counts)
-    # print(hist(PermutOut[1,],plot = F, 50)$breaks)
-    # head(print(PermutOut))
-  }
-  lratios <- NULL
-  pRPvalues[!is.finite(pRPvalues)] <- NA
-  qRPvalues <- qtvalues <- qPermutvalues <- matrix(NA,nrow=nrow(Data),ncol=NumCond-1,dimnames=list(rows=rownames(Data), cols=1:(NumCond-1)))
-  for (i in 1:(NumCond-1)) {
-    tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
-    qtvalues[names(tqs),i] <- tqs
-    print(range(pPermutvalues[,i]))
-    tqs <- qvalue(na.omit(pPermutvalues[,i]))$qvalues
-    # tqs <- p.adjust(na.omit(pPermutvalues[,i]),method="BH")
-    qPermutvalues[names(tqs),i] <- tqs
-    print(range(na.omit(pRPvalues[,i])))
-    # print(sort(pRPvalues[,i]))
-    tqs <- p.adjust(na.omit(pRPvalues[,i]),method="BH")
-    # tqs <- qvalue(na.omit(pRPvalues[,i]),lambda=seq(0.05,max(na.omit(pRPvalues[,i]))-0.05,0.05))$qvalues
-    qRPvalues[names(tqs),i] <- tqs
-    lratios <- cbind(lratios, rowMeans(Data[,Reps==i+1],na.rm=T)-rowMeans(Data[,Reps==1],na.rm=T))
-    
-  }
-  
-  return(list(lratios=lratios,ptvalues=ptvalues, plvalues=plvalues, pRPvalues=pRPvalues, pPermutvalues=pPermutvalues,
-              qtvalues=qtvalues, qlvalues=qlvalues, qRPvalues=qRPvalues,qPermutvalues=qPermutvalues,Sds=sqrt(lm.bayes$s2.post)))
-}
 
 # for comparison  using design
 UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
@@ -651,4 +514,7 @@ UnifyQvals <- function(Qvalue, NumComps, NumTests) {
   
   
 }
+
+
+# Wrapper to call 
 
