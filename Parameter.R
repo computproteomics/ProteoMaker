@@ -66,10 +66,10 @@ Param$QuantColnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_"
 # General noise level of all quantitative values (standard deviation of normal distribution)
 Param$QuantNoise <- 0.25
 # Fraction of "differentially" regulated proteoforms
-Param$DiffRegFrac <- 0
+Param$DiffRegFrac <- 0.2
 # max. amplitude of difference (differentially regulated proteins). 
 # Will be taken from uniform distribution with randomly chosen directions
-Param$DiffRegMax <- 0
+Param$DiffRegMax <- 1
 
 # >>>> For input of custom set of regulated proteoforms:
 Param$UserInputFoldChanges <- NULL
@@ -140,11 +140,11 @@ Param$PercDetectedVal <- 1
 # Parameter is the power to the ranks (given by number 0 to 1) (Maximum of 40)
 Param$WeightDetectVal <- 1
 # Add noise due to MS instrument:
-Param$MSNoise <- 0.1
+Param$MSNoise <- 0.2
 #####################
 
 #####################
-## MS search
+## MS search    
 #####################
 # Wrong identifications
 Param$WrongIDs <- 0
@@ -157,6 +157,21 @@ Param$WrongLocalizations <- 0
 #####################
 #Removes peptides that have more NA values than a specific number.
 Param$MaxNAPerPep <- 100
+
+#####################
+## Summarize to proteins
+#####################
+#Summarization method (until now only "sum.top3" and "medpolish")
+Param$ProtSummarization <- "medpolish"
+#Minimum number of available unique peptides
+Param$MinUniquePep <- 2
+
+#####################
+## Statistical testing of peptides and proteins
+#####################
+#Paired or unpaired
+Param$StatPaired <- FALSE
+
 
 #####################
 ## Load local test parameters if available:

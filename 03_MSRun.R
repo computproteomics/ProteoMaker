@@ -23,13 +23,14 @@ MSRunSim <- function(Digested, parameters) {
   cat("  - The MS noise standard deviation is", parameters$MSNoise, ".\n")
 
   # Introducing random noise to MS analysis due to MS instrument.
-  matnoise <- rnorm(n = length(parameters$QuantColnames), mean = 0, sd = parameters$MSNoise)
+  matnoise <- rnorm(n = nrow(Digested) * length(parameters$QuantColnames), mean = 0, sd = parameters$MSNoise)
 
-  for (i in seq_along(parameters$QuantColnames)) {
+#  for (i in seq_along(parameters$QuantColnames)) {
 
-    Digested[ ,parameters$QuantColnames[i]] <- Digested[ ,parameters$QuantColnames[i]] + matnoise[i]
+#    Digested[ ,parameters$QuantColnames[i]] <- Digested[ ,parameters$QuantColnames[i]] + matnoise[i]
+    Digested[ ,parameters$QuantColnames] <- Digested[ ,parameters$QuantColnames] + matnoise[i]
 
-  }
+#  }
   
   cat("  - Noise added to all samples!\n\n")
   cat(" + Detection limits:\n")
