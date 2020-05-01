@@ -19,7 +19,7 @@ proteinSummarisation <- function(peptable, parameters) {
                     num_accs = sapply(peptable$Accession, length))
   
   # Sort table according to protein accession, needs to stay in this order!
-  peptable <- peptable %>% arrange(merged_accs) %>% select(c("Sequence","merged_accs","num_accs",parameters$QuantColnames))
+  peptable <- peptable %>% arrange(merged_accs)
   cat(" - Sorted protein table\n")
   
   # Vector with row indices of protein groups
@@ -33,12 +33,14 @@ proteinSummarisation <- function(peptable, parameters) {
     }
   }
   prot_ind <- c(prot_ind, nrow(peptable))
+  other_cols <- colnames(peptable)[!colnames(peptable) %in% parameters$QuantColnames]
   cat(" - built protein index for faster summarization\n")
   pb <- txtProgressBar(min=0, max=length(prot_ind))
   
   # Initiate and fill matrix with proteins
-  protmat <- matrix(ncol = length(parameters$QuantColnames), nrow = length(prot_ind))
+  protmat <- as.data.frame(matrix(ncol = ncol(peptable), nrow = length(prot_ind)))
   rownames(protmat) <- names(prot_ind)
+  colnames(protmat) <- colnames(peptable)
 
   for (i in 1:(length(prot_ind)-1)){
     
@@ -47,8 +49,10 @@ proteinSummarisation <- function(peptable, parameters) {
     tmp <- as.data.frame(peptable[prot_ind[i]:prot_ind[i+1],])
     rownames(tmp) <- tmp$Sequence
     
+    # add other information
+    protmat[i,other_cols] <- apply(tmp[,other_cols], 2, paste, collapse=";")
+
     tmp <- tmp[tmp$num_accs==1, parameters$QuantColnames]
-    
     if (nrow(tmp) >= minUniquePep) {
       tmp <- as.matrix(tmp)
       
@@ -58,31 +62,30 @@ proteinSummarisation <- function(peptable, parameters) {
         
         if (nrow(tmp) >= 3) {
           
-          protmat[i,] <- log2(colSums(2^tmp[1:3,], na.rm = T))
+          protmat[i,parameters$QuantColnames] <- log2(colSums(2^tmp[1:3,], na.rm = T))
           
         } else {
           
-          protmat[i,] <- log2(colSums(2^tmp, na.rm = T))
+          protmat[i,parameters$QuantColnames] <- log2(colSums(2^tmp, na.rm = T))
         }
         
       } else if (method == "medpolish"){
         summed <- colSummarizeMedianpolish(tmp)$Estimates
         if (length(summed) > 0)
-          protmat[i,] <- summed
+          protmat[i,parameters$QuantColnames] <- summed
         
       } else {
         
       }
+      
     }
+    
   }
   
   close(pb)
   protmat[protmat == -Inf] <- NA
-  colnames(protmat) <- parameters$QuantColnames
-  protmat <- data.frame(Accession = names(prot_ind), protmat)
-  protmat <- protmat[rowSums(is.na(protmat)) < ncol(protmat),]
-  
-  
+#  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i]) 
+
   return(protmat)
   
 }

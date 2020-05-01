@@ -133,9 +133,6 @@ Paired <- function(MAData,NumCond,NumReps) {
   pRPvalues<-matrix(NA,ncol=NumCond,nrow=nrow(MAData),dimnames=list(rows = rownames(MAData), cols=paste("RP p-values",1:NumCond)))
   pPermutvalues<-matrix(NA,ncol=NumCond,nrow=nrow(MAData),dimnames=list(rows = rownames(MAData), cols=paste("Permutation p-values",1:NumCond)))
   for (vs in 1:NumCond) {
-    if (!is.null(getDefaultReactiveDomain()))
-      setProgress(0.1+0.3/NumCond*vs, detail = paste("tests for comparison",vs,"of",NumCond))
-    
     tMAData<-MAData[,MAReps==vs]
     ptMAvalues<-NULL
     ## MA t-test_pvalues
@@ -243,8 +240,6 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   pRPvalues<-matrix(NA,ncol=NumComps,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=paste("RP p-values",1:(NumComps))))
   pPermutvalues<-matrix(NA,ncol=NumComps,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=paste("Permutation p-values",1:(NumComps))))
   for (vs in 1:NumComps) {
-    if (!is.null(getDefaultReactiveDomain()))
-      setProgress(0.1+0.3/(NumComps)*vs, detail = paste("tests for comparison",vs,"of",NumComps))
     tData<-Data[,Reps==RRCateg[1,vs]]
     trefData <- Data[,Reps==RRCateg[2,vs]]
     tptvalues<-NULL
@@ -382,37 +377,6 @@ MissingStatsDesign <- function(Data, RR, NumCond, NumReps) {
 }
 
 
-## old for comparison versus 1
-MissingStats <- function(Data, NumCond, NumReps) {
-  Reps <- rep(1:NumCond,NumReps)
-  pNAvalues<-matrix(NA,ncol=NumCond-1,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=1:(NumCond-1)))
-  qNAvalues<-matrix(NA,ncol=NumCond-1,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=1:(NumCond-1)))
-  for (vs in 2:NumCond) {
-    tData<-Data[,Reps==vs]
-    trefData <- Data[,Reps==1]
-    tCompDat <- cbind(tData,trefData)
-    qs <- quantile(tCompDat, probs=seq(0,1,0.01),na.rm=T)
-    pvals <- statis <- matrix(NA,nrow(tCompDat),ncol=length(qs))
-    for (q in qs) {
-      tCompDat[tCompDat<q] <- NA
-      # print(head(tCompDat))
-      NAPDistr <- MissValPDistr(NumReps,sum(is.na(tCompDat))/(nrow(tCompDat)*2*NumReps))
-      statis[,which(q==qs)] <- (rowSums(!is.na(tCompDat[,1:NumReps])) - rowSums(!is.na(tCompDat[,(NumReps+1):(2*NumReps)])))
-      pvals[,which(q==qs)] <- NAPDistr[abs(statis[,which(q==qs)])+1]
-      
-    }
-    pNAvalues[,vs-1] <- rowMins(pvals)*(NumReps+1)
-    # qNAvalues[,vs-1] <- qvalue(pNAvalues[,vs-1],lambda=seq(0.1,max(pNAvalues[,vs-1]),length=100))$qvalue
-    qNAvalues[,vs-1] <- p.adjust(pNAvalues[,vs-1], method="BH")
-    
-  }
-  
-  pNAvalues[pNAvalues>1] <- 1
-    
-  return(list(pNAvalues=pNAvalues, qNAvalues=qNAvalues))
-  
-}
-
 # Function to determine "optimal" fold-change and q-value thresholds
 #  fdrtool and use hc.threshold and fc-threshold from ratios (1 standard deviation)
 FindFCandQlimAlternative <- function(Pvalue, LogRatios) {
@@ -506,8 +470,8 @@ FindFCandQlim <- function(Qvalue, LogRatios) {
 UnifyQvals <- function(Qvalue, NumComps, NumTests) {
   UnifiedQvalue <- matrix(NA,ncol=NumComps,nrow=nrow(Qvalue))
   for (i in 1:(NumComps)) {
-    print(seq(i,ncol(Qvalue)-NumComps,NumComps))
-    print(colnames(Qvalue)[seq(i,ncol(Qvalue)-NumComps,NumComps)])
+    #print(seq(i,ncol(Qvalue)-NumComps,NumComps))
+    #print(colnames(Qvalue)[seq(i,ncol(Qvalue)-NumComps,NumComps)])
     UnifiedQvalue[,i] <- colMins(apply(Qvalue[,seq(i,ncol(Qvalue)-NumComps,NumComps)], 1, p.adjust, "hommel"),na.rm=T)
   }
   UnifiedQvalue
@@ -516,5 +480,58 @@ UnifyQvals <- function(Qvalue, NumComps, NumTests) {
 }
 
 
-# Wrapper to call 
+# Wrapper to call statistical tests (set to only RefCond condition as reference)
+runPolySTest <- function(fullData, Param, refCond, isPaired=F) {
+  
+  Data <- fullData[,Param$QuantColnames]
+  NumCond <- Param$NumCond
+  NumReps <- Param$NumReps
+  
+  # Generate experimental design
+  allComps <- NULL
+  for (i in 2:NumCond) allComps <- rbind(allComps, c(1, i))
+  ncomps <- NumCond-1
+  valComps <- matrix(NA,nrow=ncomps, ncol=ncol(allComps))
+  for (i in 1:length(allComps)) valComps[i] <- as.numeric(sub("C","",allComps[i]))
+  compNames <- paste(allComps[,2]," vs ",allComps[,1],sep="")
+  
+  RR <- matrix(NA,ncol = ncomps*NumReps, nrow=2)
+  for (j in 1:ncomps) {
+    compCond <- valComps[j,2]
+    refCond <- valComps[j,1]
+    RR[1,seq(j,ncomps*NumReps,ncomps)] <- seq(compCond,NumCond*NumReps,NumCond)
+    RR[2,seq(j,ncomps*NumReps,ncomps)] <- seq(refCond,NumCond*NumReps,NumCond)
+  }
 
+  # Rearrange order of colums to grouped replicates
+  act_cols <- rep(0:(NumCond-1),NumReps)*NumReps+rep(1:(NumReps), each=NumCond)
+  Data <- Data[,act_cols]
+
+  # Run tests
+  MAData <- NULL
+  if (isPaired) {
+    for (i in 1:ncol(RR)) {
+      MAData<-cbind(MAData,Data[,RR[1,i]]-Data[,RR[2,i]])
+    }
+    rownames(MAData)<-rownames(dat)
+    qvalues <- Paired(MAData, ncomps, NumReps)
+  } else {
+    qvalues <- UnpairedDesign(Data, RR, NumCond, NumReps)
+  }
+  MissingStats <- MissingStatsDesign(Data, RR, NumCond, NumReps)
+
+  # Preparing data
+  LogRatios <- qvalues$lratios
+  Pvalue <- cbind(qvalues$plvalues, MissingStats$pNAvalues, qvalues$pRPvalues, qvalues$pPermutvalues, qvalues$ptvalues)
+  Qvalue <- cbind(qvalues$qlvalues, MissingStats$qNAvalues,qvalues$qRPvalues, qvalues$qPermutvalues, qvalues$qtvalues)
+  Qvalue <- cbind(UnifyQvals(Qvalue,ncomps,5), Qvalue)
+  testNames <- c("limma","Miss test","rank products","permutation test","t-test")
+  print(head(LogRatios))
+  print(compNames)
+  colnames(LogRatios) <- paste("log-ratios",compNames)
+  colnames(Pvalue) <- paste("p-values",rep(testNames,each=ncomps),rep(compNames,length(testNames)))
+  testNames2 <- c("PolySTest",testNames)
+  colnames(Qvalue) <- paste("FDR",rep(testNames2,each=ncomps),rep(compNames,length(testNames2)))
+  FullReg <- cbind(LogRatios, Qvalue)#, WhereReg)
+  return(FullReg)
+}
