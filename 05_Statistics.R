@@ -481,11 +481,12 @@ UnifyQvals <- function(Qvalue, NumComps, NumTests) {
 
 
 # Wrapper to call statistical tests (set to only RefCond condition as reference)
-runPolySTest <- function(fullData, Param, refCond, isPaired=F) {
+runPolySTest <- function(fullData, Param, refCond) {
   
   Data <- fullData[,Param$QuantColnames]
   NumCond <- Param$NumCond
   NumReps <- Param$NumReps
+  isPaired <- Param$StatPaired
   
   # Generate experimental design
   allComps <- NULL

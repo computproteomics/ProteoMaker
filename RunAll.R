@@ -76,5 +76,5 @@
   # ## Statistical testing
   # ##################### 
     source("05_Statistics.R")
-    Stats <- runPolySTest(Prots, Param, refCond=1, isPaired=F)
-    
+    Stats <- runPolySTest(Prots, Param, refCond=1)
+        

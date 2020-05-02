@@ -11,7 +11,7 @@ Param <- list()
 # Number of conditions
 Param$NumCond <- 2
 # Number of replicates
-Param$NumReps <- 4
+Param$NumReps <- 3
 #####################
 
 #####################
@@ -27,7 +27,7 @@ Param$PathToProteinList <- NULL
 #####################
 ## Generation of proteoform IDs:
 # Fraction of the proteins selected to be modified:
-Param$FracModProt <- 0 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
+Param$FracModProt <- 0.0 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
 # fraction of modifiable proteins to be sampled for modifications >> (might require more dedicated function
 # taking into account protein properties)
 Param$FracModPerProt <- 0 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
@@ -133,21 +133,21 @@ Param$EnrichmentNoise <- 0.2
 ## MS run
 #####################
 # Percentage of detected peptides
-Param$PercDetectedPep <- 1
+Param$PercDetectedPep <- 0.5
 # Percentage of detected values (replicate/condition)
-Param$PercDetectedVal <- 1
+Param$PercDetectedVal <- 0.7
 # Weights for intensity-dependence of non-detection (0 means no dependence). 
 # Parameter is the power to the ranks (given by number 0 to 1) (Maximum of 40)
-Param$WeightDetectVal <- 1
+Param$WeightDetectVal <- 10
 # Add noise due to MS instrument:
-Param$MSNoise <- 0.2
+Param$MSNoise <- 0.3
 #####################
 
 #####################
 ## MS search    
 #####################
 # Wrong identifications
-Param$WrongIDs <- 0
+Param$WrongIDs <- 0.01
 # Wrong localizations
 Param$WrongLocalizations <- 0
 #####################
@@ -171,7 +171,6 @@ Param$MinUniquePep <- 2
 #####################
 #Paired or unpaired
 Param$StatPaired <- FALSE
-
 
 #####################
 ## Load local test parameters if available:

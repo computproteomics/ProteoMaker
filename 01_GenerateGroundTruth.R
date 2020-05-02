@@ -426,7 +426,7 @@ addProteoformAbundance <- function(proteoforms, parameters){
       print(diff_reg_indices)
       
       # determine amplitude of regulation for regulated proteoforms
-      proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min =1, max = parameters$DiffRegMax, n = length(diff_reg_indices))
+      proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min = 0, max = parameters$DiffRegMax, n = length(diff_reg_indices))
     
       regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
     
@@ -467,7 +467,7 @@ addProteoformAbundance <- function(proteoforms, parameters){
         rep(regulationPatterns[[x]], each = parameters$NumReps)
         
         # multiply regulation pattern with Regulation amplitude
-      })) * proteoforms[diff_reg_indices, "Regulation_Amplitude"]
+      })) * 2^(proteoforms[diff_reg_indices, "Regulation_Amplitude"])
     
   } else {
     
