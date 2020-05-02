@@ -532,6 +532,6 @@ runPolySTest <- function(fullData, Param, refCond, isPaired=F) {
   colnames(Pvalue) <- paste("p-values",rep(testNames,each=ncomps),rep(compNames,length(testNames)))
   testNames2 <- c("PolySTest",testNames)
   colnames(Qvalue) <- paste("FDR",rep(testNames2,each=ncomps),rep(compNames,length(testNames2)))
-  FullReg <- cbind(LogRatios, Qvalue)#, WhereReg)
+  FullReg <- cbind(LogRatios, Qvalue, fullData)#, WhereReg)
   return(FullReg)
 }
