@@ -527,12 +527,18 @@ runPolySTest <- function(fullData, Param, refCond) {
   Qvalue <- cbind(qvalues$qlvalues, MissingStats$qNAvalues,qvalues$qRPvalues, qvalues$qPermutvalues, qvalues$qtvalues)
   Qvalue <- cbind(UnifyQvals(Qvalue,ncomps,5), Qvalue)
   testNames <- c("limma","Miss test","rank products","permutation test","t-test")
-  print(head(LogRatios))
-  print(compNames)
+  # print(head(LogRatios))
+  # print(compNames)
   colnames(LogRatios) <- paste("log-ratios",compNames)
   colnames(Pvalue) <- paste("p-values",rep(testNames,each=ncomps),rep(compNames,length(testNames)))
   testNames2 <- c("PolySTest",testNames)
   colnames(Qvalue) <- paste("FDR",rep(testNames2,each=ncomps),rep(compNames,length(testNames2)))
-  FullReg <- cbind(LogRatios, Qvalue, fullData)#, WhereReg)
+  FullReg <- cbind(LogRatios, Qvalue, as.data.frame(fullData))#, WhereReg)
+  
+  # Summarize regulations   
+  FullReg <- cbind(FullReg, min1Reg=sapply(str_split(Prots$Regulation_Amplitude, ";"),function(x) sum(as.numeric(x),na.rm=T)) != 0, 
+                   allReg=sapply(str_split(Prots$Regulation_Amplitude, ";"),function(x) !is.na(sum(as.numeric(x)))))
+
+
   return(FullReg)
 }

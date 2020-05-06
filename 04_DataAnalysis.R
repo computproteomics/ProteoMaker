@@ -15,7 +15,7 @@ proteinSummarisation <- function(peptable, parameters) {
   cat("Protein summarisation using the", method, "approach.\n")
   
   # writing new column with unlisted and merged protein names
-  peptable <- cbind(peptable , merged_accs=sapply(peptable$Accession, function(x) paste(unlist(x),collapse = ";")), 
+  peptable <- cbind(peptable , merged_accs=sapply(peptable$Accession, function(x) paste(unlist(x), collapse=";")),
                     num_accs = sapply(peptable$Accession, length))
   
   # Sort table according to protein accession, needs to stay in this order!
@@ -46,11 +46,11 @@ proteinSummarisation <- function(peptable, parameters) {
     
     setTxtProgressBar(pb, i)
     
-    tmp <- as.data.frame(peptable[prot_ind[i]:prot_ind[i+1],])
+    tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
     rownames(tmp) <- tmp$Sequence
     
     # add other information
-    protmat[i,other_cols] <- apply(tmp[,other_cols], 2, paste, collapse=";")
+    protmat[i,other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
 
     tmp <- tmp[tmp$num_accs==1, parameters$QuantColnames]
     if (nrow(tmp) >= minUniquePep) {
@@ -84,6 +84,8 @@ proteinSummarisation <- function(peptable, parameters) {
   
   close(pb)
   protmat[protmat == -Inf] <- NA
+  protmat <- protmat[rowSums(is.na(protmat[,parameters$QuantColnames])) < length(parameters$QuantColnames), ]
+  
 #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i]) 
 
   return(protmat)

@@ -67,9 +67,9 @@ Param$QuantColnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_"
 Param$QuantNoise <- 0.25
 # Fraction of "differentially" regulated proteoforms
 Param$DiffRegFrac <- 0.2
-# max. amplitude of difference (differentially regulated proteins). 
+# max. amplitude of difference (differentially regulated proteins) on log2 scale. 
 # Will be taken from uniform distribution with randomly chosen directions
-Param$DiffRegMax <- 1
+Param$DiffRegMax <- 2
 
 # >>>> For input of custom set of regulated proteoforms:
 Param$UserInputFoldChanges <- NULL
@@ -135,10 +135,10 @@ Param$EnrichmentNoise <- 0.2
 # Percentage of detected peptides
 Param$PercDetectedPep <- 0.5
 # Percentage of detected values (replicate/condition)
-Param$PercDetectedVal <- 0.7
+Param$PercDetectedVal <- 0.3
 # Weights for intensity-dependence of non-detection (0 means no dependence). 
 # Parameter is the power to the ranks (given by number 0 to 1) (Maximum of 40)
-Param$WeightDetectVal <- 10
+Param$WeightDetectVal <- 20
 # Add noise due to MS instrument:
 Param$MSNoise <- 0.3
 #####################

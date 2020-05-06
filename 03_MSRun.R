@@ -57,10 +57,12 @@ MSRunSim <- function(Digested, parameters) {
   myprob[is.na(allVals)] <- 0
   
   #This is the fastest way to sample with replacement. 
-  #Reference: https://doi.org/10.1016/j.ipl.2005.11.003
-  remove <- order(runif(length(allVals)) ^ (1/myprob), decreasing = T)[1:((1-parameters$PercDetectedVal)*length(allVals))]
+    #Reference: https://doi.org/10.1016/j.ipl.2005.11.003
+  # method does not work as numbers become 0 -> move to log-scale
+    #remove <- order(runif(length(allVals)) ^ (1/myprob), decreasing = T)[1:((1-parameters$PercDetectedVal)*length(allVals))]
+    remove <- order(1/myprob * log(runif(length(allVals))), decreasing = T)[1:((1-parameters$PercDetectedVal)*length(allVals))]
   
-  if(parameters$WeightDetectVal == 0){
+        if(parameters$WeightDetectVal == 0){
     
     cat(crayon::red("WARNING: missing values at peptide level (due to in silico MS detection) are determined at random.\n"))
     cat(crayon::red("         Change the parameter \'WeightDetectVal\' to a value > 0 to add weight to lowest intensities."))
