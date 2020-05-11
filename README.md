@@ -50,7 +50,7 @@ The following values and distribution are collected and will be used for compari
  - [ ] Number of peptides with modified and unmodified form
  - [ ] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
  - [ ] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
- - [ ] Number of identifiable proteoforms (1+number of different modified peptides) (aybe divided by actual proteoforms?)
+ - [ ] Proportion of identifiable proteoforms (1+number of different modified peptides) with respect to actual proteoforms
  
 
 
