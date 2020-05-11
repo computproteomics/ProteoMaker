@@ -21,31 +21,36 @@ The following values and distribution are collected and will be used for compari
 #### Peptide level
 - [ ] Number of peptides 
 - [ ] Number of proteins
-- [ ] Number of unique peptides
-- [ ] Number of shared peptides
+- [ ] Proportion of unique peptides
+- [ ] Proportion of shared peptides
 - [ ] Percentage missingness
-- [ ] Number of shared peptides
 - [ ] AUC of ROC curve for correct differentially regulated features
-- [ ] Number of differentially regulated peptides (FDR < 0.05/0.01)
-- [ ] Percentage of miscleaved peptides
+- [ ] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
+- [ ] True FDR for estimated FDR of 0.01/0.05
+- [ ] Proportion of miscleaved peptides
+- [ ] Proportion of cleaved peptides (per number of miscleavages)
 
 #### Protein level
 - [ ] Number of quantified protein groups
-- [ ] Number of quantified uniquely identified proteins
+- [ ] Proportion of quantified uniquely identified proteins
+- [ ] Percentage missingness
 - [ ] Distribution (summarized by its mean) of peptides per protein
 - [ ] AUC of ROC curve for correct differentially regulated features
 - [ ] True FDR for estimated FDR of 0.01/0.05
-- [ ] Number of differentially regulated proteins (FDR < 0.05/0.01)
+- [ ] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
 - [ ] Sum of squares residuals towards actual fold-changes
-- [ ] Percentage of proteins with miscleaved peptides
-- [ ] Percentage of regulated proteins with wrong identified peptides (FDR < 0.01/0.05)
+- [ ] Proportion of proteins with miscleaved peptides
+- [ ] Proportion of regulated proteins with wrong identified peptides (FDR < 0.01/0.05)
+- [ ] Distribution of quantitative values, how assymmetric (skewness) 
 
 #### PTM level
 
  - [ ] Number of different proteoforms
  - [ ] Distribution of proteoforms per protein (summarized by mean?)
  - [ ] Number of peptides with modified and unmodified form
- - [ ] Number of 
+ - [ ] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
+ - [ ] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
+ - [ ] Number of identifiable proteoforms (1+number of different modified peptides) (aybe divided by actual proteoforms?)
  
 
 
