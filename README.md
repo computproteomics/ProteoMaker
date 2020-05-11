@@ -19,8 +19,8 @@ The folder `Benchmarking` contains the scripts used for proof of concept and ben
 The following values and distribution are collected and will be used for comparing the results
 
 #### Peptide level
-- [ ] Number of peptides 
-- [ ] Number of proteins
+- [ ] Number of peptides counting both modified and non-modified
+- [ ] Number of proteins (total of different proteins, shared count as multiples)
 - [ ] Proportion of unique peptides
 - [ ] Proportion of shared peptides
 - [ ] Percentage missingness
@@ -51,6 +51,7 @@ The following values and distribution are collected and will be used for compari
  - [ ] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
  - [ ] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
  - [ ] Proportion of identifiable proteoforms (1+number of different modified peptides) with respect to actual proteoforms
+ - [ ] Proportion of modified peptides with quantified non-modified protein
  
 
 
