@@ -34,7 +34,7 @@ The following values and distribution are collected and will be used for compari
 - [ ] Number of quantified protein groups
 - [ ] Proportion of quantified uniquely identified proteins
 - [ ] Percentage missingness
-- [ ] Distribution (summarized by its mean) of peptides per protein
+- [ ] Distribution (summarized by its mean) of modified and non-modified peptides per protein
 - [ ] AUC of ROC curve for correct differentially regulated features
 - [ ] True FDR for estimated FDR of 0.01/0.05
 - [ ] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
@@ -47,7 +47,7 @@ The following values and distribution are collected and will be used for compari
 
  - [ ] Number of different proteoforms
  - [ ] Distribution of proteoforms per protein (summarized by mean?)
- - [ ] Number of peptides with modified and unmodified form
+ - [ ] Number of peptides with modified and non-modified form
  - [ ] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
  - [ ] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
  - [ ] Proportion of identifiable proteoforms (1+number of different modified peptides) with respect to actual proteoforms
