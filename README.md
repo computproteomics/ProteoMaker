@@ -19,29 +19,29 @@ The folder `Benchmarking` contains the scripts used for proof of concept and ben
 The following values and distribution are collected and will be used for comparing the results
 
 #### Peptide level
-- [ ] Number of peptides counting both modified and non-modified
-- [ ] Number of proteins (total of different proteins, shared count as multiples)
-- [ ] Proportion of unique peptides
-- [ ] Proportion of shared peptides
-- [ ] Percentage missingness
-- [ ] AUC of ROC curve for correct differentially regulated features
-- [ ] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
-- [ ] True FDR for estimated FDR of 0.01/0.05
-- [ ] Proportion of miscleaved peptides
-- [ ] Proportion of cleaved peptides (per number of miscleavages)
+- [X] Number of peptides counting both modified and non-modified
+- [X] Number of proteins (total of different proteins, shared count as multiples)
+- [X] Proportion of unique peptides
+- [X] Proportion of shared peptides
+- [X] Percentage missingness
+- [X] AUC of ROC curve for correct differentially regulated features
+- [X] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
+- [X] True FDR for estimated FDR of 0.01/0.05
+- [X] Proportion of miscleaved peptides
+- [X] Proportion of cleaved peptides (per number of miscleavages)
 
 #### Protein level
-- [ ] Number of quantified protein groups
-- [ ] Proportion of quantified uniquely identified proteins
-- [ ] Percentage missingness
-- [ ] Distribution (summarized by its mean) of non-modified peptides per protein
-- [ ] AUC of ROC curve for correct differentially regulated features
-- [ ] True FDR for estimated FDR of 0.01/0.05
-- [ ] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
-- [ ] Sum of squares residuals towards actual fold-changes
-- [ ] Proportion of proteins with miscleaved peptides
-- [ ] Proportion of regulated proteins with wrong identified peptides (FDR < 0.01/0.05)
-- [ ] Distribution of quantitative values, how assymmetric (skewness) 
+- [X] Number of quantified protein groups
+- [X] Proportion of quantified uniquely identified proteins
+- [X] Percentage missingness
+- [X] Distribution (summarized by its mean) of non-modified peptides per protein
+- [X] AUC of ROC curve for correct differentially regulated features
+- [X] True FDR for estimated FDR of 0.01/0.05
+- [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
+- [X] Sum of squares residuals towards actual fold-changes
+- [X] Proportion of proteins with miscleaved peptides
+- [X] Proportion of regulated proteins with wrong identified peptides (FDR < 0.01/0.05)
+- [X] Distribution of quantitative values, how assymmetric (skewness) 
 
 #### PTM level
 
