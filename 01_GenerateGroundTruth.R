@@ -467,7 +467,7 @@ addProteoformAbundance <- function(proteoforms, parameters){
         rep(regulationPatterns[[x]], each = parameters$NumReps)
         
         # multiply regulation pattern with Regulation amplitude
-      })) * 2^(proteoforms[diff_reg_indices, "Regulation_Amplitude"])
+      })) * (proteoforms[diff_reg_indices, "Regulation_Amplitude"])
     
   } else {
     

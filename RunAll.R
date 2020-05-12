@@ -8,6 +8,14 @@
   source("Parameter.R")
   #####################
   
+
+## TEMPORARY
+allBs <- NULL
+for (p in seq(0,10,0.2)) {
+  Param$FracModPerProt <- i
+####
+
+
   #####################
   ## Option to save data:
   #####################
@@ -82,7 +90,7 @@ Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
 allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
 # could be dangerous when the same peptide appears in different fractions 
 rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
-# much faster with only LIMMA tests 
+# much faster with only LIMMA tests   
 StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
 
 
@@ -96,4 +104,5 @@ Stats <- Stats[rowSums(is.na(Stats[, Param$QuantColnames])) < length(Param$Quant
 StatsPep <- StatsPep[rowSums(is.na(StatsPep[, Param$QuantColnames])) < length(Param$QuantColnames), ]
 
 Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
-
+    allBs[[p]] <- Benchmarks
+}

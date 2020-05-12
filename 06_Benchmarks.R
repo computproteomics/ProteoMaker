@@ -105,7 +105,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
   # results on basis of ground truth
   ROC <- list()
-  plot(0:1, 0:1, type="n", "Proteins")
+  plot(0:1, 0:1, type="n", main="Proteins", xlim=c(0,1), ylim=c(0,1))
   for (test in statCols) {
     print(test)
     testSum <-  calcROC(Stats, test)
@@ -123,6 +123,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       globalBMs$tFDRProt0.05[[test]] <- testSum[at.05, "tFDR"]
     }
   }
+  
   legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
   Benchmarks$ProtStat <- ROC
   
