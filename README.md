@@ -11,7 +11,7 @@ The pipeline is described in the figure `PhosFakeLayout.svg` and can be describe
 3) In silico MS run (`03_MSRun.R`).
 4) Functions for data analysis from the peptide to proteins: `04_DataAnalysis.R`.
 5) Statistical testing
-6) (TODO) Benchmarking
+6) Benchmarking
 The folder `Benchmarking` contains the scripts used for proof of concept and benchmarking. 
 
 ### List of benchmarks
