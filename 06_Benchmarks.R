@@ -40,6 +40,8 @@ calcROC <- function (Stats, columnName, groundtruthColumn="min1Reg") {
 # wrapper for calculating all metrics
 calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
+  Benchmarks <- NULL
+  
   # global means 1 number per metric
   globalBMs <- list(
     # Peptide level
@@ -51,8 +53,9 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), sumSquareDiffFC=0, propMisCleavedProts=0,
     propDiffRegWrongIDProt0.01=list(),propDiffRegWrongIDProt0.05=list(),skewnessProts=0,
     # PTM level
-    numProteoforms=0, meanProteoformsPerProt=0, numModAndUnmodPep=0, aucDiffRedAdjModPeptides=list(),
-    numDiffRegPepWrong0.01=list(),numDiffRegPepWrong0.05=list(),propIdentifiableProteoforms=0, percOverlapModPepProt=0)  
+    numProteoforms=0, numModPeptides=0, meanProteoformsPerProt=0, propModAndUnmodPep=0, aucDiffRegAdjModPep=list(),
+    tFDRAdjModPep0.01=list(), tFDRAdjModPep0.05=list(), tprAdjModPep0.01=list(), tprAdjModPep0.05=list(),
+    propDiffRegPepWrong0.01=list(),propDiffRegPepWrong0.05=list(), percOverlapModPepProt=0)  
   
   
   #### Calculating peptide numbers
@@ -67,7 +70,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
   # results on basis of ground truth
   ROC <- list()
-  plot(0:1, 0:1, type="n")
+  plot(0:1, 0:1, type="n", main="Peptides")
   for (test in statCols) {
     print(test)
     testSum <-  calcROC(StatsPep, test)
@@ -86,6 +89,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     }
   }
   legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
+  Benchmarks$PepStat <- ROC
 
   # miscleavages
   globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
@@ -101,7 +105,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
   # results on basis of ground truth
   ROC <- list()
-  plot(0:1, 0:1, type="n")
+  plot(0:1, 0:1, type="n", "Proteins")
   for (test in statCols) {
     print(test)
     testSum <-  calcROC(Stats, test)
@@ -120,7 +124,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     }
   }
   legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
-  
+  Benchmarks$ProtStat <- ROC
   
   ## Calculating differences between actual and "measured" fold-changes
   patterns <- sapply(Stats$Regulation_Pattern, function(x)  matrix(as.numeric(unlist(str_split(x, ";"))), byrow=T, ncol = Param$NumCond))
@@ -157,9 +161,65 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   # checking quantitative values for assymetric distribution: skewness
   globalBMs$skewnessProts <- skewness(unlist(Stats[,Param$QuantColnames]), na.rm=T)
   
-  # TODO PTM metrics      
+  ###### metrics on PTM level
+  # number of proteoforms per protein group and in total, not all identifiable
+  ProteoformDistr <- sapply(Stats$Proteoform_ID, function(x) length(unique(as.numeric(unlist(strsplit(x, ";"))))))
+  barplot(table(ProteoformDistr), 100)
+  globalBMs$numProteoforms <- sum(ProteoformDistr)
+  globalBMs$meanProteoformsPerProt <- mean(ProteoformDistr)
   
+  globalBMs$numModPeptides <- sum(StatsPep$PTMType != "NULL")
+  ModPeps <- StatsPep[StatsPep$PTMType != "NULL",]
+  # Proportion of modified peptides with identical non-modifiedpeptide
+  pepgroups <- by(StatsPep[,c("Sequence", "Accession", "PTMType", "PTMPos")], StatsPep$Sequence, function(x) x )
+  pepgroups <- lapply(pepgroups, function(x) {x[x=="NULL"] <- NA; x})  
+  modpepgroups <- sapply(pepgroups, function(x) {sum(as.numeric(unlist(x[,"PTMPos"])),na.rm=T) > 0})
+  modpepgroups <- pepgroups[modpepgroups]
+  modunmodgroups <- sapply(modpepgroups, function(x) sum(is.na(x[,"PTMPos"])) > 0)
+  modunmodgroups <- modpepgroups[modunmodgroups]
+  globalBMs$propModAndUnmodPep <- sum(sapply(modunmodgroups, function(x) nrow(x)-1)) / globalBMs$numModPeptides
+
+  # modified peptides and their proteins
+  ModPeps <- cbind(ModPeps, merged_accs=sapply(ModPeps$Accession, function(x) paste(unlist(x),collapse=";")))
+  ModPepsWithProt <- ModPeps[ModPeps$merged_accs  %in% rownames(Stats), ]
+  globalBMs$percOverlapModPepProt <- nrow(ModPepsWithProt) / nrow(ModPeps) * 100
   
+  # Adjust by protein expression (could be moved to Statistics)
+  AdjModPepsWithProt <- ModPepsWithProt
+  AdjModPepsWithProt[,Param$QuantColnames] <- AdjModPepsWithProt[,Param$QuantColnames] - Stats[as.character(AdjModPepsWithProt$merged_accs), Param$QuantColnames]
+  StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=F)
+  
+  # results on basis of ground truth
+  ROC <- list()
+  plot(0:1, 0:1, type="n", main="Adj. modified peptides")
+  for (test in statCols) {
+    print(test)
+    testSum <-  calcROC(StatsAdjModPep, test)
+    if (nrow(testSum) > 1) {
+      lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
+      lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
+      ROC[[test]] <- testSum
+      at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
+      at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
+      
+      globalBMs$aucDiffRegAdjModPep[[test]] <- testSum[1,"AUC"]
+      globalBMs$tprAdjModPep0.01[[test]] <- testSum[at.01, "TPR"]
+      globalBMs$tprAdjModPep0.05[[test]] <- testSum[at.05, "TPR"]
+      globalBMs$tFDRAdjModPep0.01[[test]] <- testSum[at.01, "tFDR"]
+      globalBMs$tFDRAdjModPep0.05[[test]] <- testSum[at.05, "tFDR"]
+    }
+  }
+  legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
+  Benchmarks$AdjModPepStat <- ROC
+  
+  # Back to original modified peptides, counting the wrong differential regulations
+  for (test in statCols) {
+    globalBMs$propDiffRegPepWrong0.01[[test]] <- sum(ModPeps[[test]] < 0.01, na.rm=T) / nrow(ModPeps)
+    globalBMs$propDiffRegPepWrong0.05[[test]] <- sum(ModPeps[[test]] < 0.05, na.rm=T) / nrow(ModPeps)
+  }
+
+
+  Benchmarks$globalBMs <- globalBMs
   return(Benchmarks)
   
 }
@@ -167,3 +227,4 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
 
 
 
+  

@@ -423,7 +423,7 @@ addProteoformAbundance <- function(proteoforms, parameters){
       # select differentially regulated proteoforms
       diff_reg_indices = sample(1:nrow(proteoforms),size = parameters$DiffRegFrac*nrow(proteoforms))
       
-      print(diff_reg_indices)
+      #print(diff_reg_indices)
       
       # determine amplitude of regulation for regulated proteoforms
       proteoforms[diff_reg_indices, "Regulation_Amplitude"] = runif(min = 0, max = parameters$DiffRegMax, n = length(diff_reg_indices))

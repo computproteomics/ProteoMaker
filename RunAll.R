@@ -80,7 +80,7 @@ source("05_Statistics.R")
 Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
 
 allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
-# could be dangerous when the same peptide appears in different fractions
+# could be dangerous when the same peptide appears in different fractions 
 rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
 # much faster with only LIMMA tests 
 StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
@@ -89,6 +89,7 @@ StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
 # #####################
 # ## Collecting benchmarks    
 # #####################   
+source("06_Benchmarks.R")
 
 # Filter for having at least 1 actual value per protein group and peptide
 Stats <- Stats[rowSums(is.na(Stats[, Param$QuantColnames])) < length(Param$QuantColnames), ]
