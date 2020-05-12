@@ -11,7 +11,7 @@ Param <- list()
 # Number of conditions
 Param$NumCond <- 2
 # Number of replicates
-Param$NumReps <- 3
+Param$NumReps <- 5
 #####################
 
 #####################
@@ -27,10 +27,10 @@ Param$PathToProteinList <- NULL
 #####################
 ## Generation of proteoform IDs:
 # Fraction of the proteins selected to be modified:
-Param$FracModProt <- 0.0 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
+Param$FracModProt <- 0.5 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
 # fraction of modifiable proteins to be sampled for modifications >> (might require more dedicated function
 # taking into account protein properties)
-Param$FracModPerProt <- 0 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
+Param$FracModPerProt <- 1 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
 # PTM types and fraction of PTMs (with respect to protein chosen to be modified)
 Param$PTMTypes <- c("ph") #Only phosphorylation
 #Param$PTMNumber <- c("2") #It is not used.
@@ -64,7 +64,7 @@ Param$RemoveNonModFormFrac <- 0
 # Vector for column names
 Param$QuantColnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 # General noise level of all quantitative values (standard deviation of normal distribution)
-Param$QuantNoise <- 0.25
+Param$QuantNoise <- 0.5
 # Fraction of "differentially" regulated proteoforms
 Param$DiffRegFrac <- 0.2
 # max. amplitude of difference (differentially regulated proteins) on log2 scale. 
@@ -140,7 +140,7 @@ Param$PercDetectedVal <- 0.3
 # Parameter is the power to the ranks (given by number 0 to 1) (Maximum of 40)
 Param$WeightDetectVal <- 20
 # Add noise due to MS instrument:
-Param$MSNoise <- 0.3
+Param$MSNoise <- 0.7
 #####################
 
 #####################

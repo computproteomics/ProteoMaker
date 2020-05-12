@@ -374,11 +374,13 @@ filterDigestedProt <- function(DigestedProt, parameters) {
     numRemove <- floor((nrow(enrichedtab) * (1/parameters$EnrichmentEfficiency)) * (1 - parameters$EnrichmentEfficiency))
     idx <- sample(seq_len(nrow(nonenrichedtab)), size = numRemove, replace = F)
     noise <- nonenrichedtab[idx,]
+    if (length(idx)> 0) {
     noise$Enriched <- TRUE
     
     # Reduce signal of non-phospho:
     noise[, parameters$QuantColnames] <- noise[, parameters$QuantColnames] * (1 - parameters$EnrichmentNonModSignalLoss)
     enrichedtab <- rbind(enrichedtab, noise)
+    }
     
     ## Noise due to enrichment procedure:
     nrowTab <- nrow(enrichedtab)

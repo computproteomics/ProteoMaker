@@ -70,7 +70,7 @@ MSRunSim <- function(Digested, parameters) {
   }
   
   allVals[remove] <- NA
-  MSRun[ ,parameters$QuantColnames] <- allVals
+  MSRun[ ,parameters$QuantColnames] <- matrix(allVals, ncol=length(parameters$QuantColnames))
   cat("  - A total of", length(remove), "intensities is removed.\n\n")
   
   # Shuffle the intensities of randomly selected peptides, to express the wrong identification.

@@ -19,7 +19,7 @@ proteinSummarisation <- function(peptable, parameters) {
                     num_accs = sapply(peptable$Accession, length))
   
   # Sort table according to protein accession, needs to stay in this order!
-  peptable <- peptable %>% arrange(merged_accs)
+  peptable <- peptable[order(peptable$merged_accs), ]
   cat(" - Sorted protein table\n")
   
   # Vector with row indices of protein groups

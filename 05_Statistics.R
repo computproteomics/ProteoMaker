@@ -105,6 +105,36 @@ RPStats <- function(tRPMAData,NumReps) {
   return(unlist(RPMADown_pvalues))
 }
 
+PairedLIMMA <- function(MAData,NumCond,NumReps) {
+  ##########################################################
+  MAReps<-rep(1:NumCond,NumReps)
+  
+  Rank <- NULL
+  
+  ##limma with ratios
+  design<-plvalues<-NULL
+  for (c in (1:(NumCond))) {
+    design<-cbind(design,as.numeric(MAReps==c))
+  }
+  lm.fittedMA <- lmFit(MAData,design)
+  lm.bayesMA<-eBayes(lm.fittedMA)
+  topTable(lm.bayesMA)
+  plvalues <- lm.bayesMA$p.value
+  qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
+  # qvalue correction
+  for (i in 1:ncol(plvalues)) {
+    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    qlvalues[names(tqs),i] <- tqs
+  }
+  lratios <- NULL
+  for (i in 1:NumCond) {
+    lratios <- cbind(lratios, rowMeans(MAData[,MAReps==i],na.rm=T))
+  }
+  
+  return(list(lratios=lratios,ptvalues=0, plvalues=plvalues, pRPvalues=0,pPermutvalues=0,
+              qtvalues=0, qlvalues=qlvalues, qRPvalues=0, qPermutvalues=0,Sds=sqrt(lm.bayesMA$s2.post)))
+}
+
 
 Paired <- function(MAData,NumCond,NumReps) {
   ##########################################################
@@ -163,12 +193,12 @@ Paired <- function(MAData,NumCond,NumReps) {
       PermMAData <- tMAData
     }
     RealStats <- StatsForPermutTest(tMAData,Paired=T)
-     cl <- makeCluster(NumThreads)
-     clusterExport(cl=cl,varlist=c("NumReps","PermMAData","RPStats","StatsForPermutTest"),envir=environment())
-     clusterEvalQ(cl=cl, library(matrixStats))  
+    cl <- makeCluster(NumThreads)
+    clusterExport(cl=cl,varlist=c("NumReps","PermMAData","RPStats","StatsForPermutTest"),envir=environment())
+    clusterEvalQ(cl=cl, library(matrixStats))  
     PermutOut <- parLapply(cl,1:NTests,function (x) {
       indat <- apply(PermMAData,1,
-                    function(y) sample(y,NumReps)*sample(c(1,-1),NumReps,replace=T))
+                     function(y) sample(y,NumReps)*sample(c(1,-1),NumReps,replace=T))
       StatsForPermutTest(t(indat),T)
     })
     stopCluster(cl)
@@ -184,7 +214,7 @@ Paired <- function(MAData,NumCond,NumReps) {
   for (i in 1:NumCond) {
     tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
     qtvalues[names(tqs),i] <- tqs
-    print(range(pPermutvalues[,i]))
+    #    print(range(pPermutvalues[,i]))
     # tqs <- qvalue(na.omit(pPermutvalues[,i]))$qvalues
     tqs <- p.adjust(na.omit(pPermutvalues[,i]),method="BH")
     qPermutvalues[names(tqs),i] <- tqs
@@ -200,6 +230,49 @@ Paired <- function(MAData,NumCond,NumReps) {
 }
 
 
+# only LIMMA
+UnpairedDesignLIMMA <- function(Data,RR, NumCond,NumReps) {
+  ##########################################################
+  # significance analysis
+  Reps <- rep(1:NumCond,NumReps)
+  
+  # Normalize row-wise by mean
+  Data <- Data - rowMeans(Data,na.rm=T)
+  
+  # Number of tests
+  NumComps <- ncol(RR)/NumReps
+  RRCateg <- RR[,1:NumComps,drop=F]
+  
+  ## limma
+  conds <- factor(Reps-1)
+  design <- model.matrix(~ 0 + conds)
+  First <- 1
+  contrasts <- NULL
+  for (i in (1:NumComps)) contrasts<-append(contrasts,paste(colnames(design)[RRCateg[2,i]],"-",colnames(design)[RRCateg[1,i]],sep=""))
+  contrast.matrix<-makeContrasts(contrasts=contrasts,levels=design)
+  # print(dim(Data))
+  lm.fitted <- lmFit(Data,design)
+  
+  lm.contr <- contrasts.fit(lm.fitted,contrast.matrix)
+  lm.bayes<-eBayes(lm.contr)
+  topTable(lm.bayes)
+  plvalues <- lm.bayes$p.value
+  qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
+  # qvalue correction
+  for (i in 1:ncol(plvalues)) {
+    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    qlvalues[names(tqs),i] <- tqs
+  }
+  
+  lratios <- NULL
+  for (i in 1:(NumComps)) {
+    lratios <- cbind(lratios, rowMeans(Data[,Reps==RRCateg[1,i]],na.rm=T)-rowMeans(Data[,Reps==RRCateg[2,i]],na.rm=T))
+  }
+  return(list(lratios=lratios,ptvalues=0, plvalues=plvalues, pRPvalues=0, pPermutvalues=0,
+              qtvalues=0, qlvalues=qlvalues, qRPvalues=0,qPermutvalues=0,Sds=sqrt(lm.bayes$s2.post)))
+  
+}
+
 # for comparison  using design
 UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   ##########################################################
@@ -213,12 +286,11 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   NumComps <- ncol(RR)/NumReps
   RRCateg <- RR[,1:NumComps,drop=F]
   
-  
   ## limma
-  design <- model.matrix(~0+factor(Reps-1))
-  colnames(design)<-paste("i",c(1:NumCond),sep="")
-  contrasts<-NULL
+  conds <- factor(Reps-1)
+  design <- model.matrix(~ 0 + conds)
   First <- 1
+  contrasts <- NULL
   for (i in (1:NumComps)) contrasts<-append(contrasts,paste(colnames(design)[RRCateg[2,i]],"-",colnames(design)[RRCateg[1,i]],sep=""))
   contrast.matrix<-makeContrasts(contrasts=contrasts,levels=design)
   # print(dim(Data))
@@ -261,7 +333,7 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
     clusterEvalQ(cl=cl, library(matrixStats))  
     
     RPparOut <- parallel::parLapply(cl,1:NumRPPairs, function(x) {
-        tRPMAData <- tData[,sample(1:NumReps)] - trefData[,sample(1:NumReps)]
+      tRPMAData <- tData[,sample(1:NumReps)] - trefData[,sample(1:NumReps)]
       #Up
       RPMAUp_pvalues <- RPStats(tRPMAData,NumReps)
       #Down
@@ -322,11 +394,11 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   for (i in 1:(NumComps)) {
     tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
     qtvalues[names(tqs),i] <- tqs
-    print(range(pPermutvalues[,i]))
+    #  print(range(pPermutvalues[,i]))
     # tqs <- qvalue(na.omit(pPermutvalues[,i]))$qvalues
     tqs <- p.adjust(na.omit(pPermutvalues[,i]),method="BH")
     qPermutvalues[names(tqs),i] <- tqs
-    print(range(na.omit(pRPvalues[,i])))
+    # print(range(na.omit(pRPvalues[,i])))
     # print(sort(pRPvalues[,i]))
     tqs <- p.adjust(na.omit(pRPvalues[,i]),method="BH")
     # tqs <- qvalue(na.omit(pRPvalues[,i]),lambda=seq(0.05,max(na.omit(pRPvalues[,i]))-0.05,0.05))$qvalues
@@ -369,7 +441,7 @@ MissingStatsDesign <- function(Data, RR, NumCond, NumReps) {
     qNAvalues[,vs] <- p.adjust(pNAvalues[,vs], method="BH")
     
   }
-  print(head(pNAvalues))
+  #print(head(pNAvalues))
   pNAvalues[pNAvalues>1] <- 1
   
   return(list(pNAvalues=pNAvalues, qNAvalues=qNAvalues))
@@ -481,8 +553,7 @@ UnifyQvals <- function(Qvalue, NumComps, NumTests) {
 
 
 # Wrapper to call statistical tests (set to only RefCond condition as reference)
-runPolySTest <- function(fullData, Param, refCond) {
-  
+runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F) {
   Data <- fullData[,Param$QuantColnames]
   NumCond <- Param$NumCond
   NumReps <- Param$NumReps
@@ -503,11 +574,11 @@ runPolySTest <- function(fullData, Param, refCond) {
     RR[1,seq(j,ncomps*NumReps,ncomps)] <- seq(compCond,NumCond*NumReps,NumCond)
     RR[2,seq(j,ncomps*NumReps,ncomps)] <- seq(refCond,NumCond*NumReps,NumCond)
   }
-
+  
   # Rearrange order of colums to grouped replicates
   act_cols <- rep(0:(NumCond-1),NumReps)*NumReps+rep(1:(NumReps), each=NumCond)
   Data <- Data[,act_cols]
-
+  
   # Run tests
   MAData <- NULL
   if (isPaired) {
@@ -515,12 +586,22 @@ runPolySTest <- function(fullData, Param, refCond) {
       MAData<-cbind(MAData,Data[,RR[1,i]]-Data[,RR[2,i]])
     }
     rownames(MAData)<-rownames(dat)
-    qvalues <- Paired(MAData, ncomps, NumReps)
+    if (onlyLIMMA) {
+      qvalues <- PairedLIMMA(MAData, ncomps, NumReps)
+    } else {
+      qvalues <- Paired(MAData, ncomps, NumReps)
+    }
   } else {
-    qvalues <- UnpairedDesign(Data, RR, NumCond, NumReps)
+    if (onlyLIMMA) {
+      qvalues <- UnpairedDesignLIMMA(Data, RR, NumCond, NumReps)
+    } else {
+      qvalues <- UnpairedDesign(Data, RR, NumCond, NumReps)
+    }
   }
-  MissingStats <- MissingStatsDesign(Data, RR, NumCond, NumReps)
-
+  MissingStats <- data.frame(pNAvalues=0, qNAvalues=0)
+  if (!onlyLIMMA) 
+    MissingStats <- MissingStatsDesign(Data, RR, NumCond, NumReps)
+  
   # Preparing data
   LogRatios <- qvalues$lratios
   Pvalue <- cbind(qvalues$plvalues, MissingStats$pNAvalues, qvalues$pRPvalues, qvalues$pPermutvalues, qvalues$ptvalues)
@@ -533,12 +614,15 @@ runPolySTest <- function(fullData, Param, refCond) {
   colnames(Pvalue) <- paste("p-values",rep(testNames,each=ncomps),rep(compNames,length(testNames)))
   testNames2 <- c("PolySTest",testNames)
   colnames(Qvalue) <- paste("FDR",rep(testNames2,each=ncomps),rep(compNames,length(testNames2)))
+  fullData$Regulation_Amplitude <- sapply(fullData$Regulation_Amplitude, function(x) paste(x, collapse=";"))
+  fullData$Regulation_Pattern <- sapply(fullData$Regulation_Pattern, function(x) paste(x, collapse=";"))
   FullReg <- cbind(LogRatios, Qvalue, as.data.frame(fullData))#, WhereReg)
   
   # Summarize regulations   
-  FullReg <- cbind(FullReg, min1Reg=sapply(str_split(Prots$Regulation_Amplitude, ";"),function(x) sum(as.numeric(x),na.rm=T)) != 0, 
-                   allReg=sapply(str_split(Prots$Regulation_Amplitude, ";"),function(x) !is.na(sum(as.numeric(x)))))
-
-
+  #print((sapply(str_split(Prots$Regulation_Amplitude, ";"),function(x) sum(as.numeric(x),na.rm=T))))
+  FullReg <- cbind(FullReg, min1Reg=sapply(str_split(fullData$Regulation_Amplitude, ";"),function(x) sum(as.numeric(x),na.rm=T)) != 0, 
+                   allReg=sapply(str_split(fullData$Regulation_Amplitude, ";"),function(x) !is.na(sum(as.numeric(x)))))
+  
+  
   return(FullReg)
 }
