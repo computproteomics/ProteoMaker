@@ -45,13 +45,15 @@ The following values and distribution are collected and will be used for compari
 
 #### PTM level
 
- - [ ] Number of different proteoforms
- - [ ] Distribution of proteoforms per protein (summarized by mean?)
- - [ ] Number of peptides with modified and non-modified form
- - [ ] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
- - [ ] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
- - [ ] Proportion of identifiable proteoforms (1+number of different modified peptides) with respect to actual proteoforms
- - [ ] Proportion of modified peptides with quantified non-modified protein
+ - [X] Number of quantitatvely represented proteoforms in data set (including combined ones)
+ - [X] Number modified peptides
+ - [X] Distribution of proteoforms per protein (summarized by mean?)
+ - [X] Proportion of modified peptides with identical non-modified form
+ - [X] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
+ - [X] True FDR for estimated FDR of 0.01/0.05
+ - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
+ - [X] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
+ - [X] Proportion of modified peptides with quantified non-modified protein
  
 
 
