@@ -175,13 +175,13 @@ for (hh in 1:length(listtogroundtruth)) {
         BeforeMS <- filterDigestedProt(DigestedProt = peptable, parameters = Param)
         save(Param, BeforeMS, file = filename)
       }
-      pfParam <- Param
+      dgParam <- Param
       
       ### MS run
       listtomsrun <- purrr::cross(compact(paramMSRun))
       for (kk in 1:length(listtomsrun)) {
         Param <- "none"
-        tParam <- c(pfParam,listtomsrun[[kk]])
+        tParam <- c(dgParam,listtomsrun[[kk]])
         md5 <- digest(tParam, algo = "md5")
         filename <- paste0(resultFilePath,"/outputMSRun_",md5,".RData")
         if (file.exists(filename)) {
