@@ -47,7 +47,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     # Peptide level
     numPeptides=0, numProteins=0, propUniquePep=0, propSharedPep=0, percMissingPep=0,
     aucDiffRegPeptides=list(), tprPep0.01=list(), tprPep0.05=list(), tFDRPep0.01=list(), tFDRPep0.05=list(), 
-    propMisCleavedPeps=vector(),
+    propMisCleavedPeps=list(),
     # Protein level
     numQuantProtGroups=0, propUniqueProts=0, percMissingProt=0, meanPepPerProt=0, aucDiffRegProteins=list(), 
     tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), sumSquareDiffFC=0, propMisCleavedProts=0,
@@ -92,7 +92,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   Benchmarks$PepStat <- ROC
   
   # miscleavages
-  globalBMs["propMisCleavedPeps"] <- as.list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
+  globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
   
   #### Calculating protein numbers
   globalBMs["numQuantProtGroups"] <- nrow(Stats)
@@ -154,7 +154,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   globalBMs["sumSquareDiffFC"] <- sumsquare / sum(diffs != 0)
   
   # Counting miscleavages
-  globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0) / nrow(Stats)
+globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0) / nrow(Stats)
   
   # statistics with respect to wrong identifications
   wrong_ids <- sapply(Stats$WrongID, function(x) sum(as.logical(unlist(strsplit(x, ";")))))

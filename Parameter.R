@@ -89,9 +89,9 @@ Param$ThreshNAQuantileProt <- 0.01
 # Enzyme
 Param$Enzyme <- "trypsin"
 # Proportion of peptides with missed cleavages
-Param$PropMissedCleavages <- 0.05
+Param$PropMissedCleavages <- 0.8
 # Maximum number of missed cleavages per peptide
-Param$MaxNumMissedCleavages <- 4
+Param$MaxNumMissedCleavages <- 6
 # Miss cleavage abundance proportion from parental proteoform
 #Param$PropMissedCleavagesAbundance <- c(0.8, 0.15, 0.5)
 # Filter for min and max of peptide length
