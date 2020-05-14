@@ -18,7 +18,7 @@ MSRunSim <- function(Digested, parameters) {
   
   # TODO: what about multiples from different fractions?
   
-  cat("#MS RUN SIMULATION - Start\n\n")
+  cat("\n#MS RUN SIMULATION - Start\n\n")
   cat(" + Noise addition:\n")
   cat("  - The MS noise standard deviation is", parameters$MSNoise, ".\n")
 

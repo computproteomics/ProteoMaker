@@ -1,51 +1,45 @@
 ################################################################################
 #                     TO TUN THE ENTIRE PHOSFAKE PIPELINE                      #
-  ################################################################################
-  
-  #####################
-  ## Load parameters
-  #####################
-  source("Parameter.R")
-  #####################
-  
+################################################################################
 
-## TEMPORARY
-allBs <- NULL
-for (p in seq(0,10,0.2)) {
-  Param$FracModPerProt <- i
-####
+#####################
+## Load parameters
+#####################
+source("Parameter.R")
+#####################
 
 
-  #####################
-  ## Option to save data:
-  #####################
-  if (!exists("saveData")) {
-    saveData <- FALSE
-  }
-  #####################
-  
-  #####################
-  ## Run the sample preparation simulation:
-  #####################
-  source("01_GenerateGroundTruth.R")
-  # Create the initial list of proteoforms:
-  proteoforms <- samplePreparation(parameters = Param)
-  # Create the full structure of proteoforms along with abundances and ground truth expression patterns:
-  GroundTruth <- addProteoformAbundance(proteoforms = proteoforms, parameters = Param)
-  rm(proteoforms)
-  # Save GroundTruth for analysis:
-  if (saveData) {
-    save(GroundTruth, file = "RData/GroundTruthAbs.RData")
-  }
+
+#####################
+## Option to save data:
+#####################
+if (!exists("saveData")) {
+  saveData <- FALSE
+}
+#####################
+
+#####################
+## Run the sample preparation simulation:
+#####################
+source("01_GenerateGroundTruth.R")
+# Create the initial list of proteoforms:
+proteoforms <- samplePreparation(parameters = Param)
+# Create the full structure of proteoforms along with abundances and ground truth expression patterns:
+GroundTruth <- addProteoformAbundance(proteoforms = proteoforms, parameters = Param)
+rm(proteoforms)
+# Save GroundTruth for analysis:
+if (saveData) {
+  save(GroundTruth, file = "RData/GroundTruthAbs.RData")
+}
 #####################
 
 #####################
 ## Digestion and sample peptide enrichment:
 #####################
-  source("02_Digestion.R")
+source("02_Digestion.R")
 # Digest all the proteoforms and get peptide table:
 peptable <- digestGroundTruth(proteoforms = GroundTruth, parameters = Param)
-  # Save peptable before filter for analysis:
+# Save peptable before filter for analysis:
 if (saveData) {
   save(peptable, file = "RData/AllPep.RData")
 }
@@ -84,7 +78,7 @@ Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Pa
 # ## Statistical testing
 # ##################### 
 source("05_Statistics.R")
-  
+
 Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
 
 allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
@@ -104,5 +98,4 @@ Stats <- Stats[rowSums(is.na(Stats[, Param$QuantColnames])) < length(Param$Quant
 StatsPep <- StatsPep[rowSums(is.na(StatsPep[, Param$QuantColnames])) < length(Param$QuantColnames), ]
 
 Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
-    allBs[[p]] <- Benchmarks
-}
+

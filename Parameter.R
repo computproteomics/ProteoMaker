@@ -1,16 +1,3 @@
-################################################################################
-#                     PARAMETERS OF THE PHOSFAKE PIPELINE                      #
-################################################################################
-
-# Create list that will contain all the parameters:
-Param <- list()
-
-#####################
-## Variables for generating an experimental design:
-#####################
-# Number of conditions
-Param$NumCond <- 2
-# Number of replicates
 Param$NumReps <- 5
 #####################
 
@@ -27,10 +14,10 @@ Param$PathToProteinList <- NULL
 #####################
 ## Generation of proteoform IDs:
 # Fraction of the proteins selected to be modified:
-Param$FracModProt <- 0.5 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
+Param$FracModProt <- 0.0 # Set to 0 if no modified proteins should be generated or 1 if only modified proteins should be generated.
 # fraction of modifiable proteins to be sampled for modifications >> (might require more dedicated function
 # taking into account protein properties)
-Param$FracModPerProt <- 3 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
+Param$FracModPerProt <- 2 # Here, a parameter of 2 will lead to 2 times more proteoforms than the set of selected proteins for modification
 # PTM types and fraction of PTMs (with respect to protein chosen to be modified)
 Param$PTMTypes <- c("ph") #Only phosphorylation
 #Param$PTMNumber <- c("2") #It is not used.
@@ -44,7 +31,7 @@ Param$PTMTypesMass <- c(79.9663) #Phospho
 
 # Distribution of multiply modified proteins is Poisson. Setting lambda
 # Parameter is scaled to the number of possible PTM sites. Therefore set it to a value <1
-Param$PTMMultipleLambda <- 0.1
+Param$PTMMultipleLambda <- 0.5
 # Residues for PTM type and relative distribution 
 # For the moment, we only consider "usual" phosphorylation on serine, threonine and tyrosines. 
 # We use the proportion of each phosphorylation type based on what is observed in the literature.
@@ -73,7 +60,7 @@ Param$DiffRegMax <- 3
 
 # >>>> For input of custom set of regulated proteoforms:
 Param$UserInputFoldChanges <- NULL
-# I use the UPS1 setup (Ramus et al. 2016). KEPP NULL ID DO NOT WANT.
+# I use the UPS1 setup (Ramus et al. 2016). KEEP NULL ID DO NOT WANT.
 # Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(96, 3),
 #                                    "RegulationFC" = rep(log2(c(100, 10, 2)), rep(96, 3)))
 
@@ -85,7 +72,7 @@ Param$UserInputFoldChanges <- NULL
 # COMMENT FROM VS:
 # What is the relation of this one to the others? Seems to be an arbitrary number which is 
 # difficult to put into context
-Param$ThreshNAProteoform <- -4
+Param$ThreshNAProteoform <- -100
 ## So if we want to add absolute quan:
 Param$AbsoluteQuanMean <- 30.5
 Param$AbsoluteQuanSD <- 3.6
@@ -104,7 +91,7 @@ Param$Enzyme <- "trypsin"
 # Proportion of peptides with missed cleavages
 Param$PropMissedCleavages <- 0.05
 # Maximum number of missed cleavages per peptide
-Param$MaxNumMissedCleavages <- 2
+Param$MaxNumMissedCleavages <- 4
 # Miss cleavage abundance proportion from parental proteoform
 #Param$PropMissedCleavagesAbundance <- c(0.8, 0.15, 0.5)
 # Filter for min and max of peptide length
@@ -116,11 +103,11 @@ Param$ClusterType <- NA
 #Param$Cores <- 10
 #Param$ClusterType <- "PSOCK" #"FORK" for linux. PSOCK works for both linux and windows
 # Remove percentage of least summarized abundant peptides (0-1).
-Param$LeastAbundantLoss <- 0.1
+Param$LeastAbundantLoss <- 0.0
 #####################
 
 #####################
-## Paramters for simulating sample preparation before MS analysis (phospho-enrichment)
+## Parameters for simulating sample preparation before MS analysis (phospho-enrichment)
 #####################
 # Loss of phosphorylated peptides during enrichment
 Param$EnrichmentLoss <- 0.2
@@ -159,6 +146,7 @@ Param$WrongLocalizations <- 0.01
 ## Filter MS search results
 #####################
 #Removes peptides that have more NA values than a specific number.
+# Veit says: might become obsolete
 Param$MaxNAPerPep <- 100
 
 #####################

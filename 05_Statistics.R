@@ -123,16 +123,21 @@ PairedLIMMA <- function(MAData,NumCond,NumReps) {
   qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
   # qvalue correction
   for (i in 1:ncol(plvalues)) {
-    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    if (length(na.omit(plvalues[,i])) > 200) {
+      tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(plvalues[,i]), method="BH")
+    }
     qlvalues[names(tqs),i] <- tqs
   }
   lratios <- NULL
   for (i in 1:NumCond) {
     lratios <- cbind(lratios, rowMeans(MAData[,MAReps==i],na.rm=T))
   }
-  
-  return(list(lratios=lratios,ptvalues=0, plvalues=plvalues, pRPvalues=0,pPermutvalues=0,
-              qtvalues=0, qlvalues=qlvalues, qRPvalues=0, qPermutvalues=0,Sds=sqrt(lm.bayesMA$s2.post)))
+  empty <- matrix(1,ncol=NumCond,nrow=plvalues)
+  return(list(lratios=lratios,ptvalues=empty, plvalues=plvalues, pRPvalues=empty,
+              pPermutvalues=empty,qtvalues=empty, qlvalues=qlvalues, qRPvalues=empty, 
+              qPermutvalues=empty,Sds=sqrt(lm.bayesMA$s2.post)))
 }
 
 
@@ -154,7 +159,11 @@ Paired <- function(MAData,NumCond,NumReps) {
   qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
   # qvalue correction
   for (i in 1:ncol(plvalues)) {
-    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    if (length(na.omit(plvalues[,i])) > 200) {
+      tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(plvalues[,i]), method="BH")
+    }
     qlvalues[names(tqs),i] <- tqs
   }
   
@@ -212,7 +221,11 @@ Paired <- function(MAData,NumCond,NumReps) {
   lratios <- NULL
   qRPvalues <- qtvalues <- qPermutvalues <- matrix(NA,nrow=nrow(MAData),ncol=NumCond,dimnames=list(rows=rownames(MAData), cols=1:NumCond))
   for (i in 1:NumCond) {
-    tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
+    if (length(na.omit(ptvalues[,i])) > 200) {
+      tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(ptvalues[,i]), method="BH")
+    }
     qtvalues[names(tqs),i] <- tqs
     #    print(range(pPermutvalues[,i]))
     # tqs <- qvalue(na.omit(pPermutvalues[,i]))$qvalues
@@ -268,8 +281,9 @@ UnpairedDesignLIMMA <- function(Data,RR, NumCond,NumReps) {
   for (i in 1:(NumComps)) {
     lratios <- cbind(lratios, rowMeans(Data[,Reps==RRCateg[1,i]],na.rm=T)-rowMeans(Data[,Reps==RRCateg[2,i]],na.rm=T))
   }
-  return(list(lratios=lratios,ptvalues=0, plvalues=plvalues, pRPvalues=0, pPermutvalues=0,
-              qtvalues=0, qlvalues=qlvalues, qRPvalues=0,qPermutvalues=0,Sds=sqrt(lm.bayes$s2.post)))
+  empty <- matrix(1, ncol=NumComps, nrow=nrow(plvalues))
+  return(list(lratios=lratios,ptvalues=empty, plvalues=plvalues, pRPvalues=empty, pPermutvalues=empty,
+              qtvalues=empty, qlvalues=qlvalues, qRPvalues=empty,qPermutvalues=empty,Sds=sqrt(lm.bayes$s2.post)))
   
 }
 
@@ -392,7 +406,11 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   pRPvalues[!is.finite(pRPvalues)] <- NA
   qRPvalues <- qtvalues <- qPermutvalues <- matrix(NA,nrow=nrow(Data),ncol=NumComps,dimnames=list(rows=rownames(Data), cols=1:(NumComps)))
   for (i in 1:(NumComps)) {
-    tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
+    if (length(na.omit(ptvalues[,i])) > 50) {
+      tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(ptvalues[,i]), method="BH")
+    }
     qtvalues[names(tqs),i] <- tqs
     #  print(range(pPermutvalues[,i]))
     # tqs <- qvalue(na.omit(pPermutvalues[,i]))$qvalues
@@ -580,6 +598,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F) {
   Data <- Data[,act_cols]
   
   # Run tests
+  testNames <- c("limma","Miss test","rank products","permutation test","t-test")
   MAData <- NULL
   if (isPaired) {
     for (i in 1:ncol(RR)) {
@@ -598,7 +617,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F) {
       qvalues <- UnpairedDesign(Data, RR, NumCond, NumReps)
     }
   }
-  MissingStats <- data.frame(pNAvalues=0, qNAvalues=0)
+  MissingStats <- list(pNAvalues=matrix(1,ncol=ncomps,nrow=nrow(Data)), qNAvalues=matrix(1,ncol=ncomps, nrow=nrow(Data)))
   if (!onlyLIMMA) 
     MissingStats <- MissingStatsDesign(Data, RR, NumCond, NumReps)
   
@@ -607,10 +626,9 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F) {
   Pvalue <- cbind(qvalues$plvalues, MissingStats$pNAvalues, qvalues$pRPvalues, qvalues$pPermutvalues, qvalues$ptvalues)
   Qvalue <- cbind(qvalues$qlvalues, MissingStats$qNAvalues,qvalues$qRPvalues, qvalues$qPermutvalues, qvalues$qtvalues)
   Qvalue <- cbind(UnifyQvals(Qvalue,ncomps,5), Qvalue)
-  testNames <- c("limma","Miss test","rank products","permutation test","t-test")
   # print(head(LogRatios))
-  # print(compNames)
-  colnames(LogRatios) <- paste("log-ratios",compNames)
+
+    colnames(LogRatios) <- paste("log-ratios",compNames)
   colnames(Pvalue) <- paste("p-values",rep(testNames,each=ncomps),rep(compNames,length(testNames)))
   testNames2 <- c("PolySTest",testNames)
   colnames(Qvalue) <- paste("FDR",rep(testNames2,each=ncomps),rep(compNames,length(testNames2)))

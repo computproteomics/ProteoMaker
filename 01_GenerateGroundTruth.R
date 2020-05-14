@@ -451,8 +451,8 @@ addProteoformAbundance <- function(proteoforms, parameters){
   
   proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
   
-  print(length(regulationPatterns))
-  print(regulationPatterns)
+  #print(length(regulationPatterns))
+  #print(regulationPatterns)
   
   if(!is.null(regulationPatterns)){
   

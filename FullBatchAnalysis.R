@@ -1,0 +1,258 @@
+################################################################################
+#                       QC batch test of the parameters                        #
+################################################################################
+
+library(purrr)
+library(crayon)
+library(parallel)
+library(digest)
+
+
+####################### Paths and directories
+#####################
+#Working directory should be PhosFake's main directory.
+# File paths
+fastaFilePath <- "QC_DataAnalysis"
+resultFilePath <- "QC_DataAnalysis/QC_output"
+# For parallel computing
+cores <- 8
+clusterType <- "FORK"
+
+try(  dir.create(resultFilePath))
+
+
+repportName <- paste0(resultFilePath,"/QC_Report_BatchAnalysis_", gsub(":|[[:space:]]", "_", format(Sys.time(), "%Y%b%d%X")))
+
+file.create(paste0(repportName,".txt"))
+#####################
+
+#####################
+## Load sources
+#####################
+
+source("Parameter.R")
+source("01_GenerateGroundTruth.R")
+source("02_Digestion.R")
+source("03_MSRun.R")
+source("04_DataAnalysis.R")
+source("05_Statistics.R")
+source("06_Benchmarks.R")
+#####################
+
+#####################
+## Create list of testing parameters
+#####################
+
+
+# Fasta files:
+pathToFasta <- list.files(path = fastaFilePath, full.names = T, pattern = ".fasta")
+
+# Generate a list of parameters to test:
+# Note: here we need to define ALL parameters as this will generate the necessary hash
+paramGroundTruth <- list(#####   Ground truth generation
+  "PathToFasta" = "QC_DataAnalysis/fasta_full_yeast.fasta",
+  #"PathToFasta" = pathToFasta,
+  "PathToProteinList" = NULL,
+  "NumReps" = 3,
+  "NumCond" = 2,
+  "FracModProt" = 0,
+  "FracModPerProt" = 0,
+  "PTMTypes" = NULL,
+  "PTMTypesDist" = NULL,
+  "PTMTypesMass" = NULL,
+  "PTMMultipleLambda" = NULL,
+  "ModifiableResidues" = NULL,
+  "ModifiableResiduesDistr" = NULL,
+  "RemoveNonModFormFrac" = 0
+)
+paramProteoformAb <- list(
+  #                    "QuantNoise" = seq(0,1,0.2),
+  "QuantNoise" = 0.2,
+  "DiffRegFrac" =0.1,
+  "DiffRegMax" = seq(1, 2, 0.5),
+  "UserInputFoldChanges" = NULL,
+  "ThreshNAProteoform" = -100,
+  "AbsoluteQuanMean" = 30.5,
+  "AbsoluteQuanSD" = 3.6,
+  "ThreshNAQuantileProt" = 0.01
+)
+paramDigest <- list(
+  ##### Digestion
+  "Enzyme" = "trypsin",
+  "PropMissedCleavages" = c(0.01), 
+  "MaxNumMissedCleavages" = 4,
+  "PepMinLength" = 7,
+  "PepMaxLength" = 30,
+  "LeastAbundantLoss" = 0,
+  "EnrichmentLoss" = 0.2,
+  "EnrichmentEfficiency" = 1,
+  "EnrichmentNonModSignalLoss" = 0,
+  "EnrichmentNoise" = 0.2
+)
+paramMSRun <- list(
+  ##### MSRun
+  "PercDetectedPep" = seq(0.2,0.2,0.05),
+  "PercDetectedVal" = seq(0.5,0.5,0.05),
+  "WeightDetectVal" = c(1),
+  "MSNoise" = c(0.5),
+  "WrongIDs" = c(0.01),
+  "WrongIdentifications" = 0.01,
+  "MaxNAPerPep" = 1000
+)
+paramDataAnalysis <- list(
+  ##### Data analysis
+  "ProtSummarization" = "medpolish",
+  "MinUniquePep" = 1:3,
+  "StatPaired" = FALSE
+)
+#####################
+
+#####################
+## Run the sample preparation:
+#####################
+
+# all combinations of the parameters
+listtogroundtruth <- purrr::cross(compact(paramGroundTruth))
+
+## setting up the entire thing hierarchically.
+## Problem: how to parallelize
+
+#Gather always benchmarking data
+allBs <- NULL
+
+for (hh in 1:length(listtogroundtruth)) {
+  
+  ## Running ground thruth generations
+  # check whether file with correct parameters exists
+  tParam <- listtogroundtruth[[hh]]
+  Param <- "none"
+  md5 <- digest(tParam, algo = "md5")
+  filename <- paste0(resultFilePath,"/outputGroundTruth_",md5,".RData")
+  if (file.exists(filename)) {
+    load(filename)
+  }
+  if (all(unlist(Param) != unlist(tParam))) {
+    Param <- tParam
+    groundTruth <- samplePreparation(parameters = Param)
+    save(Param, groundTruth, file = filename)
+  }
+  gtParam <- Param
+  ## quantitative proteoform abundances
+  listtoproteoformab <- purrr::cross(compact(paramProteoformAb))
+  for (ii in 1:length(listtoproteoformab)) {
+    Param <- "none"
+    # create combined parameterfile
+    tParam <- c(gtParam,listtoproteoformab[[ii]])
+    tParam <- c(tParam, list(QuantColnames = paste0("C_",rep(1:tParam$NumCond,each=tParam$NumReps),"_R_", rep(1:tParam$NumReps, tParam$NumCond))))
+    # hash code to represent parameter configuration
+    md5 <- digest(tParam, algo = "md5")
+    filename <- paste0(resultFilePath,"/outputProteoformAb_",md5,".RData")
+    if (file.exists(filename)) {
+      load(filename)
+    }
+    # test for exactly same parameters and run if not
+    if (!all(unlist(Param) == unlist(tParam))) {
+      Param <- tParam
+      proteoformAb <- addProteoformAbundance(proteoforms = groundTruth, parameters = Param)
+      save(Param, proteoformAb, file = filename)
+    }
+    pfParam <- Param
+    
+    ### Digestion
+    listtodigestion <- purrr::cross(compact(paramDigest))
+    for (jj in 1:length(listtodigestion)) {
+      Param <- "none"
+      tParam <- c(pfParam,listtodigestion[[jj]])
+      md5 <- digest(tParam, algo = "md5")
+      filename <- paste0(resultFilePath,"/outputDigestion_",md5,".RData")
+      if (file.exists(filename)) {
+        load(filename)
+      }
+      if (!all(unlist(Param) == unlist(tParam))) {
+        Param <- tParam
+        peptable <- digestGroundTruth(proteoforms = proteoformAb, parameters = c(Param, list(Cores=cores, ClusterType=clusterType)))
+        peptable <- digestionProductSummarization(peptides = peptable, parameters = Param)
+        BeforeMS <- filterDigestedProt(DigestedProt = peptable, parameters = Param)
+        save(Param, BeforeMS, file = filename)
+      }
+      pfParam <- Param
+      
+      ### MS run
+      listtomsrun <- purrr::cross(compact(paramMSRun))
+      for (kk in 1:length(listtomsrun)) {
+        Param <- "none"
+        tParam <- c(pfParam,listtomsrun[[kk]])
+        md5 <- digest(tParam, algo = "md5")
+        filename <- paste0(resultFilePath,"/outputMSRun_",md5,".RData")
+        if (file.exists(filename)) {
+          load(filename)
+        }
+        if (!all(unlist(Param) == unlist(tParam))) {
+          Param <- tParam
+          AfterMSRun <- vector(mode = "list")
+          for (i in which(sapply(BeforeMS, length) > 0)) {
+            AfterMSRun[[length(AfterMSRun) + 1]] <- MSRunSim(Digested = BeforeMS[[i]], parameters = Param)
+          }
+          names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
+          save(Param, AfterMSRun, file = filename)
+        }
+        msParam <- Param
+        
+        ### Protein abundance
+        listtodatanalysis <- purrr::cross(compact(paramDataAnalysis))
+        for (ll in 1:length(listtodatanalysis)) {
+          Param <- "none"
+          tParam <- c(msParam,listtodatanalysis[[ll]])
+          md5 <- digest(tParam, algo = "md5")
+          filename <- paste0(resultFilePath,"/outputDataAnalysis_",md5,".RData")
+          if (file.exists(filename)) {
+            load(filename)
+          }
+          if (!all(unlist(Param) == unlist(tParam))) {
+            Param <- tParam
+            Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
+            # Don't accept anything below 100 proteins
+            if(nrow(Prots) > 99) { 
+              # Filter for having at least 1 actual value per protein group and peptide
+              Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames])) < length(Param$QuantColnames), ]
+              allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
+              allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames])) < length(Param$QuantColnames), ]
+              rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
+              Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
+              # much faster with only LIMMA tests   
+              StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
+              Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+              save(Param, Stats, StatsPep, Benchmarks, file = filename)
+            } else {
+              print("Too few proteins!!!")
+              Benchmarks <- NULL
+            }
+          }
+          allBs[[md5]] <- list(Benchmarks, Param)
+        }
+      }
+    }
+  }
+}
+cat("###### Finished data set generation \n")
+
+### This part can be used for visualizing and comparing
+## Preferably calling an external script
+par(mfrow=c(3,3))
+for (obj in names(unlist(allBs[[1]][[1]]$globalBMs))) {
+  #obj <- "numPeptides"
+  dat <- NULL
+  for (i in names(allBs)) {
+    tglob <- unlist(allBs[[i]][[1]]$globalBMs)
+    dat <- c(dat, tglob[[obj]])  
+  }
+  dat <- dat[!is.na(dat)]
+  if (length(dat)>0)
+    plot(dat, main=obj)
+}
+par(mfrow=c(1,1))
+
+
+
+
+
