@@ -237,22 +237,34 @@ for (hh in 1:length(listtogroundtruth)) {
 cat("###### Finished data set generation \n")
 
 ### This part can be used for visualizing and comparing
-## Preferably calling an external script
+## Preferably turning into an external script
+
+# extracting all benchmarks (sometimes there are more or less per run)
+t_allbnames <- NULL
+for (i in names(allBs)) {
+  t_allbnames <- c(t_allbnames, names(unlist(allBs[[i]][[1]]$globalBMs)))
+}
+benchNames <- unique(t_allbnames)
+BenchMatrix <- data.frame(matrix(NA, ncol=length(benchNames)+length(Param)  , nrow=length(allBs)))
+colnames(BenchMatrix) <- c(benchNames, names(Param))
+rownames(BenchMatrix) <- names(allBs)
+
+# writing all results and parameters into matrix
+for (i in names(allBs)) {
+  tglob <- unlist(allBs[[i]][[1]]$globalBMs)
+  BenchMatrix[i, names(tglob)] <- tglob
+  tpar <- allBs[[i]][[2]]
+  BenchMatrix[i, names(tpar)] <- sapply(tpar, function(x) ifelse(length(x)>1, paste0(x,collapse="_"), x))
+}
+
+# Visualize roughly
 par(mfrow=c(3,3))
-for (obj in names(unlist(allBs[[1]][[1]]$globalBMs))) {
-  #obj <- "numPeptides"
-  dat <- NULL
-  for (i in names(allBs)) {
-    tglob <- unlist(allBs[[i]][[1]]$globalBMs)
-    dat <- c(dat, tglob[[obj]])  
-  }
-  dat <- dat[!is.na(dat)]
-  if (length(dat)>0)
-    plot(dat, main=obj)
+# define reference for x-axis
+ref <- "PropMissedCleavages"
+for (obj in benchNames) {
+  dat <- BenchMatrix[,obj]
+  if (sum(!is.na(dat)) > 0)
+    plot(BenchMatrix[,ref], dat, main=obj)
 }
 par(mfrow=c(1,1))
-
-
-
-
 

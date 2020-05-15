@@ -273,7 +273,11 @@ UnpairedDesignLIMMA <- function(Data,RR, NumCond,NumReps) {
   qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
   # qvalue correction
   for (i in 1:ncol(plvalues)) {
-    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    if (length(na.omit(plvalues[,i])) > 200) {
+      tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(plvalues[,i]), method="BH")
+    }
     qlvalues[names(tqs),i] <- tqs
   }
   
@@ -317,7 +321,11 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
   # qvalue correction
   for (i in 1:ncol(plvalues)) {
-    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    if (length(na.omit(plvalues[,i])) > 200) {
+      tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(plvalues[,i]), method="BH")
+    }
     qlvalues[names(tqs),i] <- tqs
   }
   ## rank products + t-test
