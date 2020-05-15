@@ -74,11 +74,10 @@ if (saveData) {
 source("04_DataAnalysis.R")
 Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
 
-# #####################
+      # #####################
 # ## Statistical testing
 # ##################### 
 source("05_Statistics.R")
-
 Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
 
 allPeps <- as.data.frame(do.call("rbind", AfterMSRun))

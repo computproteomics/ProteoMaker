@@ -10,6 +10,9 @@ proteinSummarisation <- function(peptable, parameters) {
   
   minUniquePep <- parameters$MinUniquePep
   
+  QuantColnames <- parameters$QuantColnames
+  
+
   cat("Number of minimum unique peptide per protein:", minUniquePep, "\n")
   
   cat("Protein summarisation using the", method, "approach.\n")
@@ -33,7 +36,7 @@ proteinSummarisation <- function(peptable, parameters) {
     }
   }
   prot_ind <- c(prot_ind, nrow(peptable))
-  other_cols <- colnames(peptable)[!colnames(peptable) %in% parameters$QuantColnames]
+  other_cols <- colnames(peptable)[!colnames(peptable) %in% QuantColnames]
   cat(" - built protein index for faster summarization\n")
   pb <- txtProgressBar(min=0, max=length(prot_ind))
   
@@ -41,53 +44,53 @@ proteinSummarisation <- function(peptable, parameters) {
   protmat <- as.data.frame(matrix(ncol = ncol(peptable), nrow = length(prot_ind)))
   rownames(protmat) <- names(prot_ind)
   colnames(protmat) <- colnames(peptable)
-
+  
   for (i in 1:(length(prot_ind)-1)){
-    
+
     setTxtProgressBar(pb, i)
-    
+
     tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
     rownames(tmp) <- tmp$Sequence
-    
+
     # add other information
     protmat[i,other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
 
-    tmp <- tmp[tmp$num_accs==1, parameters$QuantColnames]
+    tmp <- tmp[tmp$num_accs==1, QuantColnames]
     if (nrow(tmp) >= minUniquePep) {
       tmp <- as.matrix(tmp)
-      
+
       if (method == "sum.top3") {
-        
+
         tmp <- tmp[order(rowSums(tmp), decreasing = T),]
-        
+
         if (nrow(tmp) >= 3) {
-          
-          protmat[i,parameters$QuantColnames] <- log2(colSums(2^tmp[1:3,], na.rm = T))
-          
+
+          protmat[i,QuantColnames] <- log2(colSums(2^tmp[1:3,], na.rm = T))
+
         } else {
-          
+
           protmat[i,parameters$QuantColnames] <- log2(colSums(2^tmp, na.rm = T))
         }
-        
+
       } else if (method == "medpolish"){
         summed <- colSummarizeMedianpolish(tmp)$Estimates
         if (length(summed) > 0)
-          protmat[i,parameters$QuantColnames] <- summed
-        
+          protmat[i,QuantColnames] <- summed
+
       } else {
-        
+
       }
-      
+
     }
-    
+
   }
-  
+
   close(pb)
   protmat[protmat == -Inf] <- NA
-  protmat <- protmat[rowSums(is.na(protmat[,parameters$QuantColnames])) < length(parameters$QuantColnames), ]
+  protmat <- protmat[rowSums(is.na(protmat[,QuantColnames])) < length(QuantColnames), ]
   
-#  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i]) 
-
+  #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i]) 
+  
   return(protmat)
   
 }

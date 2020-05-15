@@ -1,6 +1,19 @@
-Param$NumReps <- 5
-#####################
-
+  ################################################################################
+  #                     PARAMETERS OF THE PHOSFAKE PIPELINE                      #
+  ################################################################################
+    
+  # Create list that will contain all the parameters:
+  Param <- list()
+  
+  #####################
+  ## Variables for generating an experimental design:
+  #####################
+  # Number of conditions
+  Param$NumCond <- 2
+  # Number of replicates
+  Param$NumReps <- 5
+  #####################
+  
 #####################
 ## Path to input data
 #####################
@@ -89,7 +102,7 @@ Param$ThreshNAQuantileProt <- 0.01
 # Enzyme
 Param$Enzyme <- "trypsin"
 # Proportion of peptides with missed cleavages
-Param$PropMissedCleavages <- 0.8
+Param$PropMissedCleavages <- 0.01
 # Maximum number of missed cleavages per peptide
 Param$MaxNumMissedCleavages <- 6
 # Miss cleavage abundance proportion from parental proteoform
@@ -98,8 +111,8 @@ Param$MaxNumMissedCleavages <- 6
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
 # For parallel computing
-Param$Cores <- NA
-Param$ClusterType <- NA
+Param$Cores <- 1
+Param$ClusterType <- "PSOCK"
 #Param$Cores <- 10
 #Param$ClusterType <- "PSOCK" #"FORK" for linux. PSOCK works for both linux and windows
 # Remove percentage of least summarized abundant peptides (0-1).
