@@ -414,7 +414,7 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   pRPvalues[!is.finite(pRPvalues)] <- NA
   qRPvalues <- qtvalues <- qPermutvalues <- matrix(NA,nrow=nrow(Data),ncol=NumComps,dimnames=list(rows=rownames(Data), cols=1:(NumComps)))
   for (i in 1:(NumComps)) {
-    if (length(na.omit(ptvalues[,i])) > 50) {
+    if (length(na.omit(ptvalues[,i])) > 200) {
       tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
     } else {
       tqs <- p.adjust(na.omit(ptvalues[,i]), method="BH")

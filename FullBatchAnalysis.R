@@ -225,8 +225,9 @@ for (hh in 1:length(listtogroundtruth)) {
               save(Param, Stats, StatsPep, Benchmarks, file = filename)
             } else {
               print("Too few proteins!!!")
-              Benchmarks <- NULL
-            }
+              Benchmarks <- Stats <- StatsPep <- NULL
+              save(Param, Stats, StatsPep, Benchmarks, file = filename)
+              }
           }
           allBs[[md5]] <- list(Benchmarks, Param)
         }

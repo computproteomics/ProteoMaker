@@ -128,8 +128,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   Benchmarks$ProtStat <- ROC
   
   ## Calculating differences between actual and "measured" fold-changes
-  patterns <- sapply(Stats$Regulation_Pattern, function(x)  matrix(as.numeric(unlist(str_split(x, ";"))), byrow=T, ncol = Param$NumCond))
-  amplitudes <- sapply(Stats$Regulation_Amplitude, function(x) as.numeric(unlist(str_split(x, ";"))))
+  patterns <- lapply(Stats$Regulation_Pattern, function(x)  matrix(as.numeric(unlist(str_split(x, ";"))), byrow=T, ncol = Param$NumCond))
+  amplitudes <- lapply(Stats$Regulation_Amplitude, function(x) as.numeric(unlist(str_split(x, ";"))))
   diffs <- vector("numeric",length(patterns))
   sumsquare <- 0
   for (i in 1:length(patterns)) {
