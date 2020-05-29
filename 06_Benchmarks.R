@@ -40,6 +40,8 @@ calcROC <- function (Stats, columnName, groundtruthColumn="min1Reg") {
 # wrapper for calculating all metrics
 calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
+  cat("\n#### Calculating benchmarks ###\n")
+  
   Benchmarks <- NULL
   
   # global means 1 number per metric

@@ -88,7 +88,7 @@ StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
 
 
 # #####################
-# ## Collecting benchmarks    
+# ## Collecting benchmarks          
 # #####################   
 source("06_Benchmarks.R")
 
