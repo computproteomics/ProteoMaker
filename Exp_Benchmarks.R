@@ -373,10 +373,10 @@ library(jsonlite)
 ## General parameters
 withGroundTruth <- F
 tmpdir <- "/data/tmp"
-allPRIDE <- readLines("accessions.json")
+allPRIDE <- readLines("pxd_accessions.json")
 
 
-for (pxd in 937:length(allPRIDE))  {
+for (pxd in 1:length(allPRIDE))  {
   
   tdat <- fromJSON(allPRIDE[[pxd]])
   modpep <- protlist <- NULL
