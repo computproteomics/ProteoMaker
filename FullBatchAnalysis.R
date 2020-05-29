@@ -105,7 +105,7 @@ paramMSRun <- list(
   "WeightDetectVal" = c(0,0.1,1),
   "MSNoise" = c(0.25, 0.5),
   "WrongIDs" = c(0.01,0.05),
-  "WrongIdentifications" = 0.01,
+  "WrongLocalizations" = 0.01,
   "MaxNAPerPep" = 1000
 )
 paramDataAnalysis <- list(
