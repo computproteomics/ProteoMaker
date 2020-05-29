@@ -47,11 +47,11 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     # Peptide level
     numPeptides=0, numProteins=0, propUniquePep=0, propSharedPep=0, percMissingPep=0,
     aucDiffRegPeptides=list(), tprPep0.01=list(), tprPep0.05=list(), tFDRPep0.01=list(), tFDRPep0.05=list(), 
-    propMisCleavedPeps=list(),
+    propMisCleavedPeps=list(),skewnessPeps=0, kurtosisPeps=0, sdPeps=0,
     # Protein level
     numQuantProtGroups=0, propUniqueProts=0, percMissingProt=0, meanPepPerProt=0, aucDiffRegProteins=list(), 
     tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), sumSquareDiffFC=0, propMisCleavedProts=0,
-    propDiffRegWrongIDProt0.01=list(),propDiffRegWrongIDProt0.05=list(),skewnessProts=0,
+    propDiffRegWrongIDProt0.01=list(),propDiffRegWrongIDProt0.05=list(),skewnessProts=0, kurtosisProts=0, sdProts=0,
     # PTM level
     numProteoforms=0, numModPeptides=0, meanProteoformsPerProt=0, propModAndUnmodPep=0, aucDiffRegAdjModPep=list(),
     tFDRAdjModPep0.01=list(), tFDRAdjModPep0.05=list(), tprAdjModPep0.01=list(), tprAdjModPep0.05=list(),
@@ -163,8 +163,14 @@ globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.nume
     globalBMs$propDiffRegWrongIDProt0.05[[test]] <- sum(Stats[,test] < 0.05 & wrong_ids > 0, na.rm=T) / sum(Stats[,test] < 0.05, na.rm=T)
   }
   
-  # checking quantitative values for assymetric distribution: skewness
+  # checking properties of distribution
   globalBMs$skewnessProts <- skewness(unlist(Stats[,Param$QuantColnames]), na.rm=T)
+  globalBMs$kurtosisProts <- kurtosis(unlist(Stats[,Param$QuantColnames]), na.rm=T)
+  globalBMs$sdProts <- sd(unlist(Stats[,Param$QuantColnames]), na.rm=T)
+  globalBMs$skewnessPeps <- skewness(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
+  globalBMs$kurtosisPeps <- kurtosis(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
+  globalBMs$sdPeps <- sd(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
+  
   
   ###### metrics on PTM level
   # number of proteoforms per protein group and in total, not all identifiable
