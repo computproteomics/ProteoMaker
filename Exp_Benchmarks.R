@@ -373,7 +373,7 @@ library(jsonlite)
 ## General parameters
 withGroundTruth <- F
 tmpdir <- "/data/tmp"
-allPRIDE <- readLines("pxd_accessions.json")
+allPRIDE <- readLines("../ExpBench/pxd_accessions.json")
 
 
 for (pxd in 1:length(allPRIDE))  {
@@ -384,47 +384,55 @@ for (pxd in 1:length(allPRIDE))  {
     # if maxquant
     if (grepl("maxquant",tolower(tdat$dataProcessingProtocol)) ) {
       # if maxquant files available
-      if (tdat$files$list$fileType == "SEARCH" & any(grepl("modificationSpecificPeptides.txt",tdat$files$list$fileName)) &
-          +           any(grepl("proteinGroups.txt",tdat$files$list$fileName))) {
-        modpep <- read.csv(grep("modificationSpecificPeptides.txt",tdat$files$list$fileName, value=T), sep="\t")
-        protlist <- read.csv(grep("proteinGroups.txt",tdat$files$list$fileName, value=T), sep="\t")
+          if (tdat$files$list$fileType == "SEARCH" & any(grepl("/modificationSpecificPeptides.txt",tdat$files$list$downloadLink)) &
+                      any(grepl("/proteinGroups.txt",tdat$files$list$downloadLink))) {
+            modpep <- read.csv(grep("/modificationSpecificPeptides.txt",tdat$files$list$downloadLink, value=T), sep="\t")
+            protlist <- read.csv(grep("/proteinGroups.txt",tdat$files$list$downloadLink, value=T), sep="\t")
         # if maxquant files in zip file
       } else if (any(tdat$files$list$fileType == "SEARCH" & grepl(".zip",tdat$files$list$fileName) )) {
         filenames <- tdat$files$list$downloadLink[which(tdat$files$list$fileType == "SEARCH" & grepl(".zip",tdat$files$list$fileName))]
         # non-optimal: if more than one zip file, then take the first
         for (filename in filenames) {
           tempfile <- tempfile(tmpdir=tmpdir)
-          download.file(filename, tempfile)
-          filelist <- unzip(tempfile, list=T)$Name
+          print(filename)
+          download.file(filename, tempfile, mode="wb")
+            filelist <- unzip(tempfile, list=T)$Name
+              dfile <- grep("modificationSpecificPeptides.txt",filelist, value=T)[1]
           if (any(grepl("modificationSpecificPeptides.txt",filelist)) & any(grepl("proteinGroups.txt",filelist))) {
-            modpep <- read.csv(unzip(tempfile, grep("modificationSpecificPeptides.txt",filelist, value=T)), sep="\t")
-            file.remove(grep("modificationSpecificPeptides.txt",filelist, value=T))
-            protlist <- read.csv(unzip(tempfile, grep("proteinGroups.txt",filelist, value=T)), sep="\t")
-            file.remove(grep("proteinGroups.txt",filelist, value=T))
-          }
-          file.remove(tempfile)
-        }
-        # if both files are non-zero
-        if (!is.null(modpep) & !is.null(protlist)) {
-          try({
-            MQout <- readMaxQuant(modpep, protlist)
-            allPeps <- MQout$allPeps
-            Prots <- MQout$Prots
-            Param <- MQout$Param
-            Benchmarks <- NULL
-            rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
-            if (withGroundTruth) {
-              Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
-              # much faster with only LIMMA tests   
-              StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
-              Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
-            } else {
-              Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
+              system(paste0("unzip ",tempfile," \"",dfile,"\""))
+              modpep <- read.csv( dfile, sep="\t")
+              file.remove(dfile)
+              dfile <- grep("proteinGroups.txt",filelist, value=T)[1]
+              system(paste0("unzip ",tempfile," \"",dfile,"\""))
+              protlist <- read.csv( dfile, sep="\t")
+              file.remove(dfile)
             }
-            save(Benchmarks, Prots, allPeps, Param, tdat, file =paste0("benchmarks_",which(filename==filenames),"_",tdat$accession, ".RData") )
-          })
+                    file.remove(tempfile)
+          
+          # if both files are non-zero
+          if (!is.null(modpep) & !is.null(protlist)) {
+            try({
+              MQout <- readMaxQuant(modpep, protlist)
+              allPeps <- MQout$allPeps
+              Prots <- MQout$Prots
+              Param <- MQout$Param
+              Benchmarks <- NULL
+              rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
+              if (withGroundTruth) {
+                Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
+                # much faster with only LIMMA tests   
+                StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
+                Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+              } else {
+                Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
+              }
+              save(Benchmarks, Prots, allPeps, Param, tdat, file =paste0("benchmarks_",which(filename==filenames),"_",tdat$accession, ".RData") )
+            })
+          }
         }
       }
     }
   }
 }
+  
+  
