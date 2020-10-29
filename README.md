@@ -19,16 +19,23 @@ The folder `Benchmarking` contains the scripts used for proof of concept and ben
 The following values and distribution are collected and will be used for comparing the results
 
 #### Peptide level
-- [X] Number of peptides counting both modified and non-modified
-- [X] Number of proteins (total of different proteins, shared count as multiples)
-- [X] Proportion of unique peptides
-- [X] Proportion of shared peptides
+- [X] Total number of peptides counting both modified and non-modified (TODO: check whether fixed PTMs (e.g. carbidomethylations) are count as PTM)
+- [X] Number of proteins (total of different proteins, the shared ones count as multiples) (TODO: is it number of unique accessions?)
+- [X] Proportion of unique peptides (TODO: PTMs? Take stripped sequences only?)
+- [X] TODO: Total number of unique stripped sequences
+- [X] Proportion of shared peptides (TODO: redundant?)
 - [X] Percentage missingness
 - [X] AUC of ROC curve for correct differentially regulated features
 - [X] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
 - [X] True FDR for estimated FDR of 0.01/0.05
-- [X] Proportion of miscleaved peptides
+- [X] Proportion of miscleaved peptides (TODO: redundant?)
 - [X] Proportion of cleaved peptides (per number of miscleavages)
+- [X] TODO: Retention time range (max-min)
+- [X] TODO: Dynamic range (max-min on log-scale)
+- [X] TODO: Number of accepted PSMs (count scan numbers)
+- [X] TODO: (only in silico) mean of std. dev. within replicates (on log-scale)
+- [X] TODO: Distribution of quantitative values, how assymmetric (skewness) 
+
 
 #### Protein level
 - [X] Number of quantified protein groups
@@ -39,13 +46,15 @@ The following values and distribution are collected and will be used for compari
 - [X] True FDR for estimated FDR of 0.01/0.05
 - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
 - [X] Sum of squares residuals towards actual fold-changes
+- [X] TODO: Dynamic range (max-min on log-scale)
+- [X] TODO: (only in silico) mean of std. dev. within replicates (on log-scale)
 - [X] Proportion of proteins with miscleaved peptides
 - [X] Proportion of regulated proteins with wrong identified peptides (FDR < 0.01/0.05)
 - [X] Distribution of quantitative values, how assymmetric (skewness) 
 
 #### PTM level
 
- - [X] Number of quantitatvely represented proteoforms in data set (including combined ones)
+ - [X] Number of quantitatively represented proteoforms in data set (including combined ones) (TODO: is that calculated from experimental data?)
  - [X] Number modified peptides
  - [X] Distribution of proteoforms per protein (summarized by mean?)
  - [X] Proportion of modified peptides with identical non-modified form
@@ -54,6 +63,7 @@ The following values and distribution are collected and will be used for compari
  - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
  - [X] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
  - [X] Proportion of modified peptides with quantified non-modified protein
+ - [X] TODO: sum of square of residuals towards actual fold-changes (only modified peptides)
  
 
 ### Running full batches and benchmarking
