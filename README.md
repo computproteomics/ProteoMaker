@@ -22,8 +22,7 @@ The following values and distribution are collected and will be used for compari
 - [X] Total number of peptides counting both modified and non-modified (fixed PTMs are not considered "modified")
 - [X] Number of proteins (total of all proteins, independently whether shared or uniquely identified) 
 - [X] Proportion of unique modified and non-modified peptides 
-- [X] TODO: Total number of unique stripped sequences
-- [X] Proportion of shared peptides (TODO: redundant?)
+- [X] Total number of unique stripped sequences
 - [X] Percentage missingness
 - [X] AUC of ROC curve for correct differentially regulated features
 - [X] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
