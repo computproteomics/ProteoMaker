@@ -30,9 +30,10 @@ The following values and distribution are collected and will be used for compari
 - [X] Proportion of cleaved peptides (per number of miscleavages)
 - [X] Retention time range (max-min)
 - [X] Dynamic range (max-min on log2-scale)
-- [X] TODO: Number of accepted PSMs (count scan numbers)
-- [] TODO: (only in silico) mean of std. dev. within replicates (on log-scale)
-- [] TODO: Distribution of quantitative values, how assymmetric (skewness) 
+- [X] Number of accepted PSMs (count scan numbers)
+- [ ] TODO: Sum of squares residuals towards actual fold-changes (assigns mean fold-change for peptides with multiple assigned fold-changes )
+- [ ] TODO: (only in silico) mean of std. dev. within replicates of peptides with actual fold-changes (on log-scale)
+- [X] Distribution of quantitative values, how assymmetric (skewness) 
 
 
 #### Protein level
