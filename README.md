@@ -19,9 +19,9 @@ The folder `Benchmarking` contains the scripts used for proof of concept and ben
 The following values and distribution are collected and will be used for comparing the results
 
 #### Peptide level
-- [X] Total number of peptides counting both modified and non-modified (TODO: check whether fixed PTMs (e.g. carbidomethylations) are count as PTM)
-- [X] Number of proteins (total of different proteins, the shared ones count as multiples) (TODO: is it number of unique accessions?)
-- [X] Proportion of unique peptides (TODO: PTMs? Take stripped sequences only?)
+- [X] Total number of peptides counting both modified and non-modified (fixed PTMs are not considered "modified")
+- [X] Number of proteins (total of all proteins, independently whether shared or uniquely identified) 
+- [X] Proportion of unique modified and non-modified peptides 
 - [X] TODO: Total number of unique stripped sequences
 - [X] Proportion of shared peptides (TODO: redundant?)
 - [X] Percentage missingness
