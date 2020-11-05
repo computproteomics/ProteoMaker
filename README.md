@@ -44,7 +44,7 @@ The following values and distribution are collected and will be used for compari
 - [X] AUC of ROC curve for correct differentially regulated features
 - [X] True FDR for estimated FDR of 0.01/0.05
 - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
-- [X] Sum of squares residuals towards actual fold-changes
+- [X] Sum of squares residuals towards actual fold-changes (takes the 1st non-zero one in case of multiples)
 - [X] TODO: Dynamic range (max-min on log-scale)
 - [X] TODO: (only in silico) mean of std. dev. within replicates (on log-scale)
 - [X] Proportion of proteins with miscleaved peptides
