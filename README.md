@@ -47,7 +47,7 @@ The following values and distribution are collected and will be used for compari
 - [X] True FDR for estimated FDR of 0.01/0.05
 - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
 - [X] Sum of squares residuals towards actual fold-changes (takes the 1st non-zero one in case of multiples)
-- [X] TODO: Dynamic range (max-min on log-scale)
+- [X] Dynamic range (max-min on log-scale)
 - [X] Mean of std. dev. within replicates (on log-scale)(only regulated proteins)
 - [X] Proportion of proteins with miscleaved peptides
 - [X] Proportion of regulated proteins with wrong identified peptides (FDR < 0.01/0.05)
