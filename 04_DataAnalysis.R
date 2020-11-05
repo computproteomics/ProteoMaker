@@ -55,7 +55,7 @@ proteinSummarisation <- function(peptable, parameters) {
     # add other information
     protmat[i,other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
 
-    tmp <- tmp[tmp$num_accs==1, QuantColnames]
+    tmp <- tmp[tmp$num_accs==1, QuantColnames,drop=F]
     if (nrow(tmp) >= minUniquePep) {
       tmp <- as.matrix(tmp)
 
