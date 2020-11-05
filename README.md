@@ -28,11 +28,11 @@ The following values and distribution are collected and will be used for compari
 - [X] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
 - [X] True FDR for estimated FDR of 0.01/0.05
 - [X] Proportion of cleaved peptides (per number of miscleavages)
-- [X] TODO: Retention time range (max-min)
-- [X] TODO: Dynamic range (max-min on log-scale)
+- [X] Retention time range (max-min)
+- [X] Dynamic range (max-min on log2-scale)
 - [X] TODO: Number of accepted PSMs (count scan numbers)
-- [X] TODO: (only in silico) mean of std. dev. within replicates (on log-scale)
-- [X] TODO: Distribution of quantitative values, how assymmetric (skewness) 
+- [] TODO: (only in silico) mean of std. dev. within replicates (on log-scale)
+- [] TODO: Distribution of quantitative values, how assymmetric (skewness) 
 
 
 #### Protein level
