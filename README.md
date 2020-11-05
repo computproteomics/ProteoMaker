@@ -27,7 +27,6 @@ The following values and distribution are collected and will be used for compari
 - [X] AUC of ROC curve for correct differentially regulated features
 - [X] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
 - [X] True FDR for estimated FDR of 0.01/0.05
-- [X] Proportion of miscleaved peptides (TODO: redundant?)
 - [X] Proportion of cleaved peptides (per number of miscleavages)
 - [X] TODO: Retention time range (max-min)
 - [X] TODO: Dynamic range (max-min on log-scale)
