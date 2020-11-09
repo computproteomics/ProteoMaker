@@ -52,8 +52,10 @@ readMaxQuant <- function(allPeps, Prots, Param=NULL) {
 library(jsonlite)
 ## General parameters
 withGroundTruth <- F
-tmpdir <- "/data/tmp"
-allPRIDE <- readLines("../ExpBench/pxd_accessions.json")
+tmpdir <- "tmp"
+tmpdir <- normalizePath(tmpdir)
+
+allPRIDE <- readLines("pxd_accessions.json")
 
 
 for (pxd in 1:length(allPRIDE))  {
@@ -65,8 +67,7 @@ for (pxd in 1:length(allPRIDE))  {
     if (grepl("maxquant",tolower(tdat$dataProcessingProtocol)) ) {
       print(pxd)
       # if maxquant files available
-      if (tdat$files$list$fileType == "SEARCH" & any(grepl("/modificationSpecificPeptides.txt",tdat$files$list$downloadLink)) &
-          any(grepl("/proteinGroups.txt",tdat$files$list$downloadLink))) {
+      if (tdat$files$list$fileType == "SEARCH" & any(grepl("/modificationSpecificPeptides.txt",tdat$files$list$downloadLink)) &  any(grepl("/proteinGroups.txt",tdat$files$list$downloadLink))) {
         modpep <- read.csv(grep("/modificationSpecificPeptides.txt",tdat$files$list$downloadLink, value=T), sep="\t")
         protlist <- read.csv(grep("/proteinGroups.txt",tdat$files$list$downloadLink, value=T), sep="\t")
         # if maxquant files in zip file
@@ -80,14 +81,17 @@ for (pxd in 1:length(allPRIDE))  {
           filelist <- system(paste0("jar tf ", tempfile), intern=T)
           # non-optimal: takes only the first of the files if multiples are available in zip-file     
           if (any(grepl("modificationSpecificPeptides.txt",filelist)) & any(grepl("proteinGroups.txt",filelist))) {
+#	    print(filelist)
             dfile <- grep("modificationSpecificPeptides.txt",filelist, value=T)[1]
-            system(paste0("jar xvf ",tempfile," \"",dfile,"\""))
-            modpep <- read.csv( dfile, sep="\t")
-            file.remove(dfile)
+            system(paste0("cd ",tmpdir,";jar xvf ",tempfile," \"",dfile,"\""))
+	    tdfile <- paste0(tmpdir,"/", dfile)
+            modpep <- read.csv(tdfile, sep="\t")
+            file.remove(tdfile)
             dfile <- grep("proteinGroups.txt",filelist, value=T)[1]
-            system(paste0("jar xvf ",tempfile," \"",dfile,"\""))
-            protlist <- read.csv( dfile, sep="\t")
-            file.remove(dfile)
+	    tdfile <- paste0(tmpdir,"/", dfile)
+            system(paste0("cd ",tmpdir,";jar xvf ",tempfile," \"",dfile,"\""))
+            protlist <- read.csv(tdfile, sep="\t")
+            file.remove(tdfile)
           }
           file.remove(tempfile)
           
