@@ -64,9 +64,9 @@ Param$RemoveNonModFormFrac <- 0
 # Vector for column names
 Param$QuantColnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 # General noise level of all quantitative values (standard deviation of normal distribution)
-Param$QuantNoise <- 0.5
+Param$QuantNoise <- 0.0
 # Fraction of "differentially" regulated proteoforms
-Param$DiffRegFrac <- 0.1
+Param$DiffRegFrac <- 0.0
 # max. amplitude of difference (differentially regulated proteins) on log2 scale. 
 # Will be taken from uniform distribution with randomly chosen directions
 Param$DiffRegMax <- 3

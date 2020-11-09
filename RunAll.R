@@ -74,7 +74,7 @@ if (saveData) {
 source("04_DataAnalysis.R")
 Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
 
-      # #####################
+# #####################
 # ## Statistical testing
 # ##################### 
 source("05_Statistics.R")
