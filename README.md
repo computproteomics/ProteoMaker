@@ -57,16 +57,15 @@ The following values and distribution are collected and will be used for compari
 
 #### PTM level
 
- - [X] Number of quantitatively represented proteoforms in data set (including combined ones) (TODO: is that calculated from experimental data?)
+ - [X] Total number and mean of quantitatively represented proteoforms per protein in data set (including protein groups) (can only be calculated for in silico data)
  - [X] Number modified peptides
- - [X] Distribution of proteoforms per protein (summarized by mean?)
  - [X] Proportion of modified peptides with identical non-modified form
  - [X] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
  - [X] True FDR for estimated FDR of 0.01/0.05
  - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
  - [X] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
  - [X] Proportion of modified peptides with quantified non-modified protein
- - [X] TODO: sum of square of residuals towards actual fold-changes (only modified peptides)
+ - [X] Sum of square of residuals towards actual fold-changes (only modified peptides)
  
 
 ### Running full batches and benchmarking
