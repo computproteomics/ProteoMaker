@@ -79,19 +79,19 @@ for (pxd in 1:nrow(allPRIDE))  {
         for (filename in filenames) {
           tempfile <- tempfile(tmpdir=tmpdir)
           print(filename)
-           download.file(filename, tempfile, mode="wb")
+          download.file(filename, tempfile, mode="wb")
           #              filelist <- unzip(tempfile, list=T)$Name
           filelist <- system(paste0("jar tf ", tempfile), intern=T)
           # non-optimal: takes only the first of the files if multiples are available in zip-file     
           if (any(grepl("modificationSpecificPeptides.txt",filelist)) & any(grepl("proteinGroups.txt",filelist))) {
-#	    print(filelist)
+            #	    print(filelist)
             dfile <- grep("modificationSpecificPeptides.txt",filelist, value=T)[1]
             system(paste0("cd ",tmpdir,";jar xvf ",tempfile," \"",dfile,"\""))
-	    tdfile <- paste0(tmpdir,"/", dfile)
+            tdfile <- paste0(tmpdir,"/", dfile)
             modpep <- read.csv(tdfile, sep="\t")
             file.remove(tdfile)
             dfile <- grep("proteinGroups.txt",filelist, value=T)[1]
-	    tdfile <- paste0(tmpdir,"/", dfile)
+            tdfile <- paste0(tmpdir,"/", dfile)
             system(paste0("cd ",tmpdir,";jar xvf ",tempfile," \"",dfile,"\""))
             protlist <- read.csv(tdfile, sep="\t")
             file.remove(tdfile)
@@ -139,6 +139,15 @@ AllExpBenchmarks <- NULL
 for (bench in benchmarks) {
   load(bench)
   print(bench)
+  if (withGroundTruth) {
+    Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
+    # much faster with only LIMMA tests   
+    StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
+    Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+  } else {
+    Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
+  }
+  save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
   AllExpBenchmarks <- rbind(c(unlist(Benchmarks$globalBMs), tdat))
 }
 rownames(AllExpBenchmarks) <- benchmarks
