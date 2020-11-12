@@ -55,28 +55,31 @@ withGroundTruth <- F
 tmpdir <- "tmp"
 tmpdir <- normalizePath(tmpdir)
 
-allPRIDE <- readLines("pxd_accessions.json")
+#allPRIDE <- readLines("pxd_accessions.json")
+allPRIDE <- read.csv(unz("pride_df.zip","pride_df.csv"), stringsAsFactors = F)
 
-
-for (pxd in 1:length(allPRIDE))  {
+for (pxd in 1:nrow(allPRIDE))  {
   
-  tdat <- fromJSON(allPRIDE[[pxd]])
+  tdat <- allPRIDE[pxd,]
   modpep <- protlist <- NULL
-  if (!is.null(tdat$dataProcessingProtocol) & !is.null(tdat$files)) {
+  if (!is.null(tdat$dataProcessingProtocol)) {
     # if maxquant
     if (grepl("maxquant",tolower(tdat$dataProcessingProtocol)) ) {
       print(pxd)
+      tfile_list <- read_json(paste0("https://www.ebi.ac.uk/pride/ws/archive/v2/files/byProject?accession=",tdat$accession))
+      file_types <- sapply(tfile_list, function(x) x$fileCategory$value)
+      file_list <- sapply(tfile_list, function(x) ifelse(grepl("ftp://",x$publicFileLocations[[1]]$value), x$publicFileLocations[[1]]$value, x$publicFileLocations[[2]]$value ))
       # if maxquant files available
-      if (tdat$files$list$fileType == "SEARCH" & any(grepl("/modificationSpecificPeptides.txt",tdat$files$list$downloadLink)) &  any(grepl("/proteinGroups.txt",tdat$files$list$downloadLink))) {
-        modpep <- read.csv(grep("/modificationSpecificPeptides.txt",tdat$files$list$downloadLink, value=T), sep="\t")
-        protlist <- read.csv(grep("/proteinGroups.txt",tdat$files$list$downloadLink, value=T), sep="\t")
+      if (any(grepl("/modificationSpecificPeptides.txt",file_list)) &  any(grepl("/proteinGroups.txt",file_list))) {
+        modpep <- read.csv(grep("/modificationSpecificPeptides.txt",file_list, value=T), sep="\t")
+        protlist <- read.csv(grep("/proteinGroups.txt",file_list, value=T), sep="\t")
         # if maxquant files in zip file
-      } else if (any(tdat$files$list$fileType == "SEARCH" & grepl(".zip",tdat$files$list$fileName) )) {
-        filenames <- tdat$files$list$downloadLink[which(tdat$files$list$fileType == "SEARCH" & grepl(".zip",tdat$files$list$fileName))]
+      } else if (any(file_types == "SEARCH" & grepl(".zip",file_list) )) {
+        filenames <- file_list[which(file_types == "SEARCH" & grepl(".zip",file_list))]
         for (filename in filenames) {
           tempfile <- tempfile(tmpdir=tmpdir)
           print(filename)
-          download.file(filename, tempfile, mode="wb")
+           download.file(filename, tempfile, mode="wb")
           #              filelist <- unzip(tempfile, list=T)$Name
           filelist <- system(paste0("jar tf ", tempfile), intern=T)
           # non-optimal: takes only the first of the files if multiples are available in zip-file     
