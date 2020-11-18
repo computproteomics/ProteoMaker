@@ -113,17 +113,24 @@ AllExpBenchmarks <- NULL
 for (bench in benchmarks) {
   load(bench)
   print(bench)
-  if (withGroundTruth) {
-    Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
-    # much faster with only LIMMA tests   
-    StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
-    Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
-  } else {
-    Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
-  }
+  Benchmarks$globalBMs <- NA
+  try({
+    if (withGroundTruth) {
+      Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
+      # much faster with only LIMMA tests   
+      StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
+      Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+    } else {
+      Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
+    }
+  })
   save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
-  AllExpBenchmarks <- rbind(c(unlist(Benchmarks$globalBMs), tdat))
+  if (length(Benchmarks$globalBMS) == 1 & !is.na(Benchmarks$globalBMs)) {
+    AllExpBenchmarks <- rbind(AllExpBenchmarks,c(unlist(Benchmarks$globalBMs), tdat))
+  } else {
+    AllExpBenchmarks <- rbind(AllExpBenchmarks,NA)
+    
+  }
 }
-rownames(AllExpBenchmarks) <- benchmarks
+names(AllExpBenchmarks) <- benchmarks
 save(AllExpBenchmarks, file="AllExpBenchmarks.RData")
-

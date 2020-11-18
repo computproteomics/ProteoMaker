@@ -139,6 +139,7 @@ for (pxd in 1:nrow(allPRIDE))  {
 benchmarks <- list.files("./","benchmarks.*RData")
 AllExpBenchmarks <- NULL
 for (bench in benchmarks) {
+  try({
   load(bench)
   print(bench)
   if (withGroundTruth) {
@@ -151,6 +152,7 @@ for (bench in benchmarks) {
   }
   save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
   AllExpBenchmarks <- rbind(c(unlist(Benchmarks$globalBMs), tdat))
+  })
 }
 rownames(AllExpBenchmarks) <- benchmarks
 save(AllExpBenchmarks, file="AllExpBenchmarks.RData")
