@@ -148,8 +148,17 @@ for (bench in benchmarks) {
     StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
     Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
   } else {
+    
     Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
   }
+  ### Get additional benchmarks only for experimental data
+  ## Max. difference retention time
+  Benchmarks$globalBMs$diffRetentionTime <- diff(range(allPeps$Retention.time))
+  
+  ## Number of accepted PSMs (count scan numbers)
+  Benchmarks$globalBMs$acceptedPSMs <- sum(allPeps$MS.MS.Count)
+  
+  
   save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
   AllExpBenchmarks <- rbind(c(unlist(Benchmarks$globalBMs), tdat))
   })

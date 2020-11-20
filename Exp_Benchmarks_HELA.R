@@ -133,7 +133,7 @@ for (zip in allzips)  {
 
 
 benchmarks <- list.files("./","benchmarks.*RData")
-AllExpBenchmarks <- NULL
+AllExpBenchmarks <- AllProts <- AllPeps <- NULL
 for (bench in benchmarks) {
   load(bench)
   print(bench)
@@ -147,14 +147,28 @@ for (bench in benchmarks) {
     } else {
       Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
     }
+    
+    AllProts <- c(AllProts, Prots[,c("Accession","Intensity.HeLA")])
+    AllPeps <- c(AllPeps, cbind(paste0(allPeps[,"Sequence"], allPeps[,"Modification"]),allPeps[,"Intensity.HeLA"]))
+    ### Get additional benchmarks only for experimental data
+    ## Max. difference retention time
+    Benchmarks$globalBMs$diffRetentionTime <- diff(range(allPeps$Retention.time))
+    
+    ## Number of accepted PSMs (count scan numbers)
+    Benchmarks$globalBMs$acceptedPSMs <- sum(allPeps$MS.MS.Count)
+    
+    
   })
   save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
-  if (length(Benchmarks$globalBMS) == 1 & !is.na(Benchmarks$globalBMs)) {
+  if (length(Benchmarks$globalBMs) > 1 & !is.na(Benchmarks$globalBMs)) {
     AllExpBenchmarks <- rbind(AllExpBenchmarks,c(unlist(Benchmarks$globalBMs), tdat))
   } else {
-    AllExpBenchmarks <- rbind(AllExpBenchmarks,NA)
+    AllExpBenchmarks <- rbind(AllExpBenchmarks,rep(NA, ncol(AllExpBenchmarks)))
     
   }
 }
+
+
+
 names(AllExpBenchmarks) <- benchmarks
-save(AllExpBenchmarks, file="AllExpBenchmarks.RData")
+save(AllProts, AllPeps, AllExpBenchmarks, file="AllExpBenchmarks.RData")
