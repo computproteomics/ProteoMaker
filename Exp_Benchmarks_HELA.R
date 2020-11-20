@@ -85,7 +85,7 @@ for (zip in allzips)  {
     tdfile <- paste0(tmpdir,"/", dfile)
     modpep <- NULL
     if (file.size(tdfile) > 0) {
-    modpep <- read.csv(tdfile, sep="\t")
+      modpep <- read.csv(tdfile, sep="\t")
     }
     file.remove(tdfile)
     dfile <- grep("proteinGroups.txt",filelist, value=T)[1]
@@ -148,8 +148,9 @@ for (bench in benchmarks) {
       Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
     }
     
-    AllProts <- c(AllProts, Prots[,c("Accession","Intensity.HeLA")])
-    AllPeps <- c(AllPeps, cbind(paste0(allPeps[,"Sequence"], allPeps[,"Modification"]),allPeps[,"Intensity.HeLA"]))
+    AllProts[[bench]] <- Prots[,c("Accession","Intensity.HeLA")]
+    AllProts[[bench]] <- AllProts[[bench]][!is.na(AllProts[[bench]][,1]),]
+    AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,"Intensity.HeLA"])
     ### Get additional benchmarks only for experimental data
     ## Max. difference retention time
     Benchmarks$globalBMs$diffRetentionTime <- diff(range(allPeps$Retention.time))
@@ -160,7 +161,7 @@ for (bench in benchmarks) {
     
   })
   save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
-  if (length(Benchmarks$globalBMs) > 1 & !is.na(Benchmarks$globalBMs)) {
+  if (length(Benchmarks$globalBMs) > 1) {
     AllExpBenchmarks <- rbind(AllExpBenchmarks,c(unlist(Benchmarks$globalBMs), tdat))
   } else {
     AllExpBenchmarks <- rbind(AllExpBenchmarks,rep(NA, ncol(AllExpBenchmarks)))
@@ -169,6 +170,23 @@ for (bench in benchmarks) {
 }
 
 
+# getting all protein names and peptide sequences
+AllAccs <- unlist(sapply(AllProts, function(x) x[,1]))
+AllSeqs <- unlist(sapply(AllPeps, function(x) x[,1]))
+AllAccs <- unique(AllAccs)
+AllSeqs <- unique(AllSeqs)
+
+
+# writing full tables
+fullProtTable <- matrix(NA, nrow=length(AllAccs), ncol=length(AllProts), dimnames=list(x=AllAccs, y=names(AllProts)))
+fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(AllPeps), dimnames=list(x=AllSeqs, y=names(AllPeps)))
+for (bench in names(AllProts)) {
+  fullProtTable[AllProts[[bench]][,1], bench] <- AllProts[[bench]][,2]
+  fullPepTable[AllPeps[[bench]][,1], bench] <- AllPeps[[bench]][,2]
+} 
 
 names(AllExpBenchmarks) <- benchmarks
-save(AllProts, AllPeps, AllExpBenchmarks, file="AllExpBenchmarks.RData")
+save(fullProtTable, fullPepTable, AllExpBenchmarks, file="AllExpBenchmarks.RData")
+
+
+
