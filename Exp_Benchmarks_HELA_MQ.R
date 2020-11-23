@@ -116,12 +116,9 @@ for (bench in benchmarks) {
     
   })
   save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
-  if (length(Benchmarks$globalBMs) > 1) {
-    AllExpBenchmarks <- rbind(AllExpBenchmarks,c(unlist(Benchmarks$globalBMs), tdat))
-  } else {
-    AllExpBenchmarks <- rbind(AllExpBenchmarks,rep(NA, ncol(AllExpBenchmarks)))
-    
-  }
+  AllExpBenchmarks[[bench]] <- c(unlist(Benchmarks$globalBMs), tdat)
+  
+  
 }
 
 
