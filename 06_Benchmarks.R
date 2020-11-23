@@ -455,7 +455,7 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
   allPeps$Sequence <- allPeps$sequence
   
   allPeps$Retention.time <- allPeps$master_elution_time
-  allPeps$MS.MS.count <- allPeps[,grep("psm_count_",names(allPeps), value=T)]
+  allPeps$MS.MS.Count <- allPeps[,grep("psm_count_",names(allPeps), value=T)]
   
   # getting PTMs and removing carbamidomethylation
   ptms <- strsplit(as.character(allPeps$modifications), ";")
