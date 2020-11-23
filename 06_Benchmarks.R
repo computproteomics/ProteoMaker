@@ -181,8 +181,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   for (c in 1:Param$NumCond) {
     tquants <- as.matrix(Stats[Stats$allReg, Param$QuantColnames][,(c-1)*Param$NumReps+(1:Param$NumReps)])
     if (nrow(tquants) > 0) {
-    tsds <- rowSds(tquants, na.rm=T)
-    sds <- sds + sum(tsds, na.rm=T) / length(na.omit(tsds)) 
+      tsds <- rowSds(tquants, na.rm=T)
+      sds <- sds + sum(tsds, na.rm=T) / length(na.omit(tsds)) 
     }
   }
   sds <- sds  / Param$NumCond
@@ -388,3 +388,121 @@ calcBasicBenchmarks <- function(Stats, StatsPep, Param)  {
   return(Benchmarks)
   
 }
+
+### Data analysis tool specific functions
+readMaxQuant <- function(allPeps, Prots, Param=NULL) {
+  allPeps$Accession <- sapply(allPeps$Proteins, function(x) strsplit(as.character(x), ";"))
+  allPeps$MC <- allPeps$Missed.cleavages
+  allPeps$PTMType <- as.character(allPeps$Modifications)
+  allPeps$PTMType[allPeps$PTMType == "Unmodified"] <- "NULL"
+  # did not find corresponding field    
+  allPeps$PTMPos <- NA
+  allPeps$PTMPos[allPeps$PTMType != "NULL"] <- 1
+  
+  # remove entries with missing protein name (should be reverse)
+  allPeps <- allPeps[allPeps$Proteins != "",]
+  
+  Param$QuantColnames <- grep("Intensity\\.", names(allPeps), value=T)
+  
+  # TODO: check whether LFQ results are available 
+  #protCols <- grepl("LFQ.intensity", names(Prots))
+  #names(Prots)[protCols] <- Param$QuantColnames
+  Prots$Accession <- Prots$Sequence <- Prots$Protein.IDs
+  Prots$num_accs <- Prots$Proteins
+  
+  # filter for rows with no quantifications
+  tquant <- allPeps[,Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[,Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$Sequence)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- log2(tquant)
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+    mergedMCs <- unlist(by(allPeps$Missed.cleavages, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
+  
+  return(list(Param=Param, allPeps=allPeps, Prots=Prots))
+}
+
+readProline <- function(psms, allPeps, Prots, Param=NULL) {
+  # merge subsets and samesets
+  allPeps <- as.data.frame(allPeps)
+  Prots <- as.data.frame(Prots)
+  allPeps$Accession <-  apply(allPeps, 1, function(x) (gsub(" ","",unlist(c(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
+  allPeps$Accession <- sapply(allPeps$Accession, na.omit)
+  allPeps$Accession <- sapply(allPeps$Accession, paste, collapse=";")
+  allPeps$Proteins <- allPeps$Accession 
+  Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",unlist(c(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
+  Prots$Accession <- sapply(Prots$Accession, na.omit)
+  Prots$Accession <- sapply(Prots$Accession, paste, collapse=";")
+  Prots$Sequence <- Prots$Accession
+  
+  
+  # getting miscleavages from psm table
+  mcs <- unique(cbind(psms$sequence, psms$missed_cleavages))
+  rownames(mcs) <- mcs[,1]
+  allPeps$MC <- mcs[allPeps$sequence , 2]
+  allPeps$Sequence <- allPeps$sequence
+  
+  allPeps$Retention.time <- allPeps$master_elution_time
+  allPeps$MS.MS.count <- allPeps[,grep("psm_count_",names(allPeps), value=T)]
+  
+  # getting PTMs and removing carbamidomethylation
+  ptms <- strsplit(as.character(allPeps$modifications), ";")
+  ptms <- lapply(ptms, function(x) {x[grepl("Carbamidomethyl", x)] <- NA; if(length(na.omit(unique(x))) == 0) {
+    NA 
+  } else {
+    na.omit(unique(x))  
+  }
+  })
+  ptms[is.na(ptms)] <- "NULL"
+  ptm_pos <- lapply(ptms, function(x) str_extract(str_extract(x, "\\(.*\\)"), "([0-9]+)|([-])"))
+  ptm_pos <- sapply(ptm_pos, paste, collapse=";")
+  ptm_pos[ptm_pos == "NA"] <- NA
+  allPeps$PTMPos <-  ptm_pos
+  ptms <- sapply(ptms, paste, collapse=";")
+  allPeps$PTMType <- ptms
+  
+  Param$QuantColnames <- grep("^abundance_", names(allPeps), value=T)
+  Prots$num_accs <- rowSums(cbind(Prots$`#sameset_protein_matches`, Prots$`#subset_protein_matches`))
+  tquant <- allPeps[,Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[,Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$Sequence)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- log2(tquant)
+  # filter for rows with no quantifications
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
+  
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+    mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
+  
+  return(list(Param=Param, allPeps=allPeps, Prots=Prots))
+  
+  
+  
+  
+}
+
+
+

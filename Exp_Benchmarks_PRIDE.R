@@ -2,50 +2,6 @@ library(moments)
 library(stringr)
 source ("06_Benchmarks.R")
 
-readMaxQuant <- function(allPeps, Prots, Param=NULL) {
-  allPeps$Accession <- sapply(allPeps$Proteins, function(x) strsplit(as.character(x), ";"))
-  allPeps$MC <- allPeps$Missed.cleavages
-  allPeps$PTMType <- as.character(allPeps$Modifications)
-  allPeps$PTMType[allPeps$PTMType == "Unmodified"] <- "NULL"
-  # did not find corresponding field    
-  allPeps$PTMPos <- NA
-  allPeps$PTMPos[allPeps$PTMType != "NULL"] <- 1
-  
-  # remove entries with missing protein name (should be reverse)
-  allPeps <- allPeps[allPeps$Proteins != "",]
-  
-  Param$QuantColnames <- grep("Intensity\\.", names(allPeps), value=T)
-  
-  # TODO: check whether LFQ results are available 
-  #protCols <- grepl("LFQ.intensity", names(Prots))
-  #names(Prots)[protCols] <- Param$QuantColnames
-  Prots$Accession <- Prots$Sequence <- Prots$Protein.IDs
-  Prots$num_accs <- Prots$Proteins
-  
-  # filter for rows with no quantifications
-  tquant <- allPeps[,Param$QuantColnames]
-  tquant[tquant == 0] <- NA
-  allPeps[, Param$QuantColnames] <- log2(tquant)
-  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-  tquant <- Prots[,Param$QuantColnames]
-  allPeps$Sequence <- as.character(allPeps$Sequence)
-  tquant[tquant == 0] <- NA
-  Prots[, Param$QuantColnames] <- log2(tquant)
-  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-  rownames(Prots) <- Prots$Accession
-  # add column with miscleavages
-  Prots$MC <- NA
-  if (!is.null(allPeps$MC)) {
-    mergedMCs <- unlist(by(allPeps$Missed.cleavages, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
-    Prots[names(mergedMCs), "MC"] <- mergedMCs
-  } else {
-    allPeps$MC <- as.character(0)
-    Prots$MC <- as.character(0)
-  }
-  
-  return(list(Param=Param, allPeps=allPeps, Prots=Prots))
-}
-
 
 ############ Call the function to load and prepare data, and then to calculate the benchmarks
 ### It is now adopted to download files from PRIDE according to the metadata
