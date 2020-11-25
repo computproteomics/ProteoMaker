@@ -116,7 +116,7 @@ for (bench in benchmarks) {
   
   
   save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
-  AllExpBenchmarks[[bench]] <- unlist(c(Benchmarks$globalBMs), tdat)
+  AllExpBenchmarks[[bench]] <- unlist(c(Benchmarks$globalBMs, tdat))
   })
 }
 save(AllExpBenchmarks, file="AllExpBenchmarks.RData")
