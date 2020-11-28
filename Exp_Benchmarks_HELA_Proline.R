@@ -83,7 +83,7 @@ for (bench in benchmarks) {
       Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
     }
     
-    AllProts[[bench]] <- Prots[,c("Accession","Intensity.HeLA")]
+    AllProts[[bench]] <- Prots[,c("Accession",Param$QuantColnames)]
     AllProts[[bench]] <- AllProts[[bench]][!is.na(AllProts[[bench]][,1]),]
     AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"modifications"]),allPeps[,Param$QuantColnames])
     ### Get additional benchmarks only for experimental data

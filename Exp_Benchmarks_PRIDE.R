@@ -93,7 +93,7 @@ for (pxd in 1:nrow(allPRIDE))  {
 
 
 benchmarks <- list.files("./","benchmarks.*RData")
-AllExpBenchmarks <- NULL
+AllExpBenchmarks <- AllProts <- AllPeps <- NULL
 for (bench in benchmarks) {
   try({
   load(bench)
@@ -107,6 +107,12 @@ for (bench in benchmarks) {
     
     Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
   }
+  
+  AllProts[[bench]] <- Prots[,c("Accession",Param$QuantColnames)]
+  AllProts[[bench]] <- AllProts[[bench]][!is.na(AllProts[[bench]][,1]),]
+  AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"modifications"]),allPeps[,Param$QuantColnames])
+  
+  
   ### Get additional benchmarks only for experimental data
   ## Max. difference retention time
   Benchmarks$globalBMs$diffRetentionTime <- diff(range(allPeps$Retention.time))
@@ -119,5 +125,23 @@ for (bench in benchmarks) {
   AllExpBenchmarks[[bench]] <- unlist(c(Benchmarks$globalBMs, tdat))
   })
 }
+
+
+# getting all protein names and peptide sequences
+AllAccs <- unlist(sapply(AllProts, function(x) x[,1]))
+AllSeqs <- unlist(sapply(AllPeps, function(x) x[,1]))
+AllAccs <- unique(AllAccs)
+AllSeqs <- unique(AllSeqs)
+
+
+# writing full tables
+fullProtTable <- matrix(NA, nrow=length(AllAccs), ncol=length(AllProts), dimnames=list(x=AllAccs, y=names(AllProts)))
+fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(AllPeps), dimnames=list(x=AllSeqs, y=names(AllPeps)))
+for (bench in names(AllProts)) {
+  fullProtTable[AllProts[[bench]][,1], bench] <- AllProts[[bench]][,2]
+  fullPepTable[AllPeps[[bench]][,1], bench] <- AllPeps[[bench]][,2]
+} 
+
+
 save(AllExpBenchmarks, file="AllExpBenchmarks.RData")
 
