@@ -85,7 +85,7 @@ for (bench in benchmarks) {
     
     AllProts[[bench]] <- Prots[,c("Accession",Param$QuantColnames)]
     AllProts[[bench]] <- AllProts[[bench]][!is.na(AllProts[[bench]][,1]),]
-    AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"modifications"]),allPeps[,Param$QuantColnames])
+    AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,Param$QuantColnames])
     ### Get additional benchmarks only for experimental data
     ## Max. difference retention time
     Benchmarks$globalBMs$diffRetentionTime <- diff(range(allPeps$Retention.time))
