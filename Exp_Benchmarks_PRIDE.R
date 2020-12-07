@@ -93,7 +93,7 @@ for (pxd in 1:nrow(allPRIDE))  {
 
 
 
-benchmarks <- list.files("./","benchmarks.*RData")
+benchmarks <- list.files("./","benchmarks")
 AllExpBenchmarks <- AllProts <- AllPeps <- numQuantCol <- NULL
 for (bench in benchmarks) {
   try({
@@ -109,11 +109,11 @@ for (bench in benchmarks) {
       Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
     }
     
-    AllProts[[bench]] <- Prots[,c("Accession",Param$QuantColnames)]
-    AllProts[[bench]] <- AllProts[[bench]][!is.na(AllProts[[bench]][,1]),]
-    AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,Param$QuantColnames])
-    numQuantCol[[bench]] <- length(Param$QuantColnames)
-
+    AllProts[[bench]] <- Prots[,"Accession"]
+    AllProts[[bench]] <- AllProts[[bench]][!is.na(AllProts[[bench]])]
+    AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]))
+    numQuantCol[[bench]] <- Param$QuantColnames
+    
     
     ### Get additional benchmarks only for experimental data
     ## Max. difference retention time
@@ -132,43 +132,66 @@ save(AllExpBenchmarks, file="AllExpBenchmarks.RData")
 
 
 # getting all protein names and peptide sequences
-AllAccs <- unlist(sapply(AllProts, function(x) x[,1]))
-AllSeqs <- unlist(sapply(AllPeps, function(x) x[,1]))
+AllAccs <- unlist(AllProts)
+AllSeqs <- unlist(AllPeps)
 AllAccs <- unique(AllAccs)
 AllSeqs <- unique(AllSeqs)
 
 
 # save all protein names and peptide sequence
-save(numQuantCol, allAccs, allSeqs, file="FullProtPepList.RData")
+save(numQuantCol, AllAccs, AllSeqs, file="FullProtPepList.RData")
+# probably better alternative: use sparse matrices from Matrix package, + cBind
 
-library(bigmemory)
+library(Matrix)
 load("FullProtPepList.RData")
-benchmarks <- list.files("./","benchmarks.*RData")
+benchmarks <- list.files("./","benchmarks")
+#benchmarks <- benchmarks[1:10]
 
 # writing full tables
-print(paste("Altogether", sum(unlist(numQuantCol)), "columns"))
+print(paste("Altogether", sum(sapply(numQuantCol, length)), "columns"))
 cols <- NULL
 for (bench in benchmarks) {
-  cols <- c(cols, paste(bench,1:numQuantCol,sep="_"))
+  cols <- c(cols, paste(bench,numQuantCol[[bench]],sep="_"))
 }
-options(bigmemory.allow.dimnames=TRUE)
-fullProtTable <- big.matrix(nrow=length(AllAccs), ncol=length(cols), type="double", init=NA, dimnames=list(x=AllAccs, y=cols), backingpath="./", backingfile="tmp.big")
-fullPepTable <- big.matrix(nrow=length(AllSeqs), ncol=length(cols), type="double", init=NA, dimnames=list(x=AllSeqs, y=cols), backingpath="./", backingfile="tmp2.big")
+
+# fill with 1  value to make the mode double
+fullProtTable <- sparseMatrix(dims = c(length(AllAccs),length(cols)), dimnames=list(x=AllAccs, y=cols), x=1.1, i={1}, j={1})
+fullProtTable[1,1] <- 0
 #fullProtTable <- matrix(NA, nrow=length(AllAccs), ncol=length(benchmarks), dimnames=list(x=AllAccs, y=names(benchmarks)))
-#fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(benchmarks), dimnames=list(x=AllSeqs, y=names(benchmarks)))
 for (bench in benchmarks) {
   try({
     load(bench)
     print(bench)
-    cols <- paste(bench,1:numQuantCol,sep="_")
+    cols <- paste(bench,numQuantCol[[bench]],sep="_")
     AllProts <- Prots[,c("Accession",Param$QuantColnames)]
     AllProts <- AllProts[!is.na(AllProts[,1]),]
-    fullProtTable[as.character(AllProts[,1]), cols] <- AllProts[,2:ncol(AllProts)]
-    AllPeps <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,Param$QuantColnames])
-    fullPepTable[as.character(AllPeps[,1]), cols] <- AllPeps[,2:ncol(AllProts)]
+    poss <- match(as.character(AllProts[,1]), AllAccs)
+    for (c in cols) {
+      print(c) 
+      fullProtTable[poss, c] <- AllProts[,(which(cols==c)+1)]
+    }
   })
 } 
+save(fullProtTable, file="FullProtQuant.RData")
 
-save(fullProtTable, "FullProtQuant.RData")
-save(fullPepTable, "FullPepQuant.RData")
+fullPepTable[1,1] <- 0
+fullPepTable <- sparseMatrix(dims = c(length(AllSeqs),length(cols)), dimnames=list(x=AllSeqs, y=cols), x=1.1, i={1}, j={1})
+#fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(benchmarks), dimnames=list(x=AllSeqs, y=names(benchmarks)))
+for (bench in benchmarks) {
+  try({
+    load(bench)
+    print(paste("Pep", bench))
+    cols <- paste(bench,numQuantCol[[bench]],sep="_")
+    AllPeps <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,Param$QuantColnames])
+    # fullPepTable[as.character(AllPeps[,1]), cols] <- AllPeps[,2:(which(cols==c)+1)]
+    # poss <- match(as.character(AllPeps[,1]), AllSeqs)
+    poss <- AllSeqs %in% as.character(AllPeps[,1])
+    for (c in cols) {
+      print(c)
+      fullPepTable[poss, c] <- AllPeps[,(which(cols==c)+1)]
+    }
+  })
+} 
+save(fullPepTable, file="FullPepQuant.RData")
+
 
