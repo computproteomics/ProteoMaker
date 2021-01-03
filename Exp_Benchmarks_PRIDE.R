@@ -174,24 +174,52 @@ for (bench in benchmarks) {
 } 
 save(fullProtTable, file="FullProtQuant.RData")
 
-fullPepTable[1,1] <- 0
-fullPepTable <- sparseMatrix(dims = c(length(AllSeqs),length(cols)), dimnames=list(x=AllSeqs, y=cols), x=1.1, i={1}, j={1})
+# fullPepTable <- sparseMatrix(dims = c(length(AllSeqs),length(cols)), dimnames=list(x=AllSeqs, y=cols), x=1.1, i={1}, j={1})
+
+# separate into junks of ch_size peptides
+ch_size <- 100000
+fullPepTable <- seq_chunk <- NULL
+for (c in 1:ceiling(length(AllSeqs)/ch_size)) {
+  seq_chunk[[c]] <- AllSeqs[((c-1)*ch_size+1):min(c*ch_size, length(AllSeqs))]  
+  fullPepTable[[c]] <- sparseMatrix(dims = c(length(seq_chunk[[c]]),1), dimnames=list(x=seq_chunk[[c]], y="X"), x=1.1, i={1}, j={1})
+  fullPepTable[[c]][1,1] <- 0
+}
+#fullPepTable <- sparseMatrix(dims = c(length(AllSeqs),1), dimnames=list(x=AllSeqs, y="X"), x=1.1, i={1}, j={1})
 #fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(benchmarks), dimnames=list(x=AllSeqs, y=names(benchmarks)))
 for (bench in benchmarks) {
-  try({
-    load(bench)
-    print(paste("Pep", bench))
-    cols <- paste(bench,numQuantCol[[bench]],sep="_")
-    AllPeps <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,Param$QuantColnames])
-    # fullPepTable[as.character(AllPeps[,1]), cols] <- AllPeps[,2:(which(cols==c)+1)]
-    # poss <- match(as.character(AllPeps[,1]), AllSeqs)
-    poss <- AllSeqs %in% as.character(AllPeps[,1])
-    for (c in cols) {
-      print(c)
-      fullPepTable[poss, c] <- AllPeps[,(which(cols==c)+1)]
-    }
-  })
+  # try({
+  load(bench)
+  print(" ")
+  print(paste("Pep", bench, dim(allPeps)),collapse=" ")
+  cols <- paste(bench,numQuantCol[[bench]],sep="_")
+  AllPeps <- data.frame(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,Param$QuantColnames])
+  colnames(AllPeps) <- c("modseq",Param$QuantColnames)
+  # fullPepTable[as.character(AllPeps[,1]), cols] <- AllPeps[,2:(which(cols==c)+1)]
+  # poss <- match(as.character(AllPeps[,1]), AllSeqs)
+  poss <- AllSeqs %in% as.character(AllPeps[,1])
+  ttable <- sparseMatrix(dims = c(length(AllSeqs),ncol(AllPeps)-1), dimnames=list(x=AllSeqs, y=cols), x=1.1, i={1}, j={1})
+  ttable[1,1] <- 0
+  # for (c in cols) {
+  #   print(paste(c))
+  #   ttable[poss, c] <- as.numeric(AllPeps[,(which(cols==c)+1)])
+  #   #fullPepTable[poss, c] <- as.numeric(AllPeps[,(which(cols==c)+1)])
+  # }
+  ttable[poss, ] <- as.matrix(AllPeps[,numQuantCol[[bench]], drop=F])
+  # colnames(ttable) <- cols
+  pb <- txtProgressBar(min = 0, max = length(AllSeqs), style = 3)
+  for (ch in 1:length(seq_chunk)) {
+    setTxtProgressBar(pb, (ch-1)*ch_size)
+        fullPepTable[[ch]] <- cbind(fullPepTable[[ch]],ttable[((ch-1)*ch_size+1):min(ch*ch_size, length(AllSeqs))])
+  }
+  #fullPepTable[,which(colnames(fullPepTable) %in% cols)] <- ttable
+  # for (c in cols) {
+  #    print(c) 
+  #    fullPepTable[, c] <- ttable[,(which(cols==c)+1)]
+  #  }
+  # # 
+  # })
 } 
 save(fullPepTable, file="FullPepQuant.RData")
+
 
 
