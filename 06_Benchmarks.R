@@ -440,11 +440,9 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
   Prots <- as.data.frame(Prots)
   allPeps$Accession <-  apply(allPeps, 1, function(x) (gsub(" ","",unlist(c(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
   allPeps$Accession <- sapply(allPeps$Accession, na.omit)
-  allPeps$Accession <- sapply(allPeps$Accession, paste, collapse=";")
-  allPeps$Proteins <- allPeps$Accession 
-  Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",unlist(c(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
-  Prots$Accession <- sapply(Prots$Accession, na.omit)
-  Prots$Accession <- sapply(Prots$Accession, paste, collapse=";")
+  allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse=";")
+  Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",c(unlist(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
+  Prots$Accession <- sapply(Prots$Accession, function(x) paste(na.omit(x), collapse=";"))
   Prots$Sequence <- Prots$Accession
   
   
@@ -454,6 +452,11 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
   allPeps$MC <- mcs[allPeps$sequence , 2]
   allPeps$Sequence <- allPeps$sequence
   
+  #' Remove the carba. in Proline output:
+  seqProline <- gsub("Carbamidomethyl \\(.+?\\)", "", allPeps$modifications)
+  seqProline[is.na(seqProline)] <- ""
+  allPeps$Modifications <- gsub("; $", "", seqProline)
+
   allPeps$Retention.time <- allPeps$master_elution_time
   allPeps$MS.MS.Count <- allPeps[,grep("psm_count_",names(allPeps), value=T)]
   
@@ -486,11 +489,13 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
   # filter for rows with no quantifications
   Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
   rownames(Prots) <- Prots$Accession
-  
+
   # add column with miscleavages
   Prots$MC <- NA
   if (!is.null(allPeps$MC)) {
     mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
+    # take only protein groups found in Prots
+    mergedMCs <- mergedMCs[intersect(rownames(Prots),names(mergedMCs))]
     Prots[names(mergedMCs), "MC"] <- mergedMCs
   } else {
     allPeps$MC <- as.character(0)
