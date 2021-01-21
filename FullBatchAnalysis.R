@@ -126,7 +126,7 @@ listtogroundtruth <- purrr::cross(compact(paramGroundTruth))
 # all combinations of all parameters 
 listall <- purrr::cross(compact(c(paramGroundTruth, paramProteoformAb, paramDataAnalysis, paramDigest, paramMSRun)))
 totalbench <- length(listall) 
-bench_counter <- 0
+benchcounter <- 0
 
 ## setting up the entire thing hierarchically.
 ## Problem: how to parallelize
@@ -224,7 +224,7 @@ for (hh in 1:length(listtogroundtruth)) {
           }
           # counter
           benchcounter <- benchcounter + 1
-          print(paste("running data set", bench_counter, "of", totalbench))
+          print(paste("running data set", benchcounter, "of", totalbench))
           if (!all(unlist(Param) == unlist(tParam))) {
             Param <- tParam
             Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
