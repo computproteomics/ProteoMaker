@@ -223,7 +223,7 @@ for (hh in 1:length(listtogroundtruth)) {
             load(filename)
           }
           # counter
-          bench_counter <- bench_counter + 1
+          benchcounter <- benchcounter + 1
           print(paste("running data set", bench_counter, "of", totalbench))
           if (!all(unlist(Param) == unlist(tParam))) {
             Param <- tParam
