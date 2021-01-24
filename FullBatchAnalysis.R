@@ -294,11 +294,12 @@ par(mfrow=c(1,1))
 # a <- system(paste0("ls ",resultFilePath,"/outputData*"), intern = T)
 # BenchMatrix <- data.frame(matrix(NA, ncol=length(benchNames)+length(Param)  , nrow=length(a)))
 # colnames(BenchMatrix) <- c(benchNames, names(Param))
-# rownames(BenchMatrix) <- names(a)
+# rownames(BenchMatrix) <- a
 # 
 # 
 # for (filename in a) {
 #   load(filename)
+#    print(filename)
 #   tB <- list(Benchmarks, Param)
 #   tglob <- unlist(tB[[1]]$globalBMs)
 #   BenchMatrix[filename, names(tglob)] <- tglob
