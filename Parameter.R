@@ -1,18 +1,18 @@
-  ################################################################################
-  #                     PARAMETERS OF THE PHOSFAKE PIPELINE                      #
-  ################################################################################
-    
-  # Create list that will contain all the parameters:
-  Param <- list()
+################################################################################
+#                     PARAMETERS OF THE PHOSFAKE PIPELINE                      #
+################################################################################
+
+# Create list that will contain all the parameters:
+Param <- list()
   
-  #####################
-  ## Variables for generating an experimental design:
-  #####################
-  # Number of conditions
-  Param$NumCond <- 2
-  # Number of replicates
-  Param$NumReps <- 5
-  #####################
+#####################
+## Variables for generating an experimental design:
+#####################
+# Number of conditions
+Param$NumCond <- 2
+# Number of replicates
+Param$NumReps <- 5
+#####################
   
 #####################
 ## Path to input data
@@ -102,7 +102,7 @@ Param$ThreshNAQuantileProt <- 0.01
 # Enzyme
 Param$Enzyme <- "trypsin"
 # Proportion of peptides with missed cleavages
-Param$PropMissedCleavages <- 0.01
+Param$PropMissedCleavages <- 1
 # Maximum number of missed cleavages per peptide
 Param$MaxNumMissedCleavages <- 6
 # Miss cleavage abundance proportion from parental proteoform

@@ -219,13 +219,22 @@ digestGroundTruth <- function(proteoforms, parameters){
   #Sample peptides per MC by size determined by PropMissedCleavages.
   if(parameters$MaxNumMissedCleavages > 0){
     
-    MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^2 * parameters$PropMissedCleavages^x)
-    MC.proportions <- scales::rescale(x = MC.proportions, to = c(0, 1), from = c(0, max(MC.proportions, na.rm = T)))
-    peptide.indices <- lapply(1:parameters$MaxNumMissedCleavages, function(x) which(peptides$MC == x))
-    peptide.indices <- unlist(lapply(1:parameters$MaxNumMissedCleavages, function(x) sample(peptide.indices[[x]], size = ceiling(sum(peptides$MC == 0) * MC.proportions[x+1]), replace = FALSE)))
-    peptide.indices <- sort(c(which(peptides$MC == 0), peptide.indices))
-    peptides <- peptides[peptide.indices, ]
-  
+    if(parameters$PropMissedCleavages != 0 & parameters$PropMissedCleavages != 1){
+      
+      MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^2 * parameters$PropMissedCleavages^x)
+      MC.proportions <- scales::rescale(x = MC.proportions, to = c(0, 1), from = c(0, max(MC.proportions, na.rm = T)))
+      peptide.indices <- lapply(1:parameters$MaxNumMissedCleavages, function(x) which(peptides$MC == x))
+      peptide.indices <- unlist(lapply(1:parameters$MaxNumMissedCleavages, function(x) sample(peptide.indices[[x]], size = ceiling(sum(peptides$MC == 0) * MC.proportions[x+1]), replace = FALSE)))
+      peptide.indices <- sort(c(which(peptides$MC == 0), peptide.indices))
+      peptides <- peptides[peptide.indices, ]
+      
+    } else if(parameters$PropMissedCleavages == 0){
+      
+      peptides <- peptides[peptides$MC == 0, ]
+      
+    }
+
+    
   }
   
   cat(" + Digestion output:\n")
