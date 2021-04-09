@@ -88,7 +88,7 @@ for (zip in allzips)  {
 
 
 benchmarks <- list.files("./","benchmarks.*RData")
-AllExpBenchmarks <- AllProts <- AllPeps <- NULL
+AllExpBenchmarks <- AllProts <- AllProts2 <- AllPeps <- NULL
 for (bench in benchmarks) {
   load(bench)
   print(bench)
@@ -105,6 +105,8 @@ for (bench in benchmarks) {
     
     AllProts[[bench]] <- Prots[,c("Accession","Intensity.HeLA")]
     AllProts[[bench]] <- AllProts[[bench]][!is.na(AllProts[[bench]][,1]),]
+    AllProts2[[bench]] <- Prots[,c("Accession","iBAQ.HeLA")]
+    AllProts2[[bench]] <- AllProts2[[bench]][!is.na(AllProts2[[bench]][,1]),]
     AllPeps[[bench]] <- cbind(SeqMod=paste0(allPeps[,"Sequence"], allPeps[,"Modifications"]),allPeps[,"Intensity.HeLA"])
     ### Get additional benchmarks only for experimental data
     ## Max. difference retention time
@@ -131,14 +133,16 @@ AllSeqs <- unique(AllSeqs)
 
 # writing full tables
 fullProtTable <- matrix(NA, nrow=length(AllAccs), ncol=length(AllProts), dimnames=list(x=AllAccs, y=names(AllProts)))
+fullProtTable2 <- matrix(NA, nrow=length(AllAccs), ncol=length(AllProts2), dimnames=list(x=AllAccs, y=names(AllProts2)))
 fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(AllPeps), dimnames=list(x=AllSeqs, y=names(AllPeps)))
 for (bench in names(AllProts)) {
   fullProtTable[AllProts[[bench]][,1], bench] <- AllProts[[bench]][,2]
+  fullProtTable2[AllProts2[[bench]][,1], bench] <- AllProts2[[bench]][,2]
   fullPepTable[AllPeps[[bench]][,1], bench] <- AllPeps[[bench]][,2]
 } 
 
 names(AllExpBenchmarks) <- benchmarks
-save(fullProtTable, fullPepTable, AllExpBenchmarks, file="AllExpBenchmarks.RData")
+save(fullProtTable, fullProtTable2, fullPepTable, AllExpBenchmarks, file="AllExpBenchmarks.RData")
 
 
 
