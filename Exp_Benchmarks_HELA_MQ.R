@@ -128,9 +128,9 @@ for (bench in benchmarks) {
 AllAccs <- unlist(sapply(AllProts, function(x) x[,1]))
 AllAccs2 <- unlist(sapply(AllProts2, function(x) x[,1]))
 AllSeqs <- unlist(sapply(AllPeps, function(x) x[,1]))
-AllAccs <- unique(AllAccs)
-AllAccs2 <- unique(AllAccs2)
-AllSeqs <- unique(AllSeqs)
+AllAccs <- unique(as.character(AllAccs))
+AllAccs2 <- unique(as.character(AllAccs2))
+AllSeqs <- unique(as.character(AllSeqs))
 
 
 # writing full tables
@@ -138,9 +138,9 @@ fullProtTable <- matrix(NA, nrow=length(AllAccs), ncol=length(AllProts), dimname
 fullProtTable2 <- matrix(NA, nrow=length(AllAccs2), ncol=length(AllProts2), dimnames=list(x=AllAccs2, y=names(AllProts2)))
 fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(AllPeps), dimnames=list(x=AllSeqs, y=names(AllPeps)))
 for (bench in names(AllProts)) {
-  fullProtTable[AllProts[[bench]][,1], bench] <- AllProts[[bench]][,2]
-  fullProtTable2[AllProts2[[bench]][,1], bench] <- AllProts2[[bench]][,2]
-  fullPepTable[AllPeps[[bench]][,1], bench] <- AllPeps[[bench]][,2]
+  fullProtTable[as.character(AllProts[[bench]][,1]), bench] <- AllProts[[bench]][,2]
+  fullProtTable2[as.character(AllProts2[[bench]][,1]), bench] <- AllProts2[[bench]][,2]
+  fullPepTable[as.character(AllPeps[[bench]][,1]), bench] <- AllPeps[[bench]][,2]
 } 
 
 names(AllExpBenchmarks) <- benchmarks
