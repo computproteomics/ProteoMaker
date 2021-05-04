@@ -126,14 +126,16 @@ for (bench in benchmarks) {
 
 # getting all protein names and peptide sequences
 AllAccs <- unlist(sapply(AllProts, function(x) x[,1]))
+AllAccs2 <- unlist(sapply(AllProts2, function(x) x[,1]))
 AllSeqs <- unlist(sapply(AllPeps, function(x) x[,1]))
 AllAccs <- unique(AllAccs)
+AllAccs2 <- unique(AllAccs2)
 AllSeqs <- unique(AllSeqs)
 
 
 # writing full tables
 fullProtTable <- matrix(NA, nrow=length(AllAccs), ncol=length(AllProts), dimnames=list(x=AllAccs, y=names(AllProts)))
-fullProtTable2 <- matrix(NA, nrow=length(AllAccs), ncol=length(AllProts2), dimnames=list(x=AllAccs, y=names(AllProts2)))
+fullProtTable2 <- matrix(NA, nrow=length(AllAccs2), ncol=length(AllProts2), dimnames=list(x=AllAccs2, y=names(AllProts2)))
 fullPepTable <- matrix(NA, nrow=length(AllSeqs), ncol=length(AllPeps), dimnames=list(x=AllSeqs, y=names(AllPeps)))
 for (bench in names(AllProts)) {
   fullProtTable[AllProts[[bench]][,1], bench] <- AllProts[[bench]][,2]
