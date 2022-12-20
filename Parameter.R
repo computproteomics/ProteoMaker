@@ -1,3 +1,16 @@
+################################################################################
+#                     PARAMETERS OF THE PHOSFAKE PIPELINE                      #
+################################################################################
+
+# Create list that will contain all the parameters:
+Param <- list()
+
+#####################
+## Variables for generating an experimental design:
+#####################
+# Number of conditions
+Param$NumCond <- 2
+# Number of replicates
 Param$NumReps <- 5
 #####################
 
@@ -61,8 +74,8 @@ Param$DiffRegMax <- 3
 # >>>> For input of custom set of regulated proteoforms:
 Param$UserInputFoldChanges <- NULL
 # I use the UPS1 setup (Ramus et al. 2016). KEEP NULL ID DO NOT WANT.
-# Param$UserInputFoldChanges <- list("NumRegProteoforms" = rep(96, 3),
-#                                    "RegulationFC" = rep(log2(c(100, 10, 2)), rep(96, 3)))
+# Param$UserInputFoldChanges_NumRegProteoforms = rep(96, 3)
+# Param$UserInputFoldChanges_NumRegProteoforms_RegulationFC = rep(log2(c(100, 10, 2)), rep(96, 3))
 
 # threshold to remove quantitative values (proteoform level)
 # COMMENT FROM MLP: I still think this is not right. A very abundant protein could 

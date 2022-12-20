@@ -204,7 +204,7 @@ Paired <- function(MAData,NumCond,NumReps) {
     RealStats <- StatsForPermutTest(tMAData,Paired=T)
     cl <- makeCluster(NumThreads)
     clusterExport(cl=cl,varlist=c("NumReps","PermMAData","RPStats","StatsForPermutTest"),envir=environment())
-    clusterEvalQ(cl=cl, library(matrixStats))  
+    clusterEvalQ(cl=cl,  {myPaths <- .libPaths();.libPaths("lib");library(matrixStats)})  
     PermutOut <- parLapply(cl,1:NTests,function (x) {
       indat <- apply(PermMAData,1,
                      function(y) sample(y,NumReps)*sample(c(1,-1),NumReps,replace=T))
@@ -273,7 +273,11 @@ UnpairedDesignLIMMA <- function(Data,RR, NumCond,NumReps) {
   qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
   # qvalue correction
   for (i in 1:ncol(plvalues)) {
-    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    if (length(na.omit(plvalues[,i])) > 200) {
+      tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(plvalues[,i]), method="BH")
+    }
     qlvalues[names(tqs),i] <- tqs
   }
   
@@ -317,7 +321,11 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   qlvalues <- matrix(NA,nrow=nrow(plvalues),ncol=ncol(plvalues),dimnames=dimnames(plvalues))
   # qvalue correction
   for (i in 1:ncol(plvalues)) {
-    tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    if (length(na.omit(plvalues[,i])) > 200) {
+      tqs <- qvalue(na.omit(plvalues[,i]))$qvalues
+    } else {
+      tqs <- p.adjust(na.omit(plvalues[,i]), method="BH")
+    }
     qlvalues[names(tqs),i] <- tqs
   }
   ## rank products + t-test
@@ -344,7 +352,7 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
     tpRPvalues<-matrix(NA,ncol=NumRPPairs,nrow=nrow(Data),dimnames=list(rows = rownames(Data), cols=1:NumRPPairs))
     cl <- makeCluster(NumThreads)
     clusterExport(cl=cl,varlist=c("NumReps","tData","trefData","RPStats"),envir=environment())
-    clusterEvalQ(cl=cl, library(matrixStats))  
+    clusterEvalQ(cl=cl,   {myPaths <- .libPaths();.libPaths("lib");library(matrixStats)})  
     
     RPparOut <- parallel::parLapply(cl,1:NumRPPairs, function(x) {
       tRPMAData <- tData[,sample(1:NumReps)] - trefData[,sample(1:NumReps)]
@@ -386,7 +394,7 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
     
     cl <- makeCluster(NumThreads)
     clusterExport(cl=cl,varlist=c("NumReps","PermFullData","RPStats","StatsForPermutTest"),envir=environment())
-    clusterEvalQ(cl=cl, library(matrixStats))  
+    clusterEvalQ(cl=cl,   {myPaths <- .libPaths();.libPaths("lib");library(matrixStats)})  
     PermutOut <- parallel::parLapply(cl,1:NTests,function (x) {indat <- apply(PermFullData,1,function(y) sample(y,NumReps*2)*sample(c(1,-1),NumReps*2,replace=T))
     StatsForPermutTest(t(indat),F)
     })
@@ -406,7 +414,7 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
   pRPvalues[!is.finite(pRPvalues)] <- NA
   qRPvalues <- qtvalues <- qPermutvalues <- matrix(NA,nrow=nrow(Data),ncol=NumComps,dimnames=list(rows=rownames(Data), cols=1:(NumComps)))
   for (i in 1:(NumComps)) {
-    if (length(na.omit(ptvalues[,i])) > 50) {
+    if (length(na.omit(ptvalues[,i])) > 200) {
       tqs <- qvalue(na.omit(ptvalues[,i]))$qvalues
     } else {
       tqs <- p.adjust(na.omit(ptvalues[,i]), method="BH")
@@ -511,7 +519,7 @@ FindFCandQlim <- function(Qvalue, LogRatios) {
   fcRange <- seq(0,max(abs(range(LogRatios,na.rm=T))),length=100)
   cl <- makeCluster(NumThreads)
   clusterExport(cl=cl,varlist=c("Qvalue","NumCond","LogRatios","qrange"),envir=environment())
-  clusterEvalQ(cl=cl, library(matrixStats))  
+  clusterEvalQ(cl=cl,   {myPaths <- .libPaths();.libPaths("lib");library(matrixStats)})  
   print(head(Qvalue))
   BestVals <- parallel::parLapply(cl,fcRange, function(fc) { 
     # range of tests to consider:

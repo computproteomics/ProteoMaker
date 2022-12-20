@@ -306,7 +306,8 @@ modify <- function(seq, param){
 
   #Sample possible modification sites for each sequence based on the adjusted probability weights and size based on a trancated poisson distribution.
   selected.modification.sites <- lapply(1:length(possible.modification.sites), function(x) {
-    if(length(unlist(possible.modification.sites[[x]])) > 1){
+    if(length(unlist(possible.modification.sites[[x]])) != 1){
+      
       sort(sample(x = unlist(possible.modification.sites[[x]]),
                   prob = rep(unlist(modification.probability.weight[[x]]), unlist(lapply(possible.modification.sites[[x]], function(y) lengths(y))) ),
                   size = extraDistr::rtpois(n = 1, lambda = param$PTMMultipleLambda * length(unlist(possible.modification.sites[[x]])), a = 1, b = length(unlist(possible.modification.sites[[x]])))
@@ -415,7 +416,7 @@ addProteoformAbundance <- function(proteoforms, parameters){
     
   }
   
-  if (is.null(parameters$UserInputFoldChanges_NumRegProteoforms)) {
+  if (is.null(parameters$UserInputFoldChanges)) {
     
     if(parameters$DiffRegFrac != 0){
       
@@ -439,11 +440,10 @@ addProteoformAbundance <- function(proteoforms, parameters){
       
   } else {
     # select differentially regulated proteoforms
-
-   diff_reg_indices = sample(1:nrow(proteoforms),size = sum(parameters$UserInputFoldChanges_NumRegProteoforms))
+    diff_reg_indices = sample(1:nrow(proteoforms),size = length(parameters$UserInputFoldChanges))
     
     # determine amplitude of regulation for regulated proteoforms
-    proteoforms[diff_reg_indices, "Regulation_Amplitude"] = parameters$UserInputFoldChanges_RegulationFC
+    proteoforms[diff_reg_indices, "Regulation_Amplitude"] = parameters$UserInputFoldChanges
     
     
     regulationPatterns <- lapply(1:length(diff_reg_indices), function(x) createRegulationPattern(parameters$NumCond))
