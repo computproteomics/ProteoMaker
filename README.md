@@ -19,16 +19,24 @@ The folder `Benchmarking` contains the scripts used for proof of concept and ben
 The following values and distribution are collected and will be used for comparing the results
 
 #### Peptide level
-- [X] Number of peptides counting both modified and non-modified
-- [X] Number of proteins (total of different proteins, shared count as multiples)
-- [X] Proportion of unique peptides
-- [X] Proportion of shared peptides
+- [X] Total number of peptides counting both modified and non-modified (fixed PTMs are not considered "modified")
+- [X] Number of proteins (total of all proteins, independently whether shared or uniquely identified) 
+- [X] Proportion of unique modified and non-modified peptides 
+- [X] Total number of unique stripped sequences
 - [X] Percentage missingness
 - [X] AUC of ROC curve for correct differentially regulated features
 - [X] TPR (found proportion of correct differentially regulated peptides, FDR < 0.05/0.01)
 - [X] True FDR for estimated FDR of 0.01/0.05
-- [X] Proportion of miscleaved peptides
 - [X] Proportion of cleaved peptides (per number of miscleavages)
+- [X] Retention time range (max-min)
+- [X] Dynamic range (max-min on log2-scale)
+- [X] Number of accepted PSMs (count scan numbers)
+- [X] Sum of squares residuals towards actual fold-changes (assigns mean fold-change for peptides with multiple assigned fold-changes)(only calculated for the 2st 2 conditions)
+- [X] Mean of std. dev. within replicates of peptides with actual fold-changes (on log-scale)
+- [X] Distribution of quantitative values, how assymmetric (skewness), 
+- [X] Distribution of quantitative values, how normal (kurtosis)
+- [X] Distribution of quantitative values, how broad (std. dev.)
+
 
 #### Protein level
 - [X] Number of quantified protein groups
@@ -38,22 +46,26 @@ The following values and distribution are collected and will be used for compari
 - [X] AUC of ROC curve for correct differentially regulated features
 - [X] True FDR for estimated FDR of 0.01/0.05
 - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
-- [X] Sum of squares residuals towards actual fold-changes
+- [X] Sum of squares residuals towards actual fold-changes (takes the 1st non-zero one in case of multiples)
+- [X] Dynamic range (max-min on log-scale)
+- [X] Mean of std. dev. within replicates (on log-scale)(only regulated proteins)
 - [X] Proportion of proteins with miscleaved peptides
 - [X] Proportion of regulated proteins with wrong identified peptides (FDR < 0.01/0.05)
 - [X] Distribution of quantitative values, how assymmetric (skewness) 
+- [X] Distribution of quantitative values, how normal (kurtosis)
+- [X] Distribution of quantitative values, how broad (std. dev.)
 
 #### PTM level
 
- - [X] Number of quantitatvely represented proteoforms in data set (including combined ones)
+ - [X] Total number and mean of quantitatively represented proteoforms per protein in data set (including protein groups) (can only be calculated for in silico data)
  - [X] Number modified peptides
- - [X] Distribution of proteoforms per protein (summarized by mean?)
  - [X] Proportion of modified peptides with identical non-modified form
  - [X] AUC of ROC curve for correct differentially regulated modified peptides (after adjusting for protein amount)
  - [X] True FDR for estimated FDR of 0.01/0.05
  - [X] TPR (found proportion of correct differentially regulated proteins (FDR < 0.05/0.01)
  - [X] Proportion of wrongly regulated modified peptides (FDR 0.01/0.05, no adjustment)
  - [X] Proportion of modified peptides with quantified non-modified protein
+ - [X] Sum of square of residuals towards actual fold-changes (only modified peptides)
  
 
 ### Running full batches and benchmarking

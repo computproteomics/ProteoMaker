@@ -72,6 +72,30 @@ for (pxd in 1:length(allPRIDE))  {
         # if maxquant files in zip file
       } else if (any(tdat$files$list$fileType == "SEARCH" & grepl(".zip",tdat$files$list$fileName) )) {
         filenames <- tdat$files$list$downloadLink[which(tdat$files$list$fileType == "SEARCH" & grepl(".zip",tdat$files$list$fileName))]
+tmpdir <- "tmp"
+tmpdir <- normalizePath(tmpdir)
+
+#allPRIDE <- readLines("pxd_accessions.json")
+allPRIDE <- read.csv(unz("pride_df.zip","pride_df.csv"), stringsAsFactors = F)
+
+for (pxd in 1:nrow(allPRIDE))  {
+  
+  tdat <- allPRIDE[pxd,]
+  modpep <- protlist <- NULL
+  if (!is.null(tdat$dataProcessingProtocol)) {
+    # if maxquant
+    if (grepl("maxquant",tolower(tdat$dataProcessingProtocol)) ) {
+      print(pxd)
+      tfile_list <- read_json(paste0("https://www.ebi.ac.uk/pride/ws/archive/v2/files/byProject?accession=",tdat$accession))
+      file_types <- sapply(tfile_list, function(x) x$fileCategory$value)
+      file_list <- sapply(tfile_list, function(x) ifelse(grepl("ftp://",x$publicFileLocations[[1]]$value), x$publicFileLocations[[1]]$value, x$publicFileLocations[[2]]$value ))
+      # if maxquant files available
+      if (any(grepl("/modificationSpecificPeptides.txt",file_list)) &  any(grepl("/proteinGroups.txt",file_list))) {
+        modpep <- read.csv(grep("/modificationSpecificPeptides.txt",file_list, value=T), sep="\t")
+        protlist <- read.csv(grep("/proteinGroups.txt",file_list, value=T), sep="\t")
+        # if maxquant files in zip file
+      } else if (any(file_types == "SEARCH" & grepl(".zip",file_list) )) {
+        filenames <- file_list[which(file_types == "SEARCH" & grepl(".zip",file_list))]
         for (filename in filenames) {
           tempfile <- tempfile(tmpdir=tmpdir)
           print(filename)
@@ -80,14 +104,17 @@ for (pxd in 1:length(allPRIDE))  {
           filelist <- system(paste0("jar tf ", tempfile), intern=T)
           # non-optimal: takes only the first of the files if multiples are available in zip-file     
           if (any(grepl("modificationSpecificPeptides.txt",filelist)) & any(grepl("proteinGroups.txt",filelist))) {
+            #	    print(filelist)
             dfile <- grep("modificationSpecificPeptides.txt",filelist, value=T)[1]
-            system(paste0("jar xvf ",tempfile," \"",dfile,"\""))
-            modpep <- read.csv( dfile, sep="\t")
-            file.remove(dfile)
+            system(paste0("cd ",tmpdir,";jar xvf ",tempfile," \"",dfile,"\""))
+            tdfile <- paste0(tmpdir,"/", dfile)
+            modpep <- read.csv(tdfile, sep="\t")
+            file.remove(tdfile)
             dfile <- grep("proteinGroups.txt",filelist, value=T)[1]
-            system(paste0("jar xvf ",tempfile," \"",dfile,"\""))
-            protlist <- read.csv( dfile, sep="\t")
-            file.remove(dfile)
+            tdfile <- paste0(tmpdir,"/", dfile)
+            system(paste0("cd ",tmpdir,";jar xvf ",tempfile," \"",dfile,"\""))
+            protlist <- read.csv(tdfile, sep="\t")
+            file.remove(tdfile)
           }
           file.remove(tempfile)
           
@@ -132,6 +159,15 @@ AllExpBenchmarks <- NULL
 for (bench in benchmarks) {
   load(bench)
   print(bench)
+  if (withGroundTruth) {
+    Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
+    # much faster with only LIMMA tests   
+    StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
+    Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+  } else {
+    Benchmarks <- calcBasicBenchmarks(Prots, allPeps, Param)
+  }
+  save(Benchmarks, Prots, allPeps, Param, tdat, file =bench)
   AllExpBenchmarks <- rbind(c(unlist(Benchmarks$globalBMs), tdat))
 }
 rownames(AllExpBenchmarks) <- benchmarks

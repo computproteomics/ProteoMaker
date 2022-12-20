@@ -4,7 +4,6 @@
 
 # Create list that will contain all the parameters:
 Param <- list()
-
 #####################
 ## Variables for generating an experimental design:
 #####################
@@ -13,7 +12,7 @@ Param$NumCond <- 2
 # Number of replicates
 Param$NumReps <- 5
 #####################
-
+  
 #####################
 ## Path to input data
 #####################
@@ -64,9 +63,9 @@ Param$RemoveNonModFormFrac <- 0
 # Vector for column names
 Param$QuantColnames <- paste0("C_",rep(1:Param$NumCond,each=Param$NumReps),"_R_", rep(1:Param$NumReps, Param$NumCond))
 # General noise level of all quantitative values (standard deviation of normal distribution)
-Param$QuantNoise <- 0.5
+Param$QuantNoise <- 0.0
 # Fraction of "differentially" regulated proteoforms
-Param$DiffRegFrac <- 0.1
+Param$DiffRegFrac <- 0.0
 # max. amplitude of difference (differentially regulated proteins) on log2 scale. 
 # Will be taken from uniform distribution with randomly chosen directions
 Param$DiffRegMax <- 3
@@ -102,17 +101,17 @@ Param$ThreshNAQuantileProt <- 0.01
 # Enzyme
 Param$Enzyme <- "trypsin"
 # Proportion of peptides with missed cleavages
-Param$PropMissedCleavages <- 0.05
+Param$PropMissedCleavages <- 1
 # Maximum number of missed cleavages per peptide
-Param$MaxNumMissedCleavages <- 4
+Param$MaxNumMissedCleavages <- 6
 # Miss cleavage abundance proportion from parental proteoform
 #Param$PropMissedCleavagesAbundance <- c(0.8, 0.15, 0.5)
 # Filter for min and max of peptide length
 Param$PepMinLength <- 7
 Param$PepMaxLength <- 30
 # For parallel computing
-Param$Cores <- NA
-Param$ClusterType <- NA
+Param$Cores <- 1
+Param$ClusterType <- "PSOCK"
 #Param$Cores <- 10
 #Param$ClusterType <- "PSOCK" #"FORK" for linux. PSOCK works for both linux and windows
 # Remove percentage of least summarized abundant peptides (0-1).

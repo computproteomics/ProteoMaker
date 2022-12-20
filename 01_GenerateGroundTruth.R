@@ -304,7 +304,7 @@ modify <- function(seq, param){
     })
   })
 
-  #Sample possible modification sites for each sequence based on the adjusted probability weights and size based on a trancated poisson distribution.
+  #Sample possible modification sites for each sequence based on the adjusted probability weights and size based on a truncated poisson distribution.
   selected.modification.sites <- lapply(1:length(possible.modification.sites), function(x) {
     if(length(unlist(possible.modification.sites[[x]])) > 1){
       sort(sample(x = unlist(possible.modification.sites[[x]]),

@@ -270,6 +270,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   AdjModPepsWithProt[,Param$QuantColnames] <- AdjModPepsWithProt[,Param$QuantColnames] - Stats[as.character(AdjModPepsWithProt$merged_accs), Param$QuantColnames]
   StatsAdjModPep <- 0
   if (nrow(AdjModPepsWithProt) > 200) {
+    print("Warning: less than 200 modified peptides corresponding unmodified peptides, skipping stats")
     StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=F)
     
     # results on basis of ground truth

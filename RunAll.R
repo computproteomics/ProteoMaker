@@ -78,7 +78,6 @@ Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Pa
 # ## Statistical testing
 # ##################### 
 source("05_Statistics.R")
-
 Stats <- runPolySTest(Prots, Param, refCond=1, onlyLIMMA=F)
 
 allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
@@ -89,7 +88,7 @@ StatsPep <- runPolySTest(allPeps, Param, refCond=1, onlyLIMMA=T)
 
 
 # #####################
-# ## Collecting benchmarks    
+# ## Collecting benchmarks          
 # #####################   
 source("06_Benchmarks.R")
 

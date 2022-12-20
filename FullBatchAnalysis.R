@@ -23,7 +23,7 @@ Param <- NULL
 fastaFilePath <- "QC_DataAnalysis"
 resultFilePath <- "QC_DataAnalysis/QC_output"
 # For parallel computing
-cores <- 4
+cores <- 20
 clusterType <- "FORK"
 calcAllBenchmarks <- T
 
@@ -123,6 +123,11 @@ paramDataAnalysis <- list(
 # all combinations of the parameters
 listtogroundtruth <- purrr::cross(compact(paramGroundTruth))
 
+# all combinations of all parameters 
+listall <- purrr::cross(compact(c(paramGroundTruth, paramProteoformAb, paramDataAnalysis, paramDigest, paramMSRun)))
+totalbench <- length(listall) 
+benchcounter <- 0
+
 ## setting up the entire thing hierarchically.
 ## Problem: how to parallelize
 
@@ -217,6 +222,9 @@ for (hh in 1:length(listtogroundtruth)) {
           if (file.exists(filename)) {
             load(filename)
           }
+          # counter
+          benchcounter <- benchcounter + 1
+          print(paste("running data set", benchcounter, "of", totalbench))
           if (!all(unlist(Param) == unlist(tParam))) {
             Param <- tParam
             Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
@@ -282,31 +290,3 @@ for (obj in benchNames) {
 }
 par(mfrow=c(1,1))
 
-# ## get all available analyses
-# a <- system(paste0("ls ",resultFilePath,"/outputData*"), intern = T)
-# BenchMatrix <- data.frame(matrix(NA, ncol=length(benchNames)+length(Param)  , nrow=length(a)))
-# colnames(BenchMatrix) <- c(benchNames, names(Param))
-# rownames(BenchMatrix) <- names(a)
-# 
-# 
-# for (filename in a) {
-#   load(filename)
-#   tB <- list(Benchmarks, Param)
-#   tglob <- unlist(tB[[1]]$globalBMs)
-#   BenchMatrix[filename, names(tglob)] <- tglob
-#   tpar <- tB[[2]]
-#   BenchMatrix[filename, names(tpar)] <- sapply(tpar, function(x) ifelse(length(x)>1, paste0(x,collapse="_"), x))
-#   
-# }
-# 
-# 
-# # Visualize roughly
-# par(mfrow=c(3,3))
-# # define reference for x-axis
-# ref <- "DiffRegFrac"
-# for (obj in benchNames) {
-#   dat <- BenchMatrix[,obj]
-#   if (sum(!is.na(dat)) > 0)
-#     hist(dat, 100, main=obj)
-# }
-# par(mfrow=c(1,1))
