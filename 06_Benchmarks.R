@@ -54,7 +54,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     propMisCleavedPeps=list(),sumSquareDiffFCPep=0, sdWithinRepsPep=0, skewnessPeps=0, kurtosisPeps=0, sdPeps=0,
     # Protein level
     numQuantProtGroups=0, dynRangeProt=0, propUniqueProts=0, percMissingProt=0, meanPepPerProt=0, aucDiffRegProteins=list(), 
-    tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), sumSquareDiffFCProt=0, sdWithinRepsProt=0, propMisCleavedProts=0,
+    tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), sumSquareDiffFCProt=0, sdWithinRepsProt=0, 
+    propMisCleavedProts=0,
     propDiffRegWrongIDProt0.01=list(),propDiffRegWrongIDProt0.05=list(),skewnessProts=0, kurtosisProts=0, sdProts=0,
     # PTM level
     numProteoforms=0, numModPeptides=0, meanProteoformsPerProt=0, propModAndUnmodPep=0, aucDiffRegAdjModPep=list(),
@@ -105,8 +106,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
   #### Calculating protein numbers
   globalBMs["numQuantProtGroups"] <- nrow(Stats)
-  
-  globalBMs["propUniqueProts"] <- sum(unlist(sapply(str_split(Stats$num_accs,";"), function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
+  globalBMs["propUniqueProts"] <- sum(unlist(sapply(str_split(Stats$num_accs,";"), 
+                                      function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
   globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[,Param$QuantColnames])))  / length(Param$QuantColnames) / nrow(Stats) * 100
   pepDistr <- sapply(str_split(Stats$Sequence,";"), function(x) length(unique(x)))
   barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
@@ -219,7 +220,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   globalBMs["sumSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
   
   # Counting miscleavages
-  globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0) / nrow(Stats)
+  if (sum(!is.na(Stats$MC)) > 0)
+     globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0) / nrow(Stats)
   
   # statistics with respect to wrong identifications
   wrong_ids <- sapply(Stats$WrongID, function(x) sum(as.logical(unlist(strsplit(x, ";")))))
@@ -353,7 +355,8 @@ calcBasicBenchmarks <- function(Stats, StatsPep, Param)  {
   
   
   # Counting miscleavages
-  globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0, na.rm=T) / nrow(Stats)
+  if (sum(!is.na(Stats$MC)) > 0)
+    globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0, na.rm=T) / nrow(Stats)
   
   
   # checking quantitative values for assymetric distribution: skewness
@@ -506,10 +509,79 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
   }
   
   return(list(Param=Param, allPeps=allPeps, Prots=Prots))
+    
+}
+
+##########TODO
+readWombat <- function(allPeps, Prots, Param=NULL) {
+  # merge subsets and samesets
+  allPeps <- as.data.frame(allPeps)
+  Prots <- as.data.frame(Prots)
+  allPeps$Accession <-  apply(allPeps, 1, function(x) (gsub(" ","",unlist(c(strsplit(x["protein_group"], ";"), strsplit(x["protein_group"], ";"))))))
+  allPeps$Accession <- sapply(allPeps$Accession, na.omit)
+  allPeps$Accession <- sapply(allPeps$Accession, function(x) unlist(gsub("sp\\|","",x)))
+  allPeps$Accession <- sapply(allPeps$Accession, function(x) gsub("\\|.*$","",x))
+  allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse=";")
   
+  Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",c(unlist(strsplit(x["protein_group"], ";"),                                                                        strsplit(x["protein_group"], ";"))))))
+  Prots$Accession <- sapply(Prots$Accession, na.omit)
+  Prots$Accession <- sapply(Prots$Accession, function(x) unlist(gsub("sp\\|","",x)))
+  Prots$Accession <- sapply(Prots$Accession, function(x) gsub("\\|.*$","",x))
+  Prots$Proteins <- sapply(Prots$Accession, paste, collapse=";")
+  Prots$Sequence <- Prots$Accession
   
+  allPeps$MC <- NA
   
+  #' Remove the carba. in Proline output:
+  seqProline <- gsub("Carbamidomethyl \\(.+?\\)", "", allPeps$modifications)
+  seqProline[is.na(seqProline)] <- ""
+  if (length(seqProline) > 0)
+     allPeps$Modifications <- gsub("; $", "", seqProline)
+
+  allPeps$Retention.time <- NA
+  allPeps$MS.MS.Count <- allPeps[,grep("number_of_psms",names(allPeps), value=T)]
   
+  # getting PTMs and removing carbamidomethylation (kind of discarded)
+  ptms <- unique(unlist(str_extract_all(as.character(allPeps$modified_peptide), "[\\[({].*?[\\])}]")))
+  ptms <- lapply(ptms, function(x) {x[grepl("Carbamidomethyl", x)] <- NA; if(length(na.omit(unique(x))) == 0) {
+    NA 
+  } else {
+    na.omit(unique(x))  
+  }
+  })
+  ptms[is.na(ptms)] <- "NULL"
+  
+  Param$QuantColnames <- grep("^abundance_", names(allPeps), value=T)
+  Prots$num_accs <- str_count(Prots$Accession, ";") + 1
+  tquant <- allPeps[,Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[,Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$modified_peptide)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- tquant
+  # filter for rows with no quantifications
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
+
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+    mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
+    # take only protein groups found in Prots
+    mergedMCs <- mergedMCs[intersect(rownames(Prots),names(mergedMCs))]
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
+  allPeps$PTMType <- NA
+  allPeps$PTMPos <- NA
+
+
+  return(list(Param=Param, allPeps=allPeps, Prots=Prots))
+    
 }
 
 
