@@ -612,7 +612,7 @@ readFlashLFQ <- function(psms, allPeps, Prots, Param=NULL) {
   allPeps$MS.MS.Count <- NA
   
   # temporary fix for flashLFQ output
-  ptms[is.na(ptms)] <- "NULL"
+  #ptms[is.na(ptms)] <- "NULL"
   
   Param$QuantColnames <- grep("^Intensity_", names(allPeps), value=T)
   Prots$num_accs <- str_count(Prots$Accession, ";") + 1
