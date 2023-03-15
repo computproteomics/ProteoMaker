@@ -2,7 +2,7 @@ library(moments)
 library(stringr)
 
 ############# Calculating ROC curves
-calcROC <- function (Stats, columnName, groundtruthColumn="min1Reg") {
+calcROC <- function(Stats, columnName, groundtruthColumn="min1Reg") {
   FPs <- TPs <- 0
   FNs <- sum(Stats$min1Reg)
   TNs <- nrow(Stats) - FNs
@@ -19,7 +19,7 @@ calcROC <- function (Stats, columnName, groundtruthColumn="min1Reg") {
       FPs <- FPs + 1
       TNs <- TNs - 1
     }
-    currFDR <- Stats[i, columnName]  
+    currFDR <- Stats[i, columnName]
     if (is.na(currFDR)) currFDR <- 1
     if (currFDR != oldFDR) {
       ROC <- rbind(ROC, c(FPs/(FPs+TNs), TPs/(TPs+FNs)))
@@ -159,7 +159,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       diffs[i] <- 0 
     }
   }
-  plot(0, xlim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), ylim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
+  plot(0, xlim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), ylim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), 
+      type="n", xlab="Ground truth", ylab="Measured ratios")
   points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
   abline(0,1)
   globalBMs["sumSquareDiffFCProt"] <- sumsquare / sum(diffs != 0)
@@ -475,6 +476,8 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
   }
   })
   ptms[is.na(ptms)] <- "NULL"
+
+
   ptm_pos <- lapply(ptms, function(x) str_extract(str_extract(x, "\\(.*\\)"), "([0-9]+)|([-])"))
   ptm_pos <- sapply(ptm_pos, paste, collapse=";")
   ptm_pos[ptm_pos == "NA"] <- NA
@@ -512,7 +515,7 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
     
 }
 
-##########TODO
+##########
 readWombat <- function(allPeps, Prots, Param=NULL) {
   # merge subsets and samesets
   allPeps <- as.data.frame(allPeps)
@@ -584,5 +587,61 @@ readWombat <- function(allPeps, Prots, Param=NULL) {
     
 }
 
+## For reading the Compomics output from WOMBAT-P
+readFlashLFQ <- function(psms, allPeps, Prots, Param=NULL) {
+  # merge subsets and samesets
+  allPeps <- as.data.frame(allPeps)
+  Prots <- as.data.frame(Prots)
+  allPeps$Accession <-  apply(allPeps, 1, function(x) (gsub(" ","",unlist(strsplit(unlist(x["Protein.Groups"]), ",")))))
+  allPeps$Accession <- sapply(allPeps$Accession, na.omit)
+  allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse=";")
+  Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",unlist(strsplit(unlist(x["Protein.Groups"]), ",")))))
+  Prots$Accession <- sapply(Prots$Accession, function(x) paste(na.omit(x), collapse=";"))
+  Prots$Sequence <- Prots$Accession
+  
+  
+  # getting miscleavages from psm table -> not available
+  allPeps$MC <- NA
+  
+  #' Remove the carba. in flashLFQ output:
+  allPeps$Sequence <- gsub("<cmm>", "", allPeps$Sequence)
+  allPeps$Modifications <- NA
 
+  allPeps$Retention.time <- NA
+  psms$Retention.time <- psms$Peak.RT.Apex
+  allPeps$MS.MS.Count <- NA
+  
+  # temporary fix for flashLFQ output
+  ptms[is.na(ptms)] <- "NULL"
+  
+  Param$QuantColnames <- grep("^Intensity_", names(allPeps), value=T)
+  Prots$num_accs <- str_count(Prots$Accession, ";") + 1
+  tquant <- allPeps[,Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[,Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$Sequence)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- log2(tquant)
+  # filter for rows with no quantifications
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
 
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
+    # take only protein groups found in Prots
+    mergedMCs <- mergedMCs[intersect(rownames(Prots),names(mergedMCs))]
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
+  allPeps$PTMType <- NA
+  allPeps$PTMPos <- NA
+
+  return(list(Param=Param, allPeps=allPeps, Prots=Prots))
+    
+}
