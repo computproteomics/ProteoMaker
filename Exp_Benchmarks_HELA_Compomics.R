@@ -9,17 +9,23 @@ library(jsonlite)
 ## General parameters
 withGroundTruth <- F
 tmpdir <- "/tmp"
-metadatafile <- "/tmp/MNTFileParsed.txt"
+metadatafile <- "../../MNTFileParsed.txt"
+
 metadata <- read.csv(metadatafile, sep="\t", stringsAsFactors = F)
 metadata$FileName <- sapply(as.character(metadata$FileName), basename)
 tmpdir <- normalizePath(tmpdir)
 
-allxlsx <- grep("xlsx",list.files("/tmp/",full.names=T),value=T)
+allxlsx <- list.files("../../WOMBAT-Results/",recursive=T, pattern="compomics\\.zip",full.names=T)
 
 for (dat in allxlsx)  {
   
   dat <- normalizePath(dat)  
-  samplename <- sub("tsv","",basename(dat))
+  unzip(dat, exdir="tmp/")
+  samplename <- paste0(sub("\\.raw_compomics\\.zip","",basename(dat)), ".raw")
+  protlist <- modpep <- psms <- NULL
+  print("dat")
+  print(dat)
+  if (file.exists("tmp/QuantifiedProteins") > 0) {
   m_ind <- grep(samplename, metadata$FileName)
   tdat <- NA
   if (length(m_ind) == 1) {
@@ -32,6 +38,7 @@ for (dat in allxlsx)  {
   protlist <- read.csv("tmp/QuantifiedProteins.tsv", sep="\t")
   modpep <- read.csv("tmp/QuantifiedPeptides.tsv", sep="\t")
   psms <- read.csv("tmp/QuantifiedPeaks.tsv", sep="\t")
+  }
 
   # if both files are non-zero
   if (!is.null(modpep) && !is.null(protlist)) {
