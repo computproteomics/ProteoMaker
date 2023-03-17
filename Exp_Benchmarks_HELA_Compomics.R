@@ -25,7 +25,7 @@ for (dat in allxlsx)  {
   protlist <- modpep <- psms <- NULL
   print("dat")
   print(dat)
-  if (file.exists("tmp/QuantifiedProteins") > 0) {
+  if (file.exists("tmp/QuantifiedProteins.tsv") > 0) {
   m_ind <- grep(samplename, metadata$FileName)
   tdat <- NA
   if (length(m_ind) == 1) {
