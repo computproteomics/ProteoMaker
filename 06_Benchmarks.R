@@ -118,7 +118,6 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   ROC <- list()
   plot(0:1, 0:1, type="n", main="Proteins", xlim=c(0,1), ylim=c(0,1))
   for (test in statCols) {
-    print(test)
     testSum <-  calcROC(Stats, test)
     if (nrow(testSum) > 1) {
       lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
@@ -201,8 +200,9 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       tampl[is.na(tampl)] <- 0
       tval <- patterns[i][[1]] * tampl
       tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
+      if (length(tval) > 1) tval <- tval[1]
       tdiff <- (tval - StatsPep$`log-ratios 2 vs 1`[i]) * (tval - StatsPep$`log-ratios 2 vs 1`[i])
-      if (!is.na(tdiff)) {
+      if (!(is.na(tdiff))) {
         sumsquare <- sumsquare + tdiff
         diffs[i] <- tval
         if(length(StatsPep$PTMType[i][[1]]) > 0) {
@@ -270,9 +270,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   AdjModPepsWithProt[,Param$QuantColnames] <- AdjModPepsWithProt[,Param$QuantColnames] - Stats[as.character(AdjModPepsWithProt$merged_accs), Param$QuantColnames]
   StatsAdjModPep <- 0
   if (nrow(AdjModPepsWithProt) > 200) {
-    print("Warning: less than 200 modified peptides corresponding unmodified peptides, skipping stats")
-    StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=F)
-    
+    StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=T)
     # results on basis of ground truth
     ROC <- list()
     plot(0:1, 0:1, type="n", main="Adj. modified peptides")
@@ -283,7 +281,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
         lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
         lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
         ROC[[test]] <- testSum
-        at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
+      at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
         at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
         
         globalBMs$aucDiffRegAdjModPep[[test]] <- testSum[1,"AUC"]
@@ -295,6 +293,9 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     }
     legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
     Benchmarks$AdjModPepStat <- ROC
+  } else {
+    print("Warning: less than 200 modified peptides corresponding unmodified peptides, skipping stats")
+    
   }
   
   # Back to original modified peptides, counting the wrong differential regulations
