@@ -340,7 +340,7 @@ UnpairedDesign <- function(Data,RR, NumCond,NumReps) {
     ## t-test_pvalues
     tptvalues <- sapply(1:nrow(tData), function(pep) {
       ifelse(sum(!is.na(tData[pep,]))>1 & sum(!is.na(trefData[pep,]))>1, 
-             t.test(as.vector(tData[pep,]),as.vector(trefData[pep,]))$p.value,
+             t.test(unlist(tData[pep,]),unlist(trefData[pep,]))$p.value,
              NA)
     })
     names(tptvalues)<-rownames(tData)
