@@ -14,7 +14,7 @@
 # get path of this file
 path <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(path)
-source("00_BatchRunFuncs.R")
+source("R/00_BatchRunFuncs.R")
 
 #####################
 ## Load PhosFake libraries and source files

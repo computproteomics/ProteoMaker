@@ -6,7 +6,7 @@
 install_phosfake <- function(pkgs = c(
                                  "purrr", "crayon", "parallel", "digest", "protr", "preprocessCore",
                                  "matrixStats", "extraDistr", "fdrtool", "qvalue", "limma", "moments",
-                                 "Hmisc","gplots"
+                                 "Hmisc", "gplots"
                              ), libpath = NULL) {
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
@@ -19,13 +19,12 @@ install_phosfake <- function(pkgs = c(
 
 # Function to load all PhosFake scripts from given path and load libraries
 load_phosfake <- function(path = "./") {
-    source(file.path(path, "Parameter.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "01_GenerateGroundTruth.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "02_Digestion.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "03_MSRun.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "04_DataAnalysis.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "05_Statistics.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "06_Benchmarks.R"), echo = T, print.eval = TRUE, )
+    source(file.path(path, "R/01_GenerateGroundTruth.R"), echo = T, print.eval = TRUE)
+    source(file.path(path, "R/02_Digestion.R"), echo = T, print.eval = TRUE)
+    source(file.path(path, "R/03_MSRun.R"), echo = T, print.eval = TRUE)
+    source(file.path(path, "R/04_DataAnalysis.R"), echo = T, print.eval = TRUE)
+    source(file.path(path, "R/05_Statistics.R"), echo = T, print.eval = TRUE)
+    source(file.path(path, "R/06_Benchmarks.R"), echo = T, print.eval = TRUE, )
     library(crayon)
     library(parallel)
     library(digest)
@@ -329,7 +328,7 @@ visualize_benchmarks <- function(BenchMatrix) {
     for (i in 1:ncol(BenchMatrix)) {
         tt <- BenchMatrix[, i]
         if (is.numeric(tt)) {
-            BenchMatrix[,i] <- round(tt, 2)
+            BenchMatrix[, i] <- round(tt, 2)
         }
         if (is.character(tt)) {
             tt <- as.factor(tt)
@@ -348,11 +347,11 @@ visualize_benchmarks <- function(BenchMatrix) {
 
         print(as.vector(dat))
         midpoints <- barplot(as.vector(dat),
-            las = 2, cex.names = 0.5, col = colorpanel(100, "#AA3333", "#3333AA")[as.numeric(dat)*99+1],
+            las = 2, cex.names = 0.5, col = colorpanel(100, "#AA3333", "#3333AA")[as.numeric(dat) * 99 + 1],
             main = sim, ylab = "Normalized values", xlab = "", ylim = c(0, 1),
-            xaxt="none"
+            xaxt = "none"
         )
-        if(sim == rownames(BenchMatrix)[nrow(BenchMatrix)]){
+        if (sim == rownames(BenchMatrix)[nrow(BenchMatrix)]) {
             axis(1, at = midpoints, labels = colnames(BenchMatrix), las = 2, cex.axis = 0.5)
         }
         # Add grid
