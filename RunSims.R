@@ -36,7 +36,7 @@ Param <- def_param()
 # You can use multiple values for each parameter that then will be combined for
 # all possible combinations in different simulated datasets
 # Param$paramGroundTruth$FastaFile <- "fasta_full_yeast.fasta"
-Param$paramGroundTruth$NumReps <- c(3:5)
+Param$paramGroundTruth$NumReps <- c(3:7)
 # Param$paramGroundTruth$NumCond <- 2
 # Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
 # Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
@@ -70,4 +70,6 @@ write.csv(benchmarks, file = paste0(phosfake_config$resultFilePath, "/allBenchma
 #####################
 ## Visualize the results
 #####################
-visualize_benchmarks(benchmarks)
+# visualize the benchmarks and parameters of the second simulation
+visualize_benchmarks(benchmarks, 2)
+

@@ -6,7 +6,7 @@
 install_phosfake <- function(pkgs = c(
     "purrr", "crayon", "parallel", "digest", "protr", "preprocessCore",
     "matrixStats", "extraDistr", "fdrtool", "qvalue", "limma", "moments",
-    "Hmisc", "gplots"
+    "Hmisc", "gplots", "plotly"
 ), libpath = NULL) {
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
@@ -320,17 +320,18 @@ matrix_benchmarks <- function(allBs, Config) {
     BenchMatrix
 }
 
-# Function to visualize benchmarks TODO libary(plotly)
-visualize_benchmarks <- function(BenchMatrix) {
+# Function to visualize benchmarks
+visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     # get parameter names
     param_table <- phosfake_params()
-    param_names <- rownames(params_table)
+    param_names <- rownames(param_table)
+    
     # Visualize roughly
     par(mfrow = c(nrow(BenchMatrix), 1), mar = c(2, 5, 2, 1), xpd = T, oma = c(5, 1, 1, 1))
     # Separate parameters and filter for actual values
     reds <- colnames(BenchMatrix) %in% param_names
     param_values <- BenchMatrix[, reds]
-    BenchMatrix <- BenchMatrix[, -reds]
+    BenchMatrix <- BenchMatrix[, !reds]
     to_del <- c()
     for (i in 1:ncol(BenchMatrix)) {
         tt <- unlist(BenchMatrix[, i])
@@ -345,6 +346,7 @@ visualize_benchmarks <- function(BenchMatrix) {
         BenchMatrix <- BenchMatrix[, -which(colnames(BenchMatrix) == "QuantColnames")]
     }
     tBenchMatrix <- BenchMatrix
+    nr <- 2# nrow(BenchMatrix)
     # convert characters to factors
     for (i in 1:ncol(BenchMatrix)) {
         tt <- BenchMatrix[, i]
@@ -358,36 +360,55 @@ visualize_benchmarks <- function(BenchMatrix) {
         tt[is.na(tt)] <- 0
         tBenchMatrix[, i] <- unlist(tt)
     }
-    # define reference for x-axis
-    for (sim in rownames(BenchMatrix)) {
+    
+    # Define color palette
+    color_palette <- colorpanel(100, "#AA3333", "#3333AA")
+    
+    # Create plots
+    plots <- list()
+    sim <- current_row
         dat <- tBenchMatrix[sim, ]
         dat2 <- BenchMatrix[sim, ]
+        
         if (is.numeric(dat2)) {
             dat2 <- round(dat2, 2)
         }
         
-        midpoints <- barplot(unlist(dat),
-                             las = 2, cex.names = 0.5, col = colorpanel(100, "#AA3333", "#3333AA")[as.numeric(dat) * 99 + 1],
-                             main = sim, ylab = "Normalized values", xlab = "", ylim = c(0, 1),
-                             xaxt = "none"
-        )
-        if (sim == rownames(BenchMatrix)[nrow(BenchMatrix)]) {
-            axis(1, at = midpoints, labels = colnames(BenchMatrix), las = 2, cex.axis = 0.7)
-        }
-        # Add grid
-        abline(v = midpoints, col = "lightgray", lty = 2)
-        # Add vertical real number on top of each bar
-        text(midpoints, dat, labels = as.character(dat2), pos = 3, cex = 0.7, col = 1, xpd = NA, srt = 45, offset = 0.5, adj = 0.5)
-    }
-    par(mfrow = c(1, 1))
+        plot <- plot_ly(
+            x = names(dat),
+            y = as.numeric(dat),
+            type = 'bar',
+            marker = list(
+                color = color_palette[as.numeric(dat) * 99 + 1]
+            ),
+            text = as.character(dat2),
+            textposition = 'auto',
+            hoverinfo = 'text'
+        
+               ) %>%
+    layout(
+        title = paste("hash:", sim),
+        yaxis = list(title = 'Normalized values', range = c(0, 1), tickfont = list(size = 18/nr), titlefont = list(size = 20/nr)),
+        xaxis = list(title = '', tickangle = -45, tickfont = list(size = 16/nr)),
+        margin = list(a= 100, b = 100),
+        showlegend = FALSE
+    )
+
+param_plot <- plot_params(param_values, sim)
+
+    # Combine all plots into a subplot
+    subplot(param_plot, plot, nrows = 2, shareX = TRUE, shareY = TRUE, 
+            margin = 0.01, titleX = TRUE, titleY = TRUE) %>%
+        layout(showlegend = FALSE)
+
 }
 
 
-plot_params <- function(BenchMatrix, current_frow) {
+plot_params <- function(BenchMatrix, current_row = 1) {
     
     # get parameter names
     param_table <- phosfake_params()
-    param_names <- rownames(params_table)
+    param_names <- rownames(param_table)
     
     #filter out every NA or NULL parameters
     to_remove <- c()
@@ -405,16 +426,22 @@ plot_params <- function(BenchMatrix, current_frow) {
     param_table <- param_table[param_names, ]
 
     # Set the number of columns
-    ncols <- 2
+    ncols <- 4
     # Calculate number of rows based on number of plots and columns
     nrows <- ceiling(length(param_names) / ncols)
     
     # Create an empty list to store meters
     meters <- list()
     # Adjust spacing factors for left/right and top/bottom margins
-    hspacing_factor <- 0.2
-    vspacing_factor <- 0.5
+    hspacing_factor <- 0.3
+    vspacing_factor <- 0.3
     
+    # get position of the current row
+    if (!is.numeric(current_row)) {
+        current_row <- which(rownames(BenchMatrix) == current_row)
+    }
+    nr <- 1
+
     # Loop to create each meter plot
     for (i in 1:length(param_names)) {
         curr_par <- param_table[i, ]
@@ -423,30 +450,33 @@ plot_params <- function(BenchMatrix, current_frow) {
         col_index <- (i - 1) %% ncols + 1
         x_domain <- c((col_index - 1 + hspacing_factor) / ncols, (col_index - hspacing_factor) / ncols)
         y_domain <- c(1 - (row_index - vspacing_factor) / nrows, 1 - ((row_index - 1 + vspacing_factor) / nrows))
-        print(x_domain)
-        print(y_domain)
+        # Scale to row position
+        # x_domain <- x_domain/2 + 0.5
+        y_domain <- y_domain/2 + 0.5
+        #y_domain <- y_domain/(nrow(BenchMatrix)*1.1) + (current_row-1)*1.05 / nrow(BenchMatrix)
         fig1 <- plot_ly(
             domain = list(x = x_domain, y = y_domain),
             value = val,
-            title = list(text = param_names[i], align="center", font = list(size = 12)),
+            title = list(text = param_names[i], align="center", font = list(size = 10/nr)),
             type = "indicator",
-            mode = "number+gauge",
+            mode = "gauge",
             gauge = list(
                 shape = "bullet",
                 axis = list(range = list(curr_par$MinValue, curr_par$MaxValue),
                             tickmode = "auto",
-                            ticks = "inside"  # Position ticks inside
-                            #tickfont = list(size = 10, color = "black")  # Adjust tickfont size and color for better visibility
+                            ticks = "inside",  # Position ticks inside
+                            tickfont = list(size = 10/nr, color = "black")  # Adjust tickfont size and color for better visibility
                 ),
                 bar = list(
                     color = colorpanel(100, "#33CC33", "#999966", "#CC3333")[(val - curr_par$MinValue) / (curr_par$MaxValue - curr_par$MinValue) * 100 + 1],
-                    thickness = 0.6  # Adjust this value to make the gauge bar thicker
+                    thickness = 0.8  # Adjust this value to make the gauge bar thicker
                 )
             )
-        ) %>%
-            layout(margin = list(l = 20, r = 20))
+        ) 
         meters[[i]] <- fig1
     }
     # Combine all meter plots
-    subplot(meters, nrows = nrows)
+    subplot(meters, nrows = nrows, margin = 0.01)
 }
+
+

@@ -106,7 +106,7 @@ write.csv(benchmarks, file = paste0(phosfake_config$resultFilePath, "/allBenchma
 Visualize the results of the benchmarks to analyze the performance and outcomes of the simulations. Visualization aids in interpreting the data and identifyinsg trends or anomalies
 
 ```{r}
-# Visualize the benchmarks
-visualize_benchmarks(benchmarks, Param)
+# visualize the benchmarks and parameters of the second simulation
+visualize_benchmarks(benchmarks, 2)
 
 ```
