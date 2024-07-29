@@ -4,10 +4,10 @@
 
 # Function to install all necessary packages
 install_phosfake <- function(pkgs = c(
-                                 "purrr", "crayon", "parallel", "digest", "protr", "preprocessCore",
-                                 "matrixStats", "extraDistr", "fdrtool", "qvalue", "limma", "moments",
-                                 "Hmisc", "gplots"
-                             ), libpath = NULL) {
+    "purrr", "crayon", "parallel", "digest", "protr", "preprocessCore",
+    "matrixStats", "extraDistr", "fdrtool", "qvalue", "limma", "moments",
+    "Hmisc", "gplots"
+), libpath = NULL) {
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
     }
@@ -19,6 +19,7 @@ install_phosfake <- function(pkgs = c(
 
 # Function to load all PhosFake scripts from given path and load libraries
 load_phosfake <- function(path = "./") {
+    source(file.path(path, "R/Parameter.R"), echo = T, print.eval = TRUE)
     source(file.path(path, "R/01_GenerateGroundTruth.R"), echo = T, print.eval = TRUE)
     source(file.path(path, "R/02_Digestion.R"), echo = T, print.eval = TRUE)
     source(file.path(path, "R/03_MSRun.R"), echo = T, print.eval = TRUE)
@@ -79,7 +80,7 @@ def_param <- function() {
         "EnrichmentNonModSignalLoss" = 0,
         "EnrichmentNoise" = 0.2
     )
-
+    
     paramsMSRun <- list(
         "PercDetectedPep" = c(0.2),
         "PercDetectedVal" = c(0.5),
@@ -89,13 +90,13 @@ def_param <- function() {
         "WrongLocalizations" = 0.0,
         "MaxNAPerPep" = 1000
     )
-
+    
     paramsDataAnalysis <- list(
         "ProtSummarization" = "medpolish",
         "MinUniquePep" = c(1),
         "StatPaired" = FALSE
     )
-
+    
     ## Provide nice printout
     cat("--------------------\nGround truth generation parameters:\n")
     list.tree(paramsGroundTruth)
@@ -108,7 +109,7 @@ def_param <- function() {
     cat("--------------------\nData analysis parameters:\n")
     list.tree(paramsDataAnalysis)
     cat("--------------------\n")
-
+    
     Param <- list(
         paramGroundTruth = paramsGroundTruth,
         paramProteoformAb = paramsProteoformAb,
@@ -116,7 +117,7 @@ def_param <- function() {
         paramMSRun = paramsMSRun,
         paramDataAnalysis = paramsDataAnalysis
     )
-
+    
     return(Param)
 }
 
@@ -142,7 +143,7 @@ run_sims <- function(Parameters, Config) {
     listtodigestion <- generate_combinations(Parameters$paramDigest)
     listtomsrun <- generate_combinations(Parameters$paramMSRun)
     listtodatanalysis <- generate_combinations(Parameters$paramDataAnalysis)
-
+    
     all_params <- c(
         Parameters$paramGroundTruth,
         Parameters$paramProteoformAb,
@@ -150,13 +151,13 @@ run_sims <- function(Parameters, Config) {
         Parameters$paramDigest,
         Parameters$paramMSRun
     )
-
+    
     # Generate combinations for all parameters
     listall <- generate_combinations(all_params)
     totalbench <- length(listall)
     cat("Total number of simulations to run: ", totalbench, "\n")
     benchcounter <- 0
-
+    
     # Gather always benchmarking data
     allBs <- NULL
     for (hh in 1:length(listtogroundtruth)) {
@@ -198,7 +199,7 @@ run_sims <- function(Parameters, Config) {
                 save(Param, proteoformAb, file = filename)
             }
             pfParam <- Param
-
+            
             ### Digestion
             for (jj in 1:length(listtodigestion)) {
                 Param <- "none"
@@ -216,7 +217,7 @@ run_sims <- function(Parameters, Config) {
                     save(Param, BeforeMS, file = filename)
                 }
                 dgParam <- Param
-
+                
                 ### MS run
                 for (kk in 1:length(listtomsrun)) {
                     Param <- "none"
@@ -236,7 +237,7 @@ run_sims <- function(Parameters, Config) {
                         save(Param, AfterMSRun, file = filename)
                     }
                     msParam <- Param
-
+                    
                     ### Protein abundance
                     for (ll in 1:length(listtodatanalysis)) {
                         Param <- "none"
@@ -267,7 +268,7 @@ run_sims <- function(Parameters, Config) {
                                 Benchmarks <- Stats <- StatsPep <- NULL
                                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
                             }
-
+                            
                             if (Config$calcAllBenchmarks & !is.null(Stats)) {
                                 Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
                                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
@@ -284,10 +285,10 @@ run_sims <- function(Parameters, Config) {
 }
 
 # Retrieve intermediate outputs for a simulation
-get_simulation <- function(Param, Config) {
+get_simulation <- function(Param, Config, stage="DataAnalysis") {
     # check whether file with correct parameters exists
     md5 <- digest(as.list(Param), algo = "md5")
-    filename <- paste0(Config$resultFilePath, "/outputDataAnalysis_", md5, ".RData")
+    filename <- paste0(Config$resultFilePath, "/output", stage, "_", md5, ".RData")
     if (file.exists(filename)) {
         load(filename)
     } else {
@@ -308,7 +309,7 @@ matrix_benchmarks <- function(allBs, Config) {
     BenchMatrix <- data.frame(matrix(NA, ncol = length(benchNames) + length(Param), nrow = length(allBs)))
     colnames(BenchMatrix) <- c(benchNames, names(Param))
     rownames(BenchMatrix) <- names(allBs)
-
+    
     # writing all results and parameters into matrix
     for (i in names(allBs)) {
         tglob <- unlist(allBs[[i]][[1]]$globalBMs)
@@ -319,10 +320,30 @@ matrix_benchmarks <- function(allBs, Config) {
     BenchMatrix
 }
 
-# Function to visualize benchmarks
+# Function to visualize benchmarks TODO libary(plotly)
 visualize_benchmarks <- function(BenchMatrix) {
+    # get parameter names
+    param_table <- phosfake_params()
+    param_names <- rownames(params_table)
     # Visualize roughly
-    par(mfrow = c(nrow(BenchMatrix), 1))
+    par(mfrow = c(nrow(BenchMatrix), 1), mar = c(2, 5, 2, 1), xpd = T, oma = c(5, 1, 1, 1))
+    # Separate parameters and filter for actual values
+    reds <- colnames(BenchMatrix) %in% param_names
+    param_values <- BenchMatrix[, reds]
+    BenchMatrix <- BenchMatrix[, -reds]
+    to_del <- c()
+    for (i in 1:ncol(BenchMatrix)) {
+        tt <- unlist(BenchMatrix[, i])
+        if (all(is.na(tt))) {
+            to_del <- c(to_del, i)
+        }
+    }
+    if(length(to_del) > 0)
+        BenchMatrix <- BenchMatrix[, -to_del]
+    # remove column QuantColnames if it exists
+    if ("QuantColnames" %in% colnames(BenchMatrix)) {
+        BenchMatrix <- BenchMatrix[, -which(colnames(BenchMatrix) == "QuantColnames")]
+    }
     tBenchMatrix <- BenchMatrix
     # convert characters to factors
     for (i in 1:ncol(BenchMatrix)) {
@@ -335,7 +356,7 @@ visualize_benchmarks <- function(BenchMatrix) {
         }
         tt <- tt / max(as.numeric(tt), na.rm = T)
         tt[is.na(tt)] <- 0
-        tBenchMatrix[, i] <- tt
+        tBenchMatrix[, i] <- unlist(tt)
     }
     # define reference for x-axis
     for (sim in rownames(BenchMatrix)) {
@@ -344,20 +365,88 @@ visualize_benchmarks <- function(BenchMatrix) {
         if (is.numeric(dat2)) {
             dat2 <- round(dat2, 2)
         }
-
-        print(as.vector(dat))
-        midpoints <- barplot(as.vector(dat),
-            las = 2, cex.names = 0.5, col = colorpanel(100, "#AA3333", "#3333AA")[as.numeric(dat) * 99 + 1],
-            main = sim, ylab = "Normalized values", xlab = "", ylim = c(0, 1),
-            xaxt = "none"
+        
+        midpoints <- barplot(unlist(dat),
+                             las = 2, cex.names = 0.5, col = colorpanel(100, "#AA3333", "#3333AA")[as.numeric(dat) * 99 + 1],
+                             main = sim, ylab = "Normalized values", xlab = "", ylim = c(0, 1),
+                             xaxt = "none"
         )
         if (sim == rownames(BenchMatrix)[nrow(BenchMatrix)]) {
-            axis(1, at = midpoints, labels = colnames(BenchMatrix), las = 2, cex.axis = 0.5)
+            axis(1, at = midpoints, labels = colnames(BenchMatrix), las = 2, cex.axis = 0.7)
         }
         # Add grid
-        abline(h = midpoints, col = "lightgray", lty = 2)
+        abline(v = midpoints, col = "lightgray", lty = 2)
         # Add vertical real number on top of each bar
-        text(midpoints, dat, labels = as.character(dat2), pos = 3, cex = 0.5, col = 1, xpd = NA, srt = 90)
+        text(midpoints, dat, labels = as.character(dat2), pos = 3, cex = 0.7, col = 1, xpd = NA, srt = 45, offset = 0.5, adj = 0.5)
     }
     par(mfrow = c(1, 1))
+}
+
+
+plot_params <- function(BenchMatrix, current_frow) {
+    
+    # get parameter names
+    param_table <- phosfake_params()
+    param_names <- rownames(params_table)
+    
+    #filter out every NA or NULL parameters
+    to_remove <- c()
+    for (i in which(colnames(BenchMatrix) %in% param_names)) {
+        val <- as.numeric(BenchMatrix[, i])
+        if (!(length(val) ==0)) {
+        if (all(is.na(val))) {
+            to_remove <- append(to_remove, i)
+        }
+        }
+    }
+    if (length(to_remove) > 0)
+        BenchMatrix <- BenchMatrix[, -to_remove]
+    param_names <- param_names[param_names %in% colnames(BenchMatrix)]
+    param_table <- param_table[param_names, ]
+
+    # Set the number of columns
+    ncols <- 2
+    # Calculate number of rows based on number of plots and columns
+    nrows <- ceiling(length(param_names) / ncols)
+    
+    # Create an empty list to store meters
+    meters <- list()
+    # Adjust spacing factors for left/right and top/bottom margins
+    hspacing_factor <- 0.2
+    vspacing_factor <- 0.5
+    
+    # Loop to create each meter plot
+    for (i in 1:length(param_names)) {
+        curr_par <- param_table[i, ]
+        val <- as.numeric(BenchMatrix[current_row, param_names[i]])
+        row_index <- ceiling(i / ncols)
+        col_index <- (i - 1) %% ncols + 1
+        x_domain <- c((col_index - 1 + hspacing_factor) / ncols, (col_index - hspacing_factor) / ncols)
+        y_domain <- c(1 - (row_index - vspacing_factor) / nrows, 1 - ((row_index - 1 + vspacing_factor) / nrows))
+        print(x_domain)
+        print(y_domain)
+        fig1 <- plot_ly(
+            domain = list(x = x_domain, y = y_domain),
+            value = val,
+            title = list(text = param_names[i], align="center", font = list(size = 12)),
+            type = "indicator",
+            mode = "number+gauge",
+            gauge = list(
+                shape = "bullet",
+                axis = list(range = list(curr_par$MinValue, curr_par$MaxValue),
+                            tickmode = "auto",
+                            ticks = "inside"  # Position ticks inside
+                            #tickfont = list(size = 10, color = "black")  # Adjust tickfont size and color for better visibility
+                ),
+                bar = list(
+                    color = colorpanel(100, "#33CC33", "#999966", "#CC3333")[(val - curr_par$MinValue) / (curr_par$MaxValue - curr_par$MinValue) * 100 + 1],
+                    thickness = 0.6  # Adjust this value to make the gauge bar thicker
+                )
+            )
+        ) %>%
+            layout(margin = list(l = 20, r = 20))
+        meters[[i]] <- fig1
+    }
+    # Combine all meter plots
+    subplot(meters, nrows = nrows)
 }
