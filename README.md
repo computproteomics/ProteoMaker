@@ -4,7 +4,7 @@
 
 Phosfake is a platform for the  generation of an in-silico bottom-up proteomics data set with a ground truth on the level of proteoforms. 
 
-All the parameters that are used to generate the data are described in [Parameters.qmd](Parameters.qmd). The script that runs the entire pipeline is [`RunSims.R`](RunSims.R). Alternatively, you can use the [Vignette](Vignette.qmd). There simulations with multiple parameters can be set up and run. PhosFake also provides comparison of the results with the ground truth using [benchmarking metrics](Benchmarks.qmd) and visual comparison between simulated data sets.
+All the parameters that are used to generate the data are described in [Parameters.qmd](Parameters.html). The script that runs the entire pipeline is [`RunSims.R`](RunSims.R). Alternatively, you can use the [Vignette](Vignette.html). There simulations with multiple parameters can be set up and run. PhosFake also provides comparison of the results with the ground truth using [benchmarking metrics](Benchmarks.html) and visual comparison between simulated data sets.
 
 The pipeline is described in the figure `PhosFakeLayout.svg` and can be described as follows:
 

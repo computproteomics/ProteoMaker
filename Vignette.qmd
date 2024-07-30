@@ -14,8 +14,16 @@ PhosFake is a simulation tool for generating synthetic proteomics datasets. This
 PhosFake requires several R packages for its operation. The `install_phosfake` function ensures that all necessary packages are installed. This function checks for the presence of the `BiocManager` package and uses it to install the required packages.required packages if you haven't already:
 
 ```{r}
-# Install the packages
-install_phosfake()
+# Set the working directory to the path of this file
+# You can use the following lines when you are using RStudio
+#path <- dirname(rstudioapi::getActiveDocumentContext()$path)
+#setwd(path)
+
+# Source the main functions
+source("R/00_BatchRunFuncs.R")
+
+# Install the packages. Uncomment if you have not installed the packages yet
+#install_phosfake()
 ```
 
 ## Loading Main Functions
@@ -23,12 +31,6 @@ install_phosfake()
 The main functions and libraries of PhosFake are essential for running the simulations. The `load_phosfake` function sources all the necessary R scripts and loads required libraries, preparing the environment for the simulations.
 
 ```{r}
-# Set the working directory to the path of this file
-path <- dirname(rstudioapi::getActiveDocumentContext()$path)
-setwd(path)
-
-# Source the main functions
-source("R/00_BatchRunFuncs.R")
 
 # Load the PhosFake libraries
 load_phosfake()
@@ -85,7 +87,8 @@ allBs <- run_sims(Param, phosfake_config)
 
 Get the results of an individual simulation. This allows you to inspect the parameters and outputs of a specific run. Retrieving results is useful for detailed analysis of a particular simulation.
 
-```{# Retrieve results}
+```{r}
+# Retrieve results}
 res <- get_simulation(allBs[[1]]$Param, phosfake_config)
 
 ```

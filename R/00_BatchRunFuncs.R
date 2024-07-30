@@ -341,6 +341,7 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     }
     if(length(to_del) > 0)
         BenchMatrix <- BenchMatrix[, -to_del]
+    BenchMatrix[is.na(BenchMatrix)] <- 0
     # remove column QuantColnames if it exists
     if ("QuantColnames" %in% colnames(BenchMatrix)) {
         BenchMatrix <- BenchMatrix[, -which(colnames(BenchMatrix) == "QuantColnames")]
@@ -367,40 +368,47 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     # Create plots
     plots <- list()
     sim <- current_row
-        dat <- tBenchMatrix[sim, ]
-        dat2 <- BenchMatrix[sim, ]
+    dat <- tBenchMatrix[sim, ]
+    if (is.numeric(dat)) {
+        dat <- round(dat, 2)
+    }
+    if (!is.numeric(dat)) {
+        dat <- 0
+    }
+    dat2 <- BenchMatrix[sim, ]
+    
+    if (is.numeric(dat2)) {
+        dat2 <- round(dat2, 2)
+    }
+    
+    plot <- plot_ly(
+        x = names(dat),
+        y = as.numeric(dat),
+        type = 'bar',
+        marker = list(
+            color = color_palette[as.numeric(dat) * 99 + 1]
+        ),
+        text = as.character(dat2),
+        textposition = 'auto',
+        hoverinfo = 'text'
         
-        if (is.numeric(dat2)) {
-            dat2 <- round(dat2, 2)
-        }
-        
-        plot <- plot_ly(
-            x = names(dat),
-            y = as.numeric(dat),
-            type = 'bar',
-            marker = list(
-                color = color_palette[as.numeric(dat) * 99 + 1]
-            ),
-            text = as.character(dat2),
-            textposition = 'auto',
-            hoverinfo = 'text'
-        
-               ) %>%
-    layout(
-        title = paste("hash:", sim),
-        yaxis = list(title = 'Normalized values', range = c(0, 1), tickfont = list(size = 18/nr), titlefont = list(size = 20/nr)),
-        xaxis = list(title = '', tickangle = -45, tickfont = list(size = 16/nr)),
-        margin = list(a= 100, b = 100),
-        showlegend = FALSE
-    )
-
-param_plot <- plot_params(param_values, sim)
-
+    ) %>%
+        layout(
+            title = paste("hash:", sim),
+            yaxis = list(title = 'Normalized values', range = c(0, 1), tickfont = list(size = 18/nr), titlefont = list(size = 20/nr)),
+            xaxis = list(title = '', tickangle = -45, tickfont = list(size = 16/nr)),
+            margin = list(t= 100, b = 100, l = 100, r = 100),
+            showlegend = FALSE
+        )
+    
+    param_plot <- plot_params(param_values, sim)
+    
+    
     # Combine all plots into a subplot
-    subplot(param_plot, plot, nrows = 2, shareX = TRUE, shareY = TRUE, 
+    subplot(param_plot, plot, nrows = 2, shareX = TRUE, shareY = TRUE,
             margin = 0.01, titleX = TRUE, titleY = TRUE) %>%
         layout(showlegend = FALSE)
-
+    
 }
 
 
@@ -415,16 +423,17 @@ plot_params <- function(BenchMatrix, current_row = 1) {
     for (i in which(colnames(BenchMatrix) %in% param_names)) {
         val <- as.numeric(BenchMatrix[, i])
         if (!(length(val) ==0)) {
-        if (all(is.na(val))) {
-            to_remove <- append(to_remove, i)
-        }
+            if (all(is.na(val))) {
+                to_remove <- append(to_remove, i)
+            }
         }
     }
     if (length(to_remove) > 0)
         BenchMatrix <- BenchMatrix[, -to_remove]
+    val[is.na(val)] <- 0
     param_names <- param_names[param_names %in% colnames(BenchMatrix)]
     param_table <- param_table[param_names, ]
-
+    
     # Set the number of columns
     ncols <- 4
     # Calculate number of rows based on number of plots and columns
@@ -441,11 +450,12 @@ plot_params <- function(BenchMatrix, current_row = 1) {
         current_row <- which(rownames(BenchMatrix) == current_row)
     }
     nr <- 1
-
+    
     # Loop to create each meter plot
     for (i in 1:length(param_names)) {
         curr_par <- param_table[i, ]
         val <- as.numeric(BenchMatrix[current_row, param_names[i]])
+        val[is.na(val)] <- 0
         row_index <- ceiling(i / ncols)
         col_index <- (i - 1) %% ncols + 1
         x_domain <- c((col_index - 1 + hspacing_factor) / ncols, (col_index - hspacing_factor) / ncols)
