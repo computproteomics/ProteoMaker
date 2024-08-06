@@ -1,0 +1,16 @@
+Package: PhosFake
+Type: Package
+Title: Simulations of LC-MS data from proteoforms
+Version: 0.1.0
+Date: 2024-07-30
+Author: Veit Schwammle, Marie Locard-Paulet
+Maintainer: Your Name <veits@bmb.sdu.dk>
+Description: PhosFake is a package designed to simulate proteomics data from liquid-chromatography experiments. It provides functions for generating ground truth data, simulating proteoform abundances, and performing enzymatic digestion, mass spectrometry (MS) runs, and data analysis. The package includes functionality to install necessary dependencies, load main scripts, and run simulations with configurable parameters.
+Depends: R (>= 4.0.0)
+Remotes: rr-2/PeptideRanger
+Imports: purrr, crayon, parallel, digest, protr, preprocessCore, matrixStats, extraDistr, fdrtool, qvalue, limma, moments, Hmisc, gplots, plotly, yaml, SummarizedExperiment, PeptideRanger
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
+NeedsCompilation: no

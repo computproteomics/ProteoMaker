@@ -77,16 +77,15 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
   # Which tests are there?
   statCols <- grep("FDR",colnames(StatsPep), value=T)
-  
+
   # results on basis of ground truth
   ROC <- list()
-  plot(0:1, 0:1, type="n", main="Peptides")
+  # plot(0:1, 0:1, type="n", main="Peptides")
   for (test in statCols) {
-    print(test)
     testSum <-  calcROC(StatsPep, test)
     if (nrow(testSum) > 1) {
-      lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
-      lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
+      # lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
+      # lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
       ROC[[test]] <- testSum
       at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
       at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
@@ -98,7 +97,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       globalBMs$tFDRPep0.05[[test]] <- testSum[at.05, "tFDR"]
     }
   }
-  legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
+  # legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
   Benchmarks$PepStat <- ROC
   
   # miscleavages
@@ -110,20 +109,22 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
                                       function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
   globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[,Param$QuantColnames])))  / length(Param$QuantColnames) / nrow(Stats) * 100
   pepDistr <- sapply(str_split(Stats$Sequence,";"), function(x) length(unique(x)))
-  barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
+  # barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
   globalBMs["meanPepPerProt"] <-  mean(pepDistr)
   globalBMs$dynRangeProt <- diff(range(Stats[,Param$QuantColnames], na.rm=T))
   
+  # Which tests are there?
+  statCols <- grep("FDR",colnames(Stats), value=T)
   
   # results on basis of ground truth
   ROC <- list()
-  plot(0:1, 0:1, type="n", main="Proteins", xlim=c(0,1), ylim=c(0,1))
+  # plot(0:1, 0:1, type="n", main="Proteins", xlim=c(0,1), ylim=c(0,1))
   for (test in statCols) {
     print(test)
     testSum <-  calcROC(Stats, test)
     if (nrow(testSum) > 1) {
-      lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
-      lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
+      # lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
+      # lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
       ROC[[test]] <- testSum
       at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
       at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
@@ -136,7 +137,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     }
   }
   
-  legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
+  # legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
   Benchmarks$ProtStat <- ROC
   
   ## Calculating differences between actual and "measured" fold-changes (proteins)
@@ -159,10 +160,10 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       diffs[i] <- 0 
     }
   }
-  plot(0, xlim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), ylim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), 
-      type="n", xlab="Ground truth", ylab="Measured ratios")
-  points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
-  abline(0,1)
+  # plot(0, xlim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), ylim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), 
+  #     type="n", xlab="Ground truth", ylab="Measured ratios")
+  # points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
+  # abline(0,1)
   globalBMs["sumSquareDiffFCProt"] <- sumsquare / sum(diffs != 0)
   
   # Calculating mean of peptide sds within replicates (only peptides with regulations)
@@ -190,6 +191,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   sds <- sds  / Param$NumCond
   globalBMs["sdWithinRepsProt"] <- sds
   
+  
   ## Calculating differences between actual and "measured" fold-changes (peptides)
   patterns <- lapply(StatsPep$Regulation_Pattern, function(x) gsub("NULL", "0", x))
   patterns <- lapply(patterns, function(x)  (do.call("rbind",lapply(unlist(str_split(x, ";")), function(y) eval(parse(text=y))))))
@@ -214,11 +216,11 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       }
     } 
   }
-  plot(0, xlim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), ylim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
-  points(diffs, StatsPep$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
-  abline(0,1)
-  globalBMs["sumSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
-  globalBMs["sumSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
+  # plot(0, xlim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), ylim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
+  # points(diffs, StatsPep$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
+  # abline(0,1)
+  # globalBMs["sumSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
+  # globalBMs["sumSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
   
   # Counting miscleavages
   if (sum(!is.na(Stats$MC)) > 0)
@@ -242,7 +244,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   ###### metrics on PTM level
   # number of proteoforms per protein group and in total, not all identifiable
   ProteoformDistr <- sapply(Stats$Proteoform_ID, function(x) length(unique(as.numeric(unlist(strsplit(x, ";"))))))
-  barplot(table(ProteoformDistr), 100)
+  # barplot(table(ProteoformDistr), 100)
   globalBMs$numProteoforms <- sum(ProteoformDistr)
   globalBMs$meanProteoformsPerProt <- mean(ProteoformDistr)
   

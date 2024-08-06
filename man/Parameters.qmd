@@ -1,0 +1,222 @@
+---
+title: "PhosFake Parameters"
+format: html
+editor: visual
+---
+
+# PhosFake Pipeline Parameters
+
+This document provides a detailed description of the parameters used in the PhosFake pipeline. PhosFake is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit [PhosFake on GitHub](https://github.com/veitveit/PhosFake).
+
+## Global Parameters
+
+### Parallel Computing
+
+*Param\$Cores*: The number of CPU cores to use for parallel computing. Set to `1`. Using multiple cores can significantly speed up the computation.
+
+*Param\$ClusterType*: The type of cluster to use for parallel computing. Currently set to `PSOCK`. The cluster type determines how parallel processing is managed.
+
+### 
+
+## Experimental Design
+
+### Number of Conditions
+
+*Param\$NumCond*: The number of different experimental conditions to be tested. For example, if you are comparing treated versus untreated samples, this value would be 2. This parameter is crucial for setting up the experimental design. Default set to `2`.
+
+### Number of Replicates
+
+*Param\$NumReps*: The number of biological or technical replicates for each condition. Replicates are essential for statistical validity and reproducibility of the results. Ensuring adequate replication helps in reducing variability and increasing the reliability of the results. Default set to `5`.
+
+## Input Data Paths
+
+### Path to FASTA File
+
+*Param\$PathToFasta*: The file path to the FASTA file containing the protein sequences. This file is essential for identifying and quantifying proteins in your samples. Accurate protein identification depends heavily on the quality and completeness of the FASTA file. Default set to `InputData/fasta_full_human.fasta`.
+
+### Path to Protein List
+
+*Param\$PathToProteinList*: The file path to a list of proteins of interest, if any. This can be used to focus the analysis on a subset of proteins. Providing a specific list can streamline the analysis and enhance focus on a set of related proteoforms or biological pathways. Default set to `NULL`.
+
+## Ground Truth Proteoform-Centric Data Generation
+
+### Proteoform IDs Generation
+
+*Param\$FracModProt*: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to `0.0`, indicating no proteins will be modified.
+
+*Param\$FracModPerProt*: The fraction of modifiable proteins sampled for modifications. A value of `2` means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.
+
+*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `ph` for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation.
+
+*Param\$PTMTypesDist*: The distribution of PTM types. Default set to `1`, indicating 100% phosphorylation. This controls the relative frequency of each PTM type.
+
+*Param\$PTMTypesMass*: The mass shifts associated with the PTM types. Default value is `79.9663` for phosphorylation. Accurate mass shifts are crucial for the identification and quantification of PTMs.
+
+*Param\$PTMMultipleLambda*: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to `0.5`, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.
+
+*Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are set to serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins.
+
+*Param\$ModifiableResiduesDistr*: The relative distribution of modifiable residues. Set to `0.86` for serine, `0.13` for threonine, and `0.01` for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.
+
+*Param\$RemoveNonModFormFrac*: The fraction of modifiable proteins without non-modified forms. Set to `0`. This parameter controls the presence of non-modified forms of proteins in the simulation.
+
+### Proteoform Abudance Generation
+
+*Param\$QuantColnames*: The column names for quantitative values, structured as `C_<condition>_R_<replicate>`for a clear and organized structure for the quantitative data.
+
+*Param\$QuantNoise*: The general noise level for all quantitative values, given as the standard deviation of a normal distribution. Default set to `0.0`. This parameter simulates technical and biological variations in the quantitative data.
+
+*Param\$DiffRegFrac*: The fraction of differentially regulated proteoforms. Default set to `0.0`. This parameter allows for the simulation of differential regulation, mimicking biological variability.
+
+*Param\$DiffRegMax*: The maximum amplitude of difference for differentially regulated proteins on a log2 scale. Set to `3`. This parameter defines the range of fold changes for differentially regulated proteins.
+
+*Param\$UserInputFoldChanges*: User-defined fold changes for regulated proteoforms. Set to `NULL`. This allows for custom input of fold changes if specific regulation patterns are desired.
+
+*Param\$ThreshNAProteoform*: The threshold for removing quantitative values at the proteoform level. Default set to `-100`. This parameter filters out low-abundant proteoforms.
+
+*Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values.
+
+*Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation.
+
+*Param\$ThreshNAQuantileProt*: The quantile threshold for removing quantitative values. Set to `0.01`. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.
+
+## Enzymatic Digestion Parameters
+
+### Enzyme
+
+*Param\$Enzyme*: The enzyme used for protein digestion. Currently set to `trypsin`. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin, trypsin.strict, chymotrypsin.h, chymotrypsin.l, pepsin.2, pepsin.1.3, lysC, argC.
+
+### Proportion of Peptides with Missed Cleavages
+
+*Param\$PropMissedCleavages*: The additional proportion of peptides that have missed cleavages. Set to `1`. Missed cleavages occur when the enzyme does not cleave at all possible sites, which can affect peptide identification.
+
+### Maximum Number of Missed Cleavages
+
+*Param\$MaxNumMissedCleavages*: The maximum number of missed cleavages per peptide. Set to `6`. This parameter defines the upper limit of missed cleavages allowed in the simulation.
+
+### Peptide Length Filter
+
+*Param\$PepMinLength*: The minimum length of peptides to be considered. Set to `7`. This filter ensures that only peptides of a certain length are included, which is important for reliable identification.
+
+*Param\$PepMaxLength*: The maximum length of peptides to be considered. Set to `30`. This parameter excludes excessively long peptides that might not be covered by the mass range.
+
+### Least Abundant Peptide Loss
+
+*Param\$LeastAbundantLoss*: The percentage of least abundant peptides to be removed. Set to `0.0`. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified.
+
+## Sample Preparation Simulation Parameters
+
+### Enrichment Loss
+
+*Param\$EnrichmentLoss*: The loss of phosphorylated peptides during enrichment. Set to `0.2`. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.
+
+### Enrichment Efficiency
+
+*Param\$EnrichmentEfficiency*: The efficiency of enrichment for phosphorylated peptides. Set to `1`. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides.
+
+### Non-Modified Peptide Signal Loss
+
+*Param\$EnrichmentNonModSignalLoss*: The loss of signal for non-modified peptides during enrichment. Set to `0`. This parameter controls the reduction in signal for non-modified peptides that contaminate the enriched fraction.
+
+### Enrichment Protocol Noise
+
+*Param\$EnrichmentNoise*: The noise introduced by the enrichment protocol. Set to `0.2`. This parameter adds variability to the enrichment process.
+
+## Mass Spectrometry (MS) Run Parameters
+
+### Detected Peptides
+
+*Param\$PercDetectedPep*: The percentage of peptides detected during the MS run. Set to `0.3`. This parameter models the efficiency of peptide detection by the MS instrument.
+
+### Detected Values
+
+*Param\$PercDetectedVal*: The percentage of detected values in each replicate or condition. Set to `0.3`. This parameter affects the completeness of the quantitative data.
+
+### Intensity-Dependence Weight
+
+*Param\$WeightDetectVal*: The weight for intensity dependence of non-detection, with a maximum of `40`. Currently set to `10`. This parameter models the likelihood of detection based on peptide intensity.
+
+### MS Noise
+
+*Param\$MSNoise*: The noise level added by the MS instrument. Set to `0.5`. This parameter simulates the inherent noise in MS measurements.
+
+## MS Search Parameters
+
+### Wrong Identifications
+
+*Param\$WrongIDs*: The percentage of wrong identifications in the MS search. Set to `0.01`. This parameter models the rate of incorrect peptide identifications due to errors in the database search process.
+
+### Wrong Localizations
+
+*Param\$WrongLocalizations*: The percentage of wrong localizations in the MS search. Set to `0.01`. This parameter reflects the frequency of incorrect localization of PTM sites within identified peptides.
+
+## Filtering MS Search Results
+
+### Maximum NA per Peptide
+
+*Param\$MaxNAPerPep*: The maximum number of NA values allowed per peptide. Set to `100`. This parameter filters out peptides with excessive missing values, ensuring more reliable quantitation.
+
+## Protein Summarization
+
+### Summarization Method
+
+*Param\$ProtSummarization*: The method for protein summarization. Currently set to `medpolish`. This parameter determines how peptide-level data is aggregated to the protein level.
+
+### Minimum Number of Unique Peptides
+
+*Param\$MinUniquePep*: The minimum number of unique peptides required for summarization. Set to `1`. This parameter ensures that proteins are summarized only if they have sufficient peptide evidence.
+
+## Statistical Testing of Peptides and Proteins
+
+### Paired or Unpaired
+
+*Param\$StatPaired*: Indicates whether the statistical test is paired. Set to `FALSE`. This parameter determines the type of statistical test applied to the data, affecting the analysis of differential expression.
+
+## Grouping into different steps of the Simulation
+
+| Parameter                  | Category                 | Group              | Explanation                                                                                   |
+|----------------------------|--------------------------|--------------------|-----------------------------------------------------------------------------------------------|
+| NumCond                    | Experimental Design      | paramsGroundTruth  | Number of conditions.                                                                         |
+| NumReps                    | Experimental Design      | paramsGroundTruth  | Number of replicates.                                                                         |
+| PathToFasta                | Input Data               | paramsGroundTruth  | Path to input FASTA file.                                                                     |
+| PathToProteinList          | Input Data               | paramsGroundTruth  | Path to input protein list (optional).                                                        |
+| FracModProt                | Ground Truth Data        | paramsGroundTruth  | Fraction of proteins selected to be modified (0 for none, 1 for all).                         |
+| FracModPerProt             | Ground Truth Data        | paramsGroundTruth  | Factor for generating more proteoforms from selected proteins.                                |
+| PTMTypes                   | Ground Truth Data        | paramsGroundTruth  | Types of post-translational modifications (PTMs).                                             |
+| PTMTypesDist               | Ground Truth Data        | paramsGroundTruth  | Distribution of PTM types.                                                                    |
+| PTMTypesMass               | Ground Truth Data        | paramsGroundTruth  | Mass shifts for each PTM type.                                                                |
+| PTMMultipleLambda          | Ground Truth Data        | paramsGroundTruth  | Poisson parameter for multiply modified proteins, scaled to the number of possible PTM sites. |
+| ModifiableResidues         | Ground Truth Data        | paramsGroundTruth  | Residues that can be modified for each PTM type.                                              |
+| ModifiableResiduesDistr    | Ground Truth Data        | paramsGroundTruth  | Distribution of modifications across residues.                                                |
+| RemoveNonModFormFrac       | Ground Truth Data        | paramsGroundTruth  | Percentage of modifiable proteins without non-modified forms.                                 |
+| QuantColnames              | Proteoform Quantities    | paramsProteoformAb | Vector of column names for quantitative data.                                                 |
+| QuantNoise                 | Proteoform Quantities    | paramsProteoformAb | Noise level of quantitative values (standard deviation).                                      |
+| DiffRegFrac                | Proteoform Quantities    | paramsProteoformAb | Fraction of differentially regulated proteoforms.                                             |
+| DiffRegMax                 | Proteoform Quantities    | paramsProteoformAb | Maximum amplitude of difference for differentially regulated proteoforms (log2 scale).        |
+| UserInputFoldChanges       | Proteoform Quantities    | paramsProteoformAb | Custom set of regulated proteoforms (optional).                                               |
+| ThreshNAProteoform         | Proteoform Quantities    | paramsProteoformAb | Threshold to remove quantitative values at the proteoform level.                              |
+| AbsoluteQuanMean           | Proteoform Quantities    | paramsProteoformAb | Mean for absolute quantification.                                                             |
+| AbsoluteQuanSD             | Proteoform Quantities    | paramsProteoformAb | Standard deviation for absolute quantification.                                               |
+| ThreshNAQuantileProt       | Proteoform Quantities    | paramsProteoformAb | Quantile threshold for removing quantitative values.                                          |
+| Enzyme                     | Enzymatic Digestion      | paramsDigest       | Enzyme used for digestion (e.g., trypsin).                                                    |
+| PropMissedCleavages        | Enzymatic Digestion      | paramsDigest       | Proportion of peptides with missed cleavages.                                                 |
+| MaxNumMissedCleavages      | Enzymatic Digestion      | paramsDigest       | Maximum number of missed cleavages per peptide.                                               |
+| PepMinLength               | Enzymatic Digestion      | paramsDigest       | Minimum peptide length.                                                                       |
+| PepMaxLength               | Enzymatic Digestion      | paramsDigest       | Maximum peptide length.                                                                       |
+| Cores                      | Enzymatic Digestion      | \-                 | Number of cores for parallel computing.                                                       |
+| ClusterType                | Enzymatic Digestion      | \-                 | Type of cluster for parallel computing (e.g., PSOCK).                                         |
+| LeastAbundantLoss          | Enzymatic Digestion      | paramsDigest       | Percentage of least abundant peptides to remove.                                              |
+| EnrichmentLoss             | Sample Preparation       | paramsDigest       | Loss of phosphorylated peptides during enrichment.                                            |
+| EnrichmentEfficiency       | Sample Preparation       | paramsDigest       | Efficiency of enrichment for phosphorylated peptides.                                         |
+| EnrichmentNonModSignalLoss | Sample Preparation       | paramsDigest       | Signal loss for non-modified peptides in the enriched fraction.                               |
+| EnrichmentNoise            | Sample Preparation       | paramsDigest       | Noise due to enrichment protocol.                                                             |
+| PercDetectedPep            | MS Run                   | paramsMSRun        | Percentage of detected peptides.                                                              |
+| PercDetectedVal            | MS Run                   | paramsMSRun        | Percentage of detected values (replicate/condition).                                          |
+| WeightDetectVal            | MS Run                   | paramsMSRun        | Weights for intensity-dependence of non-detection.                                            |
+| MSNoise                    | MS Run                   | paramsMSRun        | Noise due to the MS instrument.                                                               |
+| WrongIDs                   | MS Search                | paramsMSRun        | Percentage of wrong identifications.                                                          |
+| WrongLocalizations         | MS Search                | paramsMSRun        | Percentage of wrong localizations.                                                            |
+| MaxNAPerPep                | MS Search Results Filter | paramsMSRun        | Maximum number of NA values per peptide allowed.                                              |
+| ProtSummarization          | Protein Summarization    | paramsDataAnalysis | Method for summarizing to proteins (e.g., sum.top3, medpolish).                               |
+| MinUniquePep               | Protein Summarization    | paramsDataAnalysis | Minimum number of unique peptides available.                                                  |
+| StatPaired                 | Statistical Testing      | paramsDataAnalysis | Whether the statistical testing is paired or unpaired.                                        |

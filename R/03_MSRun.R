@@ -30,21 +30,37 @@ MSRunSim <- function(Digested, parameters) {
 
   cat("  - Noise added to all samples!\n\n")
   cat(" + Detection limits:\n")
-  cat("  - The percentage of remaining peptides is", parameters$PercDetectedPep*100, "%.\n")
-  
+  cat("  - Removing peptides with detectability scores (PeptideRanger) lower than", parameters$DetectabilityThreshold, ".\n")
+
   # Sample a percentage of random peptides to be removed.
-  if(parameters$PercDetectedPep != 1) {
-    
-    remove <- sample(1:nrow(Digested), size = (1-parameters$PercDetectedPep)*nrow(Digested))
-    MSRun <- Digested[-remove, ]
-    cat("  - A total of", (1-parameters$PercDetectedPep)*nrow(Digested), "peptides is removed.\n\n")
-  
+  if(parameters$DetectabilityThreshold > 0) {
+      RFScores<- PeptideRanger::peptide_predictions(unlist(Digested[,1]), PeptideRanger::RFmodel_ProteomicsDB)
+      remove <- RFScores$RF_score < parameters$DetectabilityThreshold
+      MSRun <- Digested[-remove, ]
+      cat("  - A total of", sum(remove), "peptides is removed.\n\n")
+      
   } else {
-    
-    MSRun <- Digested
-    cat("  - No peptides were removed.\n\n")
-    
+      
+      MSRun <- Digested
+      cat("  - No peptides were removed.\n\n")
+      
   }
+  
+  #  cat("  - The percentage of remaining peptides is", parameters$PercDetectedPep*100, "%.\n")
+  
+  # # Sample a percentage of random peptides to be removed.
+  # if(parameters$PercDetectedPep != 1) {
+  #   
+  #   remove <- sample(1:nrow(Digested), size = (1-parameters$PercDetectedPep)*nrow(Digested))
+  #   MSRun <- Digested[-remove, ]
+  #   cat("  - A total of", (1-parameters$PercDetectedPep)*nrow(Digested), "peptides is removed.\n\n")
+  # 
+  # } else {
+  #   
+  #   MSRun <- Digested
+  #   cat("  - No peptides were removed.\n\n")
+  #   
+  # }
   
   # Sample a random percentage of intensities to be removed.
   allVals <- as.vector(unlist(MSRun[ ,parameters$QuantColnames]))

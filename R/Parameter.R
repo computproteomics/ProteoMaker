@@ -1,53 +1,59 @@
 # Function to create parameter table
-phosfake_params <- function() {
+param_table <- function(params_list = NULL) {
     
-        # Create vectors for each parameter and its attributes with default values
-    params_list <- list(
-        NumCond = c("Experimental Design", "paramsGroundTruth", "Number of conditions.", 2, 10, 2),
-        NumReps = c("Experimental Design", "paramsGroundTruth", "Number of replicates.", 1, 10, 3),
-        PathToFasta = c("Input Data", "paramsGroundTruth", "Path to input FASTA file.", NA, NA, "fasta_full_yeast.fasta"),
-        PathToProteinList = c("Input Data", "paramsGroundTruth", "Path to input protein list (optional).", NA, NA, NA),
-        FracModProt = c("Ground Truth Data", "paramsGroundTruth", "Fraction of proteins selected to be modified (0 for none, 1 for all).", 0, 1, 0),
-        FracModPerProt = c("Ground Truth Data", "paramsGroundTruth", "Factor for generating more proteoforms from selected proteins.", 0, 5, 0),
-        PTMTypes = c("Ground Truth Data", "paramsGroundTruth", "Types of post-translational modifications (PTMs).", NA, NA, NA),
-        PTMTypesDist = c("Ground Truth Data", "paramsGroundTruth", "Distribution of PTM types.", 0, 1, NA),
-        PTMTypesMass = c("Ground Truth Data", "paramsGroundTruth", "Mass shifts for each PTM type.", 0, 200, NA),
-        PTMMultipleLambda = c("Ground Truth Data", "paramsGroundTruth", "Poisson parameter for multiply modified proteins, scaled to the number of possible PTM sites.", 0, 5, NA),
-        ModifiableResidues = c("Ground Truth Data", "paramsGroundTruth", "Residues that can be modified for each PTM type.", NA, NA, NA),
-        ModifiableResiduesDistr = c("Ground Truth Data", "paramsGroundTruth", "Distribution of modifications across residues.", 0, 1, NA),
-        RemoveNonModFormFrac = c("Ground Truth Data", "paramsGroundTruth", "Percentage of modifiable proteins without non-modified forms.", 0, 1, 0),
-        QuantColnames = c("Proteoform Quantities", "paramsProteoformAb", "Vector of column names for quantitative data.", NA, NA, NA),
-        QuantNoise = c("Proteoform Quantities", "paramsProteoformAb", "Noise level of quantitative values (standard deviation).", 0, 5, 0.5),
-        DiffRegFrac = c("Proteoform Quantities", "paramsProteoformAb", "Fraction of differentially regulated proteoforms.", 0, 1, 0.3),
-        DiffRegMax = c("Proteoform Quantities", "paramsProteoformAb", "Maximum amplitude of difference for differentially regulated proteoforms (log2 scale).", 0, 10, 1),
-        UserInputFoldChanges = c("Proteoform Quantities", "paramsProteoformAb", "Custom set of regulated proteoforms (optional).", NA, NA, NA),
-        ThreshNAProteoform = c("Proteoform Quantities", "paramsProteoformAb", "Threshold to remove quantitative values at the proteoform level.", 0, 1000, 0),
-        AbsoluteQuanMean = c("Proteoform Quantities", "paramsProteoformAb", "Mean for absolute quantification.", 0, 100, 30.5),
-        AbsoluteQuanSD = c("Proteoform Quantities", "paramsProteoformAb", "Standard deviation for absolute quantification.", 0, 10, 3.6),
-        ThreshNAQuantileProt = c("Proteoform Quantities", "paramsProteoformAb", "Quantile threshold for removing quantitative values.", 0, 1, 0.01),
-        Enzyme = c("Enzymatic Digestion", "paramsDigest", "Enzyme used for digestion (e.g., trypsin).", NA, NA, "trypsin"),
-        PropMissedCleavages = c("Enzymatic Digestion", "paramsDigest", "Proportion of peptides with missed cleavages.", 0, 1, 0.01),
-        MaxNumMissedCleavages = c("Enzymatic Digestion", "paramsDigest", "Maximum number of missed cleavages per peptide.", 0, 10, 2),
-        PepMinLength = c("Enzymatic Digestion", "paramsDigest", "Minimum peptide length.", 1, 50, 7),
-        PepMaxLength = c("Enzymatic Digestion", "paramsDigest", "Maximum peptide length.", 1, 50, 30),
-        Cores = c("Enzymatic Digestion", "-", "Number of cores for parallel computing.", 1, 32, 1),
-        ClusterType = c("Enzymatic Digestion", "-", "Type of cluster for parallel computing (e.g., PSOCK).", NA, NA, "PSOCK"),
-        LeastAbundantLoss = c("Enzymatic Digestion", "paramsDigest", "Percentage of least abundant peptides to remove.", 0, 1, 0),
-        EnrichmentLoss = c("Sample Preparation", "paramsDigest", "Loss of phosphorylated peptides during enrichment.", 0, 1, 0.2),
-        EnrichmentEfficiency = c("Sample Preparation", "paramsDigest", "Efficiency of enrichment for phosphorylated peptides.", 0, 1, 1),
-        EnrichmentNonModSignalLoss = c("Sample Preparation", "paramsDigest", "Signal loss for non-modified peptides in the enriched fraction.", 0, 1, 0),
-        EnrichmentNoise = c("Sample Preparation", "paramsDigest", "Noise due to enrichment protocol.", 0, 1, 0.2),
-        PercDetectedPep = c("MS Run", "paramsMSRun", "Percentage of detected peptides.", 0, 1, 0.2),
-        PercDetectedVal = c("MS Run", "paramsMSRun", "Percentage of detected values (replicate/condition).", 0, 1, 0.5),
-        WeightDetectVal = c("MS Run", "paramsMSRun", "Weights for intensity-dependence of non-detection.", 0, 1, 0.1),
-        MSNoise = c("MS Run", "paramsMSRun", "Noise due to the MS instrument.", 0, 1, 0.25),
-        WrongIDs = c("MS Search", "paramsMSRun", "Percentage of wrong identifications.", 0, 0.1, 0.01),
-        WrongLocalizations = c("MS Search", "paramsMSRun", "Percentage of wrong localizations.", 0, 0.1, 0),
-        MaxNAPerPep = c("MS Search Results Filter", "paramsMSRun", "Maximum number of NA values per peptide allowed.", 0, 100, 100),
-       ProtSummarization = c("Protein Summarization", "paramsDataAnalysis", "Method for summarizing to proteins (e.g., sum.top3, medpolish).", NA, NA, "medpolish"),
-        MinUniquePep = c("Protein Summarization", "paramsDataAnalysis", "Minimum number of unique peptides available.", 1, 10, 1),
-        StatPaired = c("Statistical Testing", "paramsDataAnalysis", "Whether the statistical testing is paired or unpaired.", FALSE, TRUE, FALSE)
-    )
+#     # Create vectors for each parameter and its attributes with default values
+#     params_list <- list(
+#         NumCond = c("Experimental Design", "paramsGroundTruth", "Number of conditions.", 2, 10, 2),
+#         NumReps = c("Experimental Design", "paramsGroundTruth", "Number of replicates.", 1, 10, 3),
+#         PathToFasta = c("Input Data", "paramsGroundTruth", "Path to input FASTA file.", NA, NA, "fasta_full_yeast.fasta"),
+#         PathToProteinList = c("Input Data", "paramsGroundTruth", "Path to input protein list (optional).", NA, NA, NA),
+#         FracModProt = c("Ground Truth Data", "paramsGroundTruth", "Fraction of proteins selected to be modified (0 for none, 1 for all).", 0, 1, 0),
+#         FracModPerProt = c("Ground Truth Data", "paramsGroundTruth", "Factor for generating more proteoforms from selected proteins.", 0, 5, 0),
+#         PTMTypes = c("Ground Truth Data", "paramsGroundTruth", "Types of post-translational modifications (PTMs).", NA, NA, NA),
+#         PTMTypesDist = c("Ground Truth Data", "paramsGroundTruth", "Distribution of PTM types.", 0, 1, NA),
+#         PTMTypesMass = c("Ground Truth Data", "paramsGroundTruth", "Mass shifts for each PTM type.", 0, 200, NA),
+#         PTMMultipleLambda = c("Ground Truth Data", "paramsGroundTruth", "Poisson parameter for multiply modified proteins, scaled to the number of possible PTM sites.", 0, 5, NA),
+#         ModifiableResidues = c("Ground Truth Data", "paramsGroundTruth", "Residues that can be modified for each PTM type.", NA, NA, NA),
+#         ModifiableResiduesDistr = c("Ground Truth Data", "paramsGroundTruth", "Distribution of modifications across residues.", 0, 1, NA),
+#         RemoveNonModFormFrac = c("Ground Truth Data", "paramsGroundTruth", "Percentage of modifiable proteins without non-modified forms.", 0, 1, 0),
+#         QuantColnames = c("Proteoform Quantities", "paramsProteoformAb", "Vector of column names for quantitative data.", NA, NA, NA),
+#         QuantNoise = c("Proteoform Quantities", "paramsProteoformAb", "Noise level of quantitative values (standard deviation).", 0, 5, 0.5),
+#         DiffRegFrac = c("Proteoform Quantities", "paramsProteoformAb", "Fraction of differentially regulated proteoforms.", 0, 1, 0.3),
+#         DiffRegMax = c("Proteoform Quantities", "paramsProteoformAb", "Maximum amplitude of difference for differentially regulated proteoforms (log2 scale).", 0, 10, 1),
+#         UserInputFoldChanges = c("Proteoform Quantities", "paramsProteoformAb", "Custom set of regulated proteoforms (optional).", NA, NA, NA),
+#         ThreshNAProteoform = c("Proteoform Quantities", "paramsProteoformAb", "Threshold to remove quantitative values at the proteoform level.", 0, 1000, 0),
+#         AbsoluteQuanMean = c("Proteoform Quantities", "paramsProteoformAb", "Mean for absolute quantification.", 0, 100, 30.5),
+#         AbsoluteQuanSD = c("Proteoform Quantities", "paramsProteoformAb", "Standard deviation for absolute quantification.", 0, 10, 3.6),
+#         ThreshNAQuantileProt = c("Proteoform Quantities", "paramsProteoformAb", "Quantile threshold for removing quantitative values.", 0, 1, 0.01),
+#         Enzyme = c("Enzymatic Digestion", "paramsDigest", "Enzyme used for digestion (e.g., trypsin).", NA, NA, "trypsin"),
+#         PropMissedCleavages = c("Enzymatic Digestion", "paramsDigest", "Proportion of peptides with missed cleavages.", 0, 1, 0.01),
+#         MaxNumMissedCleavages = c("Enzymatic Digestion", "paramsDigest", "Maximum number of missed cleavages per peptide.", 0, 10, 2),
+#         PepMinLength = c("Enzymatic Digestion", "paramsDigest", "Minimum peptide length.", 1, 50, 7),
+#         PepMaxLength = c("Enzymatic Digestion", "paramsDigest", "Maximum peptide length.", 1, 50, 30),
+#         Cores = c("Enzymatic Digestion", "-", "Number of cores for parallel computing.", 1, 32, 1),
+#         ClusterType = c("Enzymatic Digestion", "-", "Type of cluster for parallel computing (e.g., PSOCK).", NA, NA, "PSOCK"),
+#         LeastAbundantLoss = c("Enzymatic Digestion", "paramsDigest", "Percentage of least abundant peptides to remove.", 0, 1, 0),
+#         EnrichmentLoss = c("Sample Preparation", "paramsDigest", "Loss of phosphorylated peptides during enrichment.", 0, 1, 0.2),
+#         EnrichmentEfficiency = c("Sample Preparation", "paramsDigest", "Efficiency of enrichment for phosphorylated peptides.", 0, 1, 1),
+#         EnrichmentNonModSignalLoss = c("Sample Preparation", "paramsDigest", "Signal loss for non-modified peptides in the enriched fraction.", 0, 1, 0),
+#         EnrichmentNoise = c("Sample Preparation", "paramsDigest", "Noise due to enrichment protocol.", 0, 1, 0.2),
+#         DetectabilityThreshold = c("MS Run", "paramsMSRun", "Threshold for detectibility of peptides from PeptideRanger predictions (trained on ProteomicsDB).", 0, 1, 0.5),
+# #        PercDetectedPep = c("MS Run", "paramsMSRun", "Percentage of detected peptides.", 0, 1, 0.2),
+#         PercDetectedVal = c("MS Run", "paramsMSRun", "Percentage of detected values (replicate/condition).", 0, 1, 0.5),
+#         WeightDetectVal = c("MS Run", "paramsMSRun", "Weights for intensity-dependence of non-detection.", 0, 1, 0.1),
+#         MSNoise = c("MS Run", "paramsMSRun", "Noise due to the MS instrument.", 0, 1, 0.25),
+#         WrongIDs = c("MS Search", "paramsMSRun", "Percentage of wrong identifications.", 0, 0.1, 0.01),
+#         WrongLocalizations = c("MS Search", "paramsMSRun", "Percentage of wrong localizations.", 0, 0.1, 0),
+#         MaxNAPerPep = c("MS Search Results Filter", "paramsMSRun", "Maximum number of NA values per peptide allowed.", 0, 100, 100),
+#         ProtSummarization = c("Protein Summarization", "paramsDataAnalysis", "Method for summarizing to proteins (e.g., sum.top3, medpolish).", NA, NA, "medpolish"),
+#         MinUniquePep = c("Protein Summarization", "paramsDataAnalysis", "Minimum number of unique peptides available.", 1, 10, 1),
+#         StatPaired = c("Statistical Testing", "paramsDataAnalysis", "Whether the statistical testing is paired or unpaired.", FALSE, TRUE, FALSE)
+#     )
+    
+    if(is.null(params_list)) {
+        params_list <- def_param()
+    }
+    
     # Convert the list to a data frame
     params_table <- do.call(rbind, lapply(params_list, function(x) as.data.frame(t(x), stringsAsFactors = FALSE)))
     

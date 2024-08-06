@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Your Name">
+<meta name="dcterms.date" content="2024-07-25">
+
+<title>PhosFake Pipeline Parameters</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="Parameters_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Parameters_files/libs/quarto-html/quarto.js"></script>
+<script src="Parameters_files/libs/quarto-html/popper.min.js"></script>
+<script src="Parameters_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Parameters_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Parameters_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Parameters_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Parameters_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Parameters_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Parameters_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PhosFake Pipeline Parameters</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Your Name </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 25, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>knitr::opts_chunk$set(echo = TRUE)</p>
+<section id="phosfake-pipeline-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="phosfake-pipeline-parameters">PhosFake Pipeline Parameters</h2>
+<p>This document provides a detailed description of the parameters used in the PhosFake pipeline. PhosFake is a tool for generating an in-silico bottom-up phosphoproteomics dataset. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit <a href="https://github.com/veitveit/PhosFake">PhosFake on GitHub</a>.</p>
+<section id="experimental-design" class="level3">
+<h3 class="anchored" data-anchor-id="experimental-design">Experimental Design</h3>
+<p><em>Param$NumCond:</em> The number of different experimental conditions to be tested. For example, if you are comparing treated versus untreated samples, this value would be 2. This parameter is crucial for setting up the experimental design. Currently set to 2. Number of Replicates</p>
+<p>Param$NumReps: The number of biological or technical replicates for each condition. Replicates are essential for statistical validity and reproducibility of the results. Ensuring adequate replication helps in reducing variability and increasing the reliability of the results. Currently set to 5. Input Data Paths Path to FASTA File</p>
+<p>Param$PathToFasta: The file path to the FASTA file containing the protein sequences. This file is essential for identifying and quantifying proteins in your samples. Accurate protein identification depends heavily on the quality and completeness of the FASTA file. Currently set to InputData/fasta_full_human.fasta. Path to Protein List</p>
+<p>Param$PathToProteinList: The file path to a list of proteins of interest, if any. This can be used to focus the analysis on a subset of proteins. Providing a specific list can streamline the analysis and enhance focus on target proteins. Currently set to NULL. Ground Truth Proteoform-Centric Data Generation Proteoform IDs Generation</p>
+<p>Param$FracModProt: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Set to 0.0, indicating no proteins will be modified.</p>
+<p>Param$FracModPerProt: The fraction of modifiable proteins sampled for modifications. A value of 2 means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.</p>
+<p>Param$PTMTypes: The types of PTMs to be considered. Currently set to ph for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation.</p>
+<p>Param$PTMTypesDist: The distribution of PTM types. Currently set to 1, indicating 100% phosphorylation. This controls the relative frequency of each PTM type.</p>
+<p>Param$PTMTypesMass: The mass shifts associated with the PTM types. Currently set to 79.9663 for phosphorylation. Accurate mass shifts are crucial for the identification and quantification of PTMs.</p>
+<p>Param$PTMMultipleLambda: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to 0.5, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.</p>
+<p>Param$ModifiableResidues: The residues where PTMs can occur. For phosphorylation, these are serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins.</p>
+<p>Param$ModifiableResiduesDistr: The relative distribution of modifiable residues. Set to 0.86 for serine, 0.13 for threonine, and 0.01 for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.</p>
+<p>Param$RemoveNonModFormFrac: The fraction of modifiable proteins without non-modified forms. Set to 0. This parameter controls the presence of non-modified forms of proteins in the simulation. Proteoform Quantities Generation</p>
+<p>Param$QuantColnames: The column names for quantitative values, structured as C_<condition><em>R</em><replicate>. This provides a clear and organized structure for the quantitative data.</replicate></condition></p>
+<p>Param$QuantNoise: The general noise level for all quantitative values, given as the standard deviation of a normal distribution. Set to 0.0. This parameter simulates measurement noise in the quantitative data.</p>
+<p>Param$DiffRegFrac: The fraction of differentially regulated proteoforms. Set to 0.0. This parameter allows for the simulation of differential regulation, mimicking biological variability.</p>
+<p>Param$DiffRegMax: The maximum amplitude of difference for differentially regulated proteins on a log2 scale. Set to 3. This parameter defines the range of fold changes for differentially regulated proteins.</p>
+<p>Param$UserInputFoldChanges: User-defined fold changes for regulated proteoforms. Set to NULL. This allows for custom input of fold changes if specific regulation patterns are desired.</p>
+<p>Param$ThreshNAProteoform: The threshold for removing quantitative values at the proteoform level. Set to -100. This parameter filters out low-quality data points based on intensity thresholds.</p>
+<p>Param$AbsoluteQuanMean: The mean value for absolute quantitation. Set to 30.5. This parameter sets the baseline for absolute quantitation values.</p>
+<p>Param$AbsoluteQuanSD: The standard deviation for absolute quantitation. Set to 3.6. This parameter models the variability in absolute quantitation.</p>
+<p>Param$ThreshNAQuantileProt: The quantile threshold for removing quantitative values. Set to 0.01. This parameter ensures that only reliable quantitative values are retained. Enzymatic Digestion Parameters Enzyme</p>
+<p>Param$Enzyme: The enzyme used for protein digestion. Currently set to trypsin. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Proportion of Peptides with Missed Cleavages</p>
+<p>Param$PropMissedCleavages: The proportion of peptides that have missed cleavages. Set to 1. Missed cleavages occur when the enzyme does not cleave at all possible sites, which can affect peptide identification. Maximum Number of Missed Cleavages</p>
+<p>Param$MaxNumMissedCleavages: The maximum number of missed cleavages per peptide. Set to 6. This parameter defines the upper limit of missed cleavages allowed in the simulation. Peptide Length Filter</p>
+<p>Param$PepMinLength: The minimum length of peptides to be considered. Set to 7. This filter ensures that only peptides of a certain length are included, which is important for reliable identification.</p>
+<p>Param$PepMaxLength: The maximum length of peptides to be considered. Set to 30. This parameter excludes excessively long peptides that might not be efficiently analyzed by MS. Parallel Computing</p>
+<p>Param$Cores: The number of CPU cores to use for parallel computing. Set to 1. Using multiple cores can significantly speed up the computation.</p>
+<p>Param$ClusterType: The type of cluster to use for parallel computing. Currently set to PSOCK. The cluster type determines how parallel processing is managed. Least Abundant Peptide Loss</p>
+<p>Param$LeastAbundantLoss: The percentage of least abundant peptides to be removed. Set to 0.0. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified. Sample Preparation Simulation Parameters Enrichment Loss</p>
+<p>Param$EnrichmentLoss: The loss of phosphorylated peptides during enrichment. Set to 0.2. This parameter models the inefficiencies in the enrichment process, where some peptides are lost. Enrichment Efficiency</p>
+<p>Param$EnrichmentEfficiency: The efficiency of enrichment for phosphorylated peptides. Set to 1. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides. Non-Modified Peptide Signal Loss</p>
+<p>Param$EnrichmentNonModSignalLoss: The loss of signal for non-modified peptides during enrichment. Set to 0. This parameter controls the reduction in signal for non-modified peptides that contaminate the enriched fraction. Enrichment Protocol Noise</p>
+<p>Param$EnrichmentNoise: The noise introduced by the enrichment protocol. Set to 0.2. This parameter adds variability to the enrichment process, simulating real experimental conditions</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

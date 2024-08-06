@@ -1,128 +1,278 @@
 ################################################################################
 #                       QC batch test of the parameters                        #
 ################################################################################
+# 
+# # Function to install all necessary packages
+# install_phosfake <- function(pkgs = c(
+#     "purrr", "crayon", "parallel", "digest", "protr", "preprocessCore",
+#     "matrixStats", "extraDistr", "fdrtool", "qvalue", "limma", "moments",
+#     "Hmisc", "gplots", "plotly", "yaml"
+# ), libpath = NULL) {
+#     if (!requireNamespace("BiocManager", quietly = TRUE)) {
+#         install.packages("BiocManager")
+#     }
+#     if (!is.null(libpath)) {
+#         .libPaths(libpath)
+#     }
+#     BiocManager::install(pkgs)
+# }
+# 
+# # Function to load all PhosFake scripts from given path and load libraries
+# load_phosfake <- function(path = "./") {
+#     source(file.path(path, "R/Parameter.R"), echo = T, print.eval = TRUE)
+#     source(file.path(path, "R/01_GenerateGroundTruth.R"), echo = T, print.eval = TRUE)
+#     source(file.path(path, "R/02_Digestion.R"), echo = T, print.eval = TRUE)
+#     source(file.path(path, "R/03_MSRun.R"), echo = T, print.eval = TRUE)
+#     source(file.path(path, "R/04_DataAnalysis.R"), echo = T, print.eval = TRUE)
+#     source(file.path(path, "R/05_Statistics.R"), echo = T, print.eval = TRUE)
+#     source(file.path(path, "R/06_Benchmarks.R"), echo = T, print.eval = TRUE, )
+#     library(crayon)
+#     library(parallel)
+#     library(digest)
+#     library(Hmisc)
+#     library(gplots)
+# }
 
-# Function to install all necessary packages
-install_phosfake <- function(pkgs = c(
-    "purrr", "crayon", "parallel", "digest", "protr", "preprocessCore",
-    "matrixStats", "extraDistr", "fdrtool", "qvalue", "limma", "moments",
-    "Hmisc", "gplots", "plotly"
-), libpath = NULL) {
-    if (!requireNamespace("BiocManager", quietly = TRUE)) {
-        install.packages("BiocManager")
-    }
-    if (!is.null(libpath)) {
-        .libPaths(libpath)
-    }
-    BiocManager::install(pkgs)
-}
-
-# Function to load all PhosFake scripts from given path and load libraries
-load_phosfake <- function(path = "./") {
-    source(file.path(path, "R/Parameter.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "R/01_GenerateGroundTruth.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "R/02_Digestion.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "R/03_MSRun.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "R/04_DataAnalysis.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "R/05_Statistics.R"), echo = T, print.eval = TRUE)
-    source(file.path(path, "R/06_Benchmarks.R"), echo = T, print.eval = TRUE, )
-    library(crayon)
-    library(parallel)
-    library(digest)
-    library(Hmisc)
-    library(gplots)
-}
-
-# function to set the paths and general configs
-set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "SimulatedDatasets", cores = 8, clusterType = "FORK", calcAllBenchmarks = T) {
+#' Set paths and general configuration for PhosFake
+#'
+#' This function sets the paths and general configuration parameters needed for
+#' running simulations with the PhosFake package. It creates the necessary output
+#' directories and returns a list of configuration settings.
+#'
+#' @param fastaFilePath A character string specifying the path to the directory
+#' containing the FASTA files. Default is `"Proteomes"`.
+#' @param resultFilePath A character string specifying the path to the directory
+#' where the simulation results will be saved. Default is `"SimulatedDatasets"`.
+#' @param cores An integer specifying the number of cores to use for parallel
+#' processing. Default is 2.
+#' @param clusterType A character string specifying the type of cluster to use
+#' for parallel computing (e.g., `"FORK"`, `"PSOCK"`). Default is `"FORK"`.
+#' @param calcAllBenchmarks A logical value indicating whether to calculate all
+#' benchmarks. Default is `TRUE`.
+#' 
+#' @return A list containing the configuration settings:
+#' \describe{
+#'   \item{fastaFilePath}{The path to the FASTA files.}
+#'   \item{resultFilePath}{The path to the result files.}
+#'   \item{cores}{The number of cores used.}
+#'   \item{clusterType}{The type of cluster used.}
+#'   \item{calcAllBenchmarks}{Whether to calculate all benchmarks.}
+#' }
+#' 
+#' @export
+#'
+#' @examples
+#' config <- set_phosfake()
+#' config <- set_phosfake(fastaFilePath = "CustomProteomes", resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
+set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "SimulatedDatasets", cores = 2, clusterType = "FORK", calcAllBenchmarks = T) {
     try(dir.create(resultFilePath))
     return(list(fastaFilePath = fastaFilePath, resultFilePath = resultFilePath, cores = cores, clusterType = clusterType, calcAllBenchmarks = calcAllBenchmarks))
 }
 
-# function to generate default parameters
-def_param <- function() {
-    paramsGroundTruth <- list(
-        "PathToFasta" = "fasta_full_yeast.fasta",
-        "PathToProteinList" = NA,
-        "NumReps" = c(3),
-        "NumCond" = 2,
-        "FracModProt" = 0,
-        "FracModPerProt" = 0,
-        "PTMTypes" = NA,
-        "PTMTypesDist" = NA,
-        "PTMTypesMass" = NA,
-        "PTMMultipleLambda" = NA,
-        "ModifiableResidues" = NA,
-        "ModifiableResiduesDistr" = NA,
-        "RemoveNonModFormFrac" = 0
-    )
-    paramsProteoformAb <- list(
-        "QuantNoise" = seq(0.5),
-        "DiffRegFrac" = c(0.3),
-        "DiffRegMax" = c(1),
-        "UserInputFoldChanges" = NA,
-        "UserInputFoldChanges_NumRegProteoforms" = NA,
-        "UserInputFoldChanges_FoldChange" = NA,
-        "ThreshNAProteoform" = -100,
-        "AbsoluteQuanMean" = 30.5,
-        "AbsoluteQuanSD" = 3.6,
-        "ThreshNAQuantileProt" = 0.01
-    )
-    paramsDigest <- list(
-        "Enzyme" = "trypsin",
-        "PropMissedCleavages" = 0.01,
-        "MaxNumMissedCleavages" = 2,
-        "PepMinLength" = 7,
-        "PepMaxLength" = 30,
-        "LeastAbundantLoss" = 0,
-        "EnrichmentLoss" = 0.2,
-        "EnrichmentEfficiency" = 1,
-        "EnrichmentNonModSignalLoss" = 0,
-        "EnrichmentNoise" = 0.2
-    )
+#' #' Generate default parameters for PhosFake simulations
+#' #'
+#' #' This function generates and returns a list of default parameters for running
+#' #' simulations with the PhosFake package. The parameters are organized into
+#' #' several categories, including ground truth generation, proteoform abundance,
+#' #' digestion, MS run, and data analysis.
+#' #'
+#' #' @return A list of default parameters categorized as follows:
+#' #' \describe{
+#' #'   \item{paramGroundTruth}{Parameters related to ground truth data generation.}
+#' #'   \item{paramProteoformAb}{Parameters related to proteoform abundance.}
+#' #'   \item{paramDigest}{Parameters related to enzymatic digestion.}
+#' #'   \item{paramMSRun}{Parameters related to the mass spectrometry run.}
+#' #'   \item{paramDataAnalysis}{Parameters related to data analysis.}
+#' #' }
+#' #' 
+#' #' @export
+#' #'
+#' #' @examples
+#' #' params <- def_param()
+#' #' params$paramGroundTruth$NumReps <- c(2, 4, 6)
+#' def_param <- function() {
+#'     paramsGroundTruth <- list(
+#'         "PathToFasta" = "fasta_full_yeast.fasta",
+#'         "PathToProteinList" = NA,
+#'         "NumReps" = c(3),
+#'         "NumCond" = 2,
+#'         "FracModProt" = 0,
+#'         "FracModPerProt" = 0,
+#'         "PTMTypes" = NA,
+#'         "PTMTypesDist" = NA,
+#'         "PTMTypesMass" = NA,
+#'         "PTMMultipleLambda" = NA,
+#'         "ModifiableResidues" = NA,
+#'         "ModifiableResiduesDistr" = NA,
+#'         "RemoveNonModFormFrac" = 0
+#'     )
+#'     paramsProteoformAb <- list(
+#'         "QuantNoise" = seq(0.5),
+#'         "DiffRegFrac" = c(0.3),
+#'         "DiffRegMax" = c(1),
+#'         "UserInputFoldChanges" = NA,
+#'         "UserInputFoldChanges_NumRegProteoforms" = NA,
+#'         "UserInputFoldChanges_FoldChange" = NA,
+#'         "ThreshNAProteoform" = -100,
+#'         "AbsoluteQuanMean" = 30.5,
+#'         "AbsoluteQuanSD" = 3.6,
+#'         "ThreshNAQuantileProt" = 0.01
+#'     )
+#'     paramsDigest <- list(
+#'         "Enzyme" = "trypsin",
+#'         "PropMissedCleavages" = 0.01,
+#'         "MaxNumMissedCleavages" = 2,
+#'         "PepMinLength" = 7,
+#'         "PepMaxLength" = 30,
+#'         "LeastAbundantLoss" = 0,
+#'         "EnrichmentLoss" = 0.2,
+#'         "EnrichmentEfficiency" = 1,
+#'         "EnrichmentNonModSignalLoss" = 0,
+#'         "EnrichmentNoise" = 0.2
+#'     )
+#'     
+#'     paramsMSRun <- list(
+#'         "PercDetectedPep" = c(0.2),
+#'         "PercDetectedVal" = c(0.5),
+#'         "WeightDetectVal" = 0.1,
+#'         "MSNoise" = c(0.25),
+#'         "WrongIDs" = c(0.01),
+#'         "WrongLocalizations" = 0.0,
+#'         "MaxNAPerPep" = 1000
+#'     )
+#'     
+#'     paramsDataAnalysis <- list(
+#'         "ProtSummarization" = "medpolish",
+#'         "MinUniquePep" = c(1),
+#'         "StatPaired" = FALSE
+#'     )
+#'     
+#'     ## Provide nice printout
+#'     cat("--------------------\nGround truth generation parameters:\n")
+#'     list.tree(paramsGroundTruth)
+#'     cat("--------------------\nProteoform abundance parameters:\n")
+#'     list.tree(paramsProteoformAb)
+#'     cat("--------------------\nDigestion parameters:\n")
+#'     list.tree(paramsDigest)
+#'     cat("--------------------\nMSRun parameters:\n")
+#'     list.tree(paramsMSRun)
+#'     cat("--------------------\nData analysis parameters:\n")
+#'     list.tree(paramsDataAnalysis)
+#'     cat("--------------------\n")
+#'     
+#'     Param <- list(
+#'         paramGroundTruth = paramsGroundTruth,
+#'         paramProteoformAb = paramsProteoformAb,
+#'         paramDigest = paramsDigest,
+#'         paramMSRun = paramsMSRun,
+#'         paramDataAnalysis = paramsDataAnalysis
+#'     )
+#'     
+#'     return(Param)
+#' }
+
+
+#' Generate default parameters or read from yaml file
+#'
+#' This function reads a YAML file containing parameter settings and extracts
+#' them into a structured list categorized by their types. The YAML file should
+#' have a specific structure, with parameters organized under a top-level 
+#' `params` key, and each parameter containing metadata including its type 
+#' and default value.
+#'
+#' @param yaml_file A character string specifying the path to the YAML file. 
+#' NULL means setting default values.
+#' 
+#' @return A list containing categorized default parameters:
+#' \describe{
+#'   \item{paramGroundTruth}{Parameters related to ground truth data generation.}
+#'   \item{paramProteoformAb}{Parameters related to proteoform abundance.}
+#'   \item{paramDigest}{Parameters related to enzymatic digestion.}
+#'   \item{paramMSRun}{Parameters related to the mass spectrometry run.}
+#'   \item{paramDataAnalysis}{Parameters related to data analysis.}
+#' }
+#' 
+#' @export
+#'
+#' @examples
+#' # Read YAML file from inst folder
+#' yaml_path <- system.file("config", "params.yaml", package = "PhosFake")
+#' params <- def_param_from_yaml(yaml_path)
+def_param <- function(yaml_file=NULL) {
     
-    paramsMSRun <- list(
-        "PercDetectedPep" = c(0.2),
-        "PercDetectedVal" = c(0.5),
-        "WeightDetectVal" = 0.1,
-        "MSNoise" = c(0.25),
-        "WrongIDs" = c(0.01),
-        "WrongLocalizations" = 0.0,
-        "MaxNAPerPep" = 1000
-    )
+    if (is.null(yaml_file)) {
+        yaml_file <- system.file("config", "parameters.yaml", package = "PhosFake")
+    }
+    # Read the YAML file
+    params <- yaml::yaml.load_file(yaml_file)$params
     
-    paramsDataAnalysis <- list(
-        "ProtSummarization" = "medpolish",
-        "MinUniquePep" = c(1),
-        "StatPaired" = FALSE
-    )
+    # Convert NA values from strings to real NA
+    for (l in names(params)) {
+        print(params[[l]])
+        for (k in names(params[[l]])) {
+            if (params[[l]][[k]] == "NA") {
+                params[[l]][[k]] <- NA
+            }
+        }
+    }
     
-    ## Provide nice printout
-    cat("--------------------\nGround truth generation parameters:\n")
-    list.tree(paramsGroundTruth)
-    cat("--------------------\nProteoform abundance parameters:\n")
-    list.tree(paramsProteoformAb)
-    cat("--------------------\nDigestion parameters:\n")
-    list.tree(paramsDigest)
-    cat("--------------------\nMSRun parameters:\n")
-    list.tree(paramsMSRun)
-    cat("--------------------\nData analysis parameters:\n")
-    list.tree(paramsDataAnalysis)
-    cat("--------------------\n")
     
+    # Initialize empty lists for each category
     Param <- list(
-        paramGroundTruth = paramsGroundTruth,
-        paramProteoformAb = paramsProteoformAb,
-        paramDigest = paramsDigest,
-        paramMSRun = paramsMSRun,
-        paramDataAnalysis = paramsDataAnalysis
+        paramGroundTruth = list(),
+        paramProteoformAb = list(),
+        paramDigest = list(),
+        paramMSRun = list(),
+        paramDataAnalysis = list()
     )
+    
+    # Iterate over each parameter and place it into the correct category based on "type"
+    for (param_name in names(params)) {
+        param_info <- params[[param_name]]
+        category <- param_info$type
+        default_value <- param_info$default
+        
+        if (!is.null(category)) {
+            Param[[category]][[param_name]] <- default_value
+        }
+    }
+    
+    # Provide a nice printout for each category
+    cat("--------------------\nGround truth generation parameters:\n")
+    list.tree(Param$paramGroundTruth)
+    cat("--------------------\nProteoform abundance parameters:\n")
+    list.tree(Param$paramProteoformAb)
+    cat("--------------------\nDigestion parameters:\n")
+    list.tree(Param$paramDigest)
+    cat("--------------------\nMSRun parameters:\n")
+    list.tree(Param$paramMSRun)
+    cat("--------------------\nData analysis parameters:\n")
+    list.tree(Param$paramDataAnalysis)
+    cat("--------------------\n")
     
     return(Param)
 }
 
 
-# Function to generate combinations and convert rows to lists
+
+#' Generate all combinations of parameter sets
+#'
+#' This function takes a list of parameter vectors and generates all possible 
+#' combinations. The result is converted into a list of lists, where each 
+#' sublist represents a unique combination of the provided parameters.
+#'
+#' @param params A list of parameter vectors, where each vector represents 
+#' different possible values for a parameter.
+#' 
+#' @return A list of lists, each sublist containing a unique combination of 
+#' parameters.
+#' 
+#' @export
+#'
+#' @examples
+#' params <- def_param()
+#' params$paramGroundTruth$NumReps <- c(2, 4, 6)
+#' combinations <- generate_combinations(params)
 generate_combinations <- function(params) {
     combinations <- expand.grid(params, stringsAsFactors = F)
     # seems to be the only way to get to a list of lists
@@ -135,7 +285,29 @@ generate_combinations <- function(params) {
 
 
 
-# Function to run all simulations
+#' Run all simulations for given parameters and configurations
+#'
+#' This function runs simulations based on the provided parameter sets and 
+#' configuration settings. It runs the given parameter settings, processes 
+#' ground truth data, simulates proteoform abundance, performs digestion, 
+#' conducts MS runs, and carries out data analysis. Results and benchmarks are 
+#' saved to the output directory specified in \code{def_param}.
+#'
+#' @param Parameters A list containing categorized parameter sets, typically 
+#' generated using \code{def_param} or \code{def_param_from_yaml}.
+#' @param Config A list containing configuration settings, such as file paths 
+#' and computational settings, typically generated using \code{set_phosfake}.
+#' 
+#' @return A list of results, where each element contains simulation results 
+#' and benchmarks for a specific parameter combination.
+#' 
+#' @importFrom digest digest
+#' @export
+#'
+#' @examples
+#' params <- def_param()
+#' config <- set_phosfake()
+#' results <- run_sims(params, config)
 run_sims <- function(Parameters, Config) {
     # Generate combinations for each parameter set
     listtogroundtruth <- generate_combinations(Parameters$paramGroundTruth)
@@ -284,21 +456,84 @@ run_sims <- function(Parameters, Config) {
     cat("###### Finished data set generation \n")
 }
 
-# Retrieve intermediate outputs for a simulation
+
+
+#' Retrieve intermediate outputs for a simulation
+#'
+#' This function retrieves intermediate outputs for a simulation based on the
+#' provided parameters and configuration. It checks for the existence of the 
+#' output file corresponding to a specific simulation stage and loads the 
+#' data if available.
+#'
+#' @param Param A list of parameters used in the simulation, typically a subset 
+#' of those generated by functions like \code{def_param} or \code{def_param_from_yaml}.
+#' @param Config A list of configuration settings, including file paths and 
+#' computational settings, typically generated using \code{set_phosfake}.
+#' @param stage A character string indicating the stage of the simulation for 
+#' which the output is requested. Default is \code{"DataAnalysis"}. Values are \code{"GroundTruth"},
+#' \code{"ProteoformAb"}, \code{"Digestion"}, \code{"MSRun"}, and \code{"DataAnalysis"}.
+#' 
+#' @return A list containing the loaded data objects, including \code{Stats}, 
+#' \code{StatsPep}, and \code{Benchmarks}, if they exist. If no file is found, 
+#' the function returns \code{NULL}.
+#' 
+#' @importFrom digest digest
+#' @export
+#'
+#' @examples
+#' config <- set_phosfake()
+#' param <- def_param()$paramGroundTruth
+#' results <- run_sims(param, config)
+#' output <- get_simulation(param, config, stage = "MSRun")
 get_simulation <- function(Param, Config, stage="DataAnalysis") {
     # check whether file with correct parameters exists
     md5 <- digest(as.list(Param), algo = "md5")
     filename <- paste0(Config$resultFilePath, "/output", stage, "_", md5, ".RData")
     if (file.exists(filename)) {
-        load(filename)
+        # Create a temporary environment to load the objects
+        temp_env <- new.env()
+        # Load the objects into the temporary environment
+        load(filename, envir = temp_env)
+        
+        # Get the names of the objects loaded into the temporary environment
+        object_names <- ls(temp_env)
+        
+        # Create a list to store the objects
+        objects_list <- lapply(object_names, function(x) get(x, envir = temp_env))
+        
+        # Set the names of the list elements
+        names(objects_list) <- object_names
+        
+        # Return the list of objects
+        return(objects_list)        
+        
     } else {
         print("No simulation found with these parameters.")
     }
-    return(list(Stats, StatsPep, Benchmarks))
 }
 
 
-# make matrix of benchmarks
+#' Create a matrix of benchmarks from simulation results
+#'
+#' This function compiles a matrix of benchmark results from the outputs of multiple 
+#' simulations. It extracts benchmark metrics and associated parameter values, 
+#' creating a comprehensive data frame for analysis.
+#'
+#' @param allBs A list of results from the \code{run_sims} function, where each 
+#' element contains simulation results and benchmarks for a specific parameter 
+#' combination.
+#' @param Config A list of configuration settings, including file paths and 
+#' computational settings, typically generated using \code{set_phosfake}.
+#' 
+#' @return A data frame with rows representing each simulation and columns 
+#' representing benchmark values and parameter settings.
+#' 
+#' @export
+#'
+#' @examples
+#' results <- run_sims(def_param(), set_phosfake())
+#' benchmark_matrix <- matrix_benchmarks(results, set_phosfake())
+#' 
 matrix_benchmarks <- function(allBs, Config) {
     # extracting all benchmarks (sometimes there are more or less per run)
     t_allbnames <- NULL
@@ -320,10 +555,31 @@ matrix_benchmarks <- function(allBs, Config) {
     BenchMatrix
 }
 
-# Function to visualize benchmarks
+#' Visualize benchmarks for a specific simulation
+#'
+#' This function creates visualizations of the benchmark results for a specific
+#' simulation. It uses various plotting methods to display the normalized values
+#' of benchmarks and parameters, aiding in the analysis of simulation outcomes.
+#'
+#' @param BenchMatrix A data frame containing the benchmark results for multiple 
+#' simulations, typically generated by \code{matrix_benchmarks}.
+#' @param current_row An integer or a character string specifying the row number 
+#' or the simulation identifier for which the benchmarks are to be visualized. 
+#' Default is 1.
+#' 
+#' @return A plot object showing the visualized benchmarks and parameters for 
+#' the specified simulation.
+#' 
+#' @importFrom plotly plot_ly subplot
+#' @importFrom gplots colorpanel
+#' @export
+#'
+#' @examples
+#' benchmarks <- matrix_benchmarks(run_sims(def_param(), set_phosfake()), set_phosfake())
+#' visualize_benchmarks(benchmarks, current_row = 1)
 visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     # get parameter names
-    param_table <- phosfake_params()
+    param_table <- param_table()
     param_names <- rownames(param_table)
     
     # Visualize roughly
@@ -411,11 +667,33 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     
 }
 
-
+#' Plot parameters for a specific simulation
+#'
+#' This function generates visualizations of the parameter values for a specific
+#' simulation. It uses a gauge-like representation to show the range and actual 
+#' values of parameters, providing an intuitive understanding of the simulation 
+#' setup.
+#'
+#' @param BenchMatrix A data frame containing the parameter values for multiple 
+#' simulations.
+#' @param current_row An integer or a character string specifying the row number 
+#' or the simulation identifier for which the parameters are to be visualized.
+#' 
+#' @return A plot object visualizing the parameter values for the specified 
+#' simulation.
+#' 
+#' @importFrom plotly plot_ly subplot
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' benchmarks <- matrix_benchmarks(run_sims(def_param(), set_phosfake()), set_phosfake())
+#' plot_params(benchmarks, current_row = 1)
+#' }
 plot_params <- function(BenchMatrix, current_row = 1) {
     
     # get parameter names
-    param_table <- phosfake_params()
+    param_table <- param_table()
     param_names <- rownames(param_table)
     
     #filter out every NA or NULL parameters
