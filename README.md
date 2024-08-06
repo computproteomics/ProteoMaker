@@ -19,7 +19,7 @@ The pipeline is described in the figure [`PhosFakeLayout.svg`](inst/img/PhosFake
 ## Installation
 
 Install the package from GitHub with `devtools`:
-`devtools::install_github("compomics/PhosFake")`
+`devtools::install_github("veitveit/PhosFake")`
 
 ### Running full batches and benchmarking
 
