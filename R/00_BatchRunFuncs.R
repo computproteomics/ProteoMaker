@@ -535,6 +535,10 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     tBenchMatrix <- BenchMatrix
     nr <- 2# nrow(BenchMatrix)
     # convert characters to factors
+    if (is.null(ncol(BenchMatrix))) {
+        message("No benchmarks available for this simulation.")
+        return()
+    }
     for (i in 1:ncol(BenchMatrix)) {
         tt <- BenchMatrix[, i]
         if (is.numeric(tt)) {
