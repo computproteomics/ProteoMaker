@@ -199,7 +199,7 @@ set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "Simulate
 #' yaml_path <- system.file("config", "params.yaml", package = "PhosFake")
 #' params <- def_param_from_yaml(yaml_path)
 def_param <- function(yaml_file=NULL) {
-    
+    library(Hmisc)
     if (is.null(yaml_file)) {
         yaml_file <- system.file("config", "parameters.yaml", package = "PhosFake")
     }

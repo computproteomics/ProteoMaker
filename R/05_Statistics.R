@@ -2,6 +2,7 @@
 
 # Wrapper to call statistical tests (set to only RefCond condition as reference)
 runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
+    library(SummarizedExperiment)
     Data <- fullData[,Param$QuantColnames]
     NumCond <- Param$NumCond
     NumReps <- Param$NumReps

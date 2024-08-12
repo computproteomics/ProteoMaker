@@ -18,7 +18,7 @@ Param <- def_param()
 # all possible combinations in different simulated datasets
 Param$paramGroundTruth$PathToFasta <- "fasta_example.fasta"
 Param$paramGroundTruth$NumReps <- c(3)
-Param$paramGroundTruth$NumCond <- 2
+Param$paramGroundTruth$NumCond <- 5
 Param$paramGroundTruth$FracModProt <- 0.5
 Param$paramGroundTruth$PTMTypes <- "ph"
 Param$paramGroundTruth$PTMTypesMass <- c(79.966331)
@@ -26,6 +26,7 @@ Param$paramGroundTruth$PTMTypesDist <- c(1)
 Param$paramGroundTruth$PTMMultipleLambda <- c(0.1)
 Param$paramGroundTruth$ModifiableResidues <- list(c("S", "T", "Y"))
 Param$paramGroundTruth$ModifiableResiduesDistr <- list(c(0.86,0.13, 0.01))
+Param$paramDataAnalysis$MinUniquePep <- 100
 
 # Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
 # Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
@@ -67,5 +68,5 @@ write.csv(benchmarks, file = paste0(phosfake_config$resultFilePath, "/allBenchma
 ## Visualize the results
 #####################
 # visualize the benchmarks and parameters of the second simulation
-visualize_benchmarks(benchmarks, 2)
+visualize_benchmarks(benchmarks, 1)
 

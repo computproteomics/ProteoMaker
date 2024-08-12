@@ -56,9 +56,9 @@ proteinSummarisation <- function(peptable, parameters) {
     
     # Function to summarize protein groups
     summarizeProtein <- function(tmp) {
+        out <- NULL
         if (nrow(tmp) >= minUniquePep) {
             tmp <- as.matrix(tmp)
-            out <- NULL
             if (method == "sum.top3") {
                 tmp <- tmp[order(rowSums(tmp), decreasing = T),]
                 if (nrow(tmp) >= 3) {
@@ -96,9 +96,14 @@ proteinSummarisation <- function(peptable, parameters) {
             tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
             rownames(tmp) <- tmp$Sequence
             out <- tmp[1,]
-            out[QuantColnames] <- summarizeProtein(tmp[,QuantColnames,drop=F])
-            # add other information
-            out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
+            tout <- summarizeProtein(tmp[,QuantColnames,drop=F])
+            if (!is.null(tout)) {
+                out[QuantColnames] <- tout
+                # add other information
+                out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
+            } else {
+                out <- NULL
+            }
             return(out)
         })
         parallel::stopCluster(cluster)
@@ -107,9 +112,14 @@ proteinSummarisation <- function(peptable, parameters) {
             tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
             rownames(tmp) <- tmp$Sequence
             out <- tmp[1,]
-            out[QuantColnames] <- summarizeProtein(tmp[,QuantColnames,drop=F])
+            tout <- summarizeProtein(tmp[,QuantColnames,drop=F])
+            if (!is.null(tout)) {
+            out[QuantColnames] <- tout
             # add other information
             out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
+            } else {
+                out <- NULL
+            }
             return(out)
         })
     }
