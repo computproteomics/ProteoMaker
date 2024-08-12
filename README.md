@@ -9,7 +9,7 @@ All the parameters that are used to generate the data are described in [man/Para
 The pipeline is described in the figure [`PhosFakeLayout.svg`](inst/img/PhosFakeLayout) and can be described as follows:
 
 0) General functions to run the simulations: [`00_BachRunFuncs.R`](R/00_BatchRunFuncs.R)
-1) Generation of ground truth data at the proteoform leve:l [`01_GenerateGroundTruth.R'](R/01_GenerateGroundTruth.R).
+1) Generation of ground truth data at the proteoform leve:l [`01_GenerateGroundTruth.R`](R/01_GenerateGroundTruth.R).
 2) Digestion of the proteoforms from the ground truth: [`02_Digestion.R`](R/02_Digestion.R).
 3) In silico MS run [`03_MSRun.R`](R/03_MSRun.R).
 4) Functions for data analysis from the peptide to proteins: [`04_DataAnalysis.R`](R/04_DataAnalysis.R).
