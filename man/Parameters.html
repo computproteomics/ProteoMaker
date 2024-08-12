@@ -102,12 +102,12 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="proteoform-ids-generation">Proteoform IDs Generation</h3>
 <p><em>Param$FracModProt</em>: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to <code>0.0</code>, indicating no proteins will be modified.</p>
 <p><em>Param$FracModPerProt</em>: The fraction of modifiable proteins sampled for modifications. A value of <code>2</code> means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.</p>
-<p><em>Param$PTMTypes</em>: The types of PTMs to be considered. Default set to <code>ph</code> for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation.</p>
-<p><em>Param$PTMTypesDist</em>: The distribution of PTM types. Default set to <code>1</code>, indicating 100% phosphorylation. This controls the relative frequency of each PTM type.</p>
-<p><em>Param$PTMTypesMass</em>: The mass shifts associated with the PTM types. Default value is <code>79.9663</code> for phosphorylation. Accurate mass shifts are crucial for the identification and quantification of PTMs.</p>
+<p><em>Param$PTMTypes</em>: The types of PTMs to be considered. Default set to <code>ph</code> for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation. For multiple parameter in the same simulation, use a list: <code>list(c("ph", "ac"))</code></p>
+<p><em>Param$PTMTypesDist</em>: The distribution of PTM types. Default set to <code>1</code>, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type.</p>
+<p><em>Param$PTMTypesMass</em>: The mass shifts associated with the PTM types. This can be <code>79.9663</code> for phosphorylation or multiple value in a list such as <code>list(c(79.9663, 42.0106))</code> . Accurate mass shifts determine the mz values of the peptides.</p>
 <p><em>Param$PTMMultipleLambda</em>: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to <code>0.5</code>, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.</p>
-<p><em>Param$ModifiableResidues</em>: The residues where each PTM can occur. For phosphorylation, these are set to serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins.</p>
-<p><em>Param$ModifiableResiduesDistr</em>: The relative distribution of modifiable residues. Set to <code>0.86</code> for serine, <code>0.13</code> for threonine, and <code>0.01</code> for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.</p>
+<p><em>Param$ModifiableResidues</em>: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually use <code>list(ph = c("S", "T", "Y"))</code></p>
+<p><em>Param$ModifiableResiduesDistr</em>: The relative distribution of modifiable residues. For phosphorylation, this can be set to <code>0.86</code> for serine, <code>0.13</code> for threonine, and <code>0.01</code> for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.</p>
 <p><em>Param$RemoveNonModFormFrac</em>: The fraction of modifiable proteins without non-modified forms. Set to <code>0</code>. This parameter controls the presence of non-modified forms of proteins in the simulation.</p>
 </section>
 <section id="proteoform-abudance-generation" class="level3">
@@ -164,8 +164,9 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="mass-spectrometry-ms-run-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="mass-spectrometry-ms-run-parameters">Mass Spectrometry (MS) Run Parameters</h2>
-<section id="detected-peptides" class="level3">
-<h3 class="anchored" data-anchor-id="detected-peptides">Detected Peptides</h3>
+<section id="detectability-filter" class="level3">
+<h3 class="anchored" data-anchor-id="detectability-filter">Detectability filter</h3>
+<p><em>Param$DetectabilityThreshold:</em> Threshold for detectibility of peptides from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.5</p>
 <p><em>Param$PercDetectedPep</em>: The percentage of peptides detected during the MS run. Set to <code>0.3</code>. This parameter models the efficiency of peptide detection by the MS instrument.</p>
 </section>
 <section id="detected-values" class="level3">
