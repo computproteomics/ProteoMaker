@@ -105,10 +105,10 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
   #### Calculating protein numbers
   globalBMs["numQuantProtGroups"] <- nrow(Stats)
-  globalBMs["propUniqueProts"] <- sum(unlist(sapply(str_split(Stats$num_accs,";"), 
+  globalBMs["propUniqueProts"] <- sum(unlist(sapply(stringr::str_split(Stats$num_accs,";"), 
                                       function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
   globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[,Param$QuantColnames])))  / length(Param$QuantColnames) / nrow(Stats) * 100
-  pepDistr <- sapply(str_split(Stats$Sequence,";"), function(x) length(unique(x)))
+  pepDistr <- sapply(stringr::str_split(Stats$Sequence,";"), function(x) length(unique(x)))
   # barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
   globalBMs["meanPepPerProt"] <-  mean(pepDistr)
   globalBMs$dynRangeProt <- diff(range(Stats[,Param$QuantColnames], na.rm=T))
@@ -140,8 +140,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   Benchmarks$ProtStat <- ROC
   
   ## Calculating differences between actual and "measured" fold-changes (proteins)
-  patterns <- lapply(Stats$Regulation_Pattern, function(x)  matrix(as.numeric(unlist(str_split(x, ";"))), byrow=T, ncol = Param$NumCond))
-  amplitudes <- lapply(Stats$Regulation_Amplitude, function(x) as.numeric(unlist(str_split(x, ";"))))
+  patterns <- lapply(Stats$Regulation_Pattern, function(x)  matrix(as.numeric(unlist(stringr::str_split(x, ";"))), byrow=T, ncol = Param$NumCond))
+  amplitudes <- lapply(Stats$Regulation_Amplitude, function(x) as.numeric(unlist(stringr::str_split(x, ";"))))
   diffs <- vector("numeric",length(patterns))
   sumsquare <- 0
   for (i in 1:length(patterns)) {
@@ -193,8 +193,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   
   ## Calculating differences between actual and "measured" fold-changes (peptides)
   patterns <- lapply(StatsPep$Regulation_Pattern, function(x) gsub("NULL", "0", x))
-  patterns <- lapply(patterns, function(x)  (do.call("rbind",lapply(unlist(str_split(x, ";")), function(y) eval(parse(text=y))))))
-  amplitudes <- lapply(StatsPep$Regulation_Amplitude, function(x) as.numeric(unlist(str_split(x, ";"))))
+  patterns <- lapply(patterns, function(x)  (do.call("rbind",lapply(unlist(stringr::str_split(x, ";")), function(y) eval(parse(text=y))))))
+  amplitudes <- lapply(StatsPep$Regulation_Amplitude, function(x) as.numeric(unlist(stringr::str_split(x, ";"))))
   diffs <- diffsmod <- vector("numeric",length(patterns))
   sumsquare <- sumsquaremod <- 0
   for (i in 1:length(patterns)) {
@@ -349,9 +349,9 @@ calcBasicBenchmarks <- function(Stats, StatsPep, Param)  {
   #### Calculating protein numbers
   globalBMs["numQuantProtGroups"] <- nrow(Stats)
   
-  globalBMs["propUniqueProts"] <- sum(unlist(sapply(str_split(Stats$num_accs,";"), function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
+  globalBMs["propUniqueProts"] <- sum(unlist(sapply(stringr::str_split(Stats$num_accs,";"), function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
   globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[,Param$QuantColnames])))  / length(Param$QuantColnames) / nrow(Stats) * 100
-  pepDistr <- sapply(str_split(Stats$Sequence,";"), function(x) length(unique(x)))
+  pepDistr <- sapply(stringr::str_split(Stats$Sequence,";"), function(x) length(unique(x)))
   barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
   globalBMs["meanPepPerProt"] <-  mean(pepDistr)
   globalBMs$dynRangeProt <- diff(range(Stats[,Param$QuantColnames], na.rm=T))

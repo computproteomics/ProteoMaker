@@ -75,12 +75,12 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     FullReg <- cbind(LogRatios, Qvalue, as.data.frame(fullData))#, WhereReg)
     
     FullReg <- cbind(FullReg, 
-                     min1Reg=sapply(str_split(fullData$Regulation_Amplitude, ";"),
+                     min1Reg=sapply(stringr::str_split(fullData$Regulation_Amplitude, ";"),
                                     function(x) {
                                         y <- as.numeric(ifelse(x == "NA", NA, x))
                                         sum(as.numeric(y),na.rm=T)
                                     }) != 0, 
-                     allReg=sapply(str_split(fullData$Regulation_Amplitude, ";"),
+                     allReg=sapply(stringr::str_split(fullData$Regulation_Amplitude, ";"),
                                    function(x) {
                                        y <- as.numeric(ifelse(x == "NA", NA, x))
                                        !is.na(sum(as.numeric(y),na.rm=T))

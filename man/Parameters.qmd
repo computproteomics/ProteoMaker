@@ -46,17 +46,17 @@ This document provides a detailed description of the parameters used in the Phos
 
 *Param\$FracModPerProt*: The fraction of modifiable proteins sampled for modifications. A value of `2` means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.
 
-*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `ph` for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation.
+*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `ph` for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation. For multiple parameter in the same simulation, use a list: `list(c("ph", "ac"))`
 
-*Param\$PTMTypesDist*: The distribution of PTM types. Default set to `1`, indicating 100% phosphorylation. This controls the relative frequency of each PTM type.
+*Param\$PTMTypesDist*: The distribution of PTM types. Default set to `1`, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type.
 
-*Param\$PTMTypesMass*: The mass shifts associated with the PTM types. Default value is `79.9663` for phosphorylation. Accurate mass shifts are crucial for the identification and quantification of PTMs.
+*Param\$PTMTypesMass*: The mass shifts associated with the PTM types. This can be `79.9663` for phosphorylation or multiple value in a list such as `list(c(79.9663, 42.0106))` . Accurate mass shifts determine the mz values of the peptides.
 
 *Param\$PTMMultipleLambda*: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to `0.5`, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.
 
-*Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are set to serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins.
+*Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually use `list(ph = c("S", "T", "Y"))`
 
-*Param\$ModifiableResiduesDistr*: The relative distribution of modifiable residues. Set to `0.86` for serine, `0.13` for threonine, and `0.01` for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.
+*Param\$ModifiableResiduesDistr*: The relative distribution of modifiable residues. For phosphorylation, this can be set to `0.86` for serine, `0.13` for threonine, and `0.01` for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.
 
 *Param\$RemoveNonModFormFrac*: The fraction of modifiable proteins without non-modified forms. Set to `0`. This parameter controls the presence of non-modified forms of proteins in the simulation.
 

@@ -1,0 +1,29 @@
+params: 
+  enzyme:   fions: 
+NA  rions: 
+NA  isotope_error_range: 
+NA  add_decoys: 
+NA  num_hits: 
+NA  miscleavages: 
+NA  min_precursor_charge: 
+NA  max_precursor_charge: 
+NA  min_peptide_length: 
+NA  max_peptide_length: 
+NA  max_mods: 
+NA  ident_fdr_psm: 
+NA  ident_fdr_peptide: 
+NA  ident_fdr_protein: 
+NA  enable_match_between_runs: 
+NA  protein_inference: 
+NA  quantification_method: 
+precursor  summarization_proteins: 
+NA  min_num_peptides: 
+NA  summarization_psms: 
+NA  quant_transformation: 
+log  normalization_method: 
+median  run_statistics: 
+true  fdr_method: 
+qvalue  fdr_threshold: 
+NArawfiles: 
+Nonefastafile: 
+Noneparams: 

@@ -44,14 +44,16 @@ params:
   PTMTypes:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Types of post-translational modifications (PTMs)."
+    description: 'Types of post-translational modifications (PTMs), provided by their (short) names such as "ph"
+    for phosphorylation. When having multple PTMs, use a list with the names.'
     min: NA
     max: NA
     default: NA
   PTMTypesDist:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Distribution of PTM types."
+    description: "Distribution of PTM types. This means how much of which PTM type is present. Given as a list of
+    values that sum up to 1.0."
     min: 0
     max: 1
     default: NA
@@ -72,14 +74,15 @@ params:
   ModifiableResidues:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Residues that can be modified for each PTM type."
+    description: 'Residues that can be modified for each PTM type. Given as a list of strings, each list element
+    representing a PTM type and the residues that can be modified for this PTM type. For example ph: ["S", "T"].'
     min: NA
     max: NA
     default: NA
   ModifiableResiduesDistr:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Distribution of modifications across residues."
+    description: "Distribution of modifications across residues. Same layout as for PTMTypesDist."
     min: 0
     max: 1
     default: NA
