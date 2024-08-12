@@ -136,15 +136,15 @@ def_param <- function(yaml_file=NULL) {
     
     # Provide a nice printout for each category
     cat("--------------------\nGround truth generation parameters:\n")
-    list.tree(Param$paramGroundTruth)
+    list.tree(Param$paramGroundTruth, maxcomp = 100, maxlen = 100)
     cat("--------------------\nProteoform abundance parameters:\n")
-    list.tree(Param$paramProteoformAb)
+    list.tree(Param$paramProteoformAb, maxcomp = 100, maxlen = 100)
     cat("--------------------\nDigestion parameters:\n")
-    list.tree(Param$paramDigest)
+    list.tree(Param$paramDigest, maxcomp = 100, maxlen = 100)
     cat("--------------------\nMSRun parameters:\n")
-    list.tree(Param$paramMSRun)
+    list.tree(Param$paramMSRun, maxcomp = 100, maxlen = 100)
     cat("--------------------\nData analysis parameters:\n")
-    list.tree(Param$paramDataAnalysis)
+    list.tree(Param$paramDataAnalysis, maxcomp = 100, maxlen = 100)
     cat("--------------------\n")
     
     return(Param)
