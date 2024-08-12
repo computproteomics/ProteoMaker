@@ -6,7 +6,12 @@
 #####################
 ## Paths and directories
 #####################
-phosfake_config <- set_phosfake(fastaFilePath = "Proteomes", resultFilePath = "SimulatedDataSets", cores = 8, clusterType = "FORK", calcAllBenchmarks = T)
+phosfake_config <- set_phosfake(fastaFilePath = "Proteomes", 
+                                resultFilePath = "SimulatedDataSets",
+                                cores = 4, clusterType = "FORK", 
+                                runStatTests = T,
+                                calcAllBenchmarks = T
+                                )
 
 #####################
 ## Create default list of testing parameters

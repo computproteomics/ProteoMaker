@@ -57,6 +57,7 @@
 #'   \item{cores}{The number of cores used.}
 #'   \item{clusterType}{The type of cluster used.}
 #'   \item{calcAllBenchmarks}{Whether to calculate all benchmarks.}
+#'   \item{runStatTests}{Whether to run statistical tests.}
 #' }
 #' 
 #' @export
@@ -64,9 +65,13 @@
 #' @examples
 #' config <- set_phosfake()
 #' config <- set_phosfake(fastaFilePath = "CustomProteomes", resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
-set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "SimulatedDatasets", cores = 2, clusterType = "FORK", calcAllBenchmarks = T) {
+set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "SimulatedDatasets",
+                         cores = 2, clusterType = "FORK", 
+                         runStatTests = TRUE, calcAllBenchmarks = TRUE) {
     try(dir.create(resultFilePath))
-    return(list(fastaFilePath = fastaFilePath, resultFilePath = resultFilePath, cores = cores, clusterType = clusterType, calcAllBenchmarks = calcAllBenchmarks))
+    return(list(fastaFilePath = fastaFilePath, resultFilePath = resultFilePath, 
+                cores = cores, clusterType = clusterType, 
+                runStatTests = runStatTests, calcAllBenchmarks = calcAllBenchmarks))
 }
 
 
@@ -331,7 +336,7 @@ run_sims <- function(Parameters, Config) {
                         filename <- paste0(Config$resultFilePath, "/outputDataAnalysis_", md5, ".RData")
                         if (file.exists(filename)) {
                             load(filename)
-                        } else {
+                        } else if (Config$runStatTests) {
                             # counter
                             Param <- tParam
                             Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, 
@@ -346,12 +351,12 @@ run_sims <- function(Parameters, Config) {
                                 Stats <- runPolySTest(Prots, Param, refCond = 1, onlyLIMMA = F, cores = Config$cores)
                                 # much faster with only LIMMA tests
                                 StatsPep <- runPolySTest(allPeps, Param, refCond = 1, onlyLIMMA = T, cores = Config$cores)
-                                Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+                                #Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
                                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
                             } else {
-                                message("Too few proteins!!!")
+                                message("Too few proteins or no statistical tests requested. 
+                                        Skipping this part.")
                                 Benchmarks <- Stats <- StatsPep <- NULL
-                                save(Param, Stats, StatsPep, Benchmarks, file = filename)
                             }
                             
                             if (Config$calcAllBenchmarks & !is.null(Stats)) {

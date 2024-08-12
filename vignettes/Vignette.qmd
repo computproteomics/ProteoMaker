@@ -38,6 +38,7 @@ phosfake_config <- set_phosfake(
   resultFilePath = "SimulatedDataSets",
   cores = 2,
   clusterType = "FORK",
+  runStatTests = TRUE,
   calcAllBenchmarks = TRUE
 )
 ```
