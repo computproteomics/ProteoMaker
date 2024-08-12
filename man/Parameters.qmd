@@ -44,7 +44,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 *Param\$FracModProt*: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to `0.0`, indicating no proteins will be modified.
 
-*Param\$FracModPerProt*: The fraction of modifiable proteins sampled for modifications. A value of `2` means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.
+*Param\$PropModPerProt*: The proportion of modifiable proteins sampled for modifications. A value of `2` means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.
 
 *Param\$PTMTypes*: The types of PTMs to be considered. Default set to `ph` for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation. For multiple parameter in the same simulation, use a list: `list(c("ph", "ac"))`
 

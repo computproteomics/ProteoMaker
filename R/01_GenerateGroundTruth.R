@@ -173,7 +173,7 @@ proteinInput <- function(parameters) {
 
 #####################
 ## Function to perform modification to the fraction of protein sequences selected to be modified by proteinInput function.
-## - Creates a set of proteoforms from the selected protein sequences. The number of proteoforms per sequence depends on FracModPerProt.
+## - Creates a set of proteoforms from the selected protein sequences. The number of proteoforms per sequence depends on PropModPerProt.
 ## - Calls modify function to perform the modification for each proteoform.
 ## - Creates a fraction of protein sequences to be modified, that will maintain their unmodified counterpart based on RemoveNonModFormFrac.
 #####################
@@ -192,12 +192,12 @@ performModification <- function(to.Modify, parameters) {
   }
 
   # All proteins in to.Modify set are selected to be modified at least once.
-  # Then randomly a set of proteoforms from the imported to.Modify set is selected based on the fraction multiplier FracModPerProt - 1.
-  # The size of mod.proteoforms set depends to FracModPerProt. (When 1 a proteoform set of size equal to to.Modify is created, when 2 the size is double etc etc)
+  # Then randomly a set of proteoforms from the imported to.Modify set is selected based on the fraction multiplier PropModPerProt - 1.
+  # The size of mod.proteoforms set depends to PropModPerProt. (When 1 a proteoform set of size equal to to.Modify is created, when 2 the size is double etc etc)
   mod.proteoforms <- to.Modify
 
-  if (parameters$FracModPerProt >= 2) {
-    mod.proteoforms <- rbind(mod.proteoforms, to.Modify[sample(x = 1:nrow(to.Modify), size = (parameters$FracModPerProt - 1) * nrow(to.Modify), replace = T), ])
+  if (parameters$PropModPerProt >= 2) {
+    mod.proteoforms <- rbind(mod.proteoforms, to.Modify[sample(x = 1:nrow(to.Modify), size = (parameters$PropModPerProt - 1) * nrow(to.Modify), replace = T), ])
     mod.proteoforms <- mod.proteoforms[order(mod.proteoforms$Accession), ]
   }
 

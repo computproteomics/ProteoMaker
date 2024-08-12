@@ -34,10 +34,10 @@ params:
     min: 0
     max: 1
     default: 0
-  FracModPerProt:
+  PropModPerProt:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Factor for generating more proteoforms from selected proteins."
+    description: "Factor for generating more that many modified proteoforms per selected protein."
     min: 0
     max: 5
     default: 0
