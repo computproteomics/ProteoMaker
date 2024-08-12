@@ -1,5 +1,5 @@
 # Function to create parameter table
-param_table <- function(params_list = NULL) {
+param_table <- function() {
     
 #     # Create vectors for each parameter and its attributes with default values
 #     params_list <- list(
@@ -50,33 +50,32 @@ param_table <- function(params_list = NULL) {
 #         StatPaired = c("Statistical Testing", "paramsDataAnalysis", "Whether the statistical testing is paired or unpaired.", FALSE, TRUE, FALSE)
 #     )
     
-    if(is.null(params_list)) {
-        params_list <- def_param()
+    yaml_file <- system.file("config", "parameters.yaml", package = "PhosFake")
+    
+    # Read the YAML file
+    params <- yaml::yaml.load_file(yaml_file)$params
+    
+    # Convert NA values from strings to real NA
+    for (l in names(params)) {
+        for (k in names(params[[l]])) {
+            if (params[[l]][[k]] == "NA") {
+                params[[l]][[k]] <- NA
+            }
+        }
     }
     
-    # Convert the list to a data frame
-    params_table <- do.call(rbind, lapply(params_list, function(x) as.data.frame(t(x), stringsAsFactors = FALSE)))
+    # Convert the list to a data frames
+    params_table <- do.call(rbind, lapply(params, function(x) as.data.frame(t(x), stringsAsFactors = FALSE)))
     
     # Name the columns
     colnames(params_table) <- c("Category", "Group", "Explanation", "MinValue", "MaxValue", "DefaultValue")
     
     
     # Ensure MinValue and MaxValue are numeric
-    params_table$MinValue <- as.numeric(params_table$MinValue)
-    params_table$MaxValue <- as.numeric(params_table$MaxValue)
-    params_table$DefaultValue <- as.character(params_table$DefaultValue)
-    
-    
-    # Convert the list to a data frame
-    params_table <- do.call(rbind, lapply(params_list, function(x) as.data.frame(t(x), stringsAsFactors = FALSE)))
-    
-    # Name the columns
-    colnames(params_table) <- c("Category", "Group", "Explanation", "MinValue", "MaxValue")
-    
-    # Ensure MinValue and MaxValue are numeric
-    params_table$MinValue <- as.numeric(params_table$MinValue)
-    params_table$MaxValue <- as.numeric(params_table$MaxValue)
-    
+    # params_table$MinValue <- as.numeric(params_table$MinValue)
+    # params_table$MaxValue <- as.numeric(params_table$MaxValue)
+    # params_table$DefaultValue <- as.character(params_table$DefaultValue)
+    # 
     params_table
 }
 

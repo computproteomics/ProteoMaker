@@ -120,7 +120,6 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   ROC <- list()
   # plot(0:1, 0:1, type="n", main="Proteins", xlim=c(0,1), ylim=c(0,1))
   for (test in statCols) {
-    print(test)
     testSum <-  calcROC(Stats, test)
     if (nrow(testSum) > 1) {
       # lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
@@ -205,7 +204,9 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       tampl[is.na(tampl)] <- 0
       tval <- patterns[i][[1]] * tampl
       tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
-      tdiff <- (tval - StatsPep$`log-ratios 2 vs 1`[i]) * (tval - StatsPep$`log-ratios 2 vs 1`[i])
+      sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]]
+      tdiff <- (tval - sdata) * (tval - sdata)
+      print(tdiff)
       if (!is.na(tdiff)) {
         sumsquare <- sumsquare + tdiff
         diffs[i] <- tval
@@ -275,14 +276,13 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
   AdjModPepsWithProt[,Param$QuantColnames] <- AdjModPepsWithProt[,Param$QuantColnames] - Stats[as.character(AdjModPepsWithProt$merged_accs), Param$QuantColnames]
   StatsAdjModPep <- 0
   if (nrow(AdjModPepsWithProt) > 200) {
-    print("Warning: less than 200 modified peptides corresponding unmodified peptides, skipping stats")
-    StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=F)
+    message("Warning: less than 200 modified peptides with corresponding unmodified peptides, skipping stats")
+    StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=T)
     
     # results on basis of ground truth
     ROC <- list()
     plot(0:1, 0:1, type="n", main="Adj. modified peptides")
     for (test in statCols) {
-      print(test)
       testSum <-  calcROC(StatsAdjModPep, test)
       if (nrow(testSum) > 1) {
         lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))

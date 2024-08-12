@@ -198,24 +198,17 @@ params:
   EnrichmentLoss:
     group: "Sample Preparation"
     type: "paramDigest"
-    description: "Loss of phosphorylated peptides during enrichment."
+    description: "Percentage loss of peptides during enrichment."
     min: 0
     max: 1
     default: 0.2
   EnrichmentEfficiency:
     group: "Sample Preparation"
     type: "paramDigest"
-    description: "Efficiency of enrichment for phosphorylated peptides."
+    description: "Efficiency of enrichment for modified peptides."
     min: 0
     max: 1
     default: 1
-  EnrichmentNonModSignalLoss:
-    group: "Sample Preparation"
-    type: "paramDigest"
-    description: "Signal loss for non-modified peptides in the enriched fraction."
-    min: 0
-    max: 1
-    default: 0
   EnrichmentNoise:
     group: "Sample Preparation"
     type: "paramDigest"

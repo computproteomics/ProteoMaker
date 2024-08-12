@@ -6,10 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Your Name">
-<meta name="dcterms.date" content="2024-07-25">
 
-<title>PhosFake Pipeline Parameters</title>
+<title>PhosFake Parameters</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -47,26 +45,14 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">PhosFake Pipeline Parameters</h1>
+<h1 class="title">PhosFake Parameters</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>Your Name </p>
-          </div>
-  </div>
     
-    <div>
-    <div class="quarto-title-meta-heading">Published</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date">July 25, 2024</p>
-    </div>
-  </div>
   
     
   </div>
@@ -74,46 +60,162 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p>knitr::opts_chunk$set(echo = TRUE)</p>
-<section id="phosfake-pipeline-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="phosfake-pipeline-parameters">PhosFake Pipeline Parameters</h2>
-<p>This document provides a detailed description of the parameters used in the PhosFake pipeline. PhosFake is a tool for generating an in-silico bottom-up phosphoproteomics dataset. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit <a href="https://github.com/veitveit/PhosFake">PhosFake on GitHub</a>.</p>
-<section id="experimental-design" class="level3">
-<h3 class="anchored" data-anchor-id="experimental-design">Experimental Design</h3>
-<p><em>Param$NumCond:</em> The number of different experimental conditions to be tested. For example, if you are comparing treated versus untreated samples, this value would be 2. This parameter is crucial for setting up the experimental design. Currently set to 2. Number of Replicates</p>
-<p>Param$NumReps: The number of biological or technical replicates for each condition. Replicates are essential for statistical validity and reproducibility of the results. Ensuring adequate replication helps in reducing variability and increasing the reliability of the results. Currently set to 5. Input Data Paths Path to FASTA File</p>
-<p>Param$PathToFasta: The file path to the FASTA file containing the protein sequences. This file is essential for identifying and quantifying proteins in your samples. Accurate protein identification depends heavily on the quality and completeness of the FASTA file. Currently set to InputData/fasta_full_human.fasta. Path to Protein List</p>
-<p>Param$PathToProteinList: The file path to a list of proteins of interest, if any. This can be used to focus the analysis on a subset of proteins. Providing a specific list can streamline the analysis and enhance focus on target proteins. Currently set to NULL. Ground Truth Proteoform-Centric Data Generation Proteoform IDs Generation</p>
-<p>Param$FracModProt: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Set to 0.0, indicating no proteins will be modified.</p>
-<p>Param$FracModPerProt: The fraction of modifiable proteins sampled for modifications. A value of 2 means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.</p>
-<p>Param$PTMTypes: The types of PTMs to be considered. Currently set to ph for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation.</p>
-<p>Param$PTMTypesDist: The distribution of PTM types. Currently set to 1, indicating 100% phosphorylation. This controls the relative frequency of each PTM type.</p>
-<p>Param$PTMTypesMass: The mass shifts associated with the PTM types. Currently set to 79.9663 for phosphorylation. Accurate mass shifts are crucial for the identification and quantification of PTMs.</p>
-<p>Param$PTMMultipleLambda: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to 0.5, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.</p>
-<p>Param$ModifiableResidues: The residues where PTMs can occur. For phosphorylation, these are serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins.</p>
-<p>Param$ModifiableResiduesDistr: The relative distribution of modifiable residues. Set to 0.86 for serine, 0.13 for threonine, and 0.01 for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.</p>
-<p>Param$RemoveNonModFormFrac: The fraction of modifiable proteins without non-modified forms. Set to 0. This parameter controls the presence of non-modified forms of proteins in the simulation. Proteoform Quantities Generation</p>
-<p>Param$QuantColnames: The column names for quantitative values, structured as C_<condition><em>R</em><replicate>. This provides a clear and organized structure for the quantitative data.</replicate></condition></p>
-<p>Param$QuantNoise: The general noise level for all quantitative values, given as the standard deviation of a normal distribution. Set to 0.0. This parameter simulates measurement noise in the quantitative data.</p>
-<p>Param$DiffRegFrac: The fraction of differentially regulated proteoforms. Set to 0.0. This parameter allows for the simulation of differential regulation, mimicking biological variability.</p>
-<p>Param$DiffRegMax: The maximum amplitude of difference for differentially regulated proteins on a log2 scale. Set to 3. This parameter defines the range of fold changes for differentially regulated proteins.</p>
-<p>Param$UserInputFoldChanges: User-defined fold changes for regulated proteoforms. Set to NULL. This allows for custom input of fold changes if specific regulation patterns are desired.</p>
-<p>Param$ThreshNAProteoform: The threshold for removing quantitative values at the proteoform level. Set to -100. This parameter filters out low-quality data points based on intensity thresholds.</p>
-<p>Param$AbsoluteQuanMean: The mean value for absolute quantitation. Set to 30.5. This parameter sets the baseline for absolute quantitation values.</p>
-<p>Param$AbsoluteQuanSD: The standard deviation for absolute quantitation. Set to 3.6. This parameter models the variability in absolute quantitation.</p>
-<p>Param$ThreshNAQuantileProt: The quantile threshold for removing quantitative values. Set to 0.01. This parameter ensures that only reliable quantitative values are retained. Enzymatic Digestion Parameters Enzyme</p>
-<p>Param$Enzyme: The enzyme used for protein digestion. Currently set to trypsin. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Proportion of Peptides with Missed Cleavages</p>
-<p>Param$PropMissedCleavages: The proportion of peptides that have missed cleavages. Set to 1. Missed cleavages occur when the enzyme does not cleave at all possible sites, which can affect peptide identification. Maximum Number of Missed Cleavages</p>
-<p>Param$MaxNumMissedCleavages: The maximum number of missed cleavages per peptide. Set to 6. This parameter defines the upper limit of missed cleavages allowed in the simulation. Peptide Length Filter</p>
-<p>Param$PepMinLength: The minimum length of peptides to be considered. Set to 7. This filter ensures that only peptides of a certain length are included, which is important for reliable identification.</p>
-<p>Param$PepMaxLength: The maximum length of peptides to be considered. Set to 30. This parameter excludes excessively long peptides that might not be efficiently analyzed by MS. Parallel Computing</p>
-<p>Param$Cores: The number of CPU cores to use for parallel computing. Set to 1. Using multiple cores can significantly speed up the computation.</p>
-<p>Param$ClusterType: The type of cluster to use for parallel computing. Currently set to PSOCK. The cluster type determines how parallel processing is managed. Least Abundant Peptide Loss</p>
-<p>Param$LeastAbundantLoss: The percentage of least abundant peptides to be removed. Set to 0.0. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified. Sample Preparation Simulation Parameters Enrichment Loss</p>
-<p>Param$EnrichmentLoss: The loss of phosphorylated peptides during enrichment. Set to 0.2. This parameter models the inefficiencies in the enrichment process, where some peptides are lost. Enrichment Efficiency</p>
-<p>Param$EnrichmentEfficiency: The efficiency of enrichment for phosphorylated peptides. Set to 1. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides. Non-Modified Peptide Signal Loss</p>
-<p>Param$EnrichmentNonModSignalLoss: The loss of signal for non-modified peptides during enrichment. Set to 0. This parameter controls the reduction in signal for non-modified peptides that contaminate the enriched fraction. Enrichment Protocol Noise</p>
-<p>Param$EnrichmentNoise: The noise introduced by the enrichment protocol. Set to 0.2. This parameter adds variability to the enrichment process, simulating real experimental conditions</p>
+<section id="phosfake-pipeline-parameters" class="level1">
+<h1>PhosFake Pipeline Parameters</h1>
+<p>This document provides a detailed description of the parameters used in the PhosFake pipeline. PhosFake is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit <a href="https://github.com/veitveit/PhosFake">PhosFake on GitHub</a>.</p>
+<section id="global-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="global-parameters">Global Parameters</h2>
+<section id="parallel-computing" class="level3">
+<h3 class="anchored" data-anchor-id="parallel-computing">Parallel Computing</h3>
+<p><em>Param$Cores</em>: The number of CPU cores to use for parallel computing. Set to <code>1</code>. Using multiple cores can significantly speed up the computation.</p>
+<p><em>Param$ClusterType</em>: The type of cluster to use for parallel computing. Currently set to <code>PSOCK</code>. The cluster type determines how parallel processing is managed.</p>
+</section>
+<section id="section" class="level3">
+<h3 class="anchored" data-anchor-id="section"></h3>
+</section>
+</section>
+<section id="experimental-design" class="level2">
+<h2 class="anchored" data-anchor-id="experimental-design">Experimental Design</h2>
+<section id="number-of-conditions" class="level3">
+<h3 class="anchored" data-anchor-id="number-of-conditions">Number of Conditions</h3>
+<p><em>Param$NumCond</em>: The number of different experimental conditions to be tested. For example, if you are comparing treated versus untreated samples, this value would be 2. This parameter is crucial for setting up the experimental design. Default set to <code>2</code>.</p>
+</section>
+<section id="number-of-replicates" class="level3">
+<h3 class="anchored" data-anchor-id="number-of-replicates">Number of Replicates</h3>
+<p><em>Param$NumReps</em>: The number of biological or technical replicates for each condition. Replicates are essential for statistical validity and reproducibility of the results. Ensuring adequate replication helps in reducing variability and increasing the reliability of the results. Default set to <code>5</code>.</p>
+</section>
+</section>
+<section id="input-data-paths" class="level2">
+<h2 class="anchored" data-anchor-id="input-data-paths">Input Data Paths</h2>
+<section id="path-to-fasta-file" class="level3">
+<h3 class="anchored" data-anchor-id="path-to-fasta-file">Path to FASTA File</h3>
+<p><em>Param$PathToFasta</em>: The file path to the FASTA file containing the protein sequences. This file is essential for identifying and quantifying proteins in your samples. Accurate protein identification depends heavily on the quality and completeness of the FASTA file. Default set to <code>InputData/fasta_full_human.fasta</code>.</p>
+</section>
+<section id="path-to-protein-list" class="level3">
+<h3 class="anchored" data-anchor-id="path-to-protein-list">Path to Protein List</h3>
+<p><em>Param$PathToProteinList</em>: The file path to a list of proteins of interest, if any. This can be used to focus the analysis on a subset of proteins. Providing a specific list can streamline the analysis and enhance focus on a set of related proteoforms or biological pathways. Default set to <code>NULL</code>.</p>
+</section>
+</section>
+<section id="ground-truth-proteoform-centric-data-generation" class="level2">
+<h2 class="anchored" data-anchor-id="ground-truth-proteoform-centric-data-generation">Ground Truth Proteoform-Centric Data Generation</h2>
+<section id="proteoform-ids-generation" class="level3">
+<h3 class="anchored" data-anchor-id="proteoform-ids-generation">Proteoform IDs Generation</h3>
+<p><em>Param$FracModProt</em>: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to <code>0.0</code>, indicating no proteins will be modified.</p>
+<p><em>Param$FracModPerProt</em>: The fraction of modifiable proteins sampled for modifications. A value of <code>2</code> means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.</p>
+<p><em>Param$PTMTypes</em>: The types of PTMs to be considered. Default set to <code>ph</code> for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation.</p>
+<p><em>Param$PTMTypesDist</em>: The distribution of PTM types. Default set to <code>1</code>, indicating 100% phosphorylation. This controls the relative frequency of each PTM type.</p>
+<p><em>Param$PTMTypesMass</em>: The mass shifts associated with the PTM types. Default value is <code>79.9663</code> for phosphorylation. Accurate mass shifts are crucial for the identification and quantification of PTMs.</p>
+<p><em>Param$PTMMultipleLambda</em>: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to <code>0.5</code>, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.</p>
+<p><em>Param$ModifiableResidues</em>: The residues where each PTM can occur. For phosphorylation, these are set to serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins.</p>
+<p><em>Param$ModifiableResiduesDistr</em>: The relative distribution of modifiable residues. Set to <code>0.86</code> for serine, <code>0.13</code> for threonine, and <code>0.01</code> for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.</p>
+<p><em>Param$RemoveNonModFormFrac</em>: The fraction of modifiable proteins without non-modified forms. Set to <code>0</code>. This parameter controls the presence of non-modified forms of proteins in the simulation.</p>
+</section>
+<section id="proteoform-abudance-generation" class="level3">
+<h3 class="anchored" data-anchor-id="proteoform-abudance-generation">Proteoform Abudance Generation</h3>
+<p><em>Param$QuantColnames</em>: The column names for quantitative values, structured as <code>C_&lt;condition&gt;_R_&lt;replicate&gt;</code>for a clear and organized structure for the quantitative data.</p>
+<p><em>Param$QuantNoise</em>: The general noise level for all quantitative values, given as the standard deviation of a normal distribution. Default set to <code>0.0</code>. This parameter simulates technical and biological variations in the quantitative data.</p>
+<p><em>Param$DiffRegFrac</em>: The fraction of differentially regulated proteoforms. Default set to <code>0.0</code>. This parameter allows for the simulation of differential regulation, mimicking biological variability.</p>
+<p><em>Param$DiffRegMax</em>: The maximum amplitude of difference for differentially regulated proteins on a log2 scale. Set to <code>3</code>. This parameter defines the range of fold changes for differentially regulated proteins.</p>
+<p><em>Param$UserInputFoldChanges</em>: User-defined fold changes for regulated proteoforms. Set to <code>NULL</code>. This allows for custom input of fold changes if specific regulation patterns are desired.</p>
+<p><em>Param$ThreshNAProteoform</em>: The threshold for removing quantitative values at the proteoform level. Default set to <code>-100</code>. This parameter filters out low-abundant proteoforms.</p>
+<p><em>Param$AbsoluteQuanMean</em>: The mean value for absolute quantitation. Set to <code>30.5</code>. This parameter sets the baseline for absolute quantitation values.</p>
+<p><em>Param$AbsoluteQuanSD</em>: The standard deviation for absolute quantitation. Set to <code>3.6</code>. This parameter models the variability in absolute quantitation.</p>
+<p><em>Param$ThreshNAQuantileProt</em>: The quantile threshold for removing quantitative values. Set to <code>0.01</code>. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.</p>
+</section>
+</section>
+<section id="enzymatic-digestion-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="enzymatic-digestion-parameters">Enzymatic Digestion Parameters</h2>
+<section id="enzyme" class="level3">
+<h3 class="anchored" data-anchor-id="enzyme">Enzyme</h3>
+<p><em>Param$Enzyme</em>: The enzyme used for protein digestion. Currently set to <code>trypsin</code>. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin, trypsin.strict, chymotrypsin.h, chymotrypsin.l, pepsin.2, pepsin.1.3, lysC, argC.</p>
+</section>
+<section id="proportion-of-peptides-with-missed-cleavages" class="level3">
+<h3 class="anchored" data-anchor-id="proportion-of-peptides-with-missed-cleavages">Proportion of Peptides with Missed Cleavages</h3>
+<p><em>Param$PropMissedCleavages</em>: The additional proportion of peptides that have missed cleavages. Set to <code>1</code>. Missed cleavages occur when the enzyme does not cleave at all possible sites, which can affect peptide identification.</p>
+</section>
+<section id="maximum-number-of-missed-cleavages" class="level3">
+<h3 class="anchored" data-anchor-id="maximum-number-of-missed-cleavages">Maximum Number of Missed Cleavages</h3>
+<p><em>Param$MaxNumMissedCleavages</em>: The maximum number of missed cleavages per peptide. Set to <code>6</code>. This parameter defines the upper limit of missed cleavages allowed in the simulation.</p>
+</section>
+<section id="peptide-length-filter" class="level3">
+<h3 class="anchored" data-anchor-id="peptide-length-filter">Peptide Length Filter</h3>
+<p><em>Param$PepMinLength</em>: The minimum length of peptides to be considered. Set to <code>7</code>. This filter ensures that only peptides of a certain length are included, which is important for reliable identification.</p>
+<p><em>Param$PepMaxLength</em>: The maximum length of peptides to be considered. Set to <code>30</code>. This parameter excludes excessively long peptides that might not be covered by the mass range.</p>
+</section>
+<section id="least-abundant-peptide-loss" class="level3">
+<h3 class="anchored" data-anchor-id="least-abundant-peptide-loss">Least Abundant Peptide Loss</h3>
+<p><em>Param$LeastAbundantLoss</em>: The percentage of least abundant peptides to be removed. Set to <code>0.0</code>. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified.</p>
+</section>
+</section>
+<section id="sample-preparation-simulation-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="sample-preparation-simulation-parameters">Sample Preparation Simulation Parameters</h2>
+<section id="enrichment-loss" class="level3">
+<h3 class="anchored" data-anchor-id="enrichment-loss">Enrichment Loss</h3>
+<p><em>Param$EnrichmentLoss</em>: The loss of phosphorylated peptides during enrichment. Set to <code>0.2</code>. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.</p>
+</section>
+<section id="enrichment-efficiency" class="level3">
+<h3 class="anchored" data-anchor-id="enrichment-efficiency">Enrichment Efficiency</h3>
+<p><em>Param$EnrichmentEfficiency</em>: The efficiency of enrichment for phosphorylated peptides. Default set to <code>1</code>. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities</p>
+</section>
+<section id="enrichment-protocol-noise" class="level3">
+<h3 class="anchored" data-anchor-id="enrichment-protocol-noise">Enrichment Protocol Noise</h3>
+<p><em>Param$EnrichmentNoise</em>: The noise introduced by the enrichment protocol. Set to <code>0.2</code>. This parameter adds variability to the enrichment process.</p>
+</section>
+</section>
+<section id="mass-spectrometry-ms-run-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="mass-spectrometry-ms-run-parameters">Mass Spectrometry (MS) Run Parameters</h2>
+<section id="detected-peptides" class="level3">
+<h3 class="anchored" data-anchor-id="detected-peptides">Detected Peptides</h3>
+<p><em>Param$PercDetectedPep</em>: The percentage of peptides detected during the MS run. Set to <code>0.3</code>. This parameter models the efficiency of peptide detection by the MS instrument.</p>
+</section>
+<section id="detected-values" class="level3">
+<h3 class="anchored" data-anchor-id="detected-values">Detected Values</h3>
+<p><em>Param$PercDetectedVal</em>: The percentage of detected values in each replicate or condition. Set to <code>0.3</code>. This parameter affects the completeness of the quantitative data.</p>
+</section>
+<section id="intensity-dependence-weight" class="level3">
+<h3 class="anchored" data-anchor-id="intensity-dependence-weight">Intensity-Dependence Weight</h3>
+<p><em>Param$WeightDetectVal</em>: The weight for intensity dependence of non-detection, with a maximum of <code>40</code>. Currently set to <code>10</code>. This parameter models the likelihood of detection based on peptide intensity.</p>
+</section>
+<section id="ms-noise" class="level3">
+<h3 class="anchored" data-anchor-id="ms-noise">MS Noise</h3>
+<p><em>Param$MSNoise</em>: The noise level added by the MS instrument. Set to <code>0.5</code>. This parameter simulates the inherent noise in MS measurements.</p>
+</section>
+</section>
+<section id="ms-search-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="ms-search-parameters">MS Search Parameters</h2>
+<section id="wrong-identifications" class="level3">
+<h3 class="anchored" data-anchor-id="wrong-identifications">Wrong Identifications</h3>
+<p><em>Param$WrongIDs</em>: The percentage of wrong identifications in the MS search. Set to <code>0.01</code>. This parameter models the rate of incorrect peptide identifications due to errors in the database search process.</p>
+</section>
+<section id="wrong-localizations" class="level3">
+<h3 class="anchored" data-anchor-id="wrong-localizations">Wrong Localizations</h3>
+<p><em>Param$WrongLocalizations</em>: The percentage of wrong localizations in the MS search. Set to <code>0.01</code>. This parameter reflects the frequency of incorrect localization of PTM sites within identified peptides.</p>
+</section>
+</section>
+<section id="filtering-ms-search-results" class="level2">
+<h2 class="anchored" data-anchor-id="filtering-ms-search-results">Filtering MS Search Results</h2>
+<section id="maximum-na-per-peptide" class="level3">
+<h3 class="anchored" data-anchor-id="maximum-na-per-peptide">Maximum NA per Peptide</h3>
+<p><em>Param$MaxNAPerPep</em>: The maximum number of NA values allowed per peptide. Set to <code>100</code>. This parameter filters out peptides with excessive missing values, ensuring more reliable quantitation.</p>
+</section>
+</section>
+<section id="protein-summarization" class="level2">
+<h2 class="anchored" data-anchor-id="protein-summarization">Protein Summarization</h2>
+<section id="summarization-method" class="level3">
+<h3 class="anchored" data-anchor-id="summarization-method">Summarization Method</h3>
+<p><em>Param$ProtSummarization</em>: The method for protein summarization. Currently set to <code>medpolish</code>. This parameter determines how peptide-level data is aggregated to the protein level.</p>
+</section>
+<section id="minimum-number-of-unique-peptides" class="level3">
+<h3 class="anchored" data-anchor-id="minimum-number-of-unique-peptides">Minimum Number of Unique Peptides</h3>
+<p><em>Param$MinUniquePep</em>: The minimum number of unique peptides required for summarization. Set to <code>1</code>. This parameter ensures that proteins are summarized only if they have sufficient peptide evidence.</p>
+</section>
+</section>
+<section id="statistical-testing-of-peptides-and-proteins" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-testing-of-peptides-and-proteins">Statistical Testing of Peptides and Proteins</h2>
+<section id="paired-or-unpaired" class="level3">
+<h3 class="anchored" data-anchor-id="paired-or-unpaired">Paired or Unpaired</h3>
+<p><em>Param$StatPaired</em>: Indicates whether the statistical test is paired. Set to <code>FALSE</code>. This parameter determines the type of statistical test applied to the data, affecting the analysis of differential expression.</p>
+</section>
 </section>
 </section>
 

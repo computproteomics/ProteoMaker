@@ -1,14 +1,19 @@
 
 
 # Wrapper to call statistical tests (set to only RefCond condition as reference)
-runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F) {
+runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     Data <- fullData[,Param$QuantColnames]
     NumCond <- Param$NumCond
     NumReps <- Param$NumReps
     Reps <- rep(seq_len(NumCond), NumReps)
     isPaired <- Param$StatPaired
     
-
+    # Set number of threads
+    Sys.setenv(SHINY_THREADS=cores)
+    
+    cat(" + Running statistical tests\n")
+    
+    
     # Rearrange order of colums to grouped replicates
     act_cols <- rep(0:(NumCond-1),NumReps)*NumReps+rep(1:(NumReps), each=NumCond)
     Data <- Data[,act_cols]
@@ -26,7 +31,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F) {
     
     # Generate experimental design
     conditions <- unique(colData(fulldata)$Condition)
-    allComps <- PolySTest::create_pairwise_comparisons(conditions, 1)
+    allComps <- suppressMessages(PolySTest::create_pairwise_comparisons(conditions, 1))
     
     
     # Run tests

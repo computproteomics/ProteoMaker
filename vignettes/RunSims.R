@@ -6,7 +6,11 @@ library(PhosFake)
 #####################
 ## Paths and directories
 #####################
-phosfake_config <- set_phosfake(fastaFilePath = "Proteomes", resultFilePath = "SimulatedDataSets", cores = 8, clusterType = "FORK", calcAllBenchmarks = T)
+phosfake_config <- set_phosfake(fastaFilePath = "Proteomes", 
+                                resultFilePath = "SimulatedDataSets", 
+                                cores = 8, 
+                                clusterType = "FORK",
+                                calcAllBenchmarks = T)
 
 #####################
 ## Create default list of testing parameters
@@ -17,7 +21,14 @@ Param <- def_param()
 # You can use multiple values for each parameter that then will be combined for
 # all possible combinations in different simulated datasets
 # Param$paramGroundTruth$FastaFile <- "fasta_full_yeast.fasta"
-Param$paramGroundTruth$NumReps <- c(3:5)
+Param$paramGroundTruth$NumReps <- c(5)
+Param$paramGroundTruth$FracModProt <- 0.5
+Param$paramGroundTruth$PTMTypes <- "ph"
+Param$paramGroundTruth$PTMMultipleLambda <- 0.5
+Param$paramGroundTruth$PTMTypesMass <- 79.9
+Param$paramGroundTruth$PTMTypesDist <- 1
+Param$paramGroundTruth$ModifiableResidues <- list(c("S", "T", "Y"))
+Param$paramGroundTruth$ModifiableResiduesDistr <- list(c(0.86,0.13,0.01))
 # Param$paramGroundTruth$NumCond <- 2
 # Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
 # Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
@@ -27,8 +38,9 @@ Param$paramGroundTruth$NumReps <- c(3:5)
 # Param$paramDigest$MaxNumMissedCleavages <- 4
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
-Param$paramMSRun$DetectabilityThreshold <- 0.5
-Param$paramMSRun$PercDetectedVal <- 0.75
+Param$paramMSRun$DetectabilityThreshold <- 0.7
+Param$paramMSRun$PercDetectedVal <- 0.5
+Param$paramProteoformAb$Param$paramMSRun$DetectabilityThreshold <- 0.5
 
 #####################
 ## Read parameters from yaml file

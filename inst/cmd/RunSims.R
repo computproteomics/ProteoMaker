@@ -16,9 +16,17 @@ Param <- def_param()
 # Overwrite the default values with the ones you want to test
 # You can use multiple values for each parameter that then will be combined for
 # all possible combinations in different simulated datasets
-# Param$paramGroundTruth$FastaFile <- "fasta_full_yeast.fasta"
-Param$paramGroundTruth$NumReps <- c(3:7)
-# Param$paramGroundTruth$NumCond <- 2
+Param$paramGroundTruth$PathToFasta <- "fasta_full_yeast.fasta"
+Param$paramGroundTruth$NumReps <- c(3)
+Param$paramGroundTruth$NumCond <- 2
+Param$paramGroundTruth$FracModProt <- 0.5
+Param$paramGroundTruth$PTMTypes <- "ph"
+Param$paramGroundTruth$PTMTypesMass <- c(79.966331)
+Param$paramGroundTruth$PTMTypesDist <- c(1)
+Param$paramGroundTruth$PTMMultipleLambda <- c(0.1)
+Param$paramGroundTruth$ModifiableResidues <- list(c("S", "T", "Y"))
+Param$paramGroundTruth$ModifiableResiduesDistr <- list(c(0.86,0.13, 0.01))
+
 # Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
 # Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
 # Param$paramProteoformAb$DiffRegMax <- seq(0.5, 2, 0.5)
@@ -27,7 +35,7 @@ Param$paramGroundTruth$NumReps <- c(3:7)
 # Param$paramDigest$MaxNumMissedCleavages <- 4
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
-# Param$paramMSRun$PercDetectedPep <- seq(0.1, 0.5, 0.1)
+Param$paramMSRun$PercDetectedValues <- 0.2
 
 #####################
 ## Read parameters from yaml file

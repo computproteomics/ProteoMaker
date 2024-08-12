@@ -34,7 +34,38 @@ MSRunSim <- function(Digested, parameters) {
 
   # Sample a percentage of random peptides to be removed.
   if(parameters$DetectabilityThreshold > 0) {
-      RFScores<- PeptideRanger::peptide_predictions(unlist(Digested[,1]), PeptideRanger::RFmodel_ProteomicsDB)
+      RFScores <- NULL
+      if (!is.null(parameters$Cores)) {
+          cores <- parameters$Cores
+
+          if (parallel::detectCores() <= parameters$Cores) {
+              cores <- parallel::detectCores() - 1
+          }
+          
+          cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
+          #on.exit(parallel::stopCluster(cluster))          
+          parallel::setDefaultCluster(cluster)
+          # Ensure that the necessary package is loaded on each worker
+          #parallel::clusterExport(cluster, c(envir = environment()))
+                                  
+          parallel::clusterEvalQ(cluster, library(PeptideRanger))
+          
+          # Split the data into chunks of 100 peptides
+          peptide_chunks <- split(unlist(Digested[,1]) , ceiling(seq_along(unlist(Digested[,1]))/100))
+          print(length(peptide_chunks))
+          
+          # Run the predictions in parallel
+          RFScores <- parallel::parLapply(cluster, peptide_chunks, function(subset) {
+              PeptideRanger::peptide_predictions(unlist(subset), PeptideRanger::RFmodel_ProteomicsDB)
+          })
+          
+          # Combine the results into a single list or data frame
+          RFScores <- do.call(rbind, RFScores)
+          parallel::stopCluster(cluster)
+      } else {
+          RFScores<- PeptideRanger::peptide_predictions(unlist(Digested[,1]), PeptideRanger::RFmodel_ProteomicsDB)
+      }
+      
       remove <- RFScores$RF_score < parameters$DetectabilityThreshold
       MSRun <- Digested[-remove, ]
       cat("  - A total of", sum(remove), "peptides is removed.\n\n")

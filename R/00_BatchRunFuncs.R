@@ -208,7 +208,6 @@ def_param <- function(yaml_file=NULL) {
     
     # Convert NA values from strings to real NA
     for (l in names(params)) {
-        print(params[[l]])
         for (k in names(params[[l]])) {
             if (params[[l]][[k]] == "NA") {
                 params[[l]][[k]] <- NA
@@ -359,7 +358,11 @@ run_sims <- function(Parameters, Config) {
             proteoformAb <- NULL
             # create combined parameterfile
             tParam <- c(gtParam, listtoproteoformab[[ii]])
-            tParam <- c(tParam, list(QuantColnames = paste0("C_", rep(1:tParam$NumCond, each = tParam$NumReps), "_R_", rep(1:tParam$NumReps, tParam$NumCond))))
+            tParam <- c(tParam, 
+                        list(QuantColnames = paste0("C_", 
+                                                    rep(1:tParam$NumCond, each = tParam$NumReps), 
+                                                    "_R_", 
+                                                    rep(1:tParam$NumReps, tParam$NumCond))))
             # hash code to represent parameter configuration
             md5 <- digest(tParam, algo = "md5")
             filename <- paste0(Config$resultFilePath, "/outputProteoformAb_", md5, ".RData")
@@ -383,9 +386,15 @@ run_sims <- function(Parameters, Config) {
                     load(filename)
                 } else {
                     Param <- tParam
-                    peptable <- digestGroundTruth(proteoforms = proteoformAb, parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType)))
-                    peptable <- digestionProductSummarization(peptides = peptable, parameters = Param)
-                    BeforeMS <- filterDigestedProt(DigestedProt = peptable, parameters = Param)
+                    peptable <- digestGroundTruth(
+                        proteoforms = proteoformAb, 
+                        parameters = c(
+                            Param, list(Cores = Config$cores, 
+                                        ClusterType = Config$clusterType)))
+                    peptable <- digestionProductSummarization(peptides = peptable, 
+                                                              parameters = Param)
+                    BeforeMS <- filterDigestedProt(DigestedProt = peptable, 
+                                                   parameters = Param)
                     save(Param, BeforeMS, file = filename)
                 }
                 dgParam <- Param
@@ -403,7 +412,11 @@ run_sims <- function(Parameters, Config) {
                         Param <- tParam
                         AfterMSRun <- vector(mode = "list")
                         for (i in which(sapply(BeforeMS, length) > 0)) {
-                            AfterMSRun[[length(AfterMSRun) + 1]] <- MSRunSim(Digested = BeforeMS[[i]], parameters = Param)
+                            AfterMSRun[[length(AfterMSRun) + 1]] <- MSRunSim(
+                                Digested = BeforeMS[[i]], 
+                                parameters = c(Param, 
+                                               list(Cores = Config$cores, 
+                                                    ClusterType = Config$clusterType)))
                         }
                         names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
                         save(Param, AfterMSRun, file = filename)
@@ -422,7 +435,8 @@ run_sims <- function(Parameters, Config) {
                         } else {
                             # counter
                             Param <- tParam
-                            Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, parameters = Param)
+                            Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched, 
+                                                          parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType)))
                             # Don't accept anything below 100 proteins
                             if (nrow(Prots) > 99) {
                                 # Filter for having at least 1 actual value per protein group and peptide
@@ -430,13 +444,13 @@ run_sims <- function(Parameters, Config) {
                                 allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
                                 allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames])) < length(Param$QuantColnames), ]
                                 rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
-                                Stats <- runPolySTest(Prots, Param, refCond = 1, onlyLIMMA = F)
+                                Stats <- runPolySTest(Prots, Param, refCond = 1, onlyLIMMA = F, cores = Config$cores)
                                 # much faster with only LIMMA tests
-                                StatsPep <- runPolySTest(allPeps, Param, refCond = 1, onlyLIMMA = T)
+                                StatsPep <- runPolySTest(allPeps, Param, refCond = 1, onlyLIMMA = T, cores = Config$cores)
                                 Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
                                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
                             } else {
-                                print("Too few proteins!!!")
+                                message("Too few proteins!!!")
                                 Benchmarks <- Stats <- StatsPep <- NULL
                                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
                             }
@@ -486,8 +500,24 @@ run_sims <- function(Parameters, Config) {
 #' results <- run_sims(param, config)
 #' output <- get_simulation(param, config, stage = "MSRun")
 get_simulation <- function(Param, Config, stage="DataAnalysis") {
+    
+    # Check for valid stage name
+    if (!(stage %in% c("GroundTruth", "ProteoformAb", "Digestion", "MSRun", "DataAnalysis"))) {
+        stop("Invalid stage name. Please provide a valid stage name.")
+    }
+    
+    # Get all parameter names
+    param_names <- param_table()
+    
+    # Reduce the parameter set to the relevant stage
+    param_names <- param_names[1:max(which(param_names$Group == paste0("param", stage))), ]
+    # max of which is the last element of the vector
+    max_pname <- max(which(names(Param) %in% rownames(param_names)))
+    tParam  <- Param[1:max_pname]
+    
     # check whether file with correct parameters exists
-    md5 <- digest(as.list(Param), algo = "md5")
+    md5 <- digest(as.list(tParam), algo = "md5")
+    
     filename <- paste0(Config$resultFilePath, "/output", stage, "_", md5, ".RData")
     if (file.exists(filename)) {
         # Create a temporary environment to load the objects
@@ -508,7 +538,7 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
         return(objects_list)        
         
     } else {
-        print("No simulation found with these parameters.")
+        message("No simulation found with these parameters.")
     }
 }
 
@@ -547,9 +577,10 @@ matrix_benchmarks <- function(allBs, Config) {
     
     # writing all results and parameters into matrix
     for (i in names(allBs)) {
-        tglob <- unlist(allBs[[i]][[1]]$globalBMs)
+        tglob <- unlist(allBs[[i]]$Benchmarks$globalBMs)
         BenchMatrix[i, names(tglob)] <- tglob
-        tpar <- allBs[[i]][[2]]
+        tpar <- allBs[[i]]$Param
+        tpar <- lapply(tpar, function(x) paste0(unlist(x), collapse = ";"))
         BenchMatrix[i, names(tpar)] <- sapply(tpar, function(x) ifelse(length(x) > 1, paste0(x, collapse = "_"), x))
     }
     BenchMatrix
@@ -579,8 +610,8 @@ matrix_benchmarks <- function(allBs, Config) {
 #' visualize_benchmarks(benchmarks, current_row = 1)
 visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     # get parameter names
-    param_table <- param_table()
-    param_names <- rownames(param_table)
+    param_t <- param_table()
+    param_names <- rownames(param_t)
     
     # Visualize roughly
     par(mfrow = c(nrow(BenchMatrix), 1), mar = c(2, 5, 2, 1), xpd = T, oma = c(5, 1, 1, 1))
@@ -610,8 +641,8 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
         if (is.numeric(tt)) {
             BenchMatrix[, i] <- round(tt, 2)
         }
-        if (is.character(tt)) {
-            tt <- as.factor(tt)
+        if (is.character(tt) || is.factor(tt)) {
+            tt <- as.numeric(as.factor(tt))
         }
         tt <- tt / max(as.numeric(tt), na.rm = T)
         tt[is.na(tt)] <- 0
@@ -624,20 +655,25 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     # Create plots
     plots <- list()
     sim <- current_row
+    if (is.numeric(sim)) 
+        sim <- rownames(BenchMatrix)[sim]
     dat <- tBenchMatrix[sim, ]
-    if (is.numeric(dat)) {
-        dat <- round(dat, 2)
-    }
-    if (!is.numeric(dat)) {
-        dat <- 0
-    }
+    dat <- sapply(dat, function(x) {
+        if (is.numeric(x)) {
+            dat <- round(x, 2)
+        }
+        if (!is.numeric(x)) {
+            x <- 0
+        }
+        x
+    })
     dat2 <- BenchMatrix[sim, ]
-    
-    if (is.numeric(dat2)) {
-        dat2 <- round(dat2, 2)
+    dat2 <- sapply(dat2, function(x) {    if (is.numeric(x)) {
+        x <- round(x, 2)
     }
-    
-    plot <- plot_ly(
+        x
+    })
+    plot <- plotly::plot_ly(
         x = names(dat),
         y = as.numeric(dat),
         type = 'bar',
@@ -647,23 +683,21 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
         text = as.character(dat2),
         textposition = 'auto',
         hoverinfo = 'text'
-        
     ) %>%
-        layout(
+        plotly::layout(
             title = paste("hash:", sim),
             yaxis = list(title = 'Normalized values', range = c(0, 1), tickfont = list(size = 18/nr), titlefont = list(size = 20/nr)),
             xaxis = list(title = '', tickangle = -45, tickfont = list(size = 16/nr)),
-            margin = list(t= 100, b = 100, l = 100, r = 100),
+            margin = list(t = 100, b = 100, l = 100, r = 100),
             showlegend = FALSE
         )
-    
     param_plot <- plot_params(param_values, sim)
     
     
     # Combine all plots into a subplot
     subplot(param_plot, plot, nrows = 2, shareX = TRUE, shareY = TRUE,
             margin = 0.01, titleX = TRUE, titleY = TRUE) %>%
-        layout(showlegend = FALSE)
+        plotly::layout(showlegend = FALSE)
     
 }
 
@@ -693,8 +727,8 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
 plot_params <- function(BenchMatrix, current_row = 1) {
     
     # get parameter names
-    param_table <- param_table()
-    param_names <- rownames(param_table)
+    param_t <- param_table()
+    param_names <- rownames(param_t)
     
     #filter out every NA or NULL parameters
     to_remove <- c()
@@ -710,7 +744,7 @@ plot_params <- function(BenchMatrix, current_row = 1) {
         BenchMatrix <- BenchMatrix[, -to_remove]
     val[is.na(val)] <- 0
     param_names <- param_names[param_names %in% colnames(BenchMatrix)]
-    param_table <- param_table[param_names, ]
+    param_t <- param_t[param_names, ]
     
     # Set the number of columns
     ncols <- 4
@@ -731,7 +765,9 @@ plot_params <- function(BenchMatrix, current_row = 1) {
     
     # Loop to create each meter plot
     for (i in 1:length(param_names)) {
-        curr_par <- param_table[i, ]
+        curr_par <- param_t[i, ]
+        curr_par$MaxValue <- unlist(curr_par$MaxValue)
+        curr_par$MinValue <- unlist(curr_par$MinValue)
         val <- as.numeric(BenchMatrix[current_row, param_names[i]])
         val[is.na(val)] <- 0
         row_index <- ceiling(i / ncols)
