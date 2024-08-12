@@ -69,108 +69,6 @@ set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "Simulate
     return(list(fastaFilePath = fastaFilePath, resultFilePath = resultFilePath, cores = cores, clusterType = clusterType, calcAllBenchmarks = calcAllBenchmarks))
 }
 
-#' #' Generate default parameters for PhosFake simulations
-#' #'
-#' #' This function generates and returns a list of default parameters for running
-#' #' simulations with the PhosFake package. The parameters are organized into
-#' #' several categories, including ground truth generation, proteoform abundance,
-#' #' digestion, MS run, and data analysis.
-#' #'
-#' #' @return A list of default parameters categorized as follows:
-#' #' \describe{
-#' #'   \item{paramGroundTruth}{Parameters related to ground truth data generation.}
-#' #'   \item{paramProteoformAb}{Parameters related to proteoform abundance.}
-#' #'   \item{paramDigest}{Parameters related to enzymatic digestion.}
-#' #'   \item{paramMSRun}{Parameters related to the mass spectrometry run.}
-#' #'   \item{paramDataAnalysis}{Parameters related to data analysis.}
-#' #' }
-#' #' 
-#' #' @export
-#' #'
-#' #' @examples
-#' #' params <- def_param()
-#' #' params$paramGroundTruth$NumReps <- c(2, 4, 6)
-#' def_param <- function() {
-#'     paramsGroundTruth <- list(
-#'         "PathToFasta" = "fasta_full_yeast.fasta",
-#'         "PathToProteinList" = NA,
-#'         "NumReps" = c(3),
-#'         "NumCond" = 2,
-#'         "FracModProt" = 0,
-#'         "FracModPerProt" = 0,
-#'         "PTMTypes" = NA,
-#'         "PTMTypesDist" = NA,
-#'         "PTMTypesMass" = NA,
-#'         "PTMMultipleLambda" = NA,
-#'         "ModifiableResidues" = NA,
-#'         "ModifiableResiduesDistr" = NA,
-#'         "RemoveNonModFormFrac" = 0
-#'     )
-#'     paramsProteoformAb <- list(
-#'         "QuantNoise" = seq(0.5),
-#'         "DiffRegFrac" = c(0.3),
-#'         "DiffRegMax" = c(1),
-#'         "UserInputFoldChanges" = NA,
-#'         "UserInputFoldChanges_NumRegProteoforms" = NA,
-#'         "UserInputFoldChanges_FoldChange" = NA,
-#'         "ThreshNAProteoform" = -100,
-#'         "AbsoluteQuanMean" = 30.5,
-#'         "AbsoluteQuanSD" = 3.6,
-#'         "ThreshNAQuantileProt" = 0.01
-#'     )
-#'     paramsDigest <- list(
-#'         "Enzyme" = "trypsin",
-#'         "PropMissedCleavages" = 0.01,
-#'         "MaxNumMissedCleavages" = 2,
-#'         "PepMinLength" = 7,
-#'         "PepMaxLength" = 30,
-#'         "LeastAbundantLoss" = 0,
-#'         "EnrichmentLoss" = 0.2,
-#'         "EnrichmentEfficiency" = 1,
-#'         "EnrichmentNonModSignalLoss" = 0,
-#'         "EnrichmentNoise" = 0.2
-#'     )
-#'     
-#'     paramsMSRun <- list(
-#'         "PercDetectedPep" = c(0.2),
-#'         "PercDetectedVal" = c(0.5),
-#'         "WeightDetectVal" = 0.1,
-#'         "MSNoise" = c(0.25),
-#'         "WrongIDs" = c(0.01),
-#'         "WrongLocalizations" = 0.0,
-#'         "MaxNAPerPep" = 1000
-#'     )
-#'     
-#'     paramsDataAnalysis <- list(
-#'         "ProtSummarization" = "medpolish",
-#'         "MinUniquePep" = c(1),
-#'         "StatPaired" = FALSE
-#'     )
-#'     
-#'     ## Provide nice printout
-#'     cat("--------------------\nGround truth generation parameters:\n")
-#'     list.tree(paramsGroundTruth)
-#'     cat("--------------------\nProteoform abundance parameters:\n")
-#'     list.tree(paramsProteoformAb)
-#'     cat("--------------------\nDigestion parameters:\n")
-#'     list.tree(paramsDigest)
-#'     cat("--------------------\nMSRun parameters:\n")
-#'     list.tree(paramsMSRun)
-#'     cat("--------------------\nData analysis parameters:\n")
-#'     list.tree(paramsDataAnalysis)
-#'     cat("--------------------\n")
-#'     
-#'     Param <- list(
-#'         paramGroundTruth = paramsGroundTruth,
-#'         paramProteoformAb = paramsProteoformAb,
-#'         paramDigest = paramsDigest,
-#'         paramMSRun = paramsMSRun,
-#'         paramDataAnalysis = paramsDataAnalysis
-#'     )
-#'     
-#'     return(Param)
-#' }
-
 
 #' Generate default parameters or read from yaml file
 #'
@@ -308,6 +206,7 @@ generate_combinations <- function(params) {
 #' config <- set_phosfake()
 #' results <- run_sims(params, config)
 run_sims <- function(Parameters, Config) {
+    library(dplyr)
     # Generate combinations for each parameter set
     listtogroundtruth <- generate_combinations(Parameters$paramGroundTruth)
     listtoproteoformab <- generate_combinations(Parameters$paramProteoformAb)
