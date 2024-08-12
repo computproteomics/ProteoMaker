@@ -52,8 +52,7 @@ MSRunSim <- function(Digested, parameters) {
           
           # Split the data into chunks of 100 peptides
           peptide_chunks <- split(unlist(Digested[,1]) , ceiling(seq_along(unlist(Digested[,1]))/100))
-          print(length(peptide_chunks))
-          
+
           # Run the predictions in parallel
           RFScores <- parallel::parLapply(cluster, peptide_chunks, function(subset) {
               PeptideRanger::peptide_predictions(unlist(subset), PeptideRanger::RFmodel_ProteomicsDB)

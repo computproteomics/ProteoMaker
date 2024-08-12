@@ -16,7 +16,7 @@ Param <- def_param()
 # Overwrite the default values with the ones you want to test
 # You can use multiple values for each parameter that then will be combined for
 # all possible combinations in different simulated datasets
-Param$paramGroundTruth$PathToFasta <- "fasta_full_yeast.fasta"
+Param$paramGroundTruth$PathToFasta <- "fasta_example.fasta"
 Param$paramGroundTruth$NumReps <- c(3)
 Param$paramGroundTruth$NumCond <- 2
 Param$paramGroundTruth$FracModProt <- 0.5

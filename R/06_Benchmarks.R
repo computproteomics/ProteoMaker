@@ -204,7 +204,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
       tampl[is.na(tampl)] <- 0
       tval <- patterns[i][[1]] * tampl
       tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
-      sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]]
+      sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]
       tdiff <- (tval - sdata) * (tval - sdata)
       print(tdiff)
       if (!is.na(tdiff)) {
