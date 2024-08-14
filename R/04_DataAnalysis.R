@@ -2,8 +2,36 @@
 #               Data analysis of the outputs of the peptide quan.              #
 ################################################################################
 
-library(preprocessCore)
-
+#' Summarize Protein Abundance from Peptide-Level Data
+#'
+#' This function summarizes protein abundance from peptide-level data. It removes modified peptides, groups peptides by their parent proteins, and applies a summarization method (e.g., sum of top 3, median polish) to estimate protein abundance. The function supports parallel processing to speed up the summarization process.
+#'
+#' @param peptable A data frame containing peptide-level data, including accession numbers, sequence, PTM types, and quantification columns.
+#' @param parameters A list of parameters, including:
+#' \describe{
+#'   \item{ProtSummarization}{The method used for protein summarization, e.g., "sum.top3" or "medpolish".}
+#'   \item{MinUniquePep}{The minimum number of unique peptides required to summarize a protein.}
+#'   \item{QuantColnames}{The names of the columns containing quantification data.}
+#'   \item{Cores}{The number of cores to use for parallel processing.}
+#'   \item{ClusterType}{The type of cluster to use for parallel processing (e.g., "FORK", "PSOCK").}
+#' }
+#'
+#' @return A data frame containing summarized protein-level data, where each row represents a protein, and the columns include protein information and summarized quantification data.
+#'
+#' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
+#'
+#' @keywords internal
+#' 
+#' @examples
+#' peptable <- generate_peptable()  # hypothetical function to generate peptide data
+#' parameters <- list(
+#'   ProtSummarization = "sum.top3",
+#'   MinUniquePep = 2,
+#'   QuantColnames = c("Intensity1", "Intensity2"),
+#'   Cores = 2,
+#'   ClusterType = "FORK"
+#' )
+#' protmat <- proteinSummarisation(peptable, parameters)
 proteinSummarisation <- function(peptable, parameters) {
     
     method <- parameters$ProtSummarization
@@ -134,7 +162,4 @@ proteinSummarisation <- function(peptable, parameters) {
     return(protmat)
     
 }
-
-
-
 

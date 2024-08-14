@@ -2,18 +2,27 @@
 #                               IN SILICO MS RUN                               #
 ################################################################################
 
-library(stringr)
-library(crayon)
-
 #####################
-## Function that simulates MS run analysis.
-## - Adds random noise to each sample due to MS instrument.
-## - Removes a specific proportion of peptides due to detection limitations.
-## - Removes a percentage of non-missing intensities based on probability weights depending on intensity values.
-## - Introduces peptide identification false discovery rate.
-## - Adds PTMs false localization rate for multiple PTM types.
-## - Filters out peptides based on a maximum number of missing values threshold.
-#####################
+#' Simulate MS run analysis
+#'
+#' This function simulates MS run analysis, which includes:
+#' - Adding random noise to each sample due to MS instrument.
+#' - Removing a specific proportion of peptides due to detection limitations.
+#' - Removing a percentage of non-missing intensities based on probability weights depending on intensity values.
+#' - Introducing peptide identification false discovery rate.
+#' - Adding PTMs false localization rate for multiple PTM types.
+#' - Filtering out peptides based on a maximum number of missing values threshold.
+#' @param Digested A data frame containing digested peptides with associated data.
+#' @param parameters A list containing various parameters for the MS run simulation.
+#' 
+#' @return A data frame similar to `Digested` but with modifications introduced by the MS run simulation.
+#' 
+#' @importFrom parallel detectCores makeCluster stopCluster setDefaultCluster clusterEvalQ parLapply
+#' @importFrom PeptideRanger peptide_predictions RFmodel_ProteomicsDB
+#' @importFrom stringr str_locate_all
+#' @importFrom crayon red
+#'
+#' @keywords internal
 MSRunSim <- function(Digested, parameters) {
   
   # TODO: what about multiples from different fractions?

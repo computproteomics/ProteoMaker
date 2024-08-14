@@ -2,27 +2,46 @@
 #                  GENERATE PROTEOFORM-CENTRIC GROUND TRUTH                    #
 ################################################################################
 
-library(protr)
-library(crayon)
-library(extraDistr)
-
-#####################
-## Function to import a single protein sequence fasta file or along with a txt file with selected protein accessions
-## and to create protein sets to be modified or remain unmodified.
-## - Validates imported files (fasta, txt). (only possible warning is "incomplete final line found on" when fasta file doesnt have final white space line)
-## - Filters out sequences with unusual amino acids.
-## - Filters out duplicate protein accessions.
-## - Fractionates initial protein set to unmodified set and modified set, either with FracModProt % or a list of selected protein accessions.
-## - Checks if the protein set is too small to be fractionated in case of FracModProt parameter is used (will return only a set of proteins to remain unmodified)
-##   and additionally works for fractions of modified proteins of 0 and 100%.
-## - Checks if the input of the selected protein accessions in the txt file can be modified or are included in the fasta file. If not, only a set of proteins to remain unmodified is generated.
-## - When any of the files is corrupted or protein set is empty after filtering then to.Modify = NULL and to.be.Unmodified = NULL.
-## - Stop error function is not used not to interupt any potential interactive interface.
-#####################
-
-##### Future development #####
-# - Import modification DB data.
-##############################
+#' Import and Process Protein Sequence Data for Simulation
+#'
+#' This function imports a single protein sequence FASTA file and optionally a text file containing selected protein accessions. It processes the protein sequences by filtering out invalid entries, separating them into modified and unmodified sets, and validating the input files.
+#'
+#' @param parameters A list containing the following elements:
+#' \describe{
+#'   \item{PathToFasta}{A character string specifying the path to the FASTA file containing protein sequences.}
+#'   \item{PathToProteinList}{A character string specifying the path to the text file containing a list of selected protein accessions. If `NA`, a fraction of proteins will be selected randomly for modification.}
+#'   \item{FracModProt}{A numeric value between 0 and 1 indicating the fraction of proteins to be modified. Only applicable if `PathToProteinList` is `NA`.}
+#'   \item{ModifiableResidues}{A list of characters indicating the residues that can be modified in the protein sequences.}
+#' }
+#'
+#' @return A list with two elements:
+#' \describe{
+#'   \item{to.Modify}{A data frame containing the protein sequences selected for modification, along with their corresponding metadata. If no proteins are selected for modification, this will be `NULL`.}
+#'   \item{to.be.Unmodified}{A data frame containing the protein sequences that remain unmodified, along with their corresponding metadata. If no proteins remain unmodified, this will be `NULL`.}
+#' }
+#'
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Imports and validates the FASTA file.
+#'   \item Filters out protein sequences containing unusual amino acids.
+#'   \item Removes duplicate protein accessions.
+#'   \item Fractionates the protein set into modified and unmodified fractions, based on either a specified percentage or a list of selected protein accessions.
+#'   \item If the protein set is too small to be fractionated, it returns only an unmodified set.
+#'   \item If the input files are corrupted or the protein set is empty after filtering, it returns `NULL` for both modified and unmodified sets.
+#' }
+#'
+#' @keywords internal
+#'
+#' @examples
+#' parameters <- list(
+#'   PathToFasta = "path/to/fasta.fasta",
+#'   PathToProteinList = "path/to/protein_list.txt",
+#'   FracModProt = 0.5,
+#'   ModifiableResidues = list("S", "T", "Y")
+#' )
+#' result <- proteinInput(parameters)
+#' 
 proteinInput <- function(parameters) {
   cat(" + Importing data:\n")
   # Check is the fasta file can be loaded.
@@ -171,12 +190,52 @@ proteinInput <- function(parameters) {
 }
 #####################
 
-#####################
-## Function to perform modification to the fraction of protein sequences selected to be modified by proteinInput function.
-## - Creates a set of proteoforms from the selected protein sequences. The number of proteoforms per sequence depends on PropModPerProt.
-## - Calls modify function to perform the modification for each proteoform.
-## - Creates a fraction of protein sequences to be modified, that will maintain their unmodified counterpart based on RemoveNonModFormFrac.
-#####################
+#' Perform Modifications on Protein Sequences
+#'
+#' This function performs modifications on a fraction of protein sequences selected by the `proteinInput` function. It generates proteoforms based on the provided parameters, applies modifications, and optionally retains some sequences in their unmodified form.
+#'
+#' @param to.Modify A data frame containing the protein sequences that have been selected for modification. This is typically the output from the `proteinInput` function.
+#' @param parameters A list containing the following elements:
+#' \describe{
+#'   \item{PTMTypes}{A character vector specifying the types of post-translational modifications (PTMs) to be applied.}
+#'   \item{PTMTypesDist}{A numeric vector specifying the background frequency distribution of each PTM type.}
+#'   \item{ModifiableResidues}{A list of character vectors specifying the residues that can be modified for each PTM type.}
+#'   \item{ModifiableResiduesDistr}{A list of numeric vectors specifying the background frequency distribution of each residue type for modification.}
+#'   \item{PropModPerProt}{A numeric value indicating the proportion of proteoforms to generate per protein sequence.}
+#'   \item{RemoveNonModFormFrac}{A numeric value indicating the fraction of modified sequences that should retain their unmodified counterparts.}
+#' }
+#'
+#' @return A list with two elements:
+#' \describe{
+#'   \item{mod.proteoforms}{A data frame containing the modified proteoforms, including details of the modification positions and types.}
+#'   \item{unmod.proteoforms}{A data frame containing the unmodified counterparts of the selected protein sequences, if any. If no sequences are retained unmodified, this will be `NULL`.}
+#' }
+#'
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Selects a proportion of the input sequences to generate multiple proteoforms per sequence.
+#'   \item Applies the specified modifications to the selected proteoforms.
+#' \item Summarizes the types and residues of modifications applied to each proteoform.
+#'   \item Optionally retains a fraction of the input sequences in their unmodified form, based on the specified parameters.
+#' }
+#'
+#' @keywords internal
+#'
+#' @examples
+#' parameters <- list(
+#'   PTMTypes = c("Phosphorylation", "Acetylation"),
+#'   PTMTypesDist = c(0.7, 0.3),
+#'   ModifiableResidues = list(c("S", "T", "Y"), c("K")),
+#'   ModifiableResiduesDistr = list(c(0.5, 0.3, 0.2), c(1)),
+#'   PropModPerProt = 2,
+#'   RemoveNonModFormFrac = 0.5
+#' )
+#' to.Modify <- data.frame(
+#'   Sequence = c("MTEYKLVVVGAGGVGKSALTIQLIQNHFVDEYDPTIEDSYRKQVVIDGETCLLDILDTAG"),
+#'   Accession = c("P01112")
+#' )
+#' result <- performModification(to.Modify, parameters)
 performModification <- function(to.Modify, parameters) {
   cat(" + Performing modification:\n")
   cat(
@@ -249,13 +308,61 @@ performModification <- function(to.Modify, parameters) {
 }
 #####################
 
-#####################
-## Function to modify sequences based on modification type background frequences and modification per residue background frequences.
-## - Determines all possible sites for each sequence based on ModifiableResidues list.
-## - Calculates the readjusted probability weights for each modification type and candidate residues for each sequence based on the composition of the sequence and the background frequences.
-## - Modifies sequences by sampling based on the calculated probability weights. Sampling size per sequence is determined by a trancated poisson distribution [1,total modfiable residues]
-## - Returns all reported modification positions per sequences, along with the type of modification and statistics about amound of modification type and modified residues.
-#####################
+#' Modify Protein Sequences Based on Modification Type and Residue Frequencies
+#'
+#' This function modifies protein sequences by introducing post-translational modifications (PTMs) based on 
+#' specified modification types and residue-specific background frequencies. The function identifies all 
+#' possible modification sites within each sequence, adjusts the probability of modification according to 
+#' the global background frequencies, and then samples the modification sites based on these probabilities.
+#'
+#' The number of modifications per sequence is determined using a truncated Poisson distribution, ensuring 
+#' a realistic distribution of modifications. The function returns a report detailing the modification positions, 
+#' types of modifications, and statistics on the number of modified amino acids per modification type.
+#'
+#' @param seq A character vector of protein sequences to be modified.
+#' @param param A list of parameters for the modification process, including:
+#'   \itemize{
+#'     \item \code{ModifiableResidues}: A list of amino acid residues that can be modified for each PTM type.
+#'     \item \code{PTMTypes}: A character vector of modification types.
+#'     \item \code{PTMTypesDist}: A numeric vector representing the background frequencies for each PTM type.
+#'     \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies 
+#'     for each modifiable residue within each PTM type.
+#'     \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson distribution, 
+#'     which determines the number of modifications per sequence.
+#'   }
+#'
+#' @return A list of lists, where each sublist corresponds to a sequence and contains:
+#'   \itemize{
+#'     \item \code{Positions}: A numeric vector of positions in the sequence where modifications were made.
+#'     \item \code{Types}: A character vector of the modification types applied at each position.
+#'     \item \code{Count}: A list of numeric vectors representing the count of modifications per amino acid residue 
+#'     for each PTM type.
+#'   }
+#'
+#' @details 
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Identifies candidate modification sites in each sequence based on the specified modifiable residues.
+#'   \item Adjusts the probability weights for each modification type and candidate residue according to the 
+#'   background frequencies and the composition of each sequence.
+#'   \item Samples the modification sites based on the adjusted probabilities and a truncated Poisson distribution.
+#'   \item Generates a report for each sequence, detailing the modification positions, types, and the number 
+#'   of modified amino acids per modification type.
+#' }
+#'
+#' @examples
+#' # Example usage:
+#' sequences <- c("MKTAYIAKQRQISFVKSHFSRQDILDLWIYHTQGYFPDWQNYTPGKLAG")
+#' params <- list(
+#'   ModifiableResidues = list(c("K", "R"), c("S", "T", "Y")),
+#'   PTMTypes = c("Acetylation", "Phosphorylation"),
+#'   PTMTypesDist = c(0.6, 0.4),
+#'   ModifiableResiduesDistr = list(c(0.7, 0.3), c(0.4, 0.4, 0.2)),
+#'   PTMMultipleLambda = 2
+#' )
+#' modification_report <- modify(sequences, params)
+#'
+#' @keywords internal
 modify <- function(seq, param) {
   # Find the positions of candidate modification sites on the sequences.
   possible.modification.sites <- lapply(seq, function(x) {
@@ -313,10 +420,44 @@ modify <- function(seq, param) {
 }
 #####################
 
-#####################
-# Function to create a proteoform sample.
-# - Uses the above functions and returns a data frame that contains all proteoforms generated (unmodified fraction, modified fraction, modifiable but not modified)
-#####################
+#' Prepare a Sample of Proteoforms
+#'
+#' This function generates a set of proteoforms by using the `proteinInput` and `performModification` functions. 
+#' It returns a data frame that includes unmodified proteins, modified proteoforms, and modifiable but unmodified proteins.
+#'
+#'
+#' @param parameters A list of parameters required for sample preparation, including paths to input files and modification details.
+#' 
+#' @return A data frame containing all proteoforms generated, including:
+#' \itemize{
+#'   \item Unmodified proteins,
+#'   \item Modified proteoforms,
+#'   \item Modifiable but unmodified proteins.
+#' }
+#'
+#' @details 
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Imports the protein sequences using `proteinInput`.
+#'   \item Modifies the selected proteins using `performModification`.
+#'   \item Combines unmodified and modified proteoforms into a single data frame.
+#' }
+#'
+#' @examples
+#' # Example usage:
+#' parameters <- list(
+#'   PathToFasta = "path/to/fasta/file",
+#'   FracModProt = 0.5,
+#'   PTMTypes = c("Phosphorylation"),
+#'   PTMTypesDist = c(0.8),
+#'   ModifiableResidues = list(c("S", "T", "Y")),
+#'   ModifiableResiduesDistr = list(c(0.6, 0.3, 0.1)),
+#'   PropModPerProt = 2,
+#'   RemoveNonModFormFrac = 0.2
+#' )
+#' proteoforms <- samplePreparation(parameters)
+#' @importFrom crayon red
+#' @kewords internal
 samplePreparation <- function(parameters) {
   cat("#SAMPLE PREPARATION - Start\n\n")
 
@@ -358,8 +499,20 @@ samplePreparation <- function(parameters) {
 }
 #####################
 
-# Below: will be developed further.
-#####################
+#' Create a Regulation Pattern
+#'
+#' This function generates a regulation pattern for a given number of conditions. The pattern 
+#' consists of random values representing up-regulation or down-regulation for each condition.
+#'
+#' @param NumCond An integer specifying the number of conditions.
+#' 
+#' @return A numeric vector of length `NumCond` representing the regulation pattern.
+#'
+#' @examples
+#' # Example usage:
+#' regulation_pattern <- createRegulationPattern(NumCond = 3)
+#'
+#' @keywords internal
 createRegulationPattern <- function(NumCond) {
   # select 0.5 because division by 2 is already induced this way
   # this ensures that the differentiation amplitude is as speciefied by the user
@@ -368,7 +521,39 @@ createRegulationPattern <- function(NumCond) {
 }
 #####################
 
-#####################
+#' Add Abundance Values to Proteoforms
+#'
+#' This function adds abundance values to proteoforms based on a combination of random noise and 
+#' differentially regulated patterns. It supports both relative and absolute quantification.
+#'
+#' @param proteoforms A data frame of proteoforms to which abundance values will be added.
+#' @param parameters A list of parameters controlling the abundance assignment, including the 
+#' number of conditions, quantification columns, noise levels, and regulation patterns.
+#' 
+#' @return A data frame with abundance values added to the proteoforms.
+#'
+#' @details 
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Adds random noise to the abundance columns.
+#'   \item If specified, selects differentially regulated proteoforms and adjusts their abundance 
+#'   based on regulation patterns.
+#'   \item Optionally, removes values below a threshold or adjusts values to an absolute quantification scale.
+#' }
+#'
+#' @examples
+#' # Example usage:
+#' parameters <- list(
+#'   QuantColnames = c("Cond1", "Cond2"),
+#'   QuantNoise = 0.2,
+#'   DiffRegFrac = 0.3,
+#'   DiffRegMax = 2,
+#'   NumCond = 2,
+#'   NumReps = 3
+#' )
+#' proteoforms <- addProteoformAbundance(proteoforms, parameters)
+#'
+#' @keywords internal
 addProteoformAbundance <- function(proteoforms, parameters) {
   # populate the matrix with random noise
   for (name in parameters$QuantColnames) {

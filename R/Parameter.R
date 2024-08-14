@@ -1,4 +1,21 @@
-# Function to create parameter table
+#' Create Parameter Table from YAML Configuration
+#'
+#' This function reads a YAML file containing parameter settings, processes them
+#' to handle `NA` values, and converts the parameters into a data frame. The resulting
+#' table includes categories, groups, explanations, and min/max/default values for each parameter.
+#'
+#' @return A data frame containing the parameters from the YAML file with the following columns:
+#' \describe{
+#'   \item{Category}{The category to which the parameter belongs.}
+#'   \item{Group}{The group within the category.}
+#'   \item{Explanation}{A description of the parameter.}
+#'   \item{MinValue}{The minimum allowable value for the parameter.}
+#'   \item{MaxValue}{The maximum allowable value for the parameter.}
+#'   \item{DefaultValue}{The default value for the parameter.}
+#' }
+#'
+#' @importFrom yaml yaml.load_file
+#' @keywords internal
 param_table <- function() {
     
     yaml_file <- system.file("config", "parameters.yaml", package = "PhosFake")

@@ -8,7 +8,7 @@ run_sims(Parameters, Config)
 }
 \arguments{
 \item{Parameters}{A list containing categorized parameter sets, typically 
-generated using \code{def_param} or \code{def_param_from_yaml}.}
+generated using \code{def_param}.}
 
 \item{Config}{A list containing configuration settings, such as file paths 
 and computational settings, typically generated using \code{set_phosfake}.}

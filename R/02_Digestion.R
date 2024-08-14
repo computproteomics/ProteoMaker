@@ -2,25 +2,28 @@
 #                    PEPTIDE DIGESTION OF PROTEOFORM TABLE                     #
 ################################################################################
 
-library(dplyr)
-library(stringi)
-library(crayon)
-library(parallel)
-library(purrr)
-library(scales)
 
-#####################
-## Function to perform enzymatic digestion on a single protein sequence.
-## - Supports 8 different cleavage rules, for trypsin (considering proline or just cleavage after lysine and arginine), chymotrypsin (high and low specificity),
-##   pepsin (pH 2 and pH 1.3), lysC and argC.
-#    Enzyme rules according to: https://www.nature.com/articles/srep22286/tables/1
-#                               https://web.expasy.org/peptide_cutter/peptidecutter_enzymes.html#exceptions
-## - Digests the sequence to the maximum possible number of miss-cleavages based on the argument missed.
-## - Filters proteolytic peptides according to their length.
-## - Calculates the mass for every yielded peptide for charges +1, +2 and +3.
-## - Filters the single charged peptides based on a upper and lower mass threshold.
-## - If there are no cleavage sites on a sequence, or if the filtering removed or peptides, the output is NULL.
-#####################
+#' Perform enzymatic digestion on a single protein sequence
+#'
+#' This function simulates enzymatic digestion on a single protein sequence, supporting multiple 
+#' cleavage rules for enzymes such as trypsin, chymotrypsin, pepsin, lysC, and argC. The function 
+#' returns peptides filtered by length and mass, including calculations for charges +1, +2, and +3.
+#'
+#' @param sequence A character string representing the protein sequence to be digested.
+#' @param enzyme A character string specifying the enzyme to use for digestion. Default is "trypsin".
+#' @param missed An integer specifying the maximum number of missed cleavages. Default is 0.
+#' @param length.max An integer specifying the maximum peptide length. Default is NA.
+#' @param length.min An integer specifying the minimum peptide length. Default is NA.
+#' @param mass.max A numeric value specifying the maximum peptide mass. Default is NA.
+#' @param mass.min A numeric value specifying the minimum peptide mass. Default is NA.
+#' 
+#' @return A data frame with the digested peptides, including their mass/charge (M/Z) ratios for charges +1, +2, and +3.
+#' If no peptides meet the criteria, the function returns \code{NULL}.
+#' 
+#' @importFrom dplyr case_when bind_rows
+#' @importFrom stringi stri_locate_all_regex
+#' @importFrom crayon red
+#' @keywords internal
 fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA, length.min = NA, mass.max = NA, mass.min = NA) {
     cleavage_rules <- dplyr::case_when(
         enzyme == "trypsin" ~ "(?!(RP|KP))(?=(K|R))(?!(K|R)$)",
@@ -96,13 +99,24 @@ fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA
 }
 #####################
 
-#####################
-## Function to perform enzymatic digestion on a set of proteoforms.
-## - Calls fastDigest to digest a set of proteoforms.
-## - Maps the modification sites on peptide sequences.
-## - Adds the mass addition per peptide based on the modifications they have.
-## - Peptide abundance depends on the parental proteoform.
-#####################
+#' Perform enzymatic digestion on a set of proteoforms
+#'
+#' This function performs enzymatic digestion on a set of proteoforms, mapping modification sites 
+#' on peptide sequences and adding mass shifts per peptide based on modifications. The peptide 
+#' abundance is set based on the parental proteoform.
+#'
+#' @param proteoform A data frame containing proteoform sequences and associated data.
+#' @param parameters A list containing various parameters for the digestion process, 
+#' including enzyme type, maximum number of missed cleavages, peptide length limits, 
+#' and modification masses.
+#' 
+#' @return A data frame containing the digested peptides with mapped modifications, 
+#' mass shifts, and associated abundances. If no peptides are generated, the function 
+#' returns \code{NULL}.
+#' 
+#' @importFrom dplyr bind_cols
+#' @importFrom stats aggregate
+#' @keywords internal
 proteoformDigestion <- function(proteoform, parameters) {
     peptides <- fastDigest(sequence = proteoform$Sequence, enzyme = parameters$Enzyme, missed = parameters$MaxNumMissedCleavages, length.max = parameters$PepMaxLength, length.min = parameters$PepMinLength)
     
@@ -126,7 +140,7 @@ proteoformDigestion <- function(proteoform, parameters) {
                 pep.type <- lapply(1:length(pep.indices), function(x) rep(proteoform.type[x], length(pep.indices[[x]])))
                 
                 to.aggregate <- data.frame(unlist(pep.indices), unlist(pep.position), unlist(pep.type), stringsAsFactors = F)
-                to.aggregate <- aggregate(to.aggregate[, 2:3], by = list(to.aggregate[, 1]), FUN = list)
+                to.aggregate <- stats::aggregate(to.aggregate[, 2:3], by = list(to.aggregate[, 1]), FUN = list)
                 
                 # Calculate and add the mass addition due to modifications per modified peptide.
                 modification.mass <- parameters$PTMTypesMass
@@ -151,11 +165,24 @@ proteoformDigestion <- function(proteoform, parameters) {
 }
 #####################
 
-#####################
-## Function that wraps proteoformDigestion function to perform digestion on a set of proteoforms.
-## - Gives the option of parallel computing.
-## - Samples peptides based on a distribution derived from PropMissedCleavages according to their MC.
-#####################
+#' Perform proteoform digestion on a set of proteoforms with optional parallel computing
+#'
+#' This function wraps the \code{proteoformDigestion} function to perform enzymatic digestion 
+#' on a set of proteoforms. It supports parallel computing and allows sampling of peptides 
+#' based on a distribution derived from \code{PropMissedCleavages} according to their missed 
+#' cleavages (MC).
+#'
+#' @param proteoforms A data frame containing the proteoform sequences and associated data.
+#' @param parameters A list of parameters including enzyme type, number of cores for parallel 
+#' computing, maximum number of missed cleavages, peptide length limits, and proportion of missed cleavages.
+#'
+#' @return A data frame containing the digested peptides, with details on modifications, 
+#' mass shifts, and missed cleavages.
+#' 
+#' @importFrom dplyr bind_rows
+#' @importFrom parallel makeCluster detectCores setDefaultCluster clusterExport stopCluster parLapply
+#' @importFrom scales rescale
+#' @keywords internal
 digestGroundTruth <- function(proteoforms, parameters) {
     cat("#PROTEOFORM DIGESTION - Start\n\n")
     cat(" + Digestion input:\n")
@@ -215,30 +242,37 @@ digestGroundTruth <- function(proteoforms, parameters) {
 }
 #####################
 
-#####################
-## Function that groups peptides and summarizes their abundance.
-## - Creates unique ids for each peptide based on the modifications type and position (pep_id column).
-## - Substitutes leucine to isoleucine residues (Sequence column).
-## - Create groups of peptides and aggregates them.
-##   The output structure is:
-##
-##   Sequence                 <character>  Contains the unique peptide sequence after I to L substitution.
-##   Peptide                  <list of character vectors> Contains the peptides that are grouped based on Sequence, but prior to I to L substitution
-##   Start                    <list of integer vectors> Contains the starting position of the peptides in the Peptide vectors on the protein sequence.
-##   Stop                     <list of integer vectors> Contains the ending position of the peptides in the Peptide vectors on the protein sequence.
-##   MC                       <list of integer vectors> Contains MC of the peptides in the Peptide vectors on the protein sequence.
-##   MZ1                      <integer> Peptide mass for charge +1.
-##   MZ2                      <integer> Peptide mass for charge +2.
-##   MZ3                      <integer> Peptide mass for charge +3.
-##   Accession                <list of character vectors> Contains the parental protein Accession of the peptides in Peptide vectors.
-##   Proteoform_ID            <list of integer vectors> Contains the unique protoform identifiers of the Accession vectors.
-##   PTMPos                   <list of integer vectors> Contains the position of the modifications on the peptides in the Peptide vectors.
-##   PTMType                  <list of character vectors> Contains the modification types of the modifications of PTMPos vectors.
-##   Regulation_Amplitude     <list of numeric vectors> Contains the regulation amplitudes of the proteoforms in Accession vectors.
-##   Regulation_Pattern       <list of numeric vectors> Contains the regulation patterns of the proteoforms in Accession vectors.
-##   Quantitative Columns     <numeric> Contains the abundances of the peptide group of Sequence.
-## - Removes a percentage of randomly selected summarized peptides.
-#####################
+#' Summarize digested peptide products
+#'
+#' This function groups peptides by unique identifiers, summarizes their abundance,
+#' and optionally removes a percentage of the least abundant peptides. It creates
+#' unique peptide IDs, substitutes isoleucine with leucine, and aggregates peptides 
+#' based on various characteristics.
+#'
+#' @param peptides A data frame containing the digested peptides and associated data.
+#' @param parameters A list of parameters including QuantColnames and LeastAbundantLoss.
+#' 
+#' @return A data frame containing the summarized peptides, with the following structure:
+#' \describe{
+#'   \item{Sequence}{A character vector containing the unique peptide sequence after isoleucine substitution to leucine.}
+#'   \item{Peptide}{A list of character vectors containing the peptides that are grouped based on Sequence, prior to isoleucine substitution.}
+#'   \item{Start}{A list of integer vectors containing the starting positions of the peptides in the Peptide vectors on the protein sequence.}
+#'   \item{Stop}{A list of integer vectors containing the ending positions of the peptides in the Peptide vectors on the protein sequence.}
+#'   \item{MC}{A list of integer vectors containing the number of missed cleavages (MC) for the peptides in the Peptide vectors.}
+#'   \item{MZ1}{A numeric vector representing the peptide mass for charge +1.}
+#'   \item{MZ2}{A numeric vector representing the peptide mass for charge +2.}
+#'   \item{MZ3}{A numeric vector representing the peptide mass for charge +3.}
+#'   \item{Accession}{A list of character vectors containing the parental protein Accession of the peptides in the Peptide vectors.}
+#'   \item{Proteoform_ID}{A list of integer vectors containing the unique proteoform identifiers of the Accession vectors.}
+#'   \item{PTMPos}{A list of integer vectors containing the positions of the modifications on the peptides in the Peptide vectors.}
+#'   \item{PTMType}{A list of character vectors containing the modification types of the modifications in the PTMPos vectors.}
+#'   \item{Regulation_Amplitude}{A list of numeric vectors containing the regulation amplitudes of the proteoforms in the Accession vectors.}
+#'   \item{Regulation_Pattern}{A list of numeric vectors containing the regulation patterns of the proteoforms in the Accession vectors.}
+#'   \item{Quantitative Columns}{Numeric columns containing the abundances of the peptide group for each QuantColname. These columns are dynamically named based on the provided QuantColnames parameter.}
+#' }
+#' 
+#' @importFrom dplyr group_by summarise summarise_at vars inner_join select
+#' @keywords internal
 digestionProductSummarization <- function(peptides, parameters) {
     cat("#PEPTIDE SUMMARIZATION - Start\n\n")
     cat(" + Summarization input:\n")
@@ -314,14 +348,23 @@ digestionProductSummarization <- function(peptides, parameters) {
 }
 #####################
 
-#####################
-## Function that creates enriched and non-enriched fractions of the proteolytic peptides.
-## - Separates modified peptides and reduce the set based on the EnrichmentLoss parameter.
-## - Simulates enrichment efficiency as an addition of non-modified peptides to the enriched set.
-##   The abundance of these spiked peptides is reduced according to EnrichmentEfficiency parameter.
-## - Introduces noise due to modification enrichment process to the abundances of the enrich fraction.
-## - Returns two a list that contains the two sets.
-#####################
+#' Create enriched and non-enriched fractions of proteolytic peptides
+#'
+#' This function separates modified peptides into enriched and non-enriched fractions,
+#' adjusts the peptide abundances based on enrichment efficiency, and introduces noise
+#' due to the enrichment process. It returns a list containing the enriched and 
+#' non-enriched peptide sets.
+#'
+#' @param DigestedProt A data frame containing the digested proteolytic peptides and associated data.
+#' @param parameters A list of parameters that includes EnrichmentLoss, EnrichmentEfficiency, 
+#' EnrichmentNoise, and QuantColnames.
+#'
+#' @return A list with two elements:
+#' \describe{
+#'   \item{NonEnriched}{A data frame containing the non-enriched peptide fraction, which includes both modified and non-modified peptides.}
+#'   \item{Enriched}{A data frame containing the enriched peptide fraction, where modified peptides have been enriched based on the EnrichmentEfficiency, and noise has been added to simulate the enrichment process. If no modified peptides are present, this will be \code{NULL}.}
+#' }
+#'
 filterDigestedProt <- function(DigestedProt, parameters) {
     enriched <- lengths(DigestedProt$PTMType) != 0
     

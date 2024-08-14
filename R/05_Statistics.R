@@ -1,8 +1,29 @@
-
-
-# Wrapper to call statistical tests (set to only RefCond condition as reference)
+#' Run PolySTest Statistical Tests on Quantitative Data
+#'
+#' This function runs a set of statistical tests on quantitative data using the `PolySTest` package. The function handles paired and unpaired tests, reorganizes the data according to experimental conditions, and returns a comprehensive table with log ratios, p-values, and FDR values for the comparisons. It allows the user to specify the number of cores for parallel computation and to limit the tests to only the `limma` method if desired.
+#'
+#' @param fullData A data frame containing quantitative data, with rows representing features (e.g., proteins or peptides) and columns representing samples. The data frame should also include metadata columns such as `Regulation_Amplitude` and `Regulation_Pattern`.
+#' @param Param A list of parameters, including:
+#' \describe{
+#'   \item{QuantColnames}{The names of the columns containing the quantitative data to be analyzed.}
+#'   \item{NumCond}{The number of conditions in the experiment.}
+#'   \item{NumReps}{The number of replicates per condition.}
+#'   \item{StatPaired}{A logical value indicating whether the experiment is paired.}
+#' }
+#' @param refCond A numeric or character value indicating the reference condition to be used in the statistical comparisons.
+#' @param onlyLIMMA A logical value indicating whether to restrict the analysis to only the `limma` test. Default is `FALSE`, which means all available tests in `PolySTest` are run.
+#' @param cores An integer specifying the number of cores to use for parallel processing. Default is 1.
+#'
+#' @return A data frame with the original data and additional columns for log ratios, p-values, FDR values, and ground truth indicators for differential regulation.
+#'
+#' @importFrom SummarizedExperiment SummarizedExperiment rowData colData metadata assay
+#' @importFrom PolySTest create_pairwise_comparisons PolySTest_paired PolySTest_unpaired
+#' @importFrom stringr str_split
+#' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
+#'
+#' @keywords internal
+#' 
 runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
-    library(SummarizedExperiment)
     Data <- fullData[,Param$QuantColnames]
     NumCond <- Param$NumCond
     NumReps <- Param$NumReps
@@ -23,15 +44,15 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     sampleMetadata <- data.frame(Condition = rep(paste("Condition", 1:NumCond), each=NumReps),
                                  Replicate = rep(1:NumReps, each=NumCond))
     
-    fulldata <- SummarizedExperiment(assays = list(quant = Data), 
+    fulldata <- SummarizedExperiment::SummarizedExperiment(assays = list(quant = Data), 
                                      colData = sampleMetadata)
-    rowData(fulldata) <- rownames(Data)
-    metadata(fulldata) <- list(NumReps = NumReps, NumCond = NumCond)
+    SummarizedExperiment::rowData(fulldata) <- rownames(Data)
+    SummarizedExperiment::metadata(fulldata) <- list(NumReps = NumReps, NumCond = NumCond)
     
-    assay(fulldata, "quant") <- Data
+    SummarizedExperiment::assay(fulldata, "quant") <- Data
     
     # Generate experimental design
-    conditions <- unique(colData(fulldata)$Condition)
+    conditions <- unique(SummarizedExperiment::colData(fulldata)$Condition)
     allComps <- suppressMessages(PolySTest::create_pairwise_comparisons(conditions, 1))
     
     
@@ -50,12 +71,12 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     }
     
     # Define comparisons to visualize from available ones
-    compNames <- metadata(results)$compNames
+    compNames <- SummarizedExperiment::metadata(results)$compNames
     
     
     # Preparing data
-    cnames <- colnames(rowData(results))
-    rdata <- as.data.frame(rowData(results))
+    cnames <- colnames(SummarizedExperiment::rowData(results))
+    rdata <- as.data.frame(SummarizedExperiment::rowData(results))
     LogRatios <- rdata[, grep("^log_ratios_", cnames), drop=F]
     names(LogRatios) <- gsub("^log_ratios", "log-ratios", names(LogRatios))
     names(LogRatios) <- gsub("_Condition\\.", " ", names(LogRatios))

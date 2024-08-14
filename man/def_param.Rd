@@ -30,5 +30,5 @@ and default value.
 \examples{
 # Read YAML file from inst folder
 yaml_path <- system.file("config", "params.yaml", package = "PhosFake")
-params <- def_param_from_yaml(yaml_path)
+params <- def_param(yaml_path)
 }

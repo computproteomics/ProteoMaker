@@ -5,11 +5,12 @@
 \title{Set paths and general configuration for PhosFake}
 \usage{
 set_phosfake(
-  fastaFilePath = "Proteomes",
+  fastaFilePath = system.file("Proteomes", package = "PhosFake"),
   resultFilePath = "SimulatedDatasets",
   cores = 2,
   clusterType = "FORK",
-  calcAllBenchmarks = T
+  runStatTests = TRUE,
+  calcAllBenchmarks = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,7 @@ A list containing the configuration settings:
   \item{cores}{The number of cores used.}
   \item{clusterType}{The type of cluster used.}
   \item{calcAllBenchmarks}{Whether to calculate all benchmarks.}
+  \item{runStatTests}{Whether to run statistical tests.}
 }
 }
 \description{

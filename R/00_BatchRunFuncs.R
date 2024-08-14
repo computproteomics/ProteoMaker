@@ -2,36 +2,6 @@
 #                       QC batch test of the parameters                        #
 ################################################################################
 # 
-# # Function to install all necessary packages
-# install_phosfake <- function(pkgs = c(
-#     "purrr", "crayon", "parallel", "digest", "protr", "preprocessCore",
-#     "matrixStats", "extraDistr", "fdrtool", "qvalue", "limma", "moments",
-#     "Hmisc", "gplots", "plotly", "yaml"
-# ), libpath = NULL) {
-#     if (!requireNamespace("BiocManager", quietly = TRUE)) {
-#         install.packages("BiocManager")
-#     }
-#     if (!is.null(libpath)) {
-#         .libPaths(libpath)
-#     }
-#     BiocManager::install(pkgs)
-# }
-# 
-# # Function to load all PhosFake scripts from given path and load libraries
-# load_phosfake <- function(path = "./") {
-#     source(file.path(path, "R/Parameter.R"), echo = T, print.eval = TRUE)
-#     source(file.path(path, "R/01_GenerateGroundTruth.R"), echo = T, print.eval = TRUE)
-#     source(file.path(path, "R/02_Digestion.R"), echo = T, print.eval = TRUE)
-#     source(file.path(path, "R/03_MSRun.R"), echo = T, print.eval = TRUE)
-#     source(file.path(path, "R/04_DataAnalysis.R"), echo = T, print.eval = TRUE)
-#     source(file.path(path, "R/05_Statistics.R"), echo = T, print.eval = TRUE)
-#     source(file.path(path, "R/06_Benchmarks.R"), echo = T, print.eval = TRUE, )
-#     library(crayon)
-#     library(parallel)
-#     library(digest)
-#     library(Hmisc)
-#     library(gplots)
-# }
 
 #' Set paths and general configuration for PhosFake
 #'
@@ -49,6 +19,8 @@
 #' for parallel computing (e.g., `"FORK"`, `"PSOCK"`). Default is `"FORK"`.
 #' @param calcAllBenchmarks A logical value indicating whether to calculate all
 #' benchmarks. Default is `TRUE`.
+#' @param runStatTests A logical value indicating whether to run statistical tests. Default is `TRUE`.
+#' 
 #' 
 #' @return A list containing the configuration settings:
 #' \describe{
@@ -65,10 +37,10 @@
 #' @examples
 #' config <- set_phosfake()
 #' config <- set_phosfake(fastaFilePath = "CustomProteomes", resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
-set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "SimulatedDatasets",
+set_phosfake <- function(fastaFilePath = system.file("Proteomes", package = "PhosFake"), resultFilePath = "SimulatedDatasets",
                          cores = 2, clusterType = "FORK", 
                          runStatTests = TRUE, calcAllBenchmarks = TRUE) {
-    try(dir.create(resultFilePath))
+    dir.create(resultFilePath, showWarnings = FALSE)
     return(list(fastaFilePath = fastaFilePath, resultFilePath = resultFilePath, 
                 cores = cores, clusterType = clusterType, 
                 runStatTests = runStatTests, calcAllBenchmarks = calcAllBenchmarks))
@@ -94,15 +66,16 @@ set_phosfake <- function(fastaFilePath = "Proteomes", resultFilePath = "Simulate
 #'   \item{paramMSRun}{Parameters related to the mass spectrometry run.}
 #'   \item{paramDataAnalysis}{Parameters related to data analysis.}
 #' }
+#' @importFrom yaml yaml.load_file
+#' @importFrom Hmisc list.tree
 #' 
 #' @export
 #'
 #' @examples
 #' # Read YAML file from inst folder
 #' yaml_path <- system.file("config", "params.yaml", package = "PhosFake")
-#' params <- def_param_from_yaml(yaml_path)
+#' params <- def_param(yaml_path)
 def_param <- function(yaml_file=NULL) {
-    library(Hmisc)
     if (is.null(yaml_file)) {
         yaml_file <- system.file("config", "parameters.yaml", package = "PhosFake")
     }
@@ -140,18 +113,17 @@ def_param <- function(yaml_file=NULL) {
     }
     
     # Provide a nice printout for each category
-    cat("--------------------\nGround truth generation parameters:\n")
-    list.tree(Param$paramGroundTruth, maxcomp = 100, maxlen = 100)
-    cat("--------------------\nProteoform abundance parameters:\n")
-    list.tree(Param$paramProteoformAb, maxcomp = 100, maxlen = 100)
-    cat("--------------------\nDigestion parameters:\n")
-    list.tree(Param$paramDigest, maxcomp = 100, maxlen = 100)
-    cat("--------------------\nMSRun parameters:\n")
-    list.tree(Param$paramMSRun, maxcomp = 100, maxlen = 100)
-    cat("--------------------\nData analysis parameters:\n")
-    list.tree(Param$paramDataAnalysis, maxcomp = 100, maxlen = 100)
-    cat("--------------------\n")
-    
+    base::cat("--------------------\nGround truth generation parameters:\n")
+    Hmisc::list.tree(Param$paramGroundTruth, maxcomp = 100, maxlen = 100)
+    base::cat("--------------------\nProteoform abundance parameters:\n")
+    Hmisc::list.tree(Param$paramProteoformAb, maxcomp = 100, maxlen = 100)
+    base::cat("--------------------\nDigestion parameters:\n")
+    Hmisc::list.tree(Param$paramDigest, maxcomp = 100, maxlen = 100)
+    base::cat("--------------------\nMSRun parameters:\n")
+    Hmisc::list.tree(Param$paramMSRun, maxcomp = 100, maxlen = 100)
+    base::cat("--------------------\nData analysis parameters:\n")
+    Hmisc::list.tree(Param$paramDataAnalysis, maxcomp = 100, maxlen = 100)
+    base::cat("--------------------\n")    
     return(Param)
 }
 
@@ -168,6 +140,8 @@ def_param <- function(yaml_file=NULL) {
 #' 
 #' @return A list of lists, each sublist containing a unique combination of 
 #' parameters.
+#' 
+
 #' 
 #' @export
 #'
@@ -196,7 +170,7 @@ generate_combinations <- function(params) {
 #' saved to the output directory specified in \code{def_param}.
 #'
 #' @param Parameters A list containing categorized parameter sets, typically 
-#' generated using \code{def_param} or \code{def_param_from_yaml}.
+#' generated using \code{def_param}.
 #' @param Config A list containing configuration settings, such as file paths 
 #' and computational settings, typically generated using \code{set_phosfake}.
 #' 
@@ -211,7 +185,6 @@ generate_combinations <- function(params) {
 #' config <- set_phosfake()
 #' results <- run_sims(params, config)
 run_sims <- function(Parameters, Config) {
-    library(dplyr)
     # Generate combinations for each parameter set
     listtogroundtruth <- generate_combinations(Parameters$paramGroundTruth)
     listtoproteoformab <- generate_combinations(Parameters$paramProteoformAb)
@@ -241,7 +214,7 @@ run_sims <- function(Parameters, Config) {
         tParam <- listtogroundtruth[[hh]]
         Param <- "none"
         groundTruth <- NULL
-        md5 <- digest(tParam, algo = "md5")
+        md5 <- digest::digest(tParam, algo = "md5")
         filename <- paste0(Config$resultFilePath, "/outputGroundTruth_", md5, ".RData")
         if (file.exists(filename)) {
             load(filename)
@@ -268,7 +241,7 @@ run_sims <- function(Parameters, Config) {
                                                     "_R_", 
                                                     rep(1:tParam$NumReps, tParam$NumCond))))
             # hash code to represent parameter configuration
-            md5 <- digest(tParam, algo = "md5")
+            md5 <- digest::digest(tParam, algo = "md5")
             filename <- paste0(Config$resultFilePath, "/outputProteoformAb_", md5, ".RData")
             if (file.exists(filename)) {
                 load(filename)
@@ -284,7 +257,7 @@ run_sims <- function(Parameters, Config) {
                 Param <- "none"
                 BeforeMS <- NULL
                 tParam <- c(pfParam, listtodigestion[[jj]])
-                md5 <- digest(tParam, algo = "md5")
+                md5 <- digest::digest(tParam, algo = "md5")
                 filename <- paste0(Config$resultFilePath, "/outputDigestion_", md5, ".RData")
                 if (file.exists(filename)) {
                     load(filename)
@@ -308,7 +281,7 @@ run_sims <- function(Parameters, Config) {
                     Param <- "none"
                     AfterMSRun <- NULL
                     tParam <- c(dgParam, listtomsrun[[kk]])
-                    md5 <- digest(tParam, algo = "md5")
+                    md5 <- digest::digest(tParam, algo = "md5")
                     filename <- paste0(Config$resultFilePath, "/outputMSRun_", md5, ".RData")
                     if (file.exists(filename)) {
                         load(filename)
@@ -332,7 +305,7 @@ run_sims <- function(Parameters, Config) {
                         Param <- "none"
                         tParam <- c(msParam, listtodatanalysis[[ll]])
                         Benchmarks <- NULL
-                        md5 <- digest(tParam, algo = "md5")
+                        md5 <- digest::digest(tParam, algo = "md5")
                         filename <- paste0(Config$resultFilePath, "/outputDataAnalysis_", md5, ".RData")
                         if (file.exists(filename)) {
                             load(filename)
@@ -384,7 +357,7 @@ run_sims <- function(Parameters, Config) {
 #' data if available.
 #'
 #' @param Param A list of parameters used in the simulation, typically a subset 
-#' of those generated by functions like \code{def_param} or \code{def_param_from_yaml}.
+#' of those generated by functions like \code{def_param}.
 #' @param Config A list of configuration settings, including file paths and 
 #' computational settings, typically generated using \code{set_phosfake}.
 #' @param stage A character string indicating the stage of the simulation for 
@@ -396,6 +369,7 @@ run_sims <- function(Parameters, Config) {
 #' the function returns \code{NULL}.
 #' 
 #' @importFrom digest digest
+#'
 #' @export
 #'
 #' @examples
@@ -420,7 +394,7 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
     tParam  <- Param[1:max_pname]
     
     # check whether file with correct parameters exists
-    md5 <- digest(as.list(tParam), algo = "md5")
+    md5 <- digest::digest(as.list(tParam), algo = "md5")
     
     filename <- paste0(Config$resultFilePath, "/output", stage, "_", md5, ".RData")
     if (file.exists(filename)) {
