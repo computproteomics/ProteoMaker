@@ -19,6 +19,7 @@ PhosFake requires installation via the `devtools` package. You can install PhosF
 
 ```{r}
 # Install PhosFake
+install.packages("devtools")
 devtools::install_github("veitveit/PhosFake")
 ```
 
