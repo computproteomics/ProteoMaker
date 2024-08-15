@@ -566,7 +566,7 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
         text = as.character(dat2),
         textposition = 'auto',
         hoverinfo = 'text'
-    ) dplyr::'%>%'
+    ) dplyr::%>%
         plotly::layout(
             title = paste("hash:", sim),
             yaxis = list(title = 'Normalized values', range = c(0, 1), tickfont = list(size = 18/nr), titlefont = list(size = 20/nr)),
@@ -579,7 +579,7 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     
     # Combine all plots into a subplot
     subplot(param_plot, plot, nrows = 2, shareX = TRUE, shareY = TRUE,
-            margin = 0.01, titleX = TRUE, titleY = TRUE) dplyr::'%>%'
+            margin = 0.01, titleX = TRUE, titleY = TRUE) dplyr::%>%
         plotly::layout(showlegend = FALSE)
     
 }
