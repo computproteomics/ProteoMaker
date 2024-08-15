@@ -49,5 +49,6 @@ directories and returns a list of configuration settings.
 }
 \examples{
 config <- set_phosfake()
-config <- set_phosfake(fastaFilePath = "CustomProteomes", resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
+config <- set_phosfake(fastaFilePath = "CustomProteomes", 
+resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
 }

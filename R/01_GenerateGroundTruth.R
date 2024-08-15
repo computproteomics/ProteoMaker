@@ -33,14 +33,6 @@
 #'
 #' @keywords internal
 #'
-#' @examples
-#' parameters <- list(
-#'   PathToFasta = "path/to/fasta.fasta",
-#'   PathToProteinList = "path/to/protein_list.txt",
-#'   FracModProt = 0.5,
-#'   ModifiableResidues = list("S", "T", "Y")
-#' )
-#' result <- proteinInput(parameters)
 #' 
 proteinInput <- function(parameters) {
   cat(" + Importing data:\n")
@@ -222,20 +214,6 @@ proteinInput <- function(parameters) {
 #'
 #' @keywords internal
 #'
-#' @examples
-#' parameters <- list(
-#'   PTMTypes = c("Phosphorylation", "Acetylation"),
-#'   PTMTypesDist = c(0.7, 0.3),
-#'   ModifiableResidues = list(c("S", "T", "Y"), c("K")),
-#'   ModifiableResiduesDistr = list(c(0.5, 0.3, 0.2), c(1)),
-#'   PropModPerProt = 2,
-#'   RemoveNonModFormFrac = 0.5
-#' )
-#' to.Modify <- data.frame(
-#'   Sequence = c("MTEYKLVVVGAGGVGKSALTIQLIQNHFVDEYDPTIEDSYRKQVVIDGETCLLDILDTAG"),
-#'   Accession = c("P01112")
-#' )
-#' result <- performModification(to.Modify, parameters)
 performModification <- function(to.Modify, parameters) {
   cat(" + Performing modification:\n")
   cat(
@@ -350,18 +328,6 @@ performModification <- function(to.Modify, parameters) {
 #'   of modified amino acids per modification type.
 #' }
 #'
-#' @examples
-#' # Example usage:
-#' sequences <- c("MKTAYIAKQRQISFVKSHFSRQDILDLWIYHTQGYFPDWQNYTPGKLAG")
-#' params <- list(
-#'   ModifiableResidues = list(c("K", "R"), c("S", "T", "Y")),
-#'   PTMTypes = c("Acetylation", "Phosphorylation"),
-#'   PTMTypesDist = c(0.6, 0.4),
-#'   ModifiableResiduesDistr = list(c(0.7, 0.3), c(0.4, 0.4, 0.2)),
-#'   PTMMultipleLambda = 2
-#' )
-#' modification_report <- modify(sequences, params)
-#'
 #' @keywords internal
 modify <- function(seq, param) {
   # Find the positions of candidate modification sites on the sequences.
@@ -443,20 +409,6 @@ modify <- function(seq, param) {
 #'   \item Combines unmodified and modified proteoforms into a single data frame.
 #' }
 #'
-#' @examples
-#' # Example usage:
-#' parameters <- list(
-#'   PathToFasta = "path/to/fasta/file",
-#'   FracModProt = 0.5,
-#'   PTMTypes = c("Phosphorylation"),
-#'   PTMTypesDist = c(0.8),
-#'   ModifiableResidues = list(c("S", "T", "Y")),
-#'   ModifiableResiduesDistr = list(c(0.6, 0.3, 0.1)),
-#'   PropModPerProt = 2,
-#'   RemoveNonModFormFrac = 0.2
-#' )
-#' proteoforms <- samplePreparation(parameters)
-#' @importFrom crayon red
 #' @keywords internal
 samplePreparation <- function(parameters) {
   cat("#SAMPLE PREPARATION - Start\n\n")
@@ -508,9 +460,6 @@ samplePreparation <- function(parameters) {
 #' 
 #' @return A numeric vector of length `NumCond` representing the regulation pattern.
 #'
-#' @examples
-#' # Example usage:
-#' regulation_pattern <- createRegulationPattern(NumCond = 3)
 #'
 #' @keywords internal
 createRegulationPattern <- function(NumCond) {
@@ -540,18 +489,6 @@ createRegulationPattern <- function(NumCond) {
 #'   based on regulation patterns.
 #'   \item Optionally, removes values below a threshold or adjusts values to an absolute quantification scale.
 #' }
-#'
-#' @examples
-#' # Example usage:
-#' parameters <- list(
-#'   QuantColnames = c("Cond1", "Cond2"),
-#'   QuantNoise = 0.2,
-#'   DiffRegFrac = 0.3,
-#'   DiffRegMax = 2,
-#'   NumCond = 2,
-#'   NumReps = 3
-#' )
-#' proteoforms <- addProteoformAbundance(proteoforms, parameters)
 #'
 #' @keywords internal
 addProteoformAbundance <- function(proteoforms, parameters) {

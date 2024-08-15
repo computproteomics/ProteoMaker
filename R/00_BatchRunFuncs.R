@@ -36,8 +36,10 @@
 #'
 #' @examples
 #' config <- set_phosfake()
-#' config <- set_phosfake(fastaFilePath = "CustomProteomes", resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
-set_phosfake <- function(fastaFilePath = system.file("Proteomes", package = "PhosFake"), resultFilePath = "SimulatedDatasets",
+#' config <- set_phosfake(fastaFilePath = "CustomProteomes", 
+#' resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
+set_phosfake <- function(fastaFilePath = system.file("Proteomes", package = "PhosFake"), 
+                         resultFilePath = "SimulatedDatasets",
                          cores = 2, clusterType = "FORK", 
                          runStatTests = TRUE, calcAllBenchmarks = TRUE) {
     dir.create(resultFilePath, showWarnings = FALSE)
@@ -373,10 +375,11 @@ run_sims <- function(Parameters, Config) {
 #' @export
 #'
 #' @examples
-#' config <- set_phosfake()
-#' param <- def_param()$paramGroundTruth
-#' results <- run_sims(param, config)
-#' output <- get_simulation(param, config, stage = "MSRun")
+#' config <- set_phosfake(resultFilePath = tempdir())
+#' Param <- def_param()
+#' Param$paramGroundTruth$NumReps <- 5
+#' benchmarks <- run_sims(Param, config)
+#' result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
 get_simulation <- function(Param, Config, stage="DataAnalysis") {
     
     # Check for valid stage name
@@ -481,7 +484,7 @@ matrix_benchmarks <- function(allBs, Config) {
 #' 
 #' @importFrom plotly plot_ly subplot
 #' @importFrom gplots colorpanel
-#' @importFrom dplyr s%>%
+#' @importFrom dplyr %>%
 #' @export
 #'
 #' @examples

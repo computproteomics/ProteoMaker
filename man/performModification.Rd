@@ -38,19 +38,4 @@ The function performs the following steps:
   \item Optionally retains a fraction of the input sequences in their unmodified form, based on the specified parameters.
 }
 }
-\examples{
-parameters <- list(
-  PTMTypes = c("Phosphorylation", "Acetylation"),
-  PTMTypesDist = c(0.7, 0.3),
-  ModifiableResidues = list(c("S", "T", "Y"), c("K")),
-  ModifiableResiduesDistr = list(c(0.5, 0.3, 0.2), c(1)),
-  PropModPerProt = 2,
-  RemoveNonModFormFrac = 0.5
-)
-to.Modify <- data.frame(
-  Sequence = c("MTEYKLVVVGAGGVGKSALTIQLIQNHFVDEYDPTIEDSYRKQVVIDGETCLLDILDTAG"),
-  Accession = c("P01112")
-)
-result <- performModification(to.Modify, parameters)
-}
 \keyword{internal}

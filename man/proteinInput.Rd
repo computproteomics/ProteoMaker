@@ -36,14 +36,4 @@ The function performs the following steps:
   \item If the input files are corrupted or the protein set is empty after filtering, it returns `NULL` for both modified and unmodified sets.
 }
 }
-\examples{
-parameters <- list(
-  PathToFasta = "path/to/fasta.fasta",
-  PathToProteinList = "path/to/protein_list.txt",
-  FracModProt = 0.5,
-  ModifiableResidues = list("S", "T", "Y")
-)
-result <- proteinInput(parameters)
-
-}
 \keyword{internal}

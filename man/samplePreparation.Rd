@@ -29,18 +29,4 @@ The function performs the following steps:
   \item Combines unmodified and modified proteoforms into a single data frame.
 }
 }
-\examples{
-# Example usage:
-parameters <- list(
-  PathToFasta = "path/to/fasta/file",
-  FracModProt = 0.5,
-  PTMTypes = c("Phosphorylation"),
-  PTMTypesDist = c(0.8),
-  ModifiableResidues = list(c("S", "T", "Y")),
-  ModifiableResiduesDistr = list(c(0.6, 0.3, 0.1)),
-  PropModPerProt = 2,
-  RemoveNonModFormFrac = 0.2
-)
-proteoforms <- samplePreparation(parameters)
-}
 \keyword{internal}

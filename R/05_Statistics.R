@@ -16,7 +16,7 @@
 #'
 #' @return A data frame with the original data and additional columns for log ratios, p-values, FDR values, and ground truth indicators for differential regulation.
 #'
-#' @importFrom SummarizedExperiment SummarizedExperiment rowData colData assay
+#' @import SummarizedExperiment 
 #' @importFrom PolySTest create_pairwise_comparisons PolySTest_paired PolySTest_unpaired
 #' @importFrom stringr str_split
 #' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
@@ -24,6 +24,7 @@
 #' @keywords internal
 #' 
 runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
+    library(SummarizedExperiment)
     Data <- fullData[,Param$QuantColnames]
     NumCond <- Param$NumCond
     NumReps <- Param$NumReps
@@ -47,7 +48,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     fulldata <- SummarizedExperiment::SummarizedExperiment(assays = list(quant = Data), 
                                      colData = sampleMetadata)
     SummarizedExperiment::rowData(fulldata) <- rownames(Data)
-    SummarizedExperiment::metadata(fulldata) <- list(NumReps = NumReps, NumCond = NumCond)
+    metadata(fulldata) <- list(NumReps = NumReps, NumCond = NumCond)
     
     SummarizedExperiment::assay(fulldata, "quant") <- Data
     
@@ -71,7 +72,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     }
     
     # Define comparisons to visualize from available ones
-    compNames <- SummarizedExperiment::metadata(results)$compNames
+    compNames <- metadata(results)$compNames
     
     
     # Preparing data

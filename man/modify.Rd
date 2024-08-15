@@ -51,17 +51,4 @@ The function performs the following steps:
   of modified amino acids per modification type.
 }
 }
-\examples{
-# Example usage:
-sequences <- c("MKTAYIAKQRQISFVKSHFSRQDILDLWIYHTQGYFPDWQNYTPGKLAG")
-params <- list(
-  ModifiableResidues = list(c("K", "R"), c("S", "T", "Y")),
-  PTMTypes = c("Acetylation", "Phosphorylation"),
-  PTMTypesDist = c(0.6, 0.4),
-  ModifiableResiduesDistr = list(c(0.7, 0.3), c(0.4, 0.4, 0.2)),
-  PTMMultipleLambda = 2
-)
-modification_report <- modify(sequences, params)
-
-}
 \keyword{internal}

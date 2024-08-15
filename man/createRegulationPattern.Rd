@@ -16,9 +16,4 @@ A numeric vector of length `NumCond` representing the regulation pattern.
 This function generates a regulation pattern for a given number of conditions. The pattern 
 consists of random values representing up-regulation or down-regulation for each condition.
 }
-\examples{
-# Example usage:
-regulation_pattern <- createRegulationPattern(NumCond = 3)
-
-}
 \keyword{internal}

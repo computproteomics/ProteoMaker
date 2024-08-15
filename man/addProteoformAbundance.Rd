@@ -28,17 +28,4 @@ The function performs the following steps:
   \item Optionally, removes values below a threshold or adjusts values to an absolute quantification scale.
 }
 }
-\examples{
-# Example usage:
-parameters <- list(
-  QuantColnames = c("Cond1", "Cond2"),
-  QuantNoise = 0.2,
-  DiffRegFrac = 0.3,
-  DiffRegMax = 2,
-  NumCond = 2,
-  NumReps = 3
-)
-proteoforms <- addProteoformAbundance(proteoforms, parameters)
-
-}
 \keyword{internal}
