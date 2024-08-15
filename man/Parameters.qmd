@@ -122,7 +122,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Detectability filter
 
-*Param\$DetectabilityThreshold:* Threshold for detectibility of peptides from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.5
+*Param\$PercDetectability:* Removing the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.25
 
 *Param\$PercDetectedPep*: The percentage of peptides detected during the MS run. Set to `0.3`. This parameter models the efficiency of peptide detection by the MS instrument.
 

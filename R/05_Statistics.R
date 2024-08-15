@@ -16,7 +16,7 @@
 #'
 #' @return A data frame with the original data and additional columns for log ratios, p-values, FDR values, and ground truth indicators for differential regulation.
 #'
-#' @importFrom SummarizedExperiment SummarizedExperiment rowData colData metadata assay
+#' @importFrom SummarizedExperiment SummarizedExperiment rowData colData assay
 #' @importFrom PolySTest create_pairwise_comparisons PolySTest_paired PolySTest_unpaired
 #' @importFrom stringr str_split
 #' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster

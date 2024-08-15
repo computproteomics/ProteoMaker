@@ -219,13 +219,13 @@ params:
     min: 0
     max: 1
     default: 0.2
-  DetectabilityThreshold:
+  PercDetectability:
     group: "MS Run"
     type: "paramMSRun"
-    description: "Threshold for detectibility of peptides from PeptideRanger predictions (trained on ProteomicsDB)."
+    description: "Removing the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB)."
     min: 0
     max: 1
-    default: 0.5
+    default: 0.25
   # PercDetectedPep:
   #   group: "MS Run"
   #   type: "paramMSRun"

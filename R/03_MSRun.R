@@ -18,7 +18,7 @@
 #' @return A data frame similar to `Digested` but with modifications introduced by the MS run simulation.
 #' 
 #' @importFrom parallel detectCores makeCluster stopCluster setDefaultCluster clusterEvalQ parLapply
-#' @importFrom PeptideRanger peptide_predictions RFmodel_ProteomicsDB
+#' @importFrom PeptideRanger peptide_predictions
 #' @importFrom stringr str_locate_all
 #' @importFrom crayon red
 #'
@@ -39,10 +39,10 @@ MSRunSim <- function(Digested, parameters) {
 
   cat("  - Noise added to all samples!\n\n")
   cat(" + Detection limits:\n")
-  cat("  - Removing peptides with detectability scores (PeptideRanger) lower than", parameters$DetectabilityThreshold, ".\n")
+  cat("  - Removing peptides", parameters$PercDetectability*100, "% peptides with low detectability score (PeptideRanger).\n")
 
   # Sample a percentage of random peptides to be removed.
-  if(parameters$DetectabilityThreshold > 0) {
+  if(parameters$PercDetectability > 0) {
       RFScores <- NULL
       if (!is.null(parameters$Cores)) {
           cores <- parameters$Cores
@@ -73,10 +73,11 @@ MSRunSim <- function(Digested, parameters) {
       } else {
           RFScores<- PeptideRanger::peptide_predictions(unlist(Digested[,1]), PeptideRanger::RFmodel_ProteomicsDB)
       }
-      
-      remove <- RFScores$RF_score < parameters$DetectabilityThreshold
+      # get score threshold for lower percentage
+      RFThreshold <- quantile(RFScores$RF_score, parameters$PercDetectability)
+      remove <- RFScores$RF_score < RFThreshold
       MSRun <- Digested[-remove, ]
-      cat("  - A total of", sum(remove), "peptides is removed.\n\n")
+      cat("  - A total of", sum(remove), "peptides is removed with predicted detectability lower than", RFThreshold, ".\n\n")
       
   } else {
       

@@ -26,6 +26,8 @@ processing. Default is 2.}
 \item{clusterType}{A character string specifying the type of cluster to use
 for parallel computing (e.g., `"FORK"`, `"PSOCK"`). Default is `"FORK"`.}
 
+\item{runStatTests}{A logical value indicating whether to run statistical tests. Default is `TRUE`.}
+
 \item{calcAllBenchmarks}{A logical value indicating whether to calculate all
 benchmarks. Default is `TRUE`.}
 }

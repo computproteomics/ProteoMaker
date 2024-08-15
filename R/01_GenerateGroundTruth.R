@@ -457,7 +457,7 @@ modify <- function(seq, param) {
 #' )
 #' proteoforms <- samplePreparation(parameters)
 #' @importFrom crayon red
-#' @kewords internal
+#' @keywords internal
 samplePreparation <- function(parameters) {
   cat("#SAMPLE PREPARATION - Start\n\n")
 

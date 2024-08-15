@@ -6,7 +6,7 @@
 #####################
 ## Paths and directories
 #####################
-phosfake_config <- set_phosfake(fastaFilePath = "Proteomes", 
+phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"), 
                                 resultFilePath = "SimulatedDataSets",
                                 cores = 4, clusterType = "FORK", 
                                 runStatTests = T,
@@ -58,7 +58,7 @@ Param$paramMSRun$PercDetectedValues <- 0.2
 #####################
 allBs <- run_sims(Param, phosfake_config)
 
-#####################
+s#####################
 ## Get the results of an individual simulation
 #####################
 res <- get_simulation(allBs[[1]]$Param, phosfake_config)
