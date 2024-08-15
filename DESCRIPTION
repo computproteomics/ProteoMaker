@@ -1,7 +1,7 @@
 Package: PhosFake
 Type: Package
 Title: Simulations of LC-MS data from proteoforms
-Version: 0.3.0
+Version: 0.3.1
 Date: 2024-07-30
 Author: Veit Schwammle, Marie Locard-Paulet
 Maintainer: Your Name <veits@bmb.sdu.dk>

@@ -307,7 +307,7 @@ digestionProductSummarization <- function(peptides, parameters) {
     
     cat("  - Peptide groups are generated.\n")
     
-    peptides.1 <- peptides dplyr::'%>%' dplyr::summarise(
+    peptides.1 <- peptides %>% dplyr::summarise(
         Peptide = list(Peptide),
         Start = list(Start),
         Stop = list(Stop),
@@ -324,7 +324,7 @@ digestionProductSummarization <- function(peptides, parameters) {
     )
     
     
-    peptides.2 <- peptides dplyr::'%>%' dplyr::summarise_at(.vars = dplyr::vars(parameters$QuantColnames), .funs = c("log2.sum"))
+    peptides.2 <- peptides %>% dplyr::summarise_at(.vars = dplyr::vars(parameters$QuantColnames), .funs = c("log2.sum"))
     
     peptides <- dplyr::inner_join(peptides.1, peptides.2, by = c("Sequence", "pep_id"))
     peptides <- dplyr::select(peptides, -c("pep_id"))
