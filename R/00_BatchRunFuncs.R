@@ -395,7 +395,7 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
     # max of which is the last element of the vector
     max_pname <- max(which(names(Param) %in% rownames(param_names)))
     tParam  <- Param[1:max_pname]
-    
+
     # check whether file with correct parameters exists
     md5 <- digest::digest(as.list(tParam), algo = "md5")
     

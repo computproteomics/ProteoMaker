@@ -10,7 +10,7 @@ phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package
                                 resultFilePath = "SimulatedDataSets",
                                 cores = 4, clusterType = "FORK", 
                                 runStatTests = T,
-                                calcAllBenchmarks = T
+                                calcAllBenchmarks = F
                                 )
 
 #####################
@@ -41,7 +41,7 @@ Param$paramDataAnalysis$MinUniquePep <- 100
 # Param$paramDigest$MaxNumMissedCleavages <- 4
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
-Param$paramMSRun$PercDetectedValues <- 0.2
+Param$paramMSRun$PercDetectedVal <- 0.2
 
 #####################
 ## Read parameters from yaml file
@@ -58,7 +58,7 @@ Param$paramMSRun$PercDetectedValues <- 0.2
 #####################
 allBs <- run_sims(Param, phosfake_config)
 
-s#####################
+#####################
 ## Get the results of an individual simulation
 #####################
 res <- get_simulation(allBs[[1]]$Param, phosfake_config)
