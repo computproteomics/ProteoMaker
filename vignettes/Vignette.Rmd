@@ -19,7 +19,9 @@ PhosFake requires installation via the `devtools` package. You can install PhosF
 
 ```{r}
 # Install PhosFake
-install.packages("devtools")
+if (!requireNamespace("devtools", quietly = TRUE)) {
+    install.packages("devtools", repos = "https://cran.r-project.org")
+}
 devtools::install_github("veitveit/PhosFake")
 ```
 
