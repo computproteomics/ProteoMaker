@@ -74,7 +74,8 @@ MSRunSim <- function(Digested, parameters) {
           RFScores<- PeptideRanger::peptide_predictions(unlist(Digested[,1]), PeptideRanger::RFmodel_ProteomicsDB)
       }
       # get score threshold for lower percentage
-      RFThreshold <- quantile(RFScores$RF_score, parameters$PercDetectability)
+      RFThreshold <- quantile(RFScores$RF_score, 1-parameters$PercDetectability)
+      print(range(RFScores$RF_score))
       remove <- RFScores$RF_score < RFThreshold
       MSRun <- Digested[-remove, ]
       cat("  - A total of", sum(remove), "peptides is removed with predicted detectability lower than", RFThreshold, ".\n\n")

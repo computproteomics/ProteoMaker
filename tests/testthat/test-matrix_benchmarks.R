@@ -3,7 +3,7 @@ library(testthat)
 test_that("matrix_benchmarks returns a correctly formatted data frame", {
     Param <- def_param()
     Param$paramGroundTruth$NumReps <- 5
-    phosfake_config <- set_phosfake(resultFilePath = tempdir())
+    phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"), resultFilePath = tempdir())
     benchmarks <- run_sims(Param, phosfake_config)
     results <- matrix_benchmarks(benchmarks, phosfake_config)
 

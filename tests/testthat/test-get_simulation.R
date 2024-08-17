@@ -28,7 +28,7 @@ test_that("get_simulation returns the correct loaded data", {
     expect_named(result, c("BeforeMS", "Param"))
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="ProteoformAb")
     expect_true(is.list(result))
-    expect_named(result, c("proteoformAb", "Param"))
+    expect_named(result, c("Param", "proteoformAb"))
     # delete files in tempdir
     unlink(tempdir(), recursive = TRUE)
 })
@@ -52,7 +52,7 @@ test_that("get_simulation returns the correct loaded data, no stats", {
     expect_named(result, c("BeforeMS", "Param"))
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="ProteoformAb")
     expect_true(is.list(result))
-    expect_named(result, c("proteoformAb", "Param"))
+    expect_named(result, c("Param", "proteoformAb"))
     # delete files in tempdir
     unlink(tempdir(), recursive = TRUE)
 })
@@ -102,7 +102,7 @@ test_that("get_simulation returns the correct loaded data, no stats, not benchma
     expect_named(result, c("BeforeMS", "Param"))
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="ProteoformAb")
     expect_true(is.list(result))
-    expect_named(result, c("proteoformAb", "Param"))
+    expect_named(result, c("Param", "proteoformAb"))
     # delete files in tempdir
     unlink(tempdir(), recursive = TRUE)
 })

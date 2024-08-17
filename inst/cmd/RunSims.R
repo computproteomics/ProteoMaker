@@ -42,6 +42,7 @@ Param <- def_param()
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
 Param$paramMSRun$PercDetectedVal <- 0.2
+Param$paramMSRun$PercDetectability <- 0.2
 
 #####################
 ## Read parameters from yaml file
