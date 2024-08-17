@@ -209,11 +209,13 @@ run_sims <- function(Parameters, Config) {
     benchcounter <- 0
     
     # Gather always benchmarking data
-    allBs <- NULL
+    allBs <- list()
     for (hh in 1:length(listtogroundtruth)) {
         ## Running ground thruth generations
         # check whether file with correct parameters exists
         tParam <- listtogroundtruth[[hh]]
+        # turn into list
+        tParam <- lapply(tParam, function(x) x)
         Param <- "none"
         groundTruth <- NULL
         md5 <- digest::digest(tParam, algo = "md5")
@@ -237,20 +239,20 @@ run_sims <- function(Parameters, Config) {
             proteoformAb <- NULL
             # create combined parameterfile
             tParam <- c(gtParam, listtoproteoformab[[ii]])
+            # hash code to represent parameter configuration
+            md5 <- digest::digest(tParam, algo = "md5")
             tParam <- c(tParam, 
                         list(QuantColnames = paste0("C_", 
                                                     rep(1:tParam$NumCond, each = tParam$NumReps), 
                                                     "_R_", 
                                                     rep(1:tParam$NumReps, tParam$NumCond))))
-            # hash code to represent parameter configuration
-            md5 <- digest::digest(tParam, algo = "md5")
             filename <- paste0(Config$resultFilePath, "/outputProteoformAb_", md5, ".RData")
             if (file.exists(filename)) {
                 load(filename)
             } else {
                 Param <- tParam
                 proteoformAb <- addProteoformAbundance(proteoforms = groundTruth, parameters = Param)
-                save(Param, proteoformAb, file = filename)
+                save(proteoformAb, Param, file = filename)
             }
             pfParam <- Param
             
@@ -260,7 +262,7 @@ run_sims <- function(Parameters, Config) {
                 BeforeMS <- NULL
                 tParam <- c(pfParam, listtodigestion[[jj]])
                 md5 <- digest::digest(tParam, algo = "md5")
-                filename <- paste0(Config$resultFilePath, "/outputDigestion_", md5, ".RData")
+                filename <- paste0(Config$resultFilePath, "/outputDigest_", md5, ".RData")
                 if (file.exists(filename)) {
                     load(filename)
                 } else {
@@ -330,7 +332,8 @@ run_sims <- function(Parameters, Config) {
                                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
                             } else {
                                 message("Too few proteins or no statistical tests requested. 
-                                        Skipping this part.")
+                                        Skipping this protein summarization, statistical testing and 
+                                        benchmark calculation.")
                                 Benchmarks <- Stats <- StatsPep <- NULL
                             }
                             
@@ -338,6 +341,8 @@ run_sims <- function(Parameters, Config) {
                                 Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
                                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
                             }
+                        } else {
+                            Param <- tParam
                         }
                         allBs[[md5]] <- list(Benchmarks = Benchmarks, Param = Param)
                     }
@@ -364,7 +369,7 @@ run_sims <- function(Parameters, Config) {
 #' computational settings, typically generated using \code{set_phosfake}.
 #' @param stage A character string indicating the stage of the simulation for 
 #' which the output is requested. Default is \code{"DataAnalysis"}. Values are \code{"GroundTruth"},
-#' \code{"ProteoformAb"}, \code{"Digestion"}, \code{"MSRun"}, and \code{"DataAnalysis"}.
+#' \code{"ProteoformAb"}, \code{"Digest"}, \code{"MSRun"}, and \code{"DataAnalysis"}.
 #' 
 #' @return A list containing the loaded data objects, including \code{Stats}, 
 #' \code{StatsPep}, and \code{Benchmarks}, if they exist. If no file is found, 
@@ -383,7 +388,7 @@ run_sims <- function(Parameters, Config) {
 get_simulation <- function(Param, Config, stage="DataAnalysis") {
     
     # Check for valid stage name
-    if (!(stage %in% c("GroundTruth", "ProteoformAb", "Digestion", "MSRun", "DataAnalysis"))) {
+    if (!(stage %in% c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"))) {
         stop("Invalid stage name. Please provide a valid stage name.")
     }
     
@@ -395,6 +400,7 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
     # max of which is the last element of the vector
     max_pname <- max(which(names(Param) %in% rownames(param_names)))
     tParam  <- Param[1:max_pname]
+    # print(tParam)
 
     # check whether file with correct parameters exists
     md5 <- digest::digest(as.list(tParam), algo = "md5")

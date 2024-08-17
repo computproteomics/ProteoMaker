@@ -15,7 +15,7 @@ computational settings, typically generated using \code{set_phosfake}.}
 
 \item{stage}{A character string indicating the stage of the simulation for 
 which the output is requested. Default is \code{"DataAnalysis"}. Values are \code{"GroundTruth"},
-\code{"ProteoformAb"}, \code{"Digestion"}, \code{"MSRun"}, and \code{"DataAnalysis"}.}
+\code{"ProteoformAb"}, \code{"Digest"}, \code{"MSRun"}, and \code{"DataAnalysis"}.}
 }
 \value{
 A list containing the loaded data objects, including \code{Stats}, 
@@ -29,8 +29,9 @@ output file corresponding to a specific simulation stage and loads the
 data if available.
 }
 \examples{
-config <- set_phosfake()
-param <- def_param()$paramGroundTruth
-results <- run_sims(param, config)
-output <- get_simulation(param, config, stage = "MSRun")
+config <- set_phosfake(resultFilePath = tempdir())
+Param <- def_param()
+Param$paramGroundTruth$NumReps <- 5
+benchmarks <- run_sims(Param, config)
+result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
 }

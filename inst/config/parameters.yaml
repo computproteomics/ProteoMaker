@@ -19,7 +19,7 @@ params:
     description: "Path to input FASTA file."
     min: NA
     max: NA
-    default: "fasta_full_yeast.fasta"
+    default: "fasta_example.fasta"
   PathToProteinList:
     group: "Input Data"
     type: "paramGroundTruth"
