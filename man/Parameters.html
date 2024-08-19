@@ -101,7 +101,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="proteoform-ids-generation" class="level3">
 <h3 class="anchored" data-anchor-id="proteoform-ids-generation">Proteoform IDs Generation</h3>
 <p><em>Param$FracModProt</em>: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to <code>0.0</code>, indicating no proteins will be modified.</p>
-<p><em>Param$FracModPerProt</em>: The fraction of modifiable proteins sampled for modifications. A value of <code>2</code> means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.</p>
+<p><em>Param$PropModPerProt</em>: The proportion of modifiable proteins sampled for modifications. A value of <code>2</code> means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.</p>
 <p><em>Param$PTMTypes</em>: The types of PTMs to be considered. Default set to <code>ph</code> for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation. For multiple parameter in the same simulation, use a list: <code>list(c("ph", "ac"))</code></p>
 <p><em>Param$PTMTypesDist</em>: The distribution of PTM types. Default set to <code>1</code>, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type.</p>
 <p><em>Param$PTMTypesMass</em>: The mass shifts associated with the PTM types. This can be <code>79.9663</code> for phosphorylation or multiple value in a list such as <code>list(c(79.9663, 42.0106))</code> . Accurate mass shifts determine the mz values of the peptides.</p>
@@ -166,7 +166,7 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="mass-spectrometry-ms-run-parameters">Mass Spectrometry (MS) Run Parameters</h2>
 <section id="detectability-filter" class="level3">
 <h3 class="anchored" data-anchor-id="detectability-filter">Detectability filter</h3>
-<p><em>Param$DetectabilityThreshold:</em> Threshold for detectibility of peptides from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.5</p>
+<p><em>Param$PercDetectability:</em> Removing the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.25</p>
 <p><em>Param$PercDetectedPep</em>: The percentage of peptides detected during the MS run. Set to <code>0.3</code>. This parameter models the efficiency of peptide detection by the MS instrument.</p>
 </section>
 <section id="detected-values" class="level3">
