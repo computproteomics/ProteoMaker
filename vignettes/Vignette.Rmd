@@ -37,12 +37,14 @@ Set up the paths and directories for input and output data, and configure the co
 This step ensures that the necessary directories exist and the computational resources are configured correctly. The fasta file path is set to the Proteomes folder in the PhosFake package with the following
 proteomes: _fasta_example.fasta, fasta_full_human.fasta, fasta_full_mouse.fasta, fasta_full_yeast.fasta_
 
+In this case, the results will be written in the temporary folder. In case you want to run many simulations, we recommend keeping the results file in a different folder by changing the argument `resultFilePath`.
+
 
 ```{r}
 # Configure the paths and settings
 phosfake_config <- set_phosfake(
   fastaFilePath =  system.file("Proteomes", package = "PhosFake"),
-  resultFilePath = "SimulatedDataSets",
+  resultFilePath = paste0(tempdir(), "/SimulatedDataSets"),
   cores = 2,
   clusterType = "FORK",
   runStatTests = TRUE,
