@@ -19,6 +19,7 @@
 #' @import SummarizedExperiment 
 #' @importFrom PolySTest create_pairwise_comparisons PolySTest_paired PolySTest_unpaired
 #' @importFrom stringr str_split
+#' @importFrom S4Vectors metadata
 #' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
 #'
 #' @keywords internal
