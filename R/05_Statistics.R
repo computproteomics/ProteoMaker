@@ -48,7 +48,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     fulldata <- SummarizedExperiment::SummarizedExperiment(assays = list(quant = Data), 
                                      colData = sampleMetadata)
     SummarizedExperiment::rowData(fulldata) <- rownames(Data)
-    metadata(fulldata) <- list(NumReps = NumReps, NumCond = NumCond)
+    S4Vectors::metadata(fulldata) <- list(NumReps = NumReps, NumCond = NumCond)
     
     SummarizedExperiment::assay(fulldata, "quant") <- Data
     
@@ -72,7 +72,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     }
     
     # Define comparisons to visualize from available ones
-    compNames <- metadata(results)$compNames
+    compNames <- S4Vectors::metadata(results)$compNames
     
     
     # Preparing data
