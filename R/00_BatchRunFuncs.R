@@ -448,8 +448,9 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
 #' @export
 #'
 #' @examples
-#' results <- run_sims(def_param(), set_phosfake())
-#' benchmark_matrix <- matrix_benchmarks(results, set_phosfake())
+#' conf <- set_phosfake(resultFilePath = tempdir())
+#' results <- run_sims(def_param(), conf)
+#' benchmark_matrix <- matrix_benchmarks(results, conf)
 #' 
 matrix_benchmarks <- function(allBs, Config) {
     # extracting all benchmarks (sometimes there are more or less per run)
@@ -458,8 +459,9 @@ matrix_benchmarks <- function(allBs, Config) {
         t_allbnames <- c(t_allbnames, names(unlist(allBs[[i]][[1]]$globalBMs)))
     }
     benchNames <- unique(t_allbnames)
-    BenchMatrix <- data.frame(matrix(NA, ncol = length(benchNames) + length(Param), nrow = length(allBs)))
-    colnames(BenchMatrix) <- c(benchNames, names(Param))
+    parNames <- unique(names(allBs[[1]]$Param))
+    BenchMatrix <- data.frame(matrix(NA, ncol = length(benchNames) + length(parNames), nrow = length(allBs)))
+    colnames(BenchMatrix) <- c(benchNames, parNames)
     rownames(BenchMatrix) <- names(allBs)
     
     # writing all results and parameters into matrix
@@ -536,7 +538,8 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
         if (is.character(tt) || is.factor(tt)) {
             tt <- as.numeric(as.factor(tt))
         }
-        tt <- tt / max(as.numeric(tt), na.rm = T)
+        tt <- tt - min(tt, 0)
+        tt <- tt / max(tt, na.rm = T)
         tt[is.na(tt)] <- 0
         tBenchMatrix[, i] <- unlist(tt)
     }

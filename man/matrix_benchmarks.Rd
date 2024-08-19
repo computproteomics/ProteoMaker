@@ -24,7 +24,8 @@ simulations. It extracts benchmark metrics and associated parameter values,
 creating a comprehensive data frame for analysis.
 }
 \examples{
-results <- run_sims(def_param(), set_phosfake())
-benchmark_matrix <- matrix_benchmarks(results, set_phosfake())
+conf <- set_phosfake(resultFilePath = tempdir())
+results <- run_sims(def_param(), conf)
+benchmark_matrix <- matrix_benchmarks(results, conf)
 
 }

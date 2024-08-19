@@ -24,7 +24,7 @@
 #' @keywords internal
 #' 
 runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
-    library(SummarizedExperiment)
+    # library(SummarizedExperiment)
     Data <- fullData[,Param$QuantColnames]
     NumCond <- Param$NumCond
     NumReps <- Param$NumReps
