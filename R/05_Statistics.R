@@ -66,9 +66,9 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     }
     results <- NULL
     if (isPaired) {
-        results <- PolySTest::PolySTest_paired(fulldata, allComps, testNames)
+        results <- suppressWarnings(PolySTest::PolySTest_paired(fulldata, allComps, testNames))
     } else {
-        results <- PolySTest::PolySTest_unpaired(fulldata, allComps, testNames)
+        results <- suppressWarnings(PolySTest::PolySTest_unpaired(fulldata, allComps, testNames))
     }
     
     # Define comparisons to visualize from available ones

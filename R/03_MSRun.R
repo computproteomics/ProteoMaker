@@ -75,9 +75,8 @@ MSRunSim <- function(Digested, parameters) {
       }
       # get score threshold for lower percentage
       RFThreshold <- quantile(RFScores$RF_score, 1-parameters$PercDetectability)
-      print(range(RFScores$RF_score))
       remove <- RFScores$RF_score < RFThreshold
-      MSRun <- Digested[-remove, ]
+      MSRun <- Digested[!remove, ]
       cat("  - A total of", sum(remove), "peptides is removed with predicted detectability lower than", RFThreshold, ".\n\n")
       
   } else {

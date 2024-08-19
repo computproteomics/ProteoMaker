@@ -19,11 +19,14 @@ test_that("run_sims creates expected result files", {
     params$paramGroundTruth$NumCond <- 2
     params$paramDigest$DigestionEnzyme <- "Trypsin"
 
+    ll <- list.files(tempdir(), pattern="output", full.names = TRUE)
+    unlink(ll, recursive = TRUE)
+    
     config <- set_phosfake(resultFilePath = tempdir())
     
     results <- run_sims(params, config)
     
-    expected_files <- c("outputGroundTruth_", "outputProteoformAb_", "outputDigestion_", "outputMSRun_", "outputDataAnalysis_")
+    expected_files <- c("outputGroundTruth_", "outputProteoformAb_", "outputDigest_", "outputMSRun_", "outputDataAnalysis_")
     files_created <- list.files(config$resultFilePath)
     
     for (file_prefix in expected_files) {

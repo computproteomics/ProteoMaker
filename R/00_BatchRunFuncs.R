@@ -229,7 +229,7 @@ run_sims <- function(Parameters, Config) {
             ttParam$PathToFasta <- paste0(Config$fastaFilePath, "/", Param$PathToFasta)
             groundTruth <- samplePreparation(parameters = ttParam)
             if (!is.null(groundTruth)) {
-                save(Param, groundTruth, file = filename)
+                save(groundTruth, Param, file = filename)
             }
         }
         gtParam <- Param

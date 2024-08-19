@@ -9,6 +9,8 @@ test_that("get_simulation returns NULL if the file does not exist", {
 })
 
 test_that("get_simulation returns the correct loaded data", {
+    ll <- list.files(tempdir(), pattern="output", full.names = TRUE)
+    unlink(ll, recursive = TRUE)
     config <- set_phosfake(resultFilePath = tempdir())
     Param <- def_param()
     Param$paramGroundTruth$NumReps <- c(3)
@@ -16,24 +18,25 @@ test_that("get_simulation returns the correct loaded data", {
 
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
     expect_true(is.list(result))
-    expect_named(result, c("AfterMSRun", "Param"))
+    expect_named(result, c("AfterMSRun", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config)
     expect_true(is.list(result))
-    expect_named(result, c("Benchmarks", "Param", "Stats", "StatsPep"))
+    expect_named(result, c("Benchmarks", "Param", "Stats", "StatsPep"),ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="GroundTruth")
     expect_true(is.list(result))
-    expect_named(result, c("groundTruth", "Param"))
+    expect_named(result, c("groundTruth", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="Digest")
     expect_true(is.list(result))
-    expect_named(result, c("BeforeMS", "Param"))
+    expect_named(result, c("BeforeMS", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="ProteoformAb")
     expect_true(is.list(result))
-    expect_named(result, c("Param", "proteoformAb"))
-    # delete files in tempdir
-    unlink(tempdir(), recursive = TRUE)
+    expect_named(result, c("Param", "proteoformAb"), ignore.order = TRUE)
 })
 
 test_that("get_simulation returns the correct loaded data, no stats", {
+    ll <- list.files(tempdir(), pattern="output", full.names = TRUE)
+    unlink(ll, recursive = TRUE)
+    
     config <- set_phosfake(resultFilePath = tempdir(), runStatTests = FALSE)
     Param <- def_param()
     Param$paramGroundTruth$NumReps <- 5
@@ -41,23 +44,24 @@ test_that("get_simulation returns the correct loaded data, no stats", {
     
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
     expect_true(is.list(result))
-    expect_named(result, c("AfterMSRun", "Param"))
+    expect_named(result, c("AfterMSRun", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config)
     expect_true(is.null(result))
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="GroundTruth")
     expect_true(is.list(result))
-    expect_named(result, c("groundTruth", "Param"))
+    expect_named(result, c("groundTruth", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="Digest")
     expect_true(is.list(result))
-    expect_named(result, c("BeforeMS", "Param"))
+    expect_named(result, c("BeforeMS", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="ProteoformAb")
     expect_true(is.list(result))
-    expect_named(result, c("Param", "proteoformAb"))
-    # delete files in tempdir
-    unlink(tempdir(), recursive = TRUE)
+    expect_named(result, c("Param", "proteoformAb"), ignore.order = TRUE)
 })
 
 test_that("get_simulation returns the correct loaded data, no benchmarks", {
+    ll <- list.files(tempdir(), pattern="output", full.names = TRUE)
+    unlink(ll, recursive = TRUE)
+    
     config <- set_phosfake(resultFilePath = tempdir(), calcAllBenchmarks = FALSE)
     Param <- def_param()
     Param$paramGroundTruth$NumReps <- 5
@@ -65,25 +69,26 @@ test_that("get_simulation returns the correct loaded data, no benchmarks", {
     
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
     expect_true(is.list(result))
-    expect_named(result, c("AfterMSRun", "Param"))
+    expect_named(result, c("AfterMSRun", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config)
     expect_true(is.list(result))
-    expect_named(result, c("Benchmarks", "Param", "Stats", "StatsPep"))
+    expect_named(result, c("Benchmarks", "Param", "Stats", "StatsPep"), ignore.order = TRUE)
     expect_true(is.null(result$Benchmarks))
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="GroundTruth")
     expect_true(is.list(result))
-    expect_named(result, c("groundTruth", "Param"))
+    expect_named(result, c("groundTruth", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="Digest")
     expect_true(is.list(result))
-    expect_named(result, c("BeforeMS", "Param"))
+    expect_named(result, c("BeforeMS", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="ProteoformAb")
     expect_true(is.list(result))
-    expect_named(result, c("Param", "proteoformAb"))
-    # delete files in tempdir
-    unlink(tempdir(), recursive = TRUE)
+    expect_named(result, c("Param", "proteoformAb"), ignore.order = TRUE)
 })
 
 test_that("get_simulation returns the correct loaded data, no stats, not benchmarks", {
+    ll <- list.files(tempdir(), pattern="output", full.names = TRUE)
+    unlink(ll, recursive = TRUE)
+    
     config <- set_phosfake(resultFilePath = tempdir(), calcAllBenchmarks = FALSE, runStatTests = FALSE)
     Param <- def_param()
     Param$paramGroundTruth$NumReps <- 5
@@ -91,20 +96,18 @@ test_that("get_simulation returns the correct loaded data, no stats, not benchma
     
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
     expect_true(is.list(result))
-    expect_named(result, c("AfterMSRun", "Param"))
+    expect_named(result, c("AfterMSRun", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config)
     expect_true(is.null(result))
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="GroundTruth")
     expect_true(is.list(result))
-    expect_named(result, c("groundTruth", "Param"))
+    expect_named(result, c("groundTruth", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="Digest")
     expect_true(is.list(result))
-    expect_named(result, c("BeforeMS", "Param"))
+    expect_named(result, c("BeforeMS", "Param"), ignore.order = TRUE)
     result <- get_simulation(benchmarks[[1]]$Param, config, stage="ProteoformAb")
     expect_true(is.list(result))
-    expect_named(result, c("Param", "proteoformAb"))
-    # delete files in tempdir
-    unlink(tempdir(), recursive = TRUE)
+    expect_named(result, c("Param", "proteoformAb"), ignore.order = TRUE)
 })
 
 
