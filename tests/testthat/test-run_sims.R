@@ -2,6 +2,8 @@ library(testthat)
 
 test_that("run_sims completes without errors for minimal input", {
     params <- def_param()
+    ll <- list.files(tempdir(), pattern="output", full.names = TRUE)
+    unlink(ll, recursive = TRUE)
     config <- set_phosfake(resultFilePath = tempdir())
     params$paramGroundTruth$NumReps <- 2
     params$paramGroundTruth$NumCond <- 2
@@ -15,6 +17,8 @@ test_that("run_sims completes without errors for minimal input", {
 
 test_that("run_sims creates expected result files", {
     params <- def_param()
+    ll <- list.files(tempdir(), pattern="output", full.names = TRUE)
+    unlink(ll, recursive = TRUE)
     params$paramGroundTruth$NumReps <- 2
     params$paramGroundTruth$NumCond <- 2
     params$paramDigest$DigestionEnzyme <- "Trypsin"

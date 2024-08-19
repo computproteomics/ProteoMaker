@@ -39,7 +39,7 @@ MSRunSim <- function(Digested, parameters) {
 
   cat("  - Noise added to all samples!\n\n")
   cat(" + Detection limits:\n")
-  cat("  - Removing peptides", parameters$PercDetectability*100, "% peptides with low detectability score (PeptideRanger).\n")
+  cat("  - Keeping ", parameters$PercDetectability*100, "% peptides with high detectability score (PeptideRanger).\n")
 
   # Sample a percentage of random peptides to be removed.
   if(parameters$PercDetectability > 0) {
@@ -75,7 +75,7 @@ MSRunSim <- function(Digested, parameters) {
       }
       # get score threshold for lower percentage
       RFThreshold <- quantile(RFScores$RF_score, 1-parameters$PercDetectability)
-      remove <- RFScores$RF_score < RFThreshold
+      remove <- RFScores$RF_score <= RFThreshold
       MSRun <- Digested[!remove, ]
       cat("  - A total of", sum(remove), "peptides is removed with predicted detectability lower than", RFThreshold, ".\n\n")
       

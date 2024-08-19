@@ -222,7 +222,7 @@ params:
   PercDetectability:
     group: "MS Run"
     type: "paramMSRun"
-    description: "Removing the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB)."
+    description: "Keeping the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB)."
     min: 0
     max: 1
     default: 0.25
