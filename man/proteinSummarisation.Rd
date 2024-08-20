@@ -24,15 +24,4 @@ A data frame containing summarized protein-level data, where each row represents
 \description{
 This function summarizes protein abundance from peptide-level data. It removes modified peptides, groups peptides by their parent proteins, and applies a summarization method (e.g., sum of top 3, median polish) to estimate protein abundance. The function supports parallel processing to speed up the summarization process.
 }
-\examples{
-peptable <- generate_peptable()  # hypothetical function to generate peptide data
-parameters <- list(
-  ProtSummarization = "sum.top3",
-  MinUniquePep = 2,
-  QuantColnames = c("Intensity1", "Intensity2"),
-  Cores = 2,
-  ClusterType = "FORK"
-)
-protmat <- proteinSummarisation(peptable, parameters)
-}
 \keyword{internal}

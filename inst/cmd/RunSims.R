@@ -41,8 +41,9 @@ Param <- def_param()
 # Param$paramDigest$MaxNumMissedCleavages <- 4
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
-Param$paramMSRun$PercDetectedVal <- 0.2
-Param$paramMSRun$PercDetectability <- 0.2
+Param$paramMSRun$PercDetectedVal <- 0.9
+Param$paramMSRun$PercDetectability <- 1
+Param$paramMSRun$WrongIDs <- 0
 
 #####################
 ## Read parameters from yaml file

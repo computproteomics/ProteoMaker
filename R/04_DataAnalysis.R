@@ -22,16 +22,6 @@
 #'
 #' @keywords internal
 #' 
-#' @examples
-#' peptable <- generate_peptable()  # hypothetical function to generate peptide data
-#' parameters <- list(
-#'   ProtSummarization = "sum.top3",
-#'   MinUniquePep = 2,
-#'   QuantColnames = c("Intensity1", "Intensity2"),
-#'   Cores = 2,
-#'   ClusterType = "FORK"
-#' )
-#' protmat <- proteinSummarisation(peptable, parameters)
 proteinSummarisation <- function(peptable, parameters) {
     
     method <- parameters$ProtSummarization

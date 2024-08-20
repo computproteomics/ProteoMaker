@@ -35,7 +35,8 @@ Imports:
     dplyr,
     e1071,
     scales,
-    stringi
+    stringi,
+    S4Vectors
 Remotes: 
     rr-2/PeptideRanger, 
     computproteomics/PolySTest
