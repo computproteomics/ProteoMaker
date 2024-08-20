@@ -45,7 +45,7 @@ In this case, the results will be written in the temporary folder. In case you w
 phosfake_config <- set_phosfake(
   fastaFilePath =  system.file("Proteomes", package = "PhosFake"),
   resultFilePath = paste0(tempdir(), "/SimulatedDataSets"),
-  cores = 2,
+  cores = 1,
   clusterType = "PSOCK",
   runStatTests = TRUE,
   calcAllBenchmarks = TRUE
