@@ -84,7 +84,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Enzyme
 
-*Param\$Enzyme*: The enzyme used for protein digestion. Currently set to `trypsin`. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin, trypsin.strict, chymotrypsin.h, chymotrypsin.l, pepsin.2, pepsin.1.3, lysC, argC.
+*Param\$Enzyme*: The enzyme used for protein digestion. Set to `trypsin` by default ("(?!(RP|KP))(?=(K|R))(?!(K|R)$)"). Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin.strict ("(?=(K|R))(?!(K|R)$)"), chymotrypsin.h ("(?!(FP|YP|PY|WP))(?=(F|Y|W))(?!(F|Y|W)$)"), chymotrypsin.l ("(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)"), pepsin.2 ("(?=(F|L|W|Y|A|E|Q))(?!(F|L|W|Y|A|E|Q)$)"), pepsin.1.3 ("(?=(F|L))(?!(F|L)$)"), lysC ("(?=(K))(?!(K)$)"), argC ("(?!(RP))(?=(R))(?!(R)$)").
 
 ### Proportion of Peptides with Missed Cleavages
 
