@@ -9,21 +9,21 @@ addProteoformAbundance(proteoforms, parameters)
 \arguments{
 \item{proteoforms}{A data frame of proteoforms to which abundance values will be added.}
 
-\item{parameters}{A list of parameters controlling the abundance assignment, including the 
+\item{parameters}{A list of parameters controlling the abundance assignment, including the
 number of conditions, quantification columns, noise levels, and regulation patterns.}
 }
 \value{
 A data frame with abundance values added to the proteoforms.
 }
 \description{
-This function adds abundance values to proteoforms based on a combination of random noise and 
+This function adds abundance values to proteoforms based on a combination of random noise and
 differentially regulated patterns. It supports both relative and absolute quantification.
 }
 \details{
 The function performs the following steps:
 \enumerate{
   \item Adds random noise to the abundance columns.
-  \item If specified, selects differentially regulated proteoforms and adjusts their abundance 
+  \item If specified, selects differentially regulated proteoforms and adjusts their abundance
   based on regulation patterns.
   \item Optionally, removes values below a threshold or adjusts values to an absolute quantification scale.
 }

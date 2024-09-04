@@ -14,9 +14,9 @@ modify(seq, param)
   \item \code{ModifiableResidues}: A list of amino acid residues that can be modified for each PTM type.
   \item \code{PTMTypes}: A character vector of modification types.
   \item \code{PTMTypesDist}: A numeric vector representing the background frequencies for each PTM type.
-  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies 
+  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
   for each modifiable residue within each PTM type.
-  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson distribution, 
+  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson distribution,
   which determines the number of modifications per sequence.
 }}
 }
@@ -25,29 +25,29 @@ A list of lists, where each sublist corresponds to a sequence and contains:
   \itemize{
     \item \code{Positions}: A numeric vector of positions in the sequence where modifications were made.
     \item \code{Types}: A character vector of the modification types applied at each position.
-    \item \code{Count}: A list of numeric vectors representing the count of modifications per amino acid residue 
+    \item \code{Count}: A list of numeric vectors representing the count of modifications per amino acid residue
     for each PTM type.
   }
 }
 \description{
-This function modifies protein sequences by introducing post-translational modifications (PTMs) based on 
-specified modification types and residue-specific background frequencies. The function identifies all 
-possible modification sites within each sequence, adjusts the probability of modification according to 
+This function modifies protein sequences by introducing post-translational modifications (PTMs) based on
+specified modification types and residue-specific background frequencies. The function identifies all
+possible modification sites within each sequence, adjusts the probability of modification according to
 the global background frequencies, and then samples the modification sites based on these probabilities.
 }
 \details{
-The number of modifications per sequence is determined using a truncated Poisson distribution, ensuring 
-a realistic distribution of modifications. The function returns a report detailing the modification positions, 
+The number of modifications per sequence is determined using a truncated Poisson distribution, ensuring
+a realistic distribution of modifications. The function returns a report detailing the modification positions,
 types of modifications, and statistics on the number of modified amino acids per modification type.
 
 
 The function performs the following steps:
 \enumerate{
   \item Identifies candidate modification sites in each sequence based on the specified modifiable residues.
-  \item Adjusts the probability weights for each modification type and candidate residue according to the 
+  \item Adjusts the probability weights for each modification type and candidate residue according to the
   background frequencies and the composition of each sequence.
   \item Samples the modification sites based on the adjusted probabilities and a truncated Poisson distribution.
-  \item Generates a report for each sequence, detailing the modification positions, types, and the number 
+  \item Generates a report for each sequence, detailing the modification positions, types, and the number
   of modified amino acids per modification type.
 }
 }

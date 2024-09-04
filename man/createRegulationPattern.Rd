@@ -13,7 +13,7 @@ createRegulationPattern(NumCond)
 A numeric vector of length `NumCond` representing the regulation pattern.
 }
 \description{
-This function generates a regulation pattern for a given number of conditions. The pattern 
+This function generates a regulation pattern for a given number of conditions. The pattern
 consists of random values representing up-regulation or down-regulation for each condition.
 }
 \keyword{internal}

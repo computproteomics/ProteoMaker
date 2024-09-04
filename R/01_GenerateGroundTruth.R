@@ -50,7 +50,7 @@ proteinInput <- function(parameters) {
     if (parameters$PercExpressedProt < 1) {
       to.keep <- round(parameters$PercExpressedProt * nrow(fasta))
       fasta <- fasta[sample(1:nrow(fasta), size = to.keep), ]
-      cat("  - A total of", nrow(fasta), "protein sequences have been randomly selected to be expressed.\n"
+      cat("  - A total of", nrow(fasta), "protein sequences have been randomly selected to be expressed.\n")
     }
 
     # Filter proteins carrying unusual amino acids.

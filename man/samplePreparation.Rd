@@ -18,7 +18,7 @@ A data frame containing all proteoforms generated, including:
 }
 }
 \description{
-This function generates a set of proteoforms by using the `proteinInput` and `performModification` functions. 
+This function generates a set of proteoforms by using the `proteinInput` and `performModification` functions.
 It returns a data frame that includes unmodified proteins, modified proteoforms, and modifiable but unmodified proteins.
 }
 \details{
