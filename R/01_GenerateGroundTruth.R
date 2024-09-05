@@ -40,6 +40,7 @@ proteinInput <- function(parameters) {
   error <- try(protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
 
   if (class(error) != "try-error") {
+      
     # Read fasta.
     fasta <- protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE)
     fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
@@ -58,12 +59,12 @@ proteinInput <- function(parameters) {
     unknownAA <- setdiff(LETTERS, knownAA)
     initialRows <- nrow(fasta)
     fasta <- fasta[if (initialRows > 1) {
-      rowSums(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
+        rowSums(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
     } else {
-      sum(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
+        sum(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
     }, ]
     cat("  - A total of", initialRows - nrow(fasta), "protein sequences have been removed due to unusual amino acids", paste0("(", paste0(unknownAA, collapse = ","), ")"), "composition.\n")
-
+    
     # Remove duplicated protein accessions.
     cat("  - A total of", length(which(duplicated(fasta$Accession))), "duplicated protein accessions have been removed.\n")
     fasta <- fasta[!duplicated(fasta$Accession), ]

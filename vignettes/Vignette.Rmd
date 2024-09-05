@@ -43,11 +43,18 @@ In this case, the results will be written in the temporary folder. In case you w
 ```{r}
 # Configure the paths and settings
 phosfake_config <- set_phosfake(
+  # Default path to the Proteomes folder in the PhosFake package
   fastaFilePath =  system.file("Proteomes", package = "PhosFake"),
+  # Default path to the temporary directory
   resultFilePath = paste0(tempdir(), "/SimulatedDataSets"),
-  cores = 1,
+  # Increase to the number of cores you want to use. 
+  # Large numbers can lead to considerably higher RAM usage
+  cores = 1, 
+  # Should work on all operation systems. If you have problems, try "FORK" instead
   clusterType = "PSOCK",
+  # Run statistical tests on the simulated data to compare ground truth with simulated values
   runStatTests = TRUE,
+  # Calculate all benchmarks for the simulated data
   calcAllBenchmarks = TRUE
 )
 ```
@@ -66,6 +73,7 @@ Param <- def_param()
 
 # Example of overwriting default values
 Param$paramGroundTruth$PathToFasta <- "fasta_example.fasta"
+Param$paramGroundTruth$PercExpressedProt <- 1.0
 # Param$paramGroundTruth$NumReps <- c(3)
 # Param$paramGroundTruth$NumCond <- 5
 # Param$paramGroundTruth$FracModProt <- 0.5

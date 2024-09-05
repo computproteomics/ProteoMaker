@@ -33,7 +33,7 @@ params:
     description: "Percentage of expressed proteins from fasta file."
     min: 0
     max: 1
-    default: 0.5
+    default: 1
   FracModProt:
     group: "Ground Truth Data"
     type: "paramGroundTruth"

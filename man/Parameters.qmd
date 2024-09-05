@@ -42,7 +42,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Proteoform IDs Generation
 
-*Param\$PercExpressedProt:* The percentage of proteins from the fasta file selected for the ground truth generation. The selection is random and should simulate that not all proteins in a cell are actually expressed. The default value is 0.5.
+*Param\$PercExpressedProt:* The percentage of proteins from the fasta file selected for the ground truth generation. The selection is random and should simulate that not all proteins in a cell are actually expressed. The default value is s1.
 
 *Param\$FracModProt*: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to `0.0`, indicating no proteins will be modified.
 

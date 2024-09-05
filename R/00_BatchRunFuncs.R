@@ -510,6 +510,10 @@ visualize_benchmarks <- function(BenchMatrix, current_row = 1) {
     param_values <- BenchMatrix[, reds]
     BenchMatrix <- BenchMatrix[, !reds]
     to_del <- c()
+    if (is.null(ncol(BenchMatrix))) {
+        message("No benchmarks have been calculated for this simulation.")
+        return()
+    }
     for (i in 1:ncol(BenchMatrix)) {
         tt <- unlist(BenchMatrix[, i])
         if (all(is.na(tt))) {

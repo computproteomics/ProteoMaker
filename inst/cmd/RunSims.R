@@ -8,7 +8,7 @@
 #####################
 phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"), 
                                 resultFilePath = "SimulatedDataSets",
-                                cores = 4, clusterType = "FORK", 
+                                cores = 4, clusterType = "PSOCK", 
                                 runStatTests = F,
                                 calcAllBenchmarks = T
                                 )
