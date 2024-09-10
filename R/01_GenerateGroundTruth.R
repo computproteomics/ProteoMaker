@@ -40,7 +40,7 @@ proteinInput <- function(parameters) {
   error <- try(protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
 
   if (class(error) != "try-error") {
-      
+
     # Read fasta.
     fasta <- protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE)
     fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
@@ -59,12 +59,12 @@ proteinInput <- function(parameters) {
     unknownAA <- setdiff(LETTERS, knownAA)
     initialRows <- nrow(fasta)
     fasta <- fasta[if (initialRows > 1) {
-        rowSums(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
+      rowSums(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
     } else {
-        sum(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
+      sum(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
     }, ]
     cat("  - A total of", initialRows - nrow(fasta), "protein sequences have been removed due to unusual amino acids", paste0("(", paste0(unknownAA, collapse = ","), ")"), "composition.\n")
-    
+
     # Remove duplicated protein accessions.
     cat("  - A total of", length(which(duplicated(fasta$Accession))), "duplicated protein accessions have been removed.\n")
     fasta <- fasta[!duplicated(fasta$Accession), ]
@@ -554,20 +554,15 @@ addProteoformAbundance <- function(proteoforms, parameters) {
     proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
   }
 
-  if (is.na(parameters$AbsoluteQuanMean)) {
+  cat("Add quan. distribution: Relative -> absolute\n")
+  vec <- rnorm(n = nrow(proteoforms), mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
+  for (name in parameters$QuantColnames) {
+    proteoforms[name] <- proteoforms[name] + vec
+  }
+  if (parameters$ThreshNAQuantileProt > 0) {
     # Remove Values below the threshold set in the Parameters file
-    proteoforms[, parameters$QuantColnames][proteoforms[, parameters$QuantColnames] < parameters$ThreshNAProteoform] <- NA
-  } else {
-    cat("Add quan. distribution: Relative -> absolute\n")
-    vec <- rnorm(n = nrow(proteoforms), mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
-    for (name in parameters$QuantColnames) {
-      proteoforms[name] <- proteoforms[name] + vec
-    }
-    if (parameters$ThreshNAQuantileProt > 0) {
-      # Remove Values below the threshold set in the Parameters file
-      thresh <- quantile(x = vec, probs = parameters$ThreshNAQuantileProt)
-      proteoforms[, parameters$QuantColnames][proteoforms[, parameters$QuantColnames] < thresh] <- NA
-    }
+    thresh <- quantile(x = vec, probs = parameters$ThreshNAQuantileProt)
+    proteoforms[, parameters$QuantColnames][proteoforms[, parameters$QuantColnames] < thresh] <- NA
   }
 
   return(proteoforms)

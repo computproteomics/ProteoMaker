@@ -74,13 +74,11 @@ This document provides a detailed description of the parameters used in the Phos
 
 *Param\$UserInputFoldChanges*: User-defined fold changes for regulated proteoforms. Set to `NULL`. This allows for custom input of fold changes if specific regulation patterns are desired.
 
-*Param\$ThreshNAProteoform*: The threshold for removing quantitative values at the proteoform level. Default set to `-100`. This parameter filters out low-abundant proteoforms.
-
 *Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values.
 
 *Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation.
 
-*Param\$ThreshNAQuantileProt*: The quantile threshold for removing quantitative values. Set to `0.01`. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.
+*Param\$ThreshNAQuantileProt*: The quantile threshold for removing quantitative values when *AbsoluteQuanMean* is not equal to `NA`. Set to `0.01`. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.
 
 ## Enzymatic Digestion Parameters
 
