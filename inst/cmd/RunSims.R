@@ -6,9 +6,9 @@
 #####################
 ## Paths and directories
 #####################
-phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"), 
+phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"),
                                 resultFilePath = "SimulatedDataSets",
-                                cores = 4, clusterType = "PSOCK", 
+                                cores = 4, clusterType = "PSOCK",
                                 runStatTests = F,
                                 calcAllBenchmarks = T
                                 )
@@ -33,7 +33,7 @@ Param <- def_param()
 # Param$paramGroundTruth$ModifiableResiduesDistr <- list(c(0.86,0.13, 0.01))
 # Param$paramDataAnalysis$MinUniquePep <- 100
 
-# Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
+Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
 # Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
 # Param$paramProteoformAb$DiffRegMax <- seq(0.5, 2, 0.5)
 # Param$paramDigest$Enzyme <- "trypsin"
