@@ -442,7 +442,7 @@ samplePreparation <- function(parameters) {
 
       rownames(proteoforms) <- 1:nrow(proteoforms)
 
-      cat("#SAMPLE PREPARATION - Finish")
+      cat("#SAMPLE PREPARATION - Finish\n\n")
     } else {
       proteoforms <- protein.Sets$to.be.Unmodified
       rownames(proteoforms) <- 1:nrow(proteoforms)
@@ -554,7 +554,7 @@ addProteoformAbundance <- function(proteoforms, parameters) {
     proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
   }
 
-  cat("Add quan. distribution: Relative -> absolute\n")
+  cat(" + Add quan. distribution: Relative -> absolute\n")
   vec <- rnorm(n = nrow(proteoforms), mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
   for (name in parameters$QuantColnames) {
     proteoforms[name] <- proteoforms[name] + vec

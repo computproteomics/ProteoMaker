@@ -112,7 +112,9 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Enrichment Efficiency
 
-*Param\$EnrichmentEfficiency*: The efficiency of enrichment for phosphorylated peptides. Default set to `1`. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities
+*Param\$EnrichmentEfficiency*: The efficiency of enrichment for phosphorylated peptides. Default set to `1`. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities. \
+The parameter adjusts the average intensities of modified versus non-modified peptides\
+to resemble the given proportion.
 
 ### Enrichment Protocol Noise
 
