@@ -7,21 +7,21 @@
 run_sims(Parameters, Config)
 }
 \arguments{
-\item{Parameters}{A list containing categorized parameter sets, typically 
+\item{Parameters}{A list containing categorized parameter sets, typically
 generated using \code{def_param}.}
 
-\item{Config}{A list containing configuration settings, such as file paths 
+\item{Config}{A list containing configuration settings, such as file paths
 and computational settings, typically generated using \code{set_phosfake}.}
 }
 \value{
-A list of results, where each element contains simulation results 
+A list of results, where each element contains simulation results
 and benchmarks for a specific parameter combination.
 }
 \description{
-This function runs simulations based on the provided parameter sets and 
-configuration settings. It runs the given parameter settings, processes 
-ground truth data, simulates proteoform abundance, performs digestion, 
-conducts MS runs, and carries out data analysis. Results and benchmarks are 
+This function runs simulations based on the provided parameter sets and
+configuration settings. It runs the given parameter settings, processes
+ground truth data, simulates proteoform abundance, performs digestion,
+conducts MS runs, and carries out data analysis. Results and benchmarks are
 saved to the output directory specified in \code{def_param}.
 }
 \examples{

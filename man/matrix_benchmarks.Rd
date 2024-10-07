@@ -7,20 +7,20 @@
 matrix_benchmarks(allBs, Config)
 }
 \arguments{
-\item{allBs}{A list of results from the \code{run_sims} function, where each 
-element contains simulation results and benchmarks for a specific parameter 
+\item{allBs}{A list of results from the \code{run_sims} function, where each
+element contains simulation results and benchmarks for a specific parameter
 combination.}
 
-\item{Config}{A list of configuration settings, including file paths and 
+\item{Config}{A list of configuration settings, including file paths and
 computational settings, typically generated using \code{set_phosfake}.}
 }
 \value{
-A data frame with rows representing each simulation and columns 
+A data frame with rows representing each simulation and columns
 representing benchmark values and parameter settings.
 }
 \description{
-This function compiles a matrix of benchmark results from the outputs of multiple 
-simulations. It extracts benchmark metrics and associated parameter values, 
+This function compiles a matrix of benchmark results from the outputs of multiple
+simulations. It extracts benchmark metrics and associated parameter values,
 creating a comprehensive data frame for analysis.
 }
 \examples{

@@ -175,6 +175,8 @@ generate_combinations <- function(params) {
 #' generated using \code{def_param}.
 #' @param Config A list containing configuration settings, such as file paths
 #' and computational settings, typically generated using \code{set_phosfake}.
+#' @param overwrite A logical value indicating whether to overwrite existing
+#' simulation results. Default is \code{FALSE}.
 #'
 #' @return A list of results, where each element contains simulation results
 #' and benchmarks for a specific parameter combination.
@@ -186,7 +188,7 @@ generate_combinations <- function(params) {
 #' params <- def_param()
 #' config <- set_phosfake()
 #' results <- run_sims(params, config)
-run_sims <- function(Parameters, Config) {
+run_sims <- function(Parameters, Config, overwrite = FALSE) {
   # Generate combinations for each parameter set
   listtogroundtruth <- generate_combinations(Parameters$paramGroundTruth)
   listtoproteoformab <- generate_combinations(Parameters$paramProteoformAb)
@@ -220,7 +222,7 @@ run_sims <- function(Parameters, Config) {
     groundTruth <- NULL
     md5 <- digest::digest(tParam, algo = "md5")
     filename <- paste0(Config$resultFilePath, "/outputGroundTruth_", md5, ".RData")
-    if (file.exists(filename)) {
+    if (!overwrite & file.exists(filename)) {
       load(filename)
     } else {
       Param <- tParam
@@ -247,7 +249,7 @@ run_sims <- function(Parameters, Config) {
                                               "_R_",
                                               rep(1:tParam$NumReps, tParam$NumCond))))
       filename <- paste0(Config$resultFilePath, "/outputProteoformAb_", md5, ".RData")
-      if (file.exists(filename)) {
+      if (!overwrite & file.exists(filename)) {
         load(filename)
       } else {
         Param <- tParam
@@ -263,7 +265,7 @@ run_sims <- function(Parameters, Config) {
         tParam <- c(pfParam, listtodigestion[[jj]])
         md5 <- digest::digest(tParam, algo = "md5")
         filename <- paste0(Config$resultFilePath, "/outputDigest_", md5, ".RData")
-        if (file.exists(filename)) {
+        if (!overwrite & file.exists(filename)) {
           load(filename)
         } else {
           Param <- tParam
@@ -287,7 +289,7 @@ run_sims <- function(Parameters, Config) {
           tParam <- c(dgParam, listtomsrun[[kk]])
           md5 <- digest::digest(tParam, algo = "md5")
           filename <- paste0(Config$resultFilePath, "/outputMSRun_", md5, ".RData")
-          if (file.exists(filename)) {
+          if (!overwrite & file.exists(filename)) {
             load(filename)
           } else {
             Param <- tParam
@@ -311,7 +313,7 @@ run_sims <- function(Parameters, Config) {
             Benchmarks <- NULL
             md5 <- digest::digest(tParam, algo = "md5")
             filename <- paste0(Config$resultFilePath, "/outputDataAnalysis_", md5, ".RData")
-            if (file.exists(filename)) {
+            if (!overwrite & file.exists(filename)) {
               load(filename)
             } else if (Config$runStatTests) {
               # counter

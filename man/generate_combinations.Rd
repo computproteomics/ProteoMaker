@@ -7,16 +7,16 @@
 generate_combinations(params)
 }
 \arguments{
-\item{params}{A list of parameter vectors, where each vector represents 
+\item{params}{A list of parameter vectors, where each vector represents
 different possible values for a parameter.}
 }
 \value{
-A list of lists, each sublist containing a unique combination of 
+A list of lists, each sublist containing a unique combination of
 parameters.
 }
 \description{
-This function takes a list of parameter vectors and generates all possible 
-combinations. The result is converted into a list of lists, where each 
+This function takes a list of parameter vectors and generates all possible
+combinations. The result is converted into a list of lists, where each
 sublist represents a unique combination of the provided parameters.
 }
 \examples{
