@@ -208,7 +208,7 @@ params:
   EnrichmentEfficiency:
     group: "Sample Preparation"
     type: "paramDigest"
-    description: "Efficiency of enrichment for modified peptides."
+    description: "Efficiency of enrichment for modified peptides (fraction)."
     min: 0
     max: 1
     default: 1

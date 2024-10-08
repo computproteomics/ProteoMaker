@@ -4,7 +4,7 @@
 \alias{run_sims}
 \title{Run all simulations for given parameters and configurations}
 \usage{
-run_sims(Parameters, Config)
+run_sims(Parameters, Config, overwrite = FALSE)
 }
 \arguments{
 \item{Parameters}{A list containing categorized parameter sets, typically
@@ -12,6 +12,9 @@ generated using \code{def_param}.}
 
 \item{Config}{A list containing configuration settings, such as file paths
 and computational settings, typically generated using \code{set_phosfake}.}
+
+\item{overwrite}{A logical value indicating whether to overwrite existing
+simulation results. Default is \code{FALSE}.}
 }
 \value{
 A list of results, where each element contains simulation results

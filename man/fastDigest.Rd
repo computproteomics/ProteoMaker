@@ -34,8 +34,8 @@ A data frame with the digested peptides, including their mass/charge (M/Z) ratio
 If no peptides meet the criteria, the function returns \code{NULL}.
 }
 \description{
-This function simulates enzymatic digestion on a single protein sequence, supporting multiple 
-cleavage rules for enzymes such as trypsin, chymotrypsin, pepsin, lysC, and argC. The function 
+This function simulates enzymatic digestion on a single protein sequence, supporting multiple
+cleavage rules for enzymes such as trypsin, chymotrypsin, pepsin, lysC, and argC. The function
 returns peptides filtered by length and mass, including calculations for charges +1, +2, and +3.
 }
 \keyword{internal}

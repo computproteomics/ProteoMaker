@@ -438,7 +438,7 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
 #'
 #' @param Config A list of configuration settings, including file paths and
 #' computational settings, typically generated using \code{set_phosfake}.
-#' @oaram stage A character string indicating the stage of the simulation for
+#' @param stage A character string indicating the stage of the simulation for
 #' which the output is requested. Default is \code{"DataAnalysis"}. Values are \code{"GroundTruth"},
 #' \code{"ProteoformAb"}, \code{"Digest"}, \code{"MSRun"}, and \code{"DataAnalysis"}. Default is \code{"DataAnalysis"}.
 #'

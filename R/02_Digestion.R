@@ -242,6 +242,63 @@ digestGroundTruth <- function(proteoforms, parameters) {
 }
 #####################
 
+
+#' Calculate the detectability of a peptide sequence
+#'
+#' This function calculates the detectability of a peptide sequence based on the amino acid
+#' using the PeptideRanger package. It returns a numeric vector representing the detectability
+#' of the peptides. The prediction of the detectability is based on the amino acid composition
+#' and does not take into account post-translational modifications.
+#'
+#' @param peptides A character vector containing the peptide sequences.
+#' @param parameters A list of parameters including the number of cores for parallel computing.
+#'
+#' @return A numeric vector representing the detectability of the peptides.
+#'
+#' @importFrom PeptideRanger peptide_predictions
+#' @keywords internal
+addDetectability <- function(peptides, parameters) {
+
+  # get unique peptide list and be able to map back
+  unique_peptides <- unique(peptides)
+  peptide_map <- match(peptides, unique_peptides)
+
+  RFScores <- NULL
+  if (!is.null(parameters$Cores)) {
+    cores <- parameters$Cores
+
+    if (parallel::detectCores() <= parameters$Cores) {
+      cores <- parallel::detectCores() - 1
+    }
+
+    cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
+    parallel::setDefaultCluster(cluster)
+
+    # Ensure that the necessary package is loaded on each worker
+    parallel::clusterEvalQ(cluster, library(PeptideRanger))
+
+    # Split the data into chunks of 100 peptides
+    peptide_chunks <- split(unlist(unique_peptides) , ceiling(seq_along(unlist(unique_peptides))/100))
+
+    # Run the predictions in parallel
+    RFScores <- parallel::parLapply(cluster, peptide_chunks, function(subset) {
+      PeptideRanger::peptide_predictions(unlist(subset), PeptideRanger::RFmodel_ProteomicsDB)
+    })
+
+    # Combine the results into a single list or data frame
+    RFScores <- do.call(rbind, RFScores)
+    parallel::stopCluster(cluster)
+  } else {
+    RFScores<- PeptideRanger::peptide_predictions(unlist(unique_peptides), PeptideRanger::RFmodel_ProteomicsDB)
+  }
+
+  # Map back to the original peptides
+  RFScores <- RFScores[peptide_map,]$RF_score
+    return(RFScores)
+}
+#####################
+
+
 #' Summarize digested peptide products
 #'
 #' This function groups peptides by unique identifiers, summarizes their abundance,
@@ -340,6 +397,11 @@ digestionProductSummarization <- function(peptides, parameters) {
 
     cat("  - Remove", parameters$LeastAbundantLoss * 100, "% of the least abundant peptides, which corresponds to", length(remove), "peptides.\n\n")
 
+    # add column with peptide detectability
+    cat("  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.\n\n")
+    peptides$Detectability <- addDetectability(peptides$Sequence, parameters)
+
+
     cat(" + Summarization output:\n")
     cat("  - A total number of ", nrow(peptides), "summarized peptides is generated.\n\n")
     cat("#PEPTIDE SUMMARIZATION - Finish\n\n")
@@ -382,29 +444,43 @@ filterDigestedProt <- function(DigestedProt, parameters) {
         idx <- sample(seq_len(nrow(enrichedtab)), size = numRemove, replace = FALSE)
         enrichedtab <- enrichedtab[-idx, ]
 
-        # Calculate total sum and average of intensities for modified and non-modified peptides in enriched fraction
+        # NOTE: We changed back to remove identifications and adjusting the quantitative levels
+        # # Calculate total sum and average of intensities for modified and non-modified peptides in enriched fraction
         modified <- lengths(enrichedtab$PTMType) != 0
-        enrichedtab_modified <- enrichedtab[modified, parameters$QuantColnames]
-        enrichedtab_nonmodified <- enrichedtab[!modified, parameters$QuantColnames]
-        totalModified <- sum(unlist(enrichedtab_modified), na.rm = TRUE)
-        averageModified <- mean(unlist(enrichedtab_modified), na.rm = TRUE)
-        totalNonModified <- sum(unlist(enrichedtab_nonmodified), na.rm = TRUE)
-        averageNonModified <- mean(unlist(enrichedtab_nonmodified), na.rm = TRUE)
-
-        ## Adjust the intensities of modified peptides to mimic enrichment efficiency without loss of signal
-        enrichedtab[!modified, parameters$QuantColnames] <- enrichedtab[!modified, parameters$QuantColnames] *
-          (averageModified + averageNonModified) *
-            (1-parameters$EnrichmentEfficiency) / averageNonModified
-        enrichedtab[modified, parameters$QuantColnames] <- enrichedtab[modified, parameters$QuantColnames] *
-          (averageModified + averageNonModified) *
-            parameters$EnrichmentEfficiency / averageModified
-        # Scale the total intensity of all peptides to the one before the adjustment
-        enrichedtab[parameters$QuantColnames] <- enrichedtab[parameters$QuantColnames] *
-          (totalModified + totalNonModified) / sum(unlist(enrichedtab[parameters$QuantColnames]), na.rm = TRUE)
+        # enrichedtab_modified <- enrichedtab[modified, parameters$QuantColnames]
+        # enrichedtab_nonmodified <- enrichedtab[!modified, parameters$QuantColnames]
+        # totalModified <- sum(unlist(enrichedtab_modified), na.rm = TRUE)
+        # averageModified <- mean(unlist(enrichedtab_modified), na.rm = TRUE)
+        # totalNonModified <- sum(unlist(enrichedtab_nonmodified), na.rm = TRUE)
+        # averageNonModified <- mean(unlist(enrichedtab_nonmodified), na.rm = TRUE)
+        #
+        # ## Adjust the intensities of modified peptides to mimic enrichment efficiency without loss of signal
+        # enrichedtab[!modified, parameters$QuantColnames] <- enrichedtab[!modified, parameters$QuantColnames] *
+        #   (averageModified + averageNonModified) *
+        #     (1-parameters$EnrichmentEfficiency) / averageNonModified
+        # enrichedtab[modified, parameters$QuantColnames] <- enrichedtab[modified, parameters$QuantColnames] *
+        #   (averageModified + averageNonModified) *
+        #     parameters$EnrichmentEfficiency / averageModified
+        # # Scale the total intensity of all peptides to the one before the adjustment
+        # enrichedtab[parameters$QuantColnames] <- enrichedtab[parameters$QuantColnames] *
+        #   (totalModified + totalNonModified) / sum(unlist(enrichedtab[parameters$QuantColnames]), na.rm = TRUE)
         cat(" + Enrichment efficiency:\n")
 
-        cat("  - Enrichment efficiency is", parameters$EnrichmentEfficiency, "leading to the modified
-        peptides contributing to", parameters$EnrichmentEfficiency*100, " % of the average intensity.\n")
+        # Calculate current fraction of modified peptides
+        fracMod <- sum(modified) / nrow(enrichedtab)
+        cat("  - Modified peptides contribute to",  fracMod * 100, "% of all present peptides in the enriched samples.\n")
+        if (fracMod > parameters$EnrichmentEfficiency) {
+            cat("  - Warning: Enrichment efficiency is lower than the current fraction of modified peptides.
+                No peptides will be removed\n")
+        } else {
+          # Remove the non-modified peptides from the enriched fraction to reach given enrichment efficiency
+          numRemove <- floor(length(modified) - sum(modified) / parameters$EnrichmentEfficiency)
+          cat("  - Remove", numRemove, "non-modified peptides to reach enrichment efficiency of", parameters$EnrichmentEfficiency, "\n")
+          idx <- sample(which(!modified), size = numRemove, replace = FALSE)
+          enrichedtab <- enrichedtab[-idx, ]
+          cat("  - Enrichment efficiency is", parameters$EnrichmentEfficiency, "leading to modified peptides contributing to",
+              parameters$EnrichmentEfficiency*100, "% of all present peptides in the enriched samples.\n")
+        }
 
         ## Noise due to enrichment procedure:
         nrowTab <- nrow(enrichedtab)

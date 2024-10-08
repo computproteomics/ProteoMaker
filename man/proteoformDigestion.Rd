@@ -9,18 +9,18 @@ proteoformDigestion(proteoform, parameters)
 \arguments{
 \item{proteoform}{A data frame containing proteoform sequences and associated data.}
 
-\item{parameters}{A list containing various parameters for the digestion process, 
-including enzyme type, maximum number of missed cleavages, peptide length limits, 
+\item{parameters}{A list containing various parameters for the digestion process,
+including enzyme type, maximum number of missed cleavages, peptide length limits,
 and modification masses.}
 }
 \value{
-A data frame containing the digested peptides with mapped modifications, 
-mass shifts, and associated abundances. If no peptides are generated, the function 
+A data frame containing the digested peptides with mapped modifications,
+mass shifts, and associated abundances. If no peptides are generated, the function
 returns \code{NULL}.
 }
 \description{
-This function performs enzymatic digestion on a set of proteoforms, mapping modification sites 
-on peptide sequences and adding mass shifts per peptide based on modifications. The peptide 
+This function performs enzymatic digestion on a set of proteoforms, mapping modification sites
+on peptide sequences and adding mass shifts per peptide based on modifications. The peptide
 abundance is set based on the parental proteoform.
 }
 \keyword{internal}

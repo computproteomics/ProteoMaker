@@ -9,6 +9,10 @@ gather_all_sims(Config, stage = "DataAnalysis")
 \arguments{
 \item{Config}{A list of configuration settings, including file paths and
 computational settings, typically generated using \code{set_phosfake}.}
+
+\item{stage}{A character string indicating the stage of the simulation for
+which the output is requested. Default is \code{"DataAnalysis"}. Values are \code{"GroundTruth"},
+\code{"ProteoformAb"}, \code{"Digest"}, \code{"MSRun"}, and \code{"DataAnalysis"}. Default is \code{"DataAnalysis"}.}
 }
 \value{
 A list containing the parameters and benchmarks from all available runs.

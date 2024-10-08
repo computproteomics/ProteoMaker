@@ -9,7 +9,7 @@ filterDigestedProt(DigestedProt, parameters)
 \arguments{
 \item{DigestedProt}{A data frame containing the digested proteolytic peptides and associated data.}
 
-\item{parameters}{A list of parameters that includes EnrichmentLoss, EnrichmentEfficiency, 
+\item{parameters}{A list of parameters that includes EnrichmentLoss, EnrichmentEfficiency,
 EnrichmentNoise, and QuantColnames.}
 }
 \value{
@@ -22,6 +22,6 @@ A list with two elements:
 \description{
 This function separates modified peptides into enriched and non-enriched fractions,
 adjusts the peptide abundances based on enrichment efficiency, and introduces noise
-due to the enrichment process. It returns a list containing the enriched and 
+due to the enrichment process. It returns a list containing the enriched and
 non-enriched peptide sets.
 }

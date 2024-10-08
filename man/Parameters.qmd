@@ -62,7 +62,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 *Param\$RemoveNonModFormFrac*: The fraction of modifiable proteins without non-modified forms. Set to `0`. This parameter controls the presence of non-modified forms of proteins in the simulation.
 
-### Proteoform Abudance Generation
+### Proteoform Abundance Generation
 
 *Param\$QuantColnames*: The column names for quantitative values, structured as `C_<condition>_R_<replicate>`for a clear and organized structure for the quantitative data.
 
@@ -84,7 +84,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Enzyme
 
-*Param\$Enzyme*: The enzyme used for protein digestion. Set to `trypsin` by default ("(?!(RP\|KP))(?=(K\|R))(?!(K\|R)$)"). Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin.strict ("(?=(K|R))(?!(K|R)$)"), chymotrypsin.h ("(?!(FP\|YP\|PY\|WP))(?=(F\|Y\|W))(?!(F\|Y\|W)$)"), chymotrypsin.l ("(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)"), pepsin.2 ("(?=(F\|L\|W\|Y\|A\|E\|Q))(?!(F\|L\|W\|Y\|A\|E\|Q)$)"), pepsin.1.3 ("(?=(F|L))(?!(F|L)$)"), lysC ("(?=(K))(?!(K)$)"), argC ("(?!(RP))(?=(R))(?!(R)$)").
+*Param\$Enzyme*: The enzyme used for protein digestion. Set to `trypsin` by default `("(?!(RP\|KP))(?=(K\|R))(?!(K\|R)$)")`. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin.strict `("(?=(K|R))(?!(K|R)$)")`, chymotrypsin.h `("(?!(FP\|YP\|PY\|WP))(?=(F\|Y\|W))(?!(F\|Y\|W)$)")`, chymotrypsin.l `("(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)")`, pepsin.2 `("(?=(F\|L\|W\|Y\|A\|E\|Q))(?!(F\|L\|W\|Y\|A\|E\|Q)$)")`, pepsin.1.3 `("(?=(F|L))(?!(F|L)$)")`, lysC `("(?=(K))(?!(K)$)")`, and argC `("(?!(RP))(?=(R))(?!(R)$)")`s.
 
 ### Proportion of Peptides with Missed Cleavages
 
@@ -112,9 +112,8 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Enrichment Efficiency
 
-*Param\$EnrichmentEfficiency*: The efficiency of enrichment for phosphorylated peptides. Default set to `1`. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities. \
-The parameter adjusts the average intensities of modified versus non-modified peptides\
-to resemble the given proportion.
+*Param\$EnrichmentEfficiency*: The efficiency of enrichment for modified peptides. Default set to `1`. This parameter reflects how effectively modified peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities.\
+The parameter randomly removes non-modified peptides until reaching the given fraction of present modified peptides.
 
 ### Enrichment Protocol Noise
 

@@ -45,7 +45,7 @@ Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
 
 Param$paramDigest$EnrichmentEfficiency <- 0.8
 Param$paramMSRun$PercDetectedVal <- 0.9
-Param$paramMSRun$PercDetectability <- 1
+Param$paramMSRun$PercDetectability <- 0.8
 Param$paramMSRun$WrongIDs <- 0
 
 #####################

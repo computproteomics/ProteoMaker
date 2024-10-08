@@ -34,7 +34,7 @@ A data frame containing the summarized peptides, with the following structure:
 \description{
 This function groups peptides by unique identifiers, summarizes their abundance,
 and optionally removes a percentage of the least abundant peptides. It creates
-unique peptide IDs, substitutes isoleucine with leucine, and aggregates peptides 
+unique peptide IDs, substitutes isoleucine with leucine, and aggregates peptides
 based on various characteristics.
 }
 \keyword{internal}

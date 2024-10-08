@@ -9,17 +9,17 @@ digestGroundTruth(proteoforms, parameters)
 \arguments{
 \item{proteoforms}{A data frame containing the proteoform sequences and associated data.}
 
-\item{parameters}{A list of parameters including enzyme type, number of cores for parallel 
+\item{parameters}{A list of parameters including enzyme type, number of cores for parallel
 computing, maximum number of missed cleavages, peptide length limits, and proportion of missed cleavages.}
 }
 \value{
-A data frame containing the digested peptides, with details on modifications, 
+A data frame containing the digested peptides, with details on modifications,
 mass shifts, and missed cleavages.
 }
 \description{
-This function wraps the \code{proteoformDigestion} function to perform enzymatic digestion 
-on a set of proteoforms. It supports parallel computing and allows sampling of peptides 
-based on a distribution derived from \code{PropMissedCleavages} according to their missed 
+This function wraps the \code{proteoformDigestion} function to perform enzymatic digestion
+on a set of proteoforms. It supports parallel computing and allows sampling of peptides
+based on a distribution derived from \code{PropMissedCleavages} according to their missed
 cleavages (MC).
 }
 \keyword{internal}
