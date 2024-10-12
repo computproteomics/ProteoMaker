@@ -219,6 +219,13 @@ params:
     min: 0
     max: 1
     default: 0.2
+  ModificationLoss:
+    group: "Sample Preparation"
+    type: "paramDigest"
+    description: "Percentage loss of modified peptides in non-enriched samples during sample preparation."
+    min: 0
+    max: 1
+    default: 0.0
   PercDetectability:
     group: "MS Run"
     type: "paramMSRun"

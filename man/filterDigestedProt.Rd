@@ -9,7 +9,7 @@ filterDigestedProt(DigestedProt, parameters)
 \arguments{
 \item{DigestedProt}{A data frame containing the digested proteolytic peptides and associated data.}
 
-\item{parameters}{A list of parameters that includes EnrichmentLoss, EnrichmentEfficiency,
+\item{parameters}{A list of parameters that includes EnrichmentLoss, ModificationLoss, EnrichmentEfficiency,
 EnrichmentNoise, and QuantColnames.}
 }
 \value{

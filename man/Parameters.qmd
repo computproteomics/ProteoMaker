@@ -119,6 +119,10 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 *Param\$EnrichmentNoise*: The noise introduced by the enrichment protocol. Set to `0.2`. This parameter adds variability to the enrichment process.
 
+### Modification Loss
+
+*Param\$ModificationLoss*: Removal of modified peptides in non-enriched samples. The parameter denotes the fraction of to be removed peptides. Set to `0`.s
+
 ## Mass Spectrometry (MS) Run Parameters
 
 ### Detectability filter

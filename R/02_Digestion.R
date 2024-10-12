@@ -418,7 +418,7 @@ digestionProductSummarization <- function(peptides, parameters) {
 #' non-enriched peptide sets.
 #'
 #' @param DigestedProt A data frame containing the digested proteolytic peptides and associated data.
-#' @param parameters A list of parameters that includes EnrichmentLoss, EnrichmentEfficiency,
+#' @param parameters A list of parameters that includes EnrichmentLoss, ModificationLoss, EnrichmentEfficiency,
 #' EnrichmentNoise, and QuantColnames.
 #'
 #' @return A list with two elements:
@@ -430,10 +430,20 @@ digestionProductSummarization <- function(peptides, parameters) {
 filterDigestedProt <- function(DigestedProt, parameters) {
     enriched <- lengths(DigestedProt$PTMType) != 0
 
+    ## Removing fraction according to ModificationLoss parameter
+    numRemove <- floor(nrow(DigestedProt) * parameters$ModificationLoss)
+    cat ("#ENRICHMENT SIMULATION - Start\n\n")
+    cat(" + Modification loss\n")
+    cat("  - Remove", numRemove, "peptides in non-enriched fraction according to parameter ModificationLoss (",
+        parameters$ModificationLoss, ")\n")
+    idx <- sample(seq_len(nrow(DigestedProt)), size = numRemove, replace = FALSE)
+    if (length(idx) > 0)
+    DigestedProt <- DigestedProt[-idx, ]
+
     if (sum(enriched) == 0) {
+      cat("#ENRICHMENT SIMULATION - Finish\n\n")
         return(list("NonEnriched" = DigestedProt, "Enriched" = NULL))
     } else {
-        cat ("#ENRICHMENT SIMULATION - Start\n\n")
         ## Exact copy of "sample"
         enrichedtab <- data.frame(DigestedProt)
 
