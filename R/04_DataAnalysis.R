@@ -21,35 +21,35 @@
 #' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
 #'
 #' @keywords internal
-#' 
+#'
 proteinSummarisation <- function(peptable, parameters) {
-    
+
     method <- parameters$ProtSummarization
-    
+
     minUniquePep <- parameters$MinUniquePep
-    
+
     QuantColnames <- parameters$QuantColnames
-    
-    cat(" + Remove all modified peptides\n")
+
+    message(" + Remove all modified peptides")
     peptable <- peptable[sapply(peptable$PTMType, function(x) length(x) == 0),]
-    cat("  - Remaining number of non-modified peptides:", nrow(peptable), "\n")
-    
-    cat(" + Protein summarisation\n")
-    
-    cat("  - Number of minimum unique peptide per protein:", minUniquePep, "\n")
-    cat("  - Protein summarisation using the", method, "approach.\n")
-    
+    message("  - Remaining number of non-modified peptides: ", nrow(peptable), "")
+
+    message(" + Protein summarisation")
+
+    message("  - Number of minimum unique peptide per protein: ", minUniquePep, "")
+    message("  - Protein summarisation using the ", method, " approach.")
+
     # writing new column with unlisted and merged protein names
     peptable$merged_accs <- sapply(peptable$Accession, function(x) paste(unique(unlist(x)), collapse=";"))
     peptable$num_accs <- sapply(peptable$Accession, function(x) length(unique(x)))
-    
+
     # Sort table according to protein accession, needs to stay in this order!
     peptable <- peptable[order(peptable$merged_accs), ]
-    cat("  - Sorted protein table\n")
-    
+    message("  - Sorted protein table")
+
     # Reducing table to relevant columns
     peptable <- peptable[peptable$num_accs == 1, ]
-    
+
     # Vector with row indices of protein groups
     all_accs <- peptable$merged_accs
     prot_ind <- 1
@@ -62,16 +62,16 @@ proteinSummarisation <- function(peptable, parameters) {
     }
     prot_ind <- c(prot_ind, nrow(peptable))
     other_cols <- colnames(peptable)[!colnames(peptable) %in% QuantColnames]
-    cat("  - built protein index for faster summarization\n")
+    message("  - built protein index for faster summarization")
 
     # Initiate and fill matrix with proteins
     protmat <- as.data.frame(matrix(ncol = ncol(peptable), nrow = length(prot_ind)))
     rownames(protmat) <- names(prot_ind)
     colnames(protmat) <- colnames(peptable)
-    
-    cat("  - Initiated protein matrix for", length(prot_ind), "protein groups\n")
-    cat("  - Summarizing proteins, this can take a while\n")
-    
+
+    message("  - Initiated protein matrix for ", length(prot_ind), " protein groups")
+    message("  - Summarizing proteins, this can take a while")
+
     # Function to summarize protein groups
     summarizeProtein <- function(tmp) {
         out <- NULL
@@ -99,14 +99,14 @@ proteinSummarisation <- function(peptable, parameters) {
         }
         return(out)
     }
-    
+
     if (!is.null(parameters$Cores)) {
         cores <- parameters$Cores
-        
+
         if (parallel::detectCores() <= parameters$Cores) {
             cores <- parallel::detectCores() - 1
         }
-        
+
         cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
         parallel::setDefaultCluster(cluster)
         parallel::clusterExport(cluster, c("peptable","summarizeProtein","minUniquePep","prot_ind","other_cols","QuantColnames"), envir = environment())
@@ -145,11 +145,11 @@ proteinSummarisation <- function(peptable, parameters) {
     protmat <- do.call(rbind, proteins)
     protmat[protmat == -Inf] <- NA
     protmat <- protmat[rowSums(is.na(protmat[,QuantColnames])) < length(QuantColnames), ]
-    
-    cat ("  - Finished summarizing into", nrow(protmat) ,"proteins\n")
-    #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i]) 
-    
+
+    cat ("  - Finished summarizing into ", nrow(protmat) ," proteins")
+    #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i])
+
     return(protmat)
-    
+
 }
 

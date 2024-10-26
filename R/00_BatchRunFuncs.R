@@ -86,6 +86,7 @@ def_param <- function(yaml_file=NULL) {
 
   # Convert NA values from strings to real NA
   for (l in names(params)) {
+    params[[l]]$class <- params[[l]]$choices <- NULL
     for (k in names(params[[l]])) {
       if (params[[l]][[k]] == "NA") {
         params[[l]][[k]] <- NA
@@ -108,24 +109,29 @@ def_param <- function(yaml_file=NULL) {
     param_info <- params[[param_name]]
     category <- param_info$type
     default_value <- param_info$default
+    value <- param_info$value
 
     if (!is.null(category)) {
-      Param[[category]][[param_name]] <- default_value
+      if (!is.null(value)) {
+        Param[[category]][[param_name]] <- value
+      } else {
+        Param[[category]][[param_name]] <- default_value
+      }
     }
   }
 
   # Provide a nice printout for each category
-  base::cat("--------------------\nGround truth generation parameters:\n")
+  base::message("--------------------\nGround truth generation parameters:")
   Hmisc::list.tree(Param$paramGroundTruth, maxcomp = 100, maxlen = 100)
-  base::cat("--------------------\nProteoform abundance parameters:\n")
+  base::message("--------------------\nProteoform abundance parameters:")
   Hmisc::list.tree(Param$paramProteoformAb, maxcomp = 100, maxlen = 100)
-  base::cat("--------------------\nDigestion parameters:\n")
+  base::message("--------------------\nDigestion parameters:")
   Hmisc::list.tree(Param$paramDigest, maxcomp = 100, maxlen = 100)
-  base::cat("--------------------\nMSRun parameters:\n")
+  base::message("--------------------\nMSRun parameters:")
   Hmisc::list.tree(Param$paramMSRun, maxcomp = 100, maxlen = 100)
-  base::cat("--------------------\nData analysis parameters:\n")
+  base::message("--------------------\nData analysis parameters:")
   Hmisc::list.tree(Param$paramDataAnalysis, maxcomp = 100, maxlen = 100)
-  base::cat("--------------------\n")
+  base::message("--------------------")
   return(Param)
 }
 
@@ -207,7 +213,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
   # Generate combinations for all parameters
   listall <- generate_combinations(all_params)
   totalbench <- length(listall)
-  cat("Total number of simulations to run: ", totalbench, "\n")
+  message("Total number of simulations to run: ", totalbench)
   benchcounter <- 0
 
   # Gather always benchmarking data
@@ -353,7 +359,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
     }
   }
   return(allBs)
-  cat("###### Finished data set generation \n")
+  message("###### Finished data set generation")
 }
 
 
@@ -408,6 +414,7 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
   md5 <- digest::digest(as.list(tParam), algo = "md5")
 
   filename <- paste0(Config$resultFilePath, "/output", stage, "_", md5, ".RData")
+
   if (file.exists(filename)) {
     # Create a temporary environment to load the objects
     temp_env <- new.env()

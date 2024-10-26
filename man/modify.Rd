@@ -13,7 +13,7 @@ modify(seq, param)
 \itemize{
   \item \code{ModifiableResidues}: A list of amino acid residues that can be modified for each PTM type.
   \item \code{PTMTypes}: A character vector of modification types.
-  \item \code{PTMTypesDist}: A numeric vector representing the background frequencies for each PTM type.
+  \item \code{PTMTypesDistr}: A numeric vector representing the background frequencies for each PTM type.
   \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
   for each modifiable residue within each PTM type.
   \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson distribution,

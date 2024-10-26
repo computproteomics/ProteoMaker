@@ -28,22 +28,25 @@ Imports:
     plotly, 
     yaml, 
     SummarizedExperiment, 
-    PeptideRanger, 
-    PolySTest, 
-    stringr, 
     cleaver,
+    stringr, 
     dplyr,
     e1071,
     scales,
     stringi,
-    S4Vectors
+    S4Vectors,
+    DT
 Remotes: 
     rr-2/PeptideRanger, 
     computproteomics/PolySTest
 Suggests: 
     testthat (>= 3.0.0), 
     knitr, 
-    rmarkdown
+    rmarkdown,
+    shiny,
+    shinyWidgets,
+    shinyBS,
+    bslib
 License: MIT
 Encoding: UTF-8
 LazyData: true

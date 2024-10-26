@@ -12,7 +12,7 @@ performModification(to.Modify, parameters)
 \item{parameters}{A list containing the following elements:
 \describe{
   \item{PTMTypes}{A character vector specifying the types of post-translational modifications (PTMs) to be applied.}
-  \item{PTMTypesDist}{A numeric vector specifying the background frequency distribution of each PTM type.}
+  \item{PTMTypesDistr}{A numeric vector specifying the background frequency distribution of each PTM type.}
   \item{ModifiableResidues}{A list of character vectors specifying the residues that can be modified for each PTM type.}
   \item{ModifiableResiduesDistr}{A list of numeric vectors specifying the background frequency distribution of each residue type for modification.}
   \item{PropModPerProt}{A numeric value indicating the proportion of proteoforms to generate per protein sequence.}

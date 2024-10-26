@@ -4,7 +4,6 @@ format: html
 editor: visual
 ---
 
-
 This document provides a detailed description of the benchmarks used in the PhosFake pipeline. PhosFake is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. These benchmarks are essential for comparing the results and evaluating the performance of the pipeline. For more information about the project, visit [PhosFake on GitHub](https://github.com/veitveit/PhosFake).
 
 ## List of Benchmarks
@@ -13,97 +12,96 @@ The following values and distributions are collected and will be used for compar
 
 ### Peptide Level
 
-- **Total Number of Peptides**: Counts both modified and non-modified peptides. Fixed PTMs are not considered "modified".
-- **Number of Proteins**: Total number of all proteins, independently whether shared or uniquely identified.
-- **Proportion of Unique Modified and Non-Modified Peptides**: Measures the proportion of peptides that are unique and either modified or non-modified.
-- **Total Number of Unique Stripped Sequences**: Counts the unique sequences after removing modifications.
-- **Percentage Missingness**: Calculates the percentage of missing values in the data.
-- **AUC of ROC Curve for Correct Differentially Regulated Features**: Area under the ROC curve for correctly identifying differentially regulated peptides.
-- **TPR (True Positive Rate)**: Found proportion of correct differentially regulated peptides, with FDR < 0.05/0.01.
-- **True FDR for Estimated FDR**: True false discovery rate for an estimated FDR of 0.01/0.05.
-- **Proportion of Cleaved Peptides**: Proportion of peptides per number of miscleavages.
-- **Retention Time Range**: The range of retention times (max-min).
-- **Dynamic Range**: The dynamic range of peptide intensities on a log2 scale (max-min).
-- **Number of Accepted PSMs**: Count of accepted peptide-spectrum matches, based on scan numbers.
-- **Sum of Squares Residuals Towards Actual Fold-Changes**: Assigns mean fold-change for peptides with multiple assigned fold-changes, only calculated for the first 2 conditions.
-- **Mean of Std. Dev. Within Replicates**: The mean standard deviation within replicates of peptides with actual fold-changes, on a log scale.
-- **Distribution of Quantitative Values (Skewness)**: Measures how asymmetric the distribution of quantitative values is.
-- **Distribution of Quantitative Values (Kurtosis)**: Measures how normal (peaked) the distribution of quantitative values is.
-- **Distribution of Quantitative Values (Standard Deviation)**: Measures how broad the distribution of quantitative values is.
+-   **Total Number of Peptides**: Counts both modified and non-modified peptides. Fixed PTMs are not considered "modified".
+-   **Number of Proteins**: Total number of all proteins, independently whether shared or uniquely identified.
+-   **Proportion of Unique Modified and Non-Modified Peptides**: Measures the proportion of peptides that are unique and either modified or non-modified.
+-   **Total Number of Unique Stripped Sequences**: Counts the unique sequences after removing modifications.
+-   **Percentage Missingness**: Calculates the percentage of missing values in the data.
+-   **AUC of ROC Curve for Correct Differentially Regulated Features**: Area under the ROC curve for correctly identifying differentially regulated peptides.
+-   **TPR (True Positive Rate)**: Found proportion of correct differentially regulated peptides, with FDR \< 0.05/0.01.
+-   **True FDR for Estimated FDR**: True false discovery rate for an estimated FDR of 0.01/0.05.
+-   **Proportion of Cleaved Peptides**: Proportion of peptides per number of miscleavages.
+-   **Retention Time Range**: The range of retention times (max-min).
+-   **Dynamic Range**: The dynamic range of peptide intensities on a log2 scale (max-min).
+-   **Number of Accepted PSMs**: Count of accepted peptide-spectrum matches, based on scan numbers.
+-   **Sum of Squares Residuals Towards Actual Fold-Changes**: Assigns mean fold-change for peptides with multiple assigned fold-changes, only calculated for the first 2 conditions.
+-   **Mean of Std. Dev. Within Replicates**: The mean standard deviation within replicates of peptides with actual fold-changes, on a log scale.
+-   **Distribution of Quantitative Values (Skewness)**: Measures how asymmetric the distribution of quantitative values is.
+-   **Distribution of Quantitative Values (Kurtosis)**: Measures how normal (peaked) the distribution of quantitative values is.
+-   **Distribution of Quantitative Values (Standard Deviation)**: Measures how broad the distribution of quantitative values is.
 
 ### Protein Level
 
-- **Number of Quantified Protein Groups**: Total number of quantified protein groups.
-- **Proportion of Quantified Uniquely Identified Proteins**: Measures the proportion of uniquely identified proteins that are quantified.
-- **Percentage Missingness**: Calculates the percentage of missing values at the protein level.
-- **Distribution of Non-Modified Peptides per Protein**: Summarized by its mean, the distribution of non-modified peptides per protein.
-- **AUC of ROC Curve for Correct Differentially Regulated Features**: Area under the ROC curve for correctly identifying differentially regulated proteins.
-- **True FDR for Estimated FDR**: True false discovery rate for an estimated FDR of 0.01/0.05.
-- **TPR (True Positive Rate)**: Found proportion of correct differentially regulated proteins, with FDR < 0.05/0.01.
-- **Sum of Squares Residuals Towards Actual Fold-Changes**: Takes the first non-zero one in case of multiples.
-- **Dynamic Range**: The dynamic range of protein intensities on a log2 scale (max-min).
-- **Mean of Std. Dev. Within Replicates**: The mean standard deviation within replicates of regulated proteins, on a log scale.
-- **Proportion of Proteins with Miscleaved Peptides**: Measures the proportion of proteins with miscleaved peptides.
-- **Proportion of Regulated Proteins with Wrong Identified Peptides**: Measures the proportion of regulated proteins with wrongly identified peptides, with FDR < 0.01/0.05.
-- **Distribution of Quantitative Values (Skewness)**: Measures how asymmetric the distribution of quantitative values is at the protein level.
-- **Distribution of Quantitative Values (Kurtosis)**: Measures how normal (peaked) the distribution of quantitative values is at the protein level.
-- **Distribution of Quantitative Values (Standard Deviation)**: Measures how broad the distribution of quantitative values is at the protein level.
+-   **Number of Quantified Protein Groups**: Total number of quantified protein groups.
+-   **Proportion of Quantified Uniquely Identified Proteins**: Measures the proportion of uniquely identified proteins that are quantified.
+-   **Percentage Missingness**: Calculates the percentage of missing values at the protein level.
+-   **Distribution of Non-Modified Peptides per Protein**: Summarized by its mean, the distribution of non-modified peptides per protein.
+-   **AUC of ROC Curve for Correct Differentially Regulated Features**: Area under the ROC curve for correctly identifying differentially regulated proteins.
+-   **True FDR for Estimated FDR**: True false discovery rate for an estimated FDR of 0.01/0.05.
+-   **TPR (True Positive Rate)**: Found proportion of correct differentially regulated proteins, with FDR \< 0.05/0.01.
+-   **Sum of Squares Residuals Towards Actual Fold-Changes**: Takes the first non-zero one in case of multiples.
+-   **Dynamic Range**: The dynamic range of protein intensities on a log2 scale (max-min).
+-   **Mean of Std. Dev. Within Replicates**: The mean standard deviation within replicates of regulated proteins, on a log scale.
+-   **Proportion of Proteins with Miscleaved Peptides**: Measures the proportion of proteins with miscleaved peptides.
+-   **Proportion of Regulated Proteins with Wrong Identified Peptides**: Measures the proportion of regulated proteins with wrongly identified peptides, with FDR \< 0.01/0.05.
+-   **Distribution of Quantitative Values (Skewness)**: Measures how asymmetric the distribution of quantitative values is at the protein level.
+-   **Distribution of Quantitative Values (Kurtosis)**: Measures how normal (peaked) the distribution of quantitative values is at the protein level.
+-   **Distribution of Quantitative Values (Standard Deviation)**: Measures how broad the distribution of quantitative values is at the protein level.
 
 ### PTM Level
 
-- **Total Number and Mean of Quantitatively Represented Proteoforms per Protein**: Includes protein groups, can only be calculated for in silico data.
-- **Number of Modified Peptides**: Total number of modified peptides.
-- **Proportion of Modified Peptides with Identical Non-Modified Form**: Measures the proportion of modified peptides that have an identical non-modified form.
-- **AUC of ROC Curve for Correct Differentially Regulated Modified Peptides**: After adjusting for protein amount, the area under the ROC curve for correctly identifying differentially regulated modified peptides.
-- **True FDR for Estimated FDR**: True false discovery rate for an estimated FDR of 0.01/0.05.
-- **TPR (True Positive Rate)**: Found proportion of correct differentially regulated modified peptides, with FDR < 0.05/0.01.
-- **Proportion of Wrongly Regulated Modified Peptides**: Measures the proportion of wrongly regulated modified peptides, with FDR 0.01/0.05, no adjustment.
-- **Proportion of Modified Peptides with Quantified Non-Modified Protein**: Measures the proportion of modified peptides that have a quantified non-modified protein.
-- **Sum of Squares of Residuals Towards Actual Fold-Changes**: Only calculated for modified peptides.
+-   **Total Number and Mean of Quantitatively Represented Proteoforms per Protein**: Includes protein groups, can only be calculated for in silico data.
+-   **Number of Modified Peptides**: Total number of modified peptides.
+-   **Proportion of Modified Peptides with Identical Non-Modified Form**: Measures the proportion of modified peptides that have an identical non-modified form.
+-   **AUC of ROC Curve for Correct Differentially Regulated Modified Peptides**: After adjusting for protein amount, the area under the ROC curve for correctly identifying differentially regulated modified peptides.
+-   **True FDR for Estimated FDR**: True false discovery rate for an estimated FDR of 0.01/0.05.
+-   **TPR (True Positive Rate)**: Found proportion of correct differentially regulated modified peptides, with FDR \< 0.05/0.01.
+-   **Proportion of Wrongly Regulated Modified Peptides**: Measures the proportion of wrongly regulated modified peptides, with FDR 0.01/0.05, no adjustment.
+-   **Proportion of Modified Peptides with Quantified Non-Modified Protein**: Measures the proportion of modified peptides that have a quantified non-modified protein.
+-   **Sum of Squares of Residuals Towards Actual Fold-Changes**: Only calculated for modified peptides.
 
 ## Overview as table
 
-| Benchmark Name                                              | Description                                                                                                                    | Category       |
-|-------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|----------------|
-| Total Number of Peptides                                    | Counts both modified and non-modified peptides. Fixed PTMs are not considered "modified".                                      | Peptide Level  |
-| Number of Proteins                                          | Total number of all proteins, independently whether shared or uniquely identified.                                             | Peptide Level  |
-| Proportion of Unique Modified and Non-Modified Peptides     | Measures the proportion of peptides that are unique and either modified or non-modified.                                       | Peptide Level  |
-| Total Number of Unique Stripped Sequences                   | Counts the unique sequences after removing modifications.                                                                      | Peptide Level  |
-| Percentage Missingness                                      | Calculates the percentage of missing values in the data.                                                                       | Peptide Level  |
-| AUC of ROC Curve for Correct Differentially Regulated Features | Area under the ROC curve for correctly identifying differentially regulated peptides.                                           | Peptide Level  |
-| TPR (True Positive Rate)                                    | Found proportion of correct differentially regulated peptides, with FDR < 0.05/0.01.                                           | Peptide Level  |
-| True FDR for Estimated FDR                                  | True false discovery rate for an estimated FDR of 0.01/0.05.                                                                   | Peptide Level  |
-| Proportion of Cleaved Peptides                              | Proportion of peptides per number of miscleavages.                                                                             | Peptide Level  |
-| Retention Time Range                                        | The range of retention times (max-min).                                                                                        | Peptide Level  |
-| Dynamic Range                                               | The dynamic range of peptide intensities on a log2 scale (max-min).                                                            | Peptide Level  |
-| Number of Accepted PSMs                                     | Count of accepted peptide-spectrum matches, based on scan numbers.                                                             | Peptide Level  |
-| Sum of Squares Residuals Towards Actual Fold-Changes        | Assigns mean fold-change for peptides with multiple assigned fold-changes, only calculated for the first 2 conditions.         | Peptide Level  |
-| Mean of Std. Dev. Within Replicates                         | The mean standard deviation within replicates of peptides with actual fold-changes, on a log scale.                            | Peptide Level  |
-| Distribution of Quantitative Values (Skewness)              | Measures how asymmetric the distribution of quantitative values is.                                                            | Peptide Level  |
-| Distribution of Quantitative Values (Kurtosis)              | Measures how normal (peaked) the distribution of quantitative values is.                                                       | Peptide Level  |
-| Distribution of Quantitative Values (Standard Deviation)    | Measures how broad the distribution of quantitative values is.                                                                 | Peptide Level  |
-| Number of Quantified Protein Groups                         | Total number of quantified protein groups.                                                                                     | Protein Level  |
-| Proportion of Quantified Uniquely Identified Proteins       | Measures the proportion of uniquely identified proteins that are quantified.                                                   | Protein Level  |
-| Percentage Missingness                                      | Calculates the percentage of missing values at the protein level.                                                              | Protein Level  |
-| Distribution of Non-Modified Peptides per Protein           | Summarized by its mean, the distribution of non-modified peptides per protein.                                                 | Protein Level  |
-| AUC of ROC Curve for Correct Differentially Regulated Features | Area under the ROC curve for correctly identifying differentially regulated proteins.                                           | Protein Level  |
-| True FDR for Estimated FDR                                  | True false discovery rate for an estimated FDR of 0.01/0.05.                                                                   | Protein Level  |
-| TPR (True Positive Rate)                                    | Found proportion of correct differentially regulated proteins, with FDR < 0.05/0.01.                                           | Protein Level  |
-| Sum of Squares Residuals Towards Actual Fold-Changes        | Takes the first non-zero one in case of multiples.                                                                             | Protein Level  |
-| Dynamic Range                                               | The dynamic range of protein intensities on a log2 scale (max-min).                                                            | Protein Level  |
-| Mean of Std. Dev. Within Replicates                         | The mean standard deviation within replicates of regulated proteins, on a log scale.                                           | Protein Level  |
-| Proportion of Proteins with Miscleaved Peptides             | Measures the proportion of proteins with miscleaved peptides.                                                                  | Protein Level  |
-| Proportion of Regulated Proteins with Wrong Identified Peptides | Measures the proportion of regulated proteins with wrongly identified peptides, with FDR < 0.01/0.05.                          | Protein Level  |
-| Distribution of Quantitative Values (Skewness)              | Measures how asymmetric the distribution of quantitative values is at the protein level.                                       | Protein Level  |
-| Distribution of Quantitative Values (Kurtosis)              | Measures how normal (peaked) the distribution of quantitative values is at the protein level.                                  | Protein Level  |
-| Distribution of Quantitative Values (Standard Deviation)    | Measures how broad the distribution of quantitative values is at the protein level.                                            | Protein Level  |
-| Total Number and Mean of Quantitatively Represented Proteoforms per Protein | Includes protein groups, can only be calculated for in silico data.                                                             | PTM Level      |
-| Number of Modified Peptides                                 | Total number of modified peptides.                                                                                             | PTM Level      |
-| Proportion of Modified Peptides with Identical Non-Modified Form | Measures the proportion of modified peptides that have an identical non-modified form.                                          | PTM Level      |
-| AUC of ROC Curve for Correct Differentially Regulated Modified Peptides | After adjusting for protein amount, the area under the ROC curve for correctly identifying differentially regulated modified peptides. | PTM Level      |
-| True FDR for Estimated FDR                                  | True false discovery rate for an estimated FDR of 0.01/0.05.                                                                   | PTM Level      |
-| TPR (True Positive Rate)                                    | Found proportion of correct differentially regulated modified peptides, with FDR < 0.05/0.01.                                  | PTM Level      |
-| Proportion of Wrongly Regulated Modified Peptides           | Measures the proportion of wrongly regulated modified peptides, with FDR 0.01/0.05, no adjustment.                             | PTM Level      |
-| Proportion of Modified Peptides with Quantified Non-Modified Protein | Measures the proportion of modified peptides that have a quantified non-modified protein.                                       | PTM Level      |
-| Sum of Squares of Residuals Towards Actual Fold-Changes     | Only calculated for modified peptides.                                                                                         | PTM Level      |
-
+| Benchmark Name | Description | Category |
+|----|----|----|
+| Total Number of Peptides | Counts both modified and non-modified peptides. Fixed PTMs are not considered "modified". | Peptide Level |
+| Number of Proteins | Total number of all proteins, independently whether shared or uniquely identified. | Peptide Level |
+| Proportion of Unique Modified and Non-Modified Peptides | Measures the proportion of peptides that are unique and either modified or non-modified. | Peptide Level |
+| Total Number of Unique Stripped Sequences | Counts the unique sequences after removing modifications. | Peptide Level |
+| Percentage Missingness | Calculates the percentage of missing values in the data. | Peptide Level |
+| AUC of ROC Curve for Correct Differentially Regulated Features | Area under the ROC curve for correctly identifying differentially regulated peptides. | Peptide Level |
+| TPR (True Positive Rate) | Found proportion of correct differentially regulated peptides, with FDR \< 0.05/0.01. | Peptide Level |
+| True FDR for Estimated FDR | True false discovery rate for an estimated FDR of 0.01/0.05. | Peptide Level |
+| Proportion of Cleaved Peptides | Proportion of peptides per number of miscleavages. | Peptide Level |
+| Retention Time Range | The range of retention times (max-min). | Peptide Level |
+| Dynamic Range | The dynamic range of peptide intensities on a log2 scale (max-min). | Peptide Level |
+| Number of Accepted PSMs | Count of accepted peptide-spectrum matches, based on scan numbers. | Peptide Level |
+| Sum of Squares Residuals Towards Actual Fold-Changes | Assigns mean fold-change for peptides with multiple assigned fold-changes, only calculated for the first 2 conditions. | Peptide Level |
+| Mean of Std. Dev. Within Replicates | The mean standard deviation within replicates of peptides with actual fold-changes, on a log scale. | Peptide Level |
+| Distribution of Quantitative Values (Skewness) | Measures how asymmetric the distribution of quantitative values is. | Peptide Level |
+| Distribution of Quantitative Values (Kurtosis) | Measures how normal (peaked) the distribution of quantitative values is. | Peptide Level |
+| Distribution of Quantitative Values (Standard Deviation) | Measures how broad the distribution of quantitative values is. | Peptide Level |
+| Number of Quantified Protein Groups | Total number of quantified protein groups. | Protein Level |
+| Proportion of Quantified Uniquely Identified Proteins | Measures the proportion of uniquely identified proteins that are quantified. | Protein Level |
+| Percentage Missingness | Calculates the percentage of missing values at the protein level. | Protein Level |
+| Distribution of Non-Modified Peptides per Protein | Summarized by its mean, the distribution of non-modified peptides per protein. | Protein Level |
+| AUC of ROC Curve for Correct Differentially Regulated Features | Area under the ROC curve for correctly identifying differentially regulated proteins. | Protein Level |
+| True FDR for Estimated FDR | True false discovery rate for an estimated FDR of 0.01/0.05. | Protein Level |
+| TPR (True Positive Rate) | Found proportion of correct differentially regulated proteins, with FDR \< 0.05/0.01. | Protein Level |
+| Sum of Squares Residuals Towards Actual Fold-Changes | Takes the first non-zero one in case of multiples. | Protein Level |
+| Dynamic Range | The dynamic range of protein intensities on a log2 scale (max-min). | Protein Level |
+| Mean of Std. Dev. Within Replicates | The mean standard deviation within replicates of regulated proteins, on a log scale. | Protein Level |
+| Proportion of Proteins with Miscleaved Peptides | Measures the proportion of proteins with miscleaved peptides. | Protein Level |
+| Proportion of Regulated Proteins with Wrong Identified Peptides | Measures the proportion of regulated proteins with wrongly identified peptides, with FDR \< 0.01/0.05. | Protein Level |
+| Distribution of Quantitative Values (Skewness) | Measures how asymmetric the distribution of quantitative values is at the protein level. | Protein Level |
+| Distribution of Quantitative Values (Kurtosis) | Measures how normal (peaked) the distribution of quantitative values is at the protein level. | Protein Level |
+| Distribution of Quantitative Values (Standard Deviation) | Measures how broad the distribution of quantitative values is at the protein level. | Protein Level |
+| Total Number and Mean of Quantitatively Represented Proteoforms per Protein | Includes protein groups, can only be calculated for in silico data. | PTM Level |
+| Number of Modified Peptides | Total number of modified peptides. | PTM Level |
+| Proportion of Modified Peptides with Identical Non-Modified Form | Measures the proportion of modified peptides that have an identical non-modified form. | PTM Level |
+| AUC of ROC Curve for Correct Differentially Regulated Modified Peptides | After adjusting for protein amount, the area under the ROC curve for correctly identifying differentially regulated modified peptides. | PTM Level |
+| True FDR for Estimated FDR | True false discovery rate for an estimated FDR of 0.01/0.05. | PTM Level |
+| TPR (True Positive Rate) | Found proportion of correct differentially regulated modified peptides, with FDR \< 0.05/0.01. | PTM Level |
+| Proportion of Wrongly Regulated Modified Peptides | Measures the proportion of wrongly regulated modified peptides, with FDR 0.01/0.05, no adjustment. | PTM Level |
+| Proportion of Modified Peptides with Quantified Non-Modified Protein | Measures the proportion of modified peptides that have a quantified non-modified protein. | PTM Level |
+| Sum of Squares of Residuals Towards Actual Fold-Changes | Only calculated for modified peptides. | PTM Level |

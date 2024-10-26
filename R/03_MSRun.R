@@ -26,9 +26,9 @@ MSRunSim <- function(Digested, parameters) {
 
     # TODO: what about multiples from different fractions?
 
-    cat("\n#MS RUN SIMULATION - Start\n\n")
-    cat(" + Noise addition:\n")
-    cat("  - The MS noise standard deviation is", parameters$MSNoise, ".\n")
+    message("\n#MS RUN SIMULATION - Start\n")
+    message(" + Noise addition:")
+    message("  - The MS noise standard deviation is ", parameters$MSNoise, ".")
 
     # Introducing random noise to MS analysis due to MS instrument.
     matnoise <- matrix(rnorm(n = nrow(Digested) * length(parameters$QuantColnames), mean = 0, sd = parameters$MSNoise),
@@ -36,9 +36,9 @@ MSRunSim <- function(Digested, parameters) {
 
     Digested[ ,parameters$QuantColnames] <- Digested[ ,parameters$QuantColnames] + matnoise
 
-    cat("  - Noise added to all samples!\n\n")
-    cat(" + Detection limits:\n")
-    cat("  - Keeping ", parameters$PercDetectability*100, "% peptides with high detectability score (PeptideRanger).\n")
+    message("  - Noise added to all samples!\n")
+    message(" + Detection limits:")
+    message("  - Keeping ", parameters$PercDetectability*100, "% peptides with high detectability score (PeptideRanger).")
 
     # Sample a percentage of random peptides to be removed.
     if(parameters$PercDetectability < 1) {
@@ -46,35 +46,35 @@ MSRunSim <- function(Digested, parameters) {
         RFThreshold <- quantile(Digested$Detectability, 1-parameters$PercDetectability)
         remove <- Digested$Detectability <= RFThreshold
         MSRun <- Digested[!remove, ]
-        cat("  - A total of", sum(remove), "peptides is removed with predicted detectability lower than", RFThreshold, ".\n\n")
+        message("  - A total of ", sum(remove), " peptides is removed with predicted detectability lower than ", RFThreshold, ".\n")
 
     } else {
 
         MSRun <- Digested
-        cat("  - No peptides were removed.\n\n")
+        message("  - No peptides were removed.\n")
 
     }
 
-    #  cat("  - The percentage of remaining peptides is", parameters$PercDetectedPep*100, "%.\n")
+    #  message("  - The percentage of remaining peptides is", parameters$PercDetectedPep*100, "%.")
 
     # # Sample a percentage of random peptides to be removed.
     # if(parameters$PercDetectedPep != 1) {
     #
     #   remove <- sample(1:nrow(Digested), size = (1-parameters$PercDetectedPep)*nrow(Digested))
     #   MSRun <- Digested[-remove, ]
-    #   cat("  - A total of", (1-parameters$PercDetectedPep)*nrow(Digested), "peptides is removed.\n\n")
+    #   message("  - A total of", (1-parameters$PercDetectedPep)*nrow(Digested), "peptides is removed.\n")
     #
     # } else {
     #
     #   MSRun <- Digested
-    #   cat("  - No peptides were removed.\n\n")
+    #   message("  - No peptides were removed.\n")
     #
     # }
 
     # Sample a random percentage of intensities to be removed.
     allVals <- as.vector(unlist(MSRun[ ,parameters$QuantColnames]))
-    cat(" + Removing peptide intensities:\n")
-    cat("  - The percentage of remaining intensities is", parameters$PercDetectedVal*100, "% and the probabilities of selection depends on intensity values by", parameters$WeightDetectVal, ".\n")
+    message(" + Removing peptide intensities:")
+    message("  - The percentage of remaining intensities is ", parameters$PercDetectedVal*100, "% and the probabilities of selection depends on intensity values by ", parameters$WeightDetectVal, ".")
     myprob <-  (rank(-allVals)/length(allVals)) ^ parameters$WeightDetectVal
 
     #The probability for existing NA values from the above will be 1.
@@ -83,8 +83,8 @@ MSRunSim <- function(Digested, parameters) {
 
     if(parameters$WeightDetectVal == 0){
 
-        cat(crayon::red("WARNING: missing values at peptide level (due to in silico MS detection) are determined at random.\n"))
-        cat(crayon::red("         Change the parameter \'WeightDetectVal\' to a value > 0 to add weight to lowest intensities."))
+        message(crayon::red("WARNING: missing values at peptide level (due to in silico MS detection) are determined at random."))
+        message(crayon::red("         Change the parameter \'WeightDetectVal\' to a value > 0 to add weight to lowest intensities."))
 
     }
 
@@ -98,12 +98,12 @@ MSRunSim <- function(Digested, parameters) {
         allVals[remove] <- NA
     }
     MSRun[ ,parameters$QuantColnames] <- matrix(allVals, ncol=length(parameters$QuantColnames))
-    cat("  - A total of", length(remove), "intensities is removed.\n\n")
+    message("  - A total of ", length(remove), " intensities is removed.\n")
 
     # Shuffle the intensities of randomly selected peptides, to express the wrong identification.
     shuffle <- order(runif(nrow(MSRun)), decreasing = T)[seq_len(parameters$WrongIDs*nrow(MSRun))]
-    cat(" + Addition of false identification:\n")
-    cat("  - FDR selected is", parameters$WrongIDs*100, "% and corresponds to", length(shuffle), "peptides.\n")
+    message(" + Addition of false identification:")
+    message("  - FDR selected is ", parameters$WrongIDs*100, "% and corresponds to ", length(shuffle), " peptides.")
 
     if(length(shuffle) >= 2) {
 
@@ -122,14 +122,14 @@ MSRunSim <- function(Digested, parameters) {
 
     }
 
-    cat("  - FDR addition finished.\n\n")
+    message("  - FDR addition finished.\n")
 
     # False PTM localization for different PTM types.
     MSRun$IsMisLocated <- F
 
     if (parameters$FracModProt > 0) {
 
-        cat(" + PTM mis-localization:\n")
+        message(" + PTM mis-localization:")
 
         for (mod in 1:length(parameters$PTMTypes)) {
 
@@ -150,7 +150,7 @@ MSRunSim <- function(Digested, parameters) {
             # Mislocate PTMs for the modified peptides of NumForMisloc.
             if (NumForMisLoc > 0) {
 
-                cat("  - For", parameters$PTMTypes[mod], "modification type,", NumForMisLoc, "modified peptides is selected for PTM re-location.\n")
+                message("  - For ", parameters$PTMTypes[mod], " modification type, ", NumForMisLoc, " modified peptides are selected for PTM re-location.")
 
                 for (ind in sample(isModified[ModifiableCount > ModCount], NumForMisLoc)) {
 
@@ -198,16 +198,16 @@ MSRunSim <- function(Digested, parameters) {
         }
     }
 
-    cat("  - PTM re-location finished.\n\n")
+    message("  - PTM re-location finished.\n")
 
     if(!is.na(parameters$MaxNAPerPep) & parameters$MaxNAPerPep <= length(parameters$QuantColnames)){
 
-        cat(" + Missing value filtering:\n")
+        message(" + Missing value filtering:")
 
         NAs <- apply(MSRun[, parameters$QuantColnames], 1, function(x) sum(is.na(x)))
         Which <- which(NAs <= parameters$MaxNAPerPep)
 
-        cat("  - A total of", length(which), "peptides have removed, which have missing intensities in more than", parameters$MaxNAPerPep ,"samples.\n\n")
+        message("  - A total of ", length(which), " peptides have removed, which have missing intensities in more than ", parameters$MaxNAPerPep ," samples.\n")
 
         if(length(which) > 0){
 
@@ -217,7 +217,7 @@ MSRunSim <- function(Digested, parameters) {
 
     }
 
-    cat("#MS RUN SIMULATION - Finish\n\n")
+    message("#MS RUN SIMULATION - Finish\n")
 
     return(MSRun)
 

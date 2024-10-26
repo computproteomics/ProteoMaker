@@ -16,14 +16,14 @@
 #'
 #' @return A data frame with the original data and additional columns for log ratios, p-values, FDR values, and ground truth indicators for differential regulation.
 #'
-#' @import SummarizedExperiment 
+#' @import SummarizedExperiment
 #' @importFrom PolySTest create_pairwise_comparisons PolySTest_paired PolySTest_unpaired
 #' @importFrom stringr str_split
 #' @importFrom S4Vectors metadata
 #' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
 #'
 #' @keywords internal
-#' 
+#'
 runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     # library(SummarizedExperiment)
     Data <- fullData[,Param$QuantColnames]
@@ -31,33 +31,33 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     NumReps <- Param$NumReps
     Reps <- rep(seq_len(NumCond), NumReps)
     isPaired <- Param$StatPaired
-    
+
     # Set number of threads
     Sys.setenv(SHINY_THREADS=cores)
-    
-    cat(" + Running statistical tests\n")
-    
-    
+
+    message(" + Running statistical tests")
+
+
     # Rearrange order of colums to grouped replicates
     act_cols <- rep(0:(NumCond-1),NumReps)*NumReps+rep(1:(NumReps), each=NumCond)
     Data <- Data[,act_cols]
-    
+
     # Make SummarizedExperiment object
     sampleMetadata <- data.frame(Condition = rep(paste("Condition", 1:NumCond), each=NumReps),
                                  Replicate = rep(1:NumReps, each=NumCond))
-    
-    fulldata <- SummarizedExperiment::SummarizedExperiment(assays = list(quant = Data), 
+
+    fulldata <- SummarizedExperiment::SummarizedExperiment(assays = list(quant = Data),
                                      colData = sampleMetadata)
     SummarizedExperiment::rowData(fulldata) <- rownames(Data)
     S4Vectors::metadata(fulldata) <- list(NumReps = NumReps, NumCond = NumCond)
-    
+
     SummarizedExperiment::assay(fulldata, "quant") <- Data
-    
+
     # Generate experimental design
     conditions <- unique(SummarizedExperiment::colData(fulldata)$Condition)
     allComps <- suppressMessages(PolySTest::create_pairwise_comparisons(conditions, 1))
-    
-    
+
+
     # Run tests
     testNames <- NULL
     if (onlyLIMMA) {
@@ -71,11 +71,11 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     } else {
         results <- suppressWarnings(PolySTest::PolySTest_unpaired(fulldata, allComps, testNames))
     }
-    
+
     # Define comparisons to visualize from available ones
     compNames <- S4Vectors::metadata(results)$compNames
-    
-    
+
+
     # Preparing data
     cnames <- colnames(SummarizedExperiment::rowData(results))
     rdata <- as.data.frame(SummarizedExperiment::rowData(results))
@@ -91,18 +91,18 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA=F, cores=1) {
     }
     names(Qvalue) <- gsub("_Condition\\.", " ", names(Qvalue))
     names(Qvalue) <- gsub("_vs", " vs", names(Qvalue))
-    
-    
+
+
     fullData$Regulation_Amplitude <- sapply(fullData$Regulation_Amplitude, function(x) paste(x, collapse=";"))
     fullData$Regulation_Pattern <- sapply(fullData$Regulation_Pattern, function(x) paste(x, collapse=";"))
     FullReg <- cbind(LogRatios, Qvalue, as.data.frame(fullData))#, WhereReg)
-    
-    FullReg <- cbind(FullReg, 
+
+    FullReg <- cbind(FullReg,
                      min1Reg=sapply(stringr::str_split(fullData$Regulation_Amplitude, ";"),
                                     function(x) {
                                         y <- as.numeric(ifelse(x == "NA", NA, x))
                                         sum(as.numeric(y),na.rm=T)
-                                    }) != 0, 
+                                    }) != 0,
                      allReg=sapply(stringr::str_split(fullData$Regulation_Amplitude, ";"),
                                    function(x) {
                                        y <- as.numeric(ifelse(x == "NA", NA, x))

@@ -39,7 +39,7 @@ fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA
     if (!is.na(cleavage_rules)) {
         cleave <- stringi::stri_locate_all_regex(str = sequence, pattern = cleavage_rules)[[1]][, 1]
     } else {
-        cat(crayon::red(enzyme, "is invalid enzyme argument!\n\n"))
+        message(crayon::red(enzyme, " is invalid enzyme argument!"))
         return(NULL)
     }
 
@@ -143,9 +143,9 @@ proteoformDigestion <- function(proteoform, parameters) {
                 to.aggregate <- stats::aggregate(to.aggregate[, 2:3], by = list(to.aggregate[, 1]), FUN = list)
 
                 # Calculate and add the mass addition due to modifications per modified peptide.
-                modification.mass <- parameters$PTMTypesMass
-                names(modification.mass) <- parameters$PTMTypes
-                to.aggregate$mass_shift <- sapply(to.aggregate[, 3], function(x) sum(modification.mass[x], na.rm = T))
+                modification.mass <- parameters$PTMTypesMass[[1]]
+                names(modification.mass) <- parameters$PTMTypes[[1]]
+                to.aggregate$mass_shift <- sapply(to.aggregate[, 3], function(x) sum(unlist(modification.mass[x]), na.rm = T))
 
                 peptides[to.aggregate[, 1], c("PTMPos", "PTMType")] <- to.aggregate[, 2:3]
                 peptides[to.aggregate[, 1], c("MZ1", "MZ2", "MZ3")] <- peptides[to.aggregate[, 1], c("MZ1", "MZ2", "MZ3")] + as.numeric(to.aggregate[, 4]) %*% t(c(1, 0.5, 1 / 3))
@@ -184,15 +184,17 @@ proteoformDigestion <- function(proteoform, parameters) {
 #' @importFrom scales rescale
 #' @keywords internal
 digestGroundTruth <- function(proteoforms, parameters) {
-    cat("#PROTEOFORM DIGESTION - Start\n\n")
-    cat(" + Digestion input:\n")
-    cat("  - A total number of", nrow(proteoforms), "proteoforms, is proceed for proteolytic digestion.\n")
-    cat("  - Unmodified fraction contains", sum(lengths(proteoforms$PTMType) == 0), "proteoforms and modified fraction", sum(lengths(proteoforms$PTMType) != 0), "proteoforms.\n")
-    cat(
-        "  - Cleavage will be performed by", parameters$Enzyme, "with a maximum of", parameters$MaxNumMissedCleavages,
-        "miss-cleavages, to create peptides of length", parameters$PepMinLength, "to", parameters$PepMaxLength, "amino acids.\n"
+    message("#PROTEOFORM DIGESTION - Start")
+    message(" + Digestion input:")
+    message("  - A total number of ", nrow(proteoforms), " proteoforms, is proceed for proteolytic digestion.")
+    message("  - Unmodified fraction contains ", sum(lengths(proteoforms$PTMType) == 0), " proteoforms and modified fraction ", sum(lengths(proteoforms$PTMType) != 0), " proteoforms.")
+    message(
+        "  - Cleavage will be performed by ", parameters$Enzyme, " with a maximum of ", parameters$MaxNumMissedCleavages,
+        " miss-cleavages, to create peptides of length ", parameters$PepMinLength, " to ", parameters$PepMaxLength, " amino acids.\n"
     )
 
+    # TODO REVERT
+    parameters$Cores <- NULL
     if (!is.null(parameters$Cores)) {
         cores <- parameters$Cores
 
@@ -210,7 +212,7 @@ digestGroundTruth <- function(proteoforms, parameters) {
         peptides <- lapply(1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters))
     }
 
-    cat("  - All proteoforms are digested successfully!\n\n")
+    message("  - All proteoforms are digested successfully!")
 
     peptides <- dplyr::bind_rows(peptides)
 
@@ -228,15 +230,15 @@ digestGroundTruth <- function(proteoforms, parameters) {
         }
     }
 
-    cat(" + Digestion output:\n")
-    cat("  - A total number of", nrow(peptides), "peptides is generated.\n")
-    cat("  - Unmodified fraction contains", sum(lengths(peptides$PTMType) == 0), "peptides and modified fraction", sum(lengths(peptides$PTMType) != 0), "peptides.\n")
-    cat(
-        "  - The amount of peptides with", paste0(0:parameters$MaxNumMissedCleavages, collapse = ", "), "miss-cleavages is",
-        paste0(sapply(0:parameters$MaxNumMissedCleavages, function(x) sum(peptides$MC == x)), collapse = ", "), "respectively.\n\n"
+    message(" + Digestion output:")
+    message("  - A total number of ", nrow(peptides), " peptides is generated.")
+    message("  - Unmodified fraction contains ", sum(lengths(peptides$PTMType) == 0), " peptides and modified fraction ", sum(lengths(peptides$PTMType) != 0), " peptides.")
+    message(
+        "  - The amount of peptides with ", paste0(0:parameters$MaxNumMissedCleavages, collapse = ", "), " miss-cleavages is ",
+        paste0(sapply(0:parameters$MaxNumMissedCleavages, function(x) sum(peptides$MC == x)), collapse = ", "), " respectively.\n"
     )
 
-    cat("#PROTEOFORM DIGESTION - Finish\n\n")
+    message("#PROTEOFORM DIGESTION - Finish\n")
 
     return(peptides)
 }
@@ -331,19 +333,19 @@ addDetectability <- function(peptides, parameters) {
 #' @importFrom dplyr group_by summarise summarise_at vars inner_join select %>%
 #' @keywords internal
 digestionProductSummarization <- function(peptides, parameters) {
-    cat("#PEPTIDE SUMMARIZATION - Start\n\n")
-    cat(" + Summarization input:\n")
-    cat("  - A total number of", nrow(peptides), "peptides is proceed for summarization.\n")
+    message("#PEPTIDE SUMMARIZATION - Start\n")
+    message(" + Summarization input:")
+    message("  - A total number of ", nrow(peptides), " peptides is proceed for summarization.")
 
     # Create unique ID for each peptide based on the PTMType and PTMPos. No aggregation technique in any package supports lists...
     peptides$pep_id <- as.character(mapply(list, peptides$PTMType, peptides$PTMPos, SIMPLIFY = F))
 
-    cat("  - Unique peptide IDs are generated.\n")
+    message("  - Unique peptide IDs are generated.")
 
     # Create a Sequence column where isoleucine is substituted by leucine.
     peptides$Sequence <- gsub("[I]", "L", peptides$Peptide)
 
-    cat("  - Isoleucine substitution to leucine is done.\n")
+    message("  - Isoleucine substitution to leucine is done.")
 
     # Helping functions for summarization per group for specific columns.
     log2.sum <- function(x) {
@@ -362,7 +364,7 @@ digestionProductSummarization <- function(peptides, parameters) {
     # Create groups based on Sequence and pep_id
     peptides <- dplyr::group_by(.data = peptides, Sequence, pep_id)
 
-    cat("  - Peptide groups are generated.\n")
+    message("  - Peptide groups are generated.")
 
     peptides.1 <- peptides %>% dplyr::summarise(
         Peptide = list(Peptide),
@@ -386,7 +388,7 @@ digestionProductSummarization <- function(peptides, parameters) {
     peptides <- dplyr::inner_join(peptides.1, peptides.2, by = c("Sequence", "pep_id"))
     peptides <- dplyr::select(peptides, -c("pep_id"))
 
-    cat("  - Peptide groups summarization is done.\n")
+    message("  - Peptide groups summarization is done.")
 
     # Remove a percentage of randomly selected summarized peptides.
     remove <- sample(1:nrow(peptides), size = nrow(peptides) * parameters$LeastAbundantLoss, replace = FALSE)
@@ -395,16 +397,16 @@ digestionProductSummarization <- function(peptides, parameters) {
         peptides <- peptides[-remove, ]
     }
 
-    cat("  - Remove", parameters$LeastAbundantLoss * 100, "% of the least abundant peptides, which corresponds to", length(remove), "peptides.\n\n")
+    message("  - Remove ", parameters$LeastAbundantLoss * 100, "% of the least abundant peptides, which corresponds to ", length(remove), " peptides.")
 
     # add column with peptide detectability
-    cat("  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.\n\n")
+    message("  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.")
     peptides$Detectability <- addDetectability(peptides$Sequence, parameters)
 
 
-    cat(" + Summarization output:\n")
-    cat("  - A total number of ", nrow(peptides), "summarized peptides is generated.\n\n")
-    cat("#PEPTIDE SUMMARIZATION - Finish\n\n")
+    message(" + Summarization output:")
+    message("  - A total number of ", nrow(peptides), " summarized peptides is generated.")
+    message("#PEPTIDE SUMMARIZATION - Finish\n")
 
     return(peptides)
 }
@@ -432,16 +434,16 @@ filterDigestedProt <- function(DigestedProt, parameters) {
 
     ## Removing fraction according to ModificationLoss parameter
     numRemove <- floor(nrow(DigestedProt) * parameters$ModificationLoss)
-    cat ("#ENRICHMENT SIMULATION - Start\n\n")
-    cat(" + Modification loss\n")
-    cat("  - Remove", numRemove, "peptides in non-enriched fraction according to parameter ModificationLoss (",
-        parameters$ModificationLoss, ")\n")
+    message("#ENRICHMENT SIMULATION - Start")
+    message(" + Modification loss")
+    message("  - Remove ", numRemove, " peptides in non-enriched fraction according to parameter ModificationLoss (",
+        parameters$ModificationLoss, ")")
     idx <- sample(seq_len(nrow(DigestedProt)), size = numRemove, replace = FALSE)
     if (length(idx) > 0)
     DigestedProt <- DigestedProt[-idx, ]
 
     if (sum(enriched) == 0) {
-      cat("#ENRICHMENT SIMULATION - Finish\n\n")
+      message("#ENRICHMENT SIMULATION - Finish")
         return(list("NonEnriched" = DigestedProt, "Enriched" = NULL))
     } else {
         ## Exact copy of "sample"
@@ -449,58 +451,58 @@ filterDigestedProt <- function(DigestedProt, parameters) {
 
         ## Removing fraction according to EnrichmentLoss parameter
         numRemove <- floor(nrow(enrichedtab) * parameters$EnrichmentLoss)
-        cat(" + Enrichment loss:\n")
-        cat("  - Remove", numRemove, "peptides according to parameter EnrichmentLoss (", parameters$EnrichmentLoss, ")\n")
+        message(" + Enrichment loss:")
+        message("  - Remove ", numRemove, " peptides according to parameter EnrichmentLoss (", parameters$EnrichmentLoss, ")")
         idx <- sample(seq_len(nrow(enrichedtab)), size = numRemove, replace = FALSE)
         enrichedtab <- enrichedtab[-idx, ]
 
-        # NOTE: We changed back to remove identifications and adjusting the quantitative levels
-        # # Calculate total sum and average of intensities for modified and non-modified peptides in enriched fraction
         modified <- lengths(enrichedtab$PTMType) != 0
-        # enrichedtab_modified <- enrichedtab[modified, parameters$QuantColnames]
-        # enrichedtab_nonmodified <- enrichedtab[!modified, parameters$QuantColnames]
-        # totalModified <- sum(unlist(enrichedtab_modified), na.rm = TRUE)
-        # averageModified <- mean(unlist(enrichedtab_modified), na.rm = TRUE)
-        # totalNonModified <- sum(unlist(enrichedtab_nonmodified), na.rm = TRUE)
-        # averageNonModified <- mean(unlist(enrichedtab_nonmodified), na.rm = TRUE)
-        #
-        # ## Adjust the intensities of modified peptides to mimic enrichment efficiency without loss of signal
-        # enrichedtab[!modified, parameters$QuantColnames] <- enrichedtab[!modified, parameters$QuantColnames] *
-        #   (averageModified + averageNonModified) *
-        #     (1-parameters$EnrichmentEfficiency) / averageNonModified
-        # enrichedtab[modified, parameters$QuantColnames] <- enrichedtab[modified, parameters$QuantColnames] *
-        #   (averageModified + averageNonModified) *
-        #     parameters$EnrichmentEfficiency / averageModified
-        # # Scale the total intensity of all peptides to the one before the adjustment
-        # enrichedtab[parameters$QuantColnames] <- enrichedtab[parameters$QuantColnames] *
-        #   (totalModified + totalNonModified) / sum(unlist(enrichedtab[parameters$QuantColnames]), na.rm = TRUE)
-        cat(" + Enrichment efficiency:\n")
 
+        # Calculate total sum and average of intensities for modified and non-modified peptides in enriched fraction
+        enrichedtab_modified <- enrichedtab[modified, parameters$QuantColnames]
+        enrichedtab_nonmodified <- enrichedtab[!modified, parameters$QuantColnames]
+        totalModified <- sum(unlist(enrichedtab_modified), na.rm = TRUE)
+        averageModified <- mean(unlist(enrichedtab_modified), na.rm = TRUE)
+        totalNonModified <- sum(unlist(enrichedtab_nonmodified), na.rm = TRUE)
+        averageNonModified <- mean(unlist(enrichedtab_nonmodified), na.rm = TRUE)
+
+        ## Adjust the intensities of modified peptides to mimic the mean difference of the parameter
+        enrichedtab[!modified, parameters$QuantColnames] <- enrichedtab[!modified, parameters$QuantColnames] -
+          parameters$EnrichmentQuantDiff
+        enrichedtab[modified, parameters$QuantColnames] <- enrichedtab[modified, parameters$QuantColnames] +
+          parameters$EnrichmentQuantDiff
+        # Scale the total intensity of all peptides to the one before the adjustment
+        enrichedtab[parameters$QuantColnames] <- enrichedtab[parameters$QuantColnames] *
+          (totalModified + totalNonModified) / sum(unlist(enrichedtab[parameters$QuantColnames]), na.rm = TRUE)
+
+                message(" + Enrichment efficiency:")
+                message("  - Adjusted quantitative values to mimic the mean difference of the parameter EnrichmentQuantDiff (",
+                    parameters$EnrichmentQuantDiff, ").")
         # Calculate current fraction of modified peptides
         fracMod <- sum(modified) / nrow(enrichedtab)
-        cat("  - Modified peptides contribute to",  fracMod * 100, "% of all present peptides in the enriched samples.\n")
+        message("  - Modified peptides contribute to ",  fracMod * 100, "% of all present peptides in the enriched samples.")
         if (fracMod > parameters$EnrichmentEfficiency) {
-            cat("  - Warning: Enrichment efficiency is lower than the current fraction of modified peptides.
-                No peptides will be removed\n")
+            message("  - Warning: Enrichment efficiency is lower than the current fraction of modified peptides.
+                No peptides will be removed")
         } else {
           # Remove the non-modified peptides from the enriched fraction to reach given enrichment efficiency
           numRemove <- floor(length(modified) - sum(modified) / parameters$EnrichmentEfficiency)
-          cat("  - Remove", numRemove, "non-modified peptides to reach enrichment efficiency of", parameters$EnrichmentEfficiency, "\n")
+          message("  - Remove ", numRemove, " non-modified peptides to reach enrichment efficiency of ", parameters$EnrichmentEfficiency, "")
           idx <- sample(which(!modified), size = numRemove, replace = FALSE)
           enrichedtab <- enrichedtab[-idx, ]
-          cat("  - Enrichment efficiency is", parameters$EnrichmentEfficiency, "leading to modified peptides contributing to",
-              parameters$EnrichmentEfficiency*100, "% of all present peptides in the enriched samples.\n")
+          message("  - Enrichment efficiency is ", parameters$EnrichmentEfficiency, " leading to modified peptides contributing to ",
+              parameters$EnrichmentEfficiency*100, "% of all present peptides in the enriched samples.")
         }
 
         ## Noise due to enrichment procedure:
         nrowTab <- nrow(enrichedtab)
         ncolTab <- length(parameters$QuantColnames)
-        cat(" + Enrichment noise:\n")
-        cat("  - The enrichment noise standard deviation is", parameters$EnrichmentNoise, ".\n")
+        message(" + Enrichment noise:")
+        message("  - The enrichment noise standard deviation is ", parameters$EnrichmentNoise, ".")
         mtx <- matrix(nrow = nrowTab, ncol = ncolTab, data = rnorm(n = ncolTab * nrowTab, mean = 0, sd = parameters$EnrichmentNoise))
         enrichedtab[, parameters$QuantColnames] <- enrichedtab[, parameters$QuantColnames] + mtx
-        cat("  - Noise added to all samples!\n\n")
-        cat("#ENRICHMENT SIMULATION - Finish\n\n")
+        message("  - Noise added to all samples!")
+        message("#ENRICHMENT SIMULATION - Finish")
 
         return(list("NonEnriched" = DigestedProt, "Enriched" = enrichedtab))
     }

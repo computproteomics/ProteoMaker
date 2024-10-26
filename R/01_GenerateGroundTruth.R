@@ -35,7 +35,7 @@
 #'
 #'
 proteinInput <- function(parameters) {
-  cat(" + Importing data:\n")
+  message(" + Importing data:")
   # Check is the fasta file can be loaded.
   error <- try(protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
 
@@ -45,13 +45,13 @@ proteinInput <- function(parameters) {
     fasta <- protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE)
     fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
     rownames(fasta) <- 1:nrow(fasta)
-    cat("  - File", parameters$PathToFasta, "imported, containing", nrow(fasta), "protein sequences.\n")
+    message("  - File ", parameters$PathToFasta, " imported, containing ", nrow(fasta), " protein sequences.")
 
     # Filter non-expressed proteins (random)
     if (parameters$PercExpressedProt < 1) {
       to.keep <- round(parameters$PercExpressedProt * nrow(fasta))
       fasta <- fasta[sample(1:nrow(fasta), size = to.keep), ]
-      cat("  - A total of", nrow(fasta), "protein sequences have been randomly selected to be expressed.\n")
+      message("  - A total of ", nrow(fasta), " protein sequences have been randomly selected to be expressed.")
     }
 
     # Filter proteins carrying unusual amino acids.
@@ -63,16 +63,16 @@ proteinInput <- function(parameters) {
     } else {
       sum(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
     }, ]
-    cat("  - A total of", initialRows - nrow(fasta), "protein sequences have been removed due to unusual amino acids", paste0("(", paste0(unknownAA, collapse = ","), ")"), "composition.\n")
+    message("  - A total of ", initialRows - nrow(fasta), " protein sequences have been removed due to unusual amino acids ", paste0("(", paste0(unknownAA, collapse = ","), ")"), " composition.")
 
     # Remove duplicated protein accessions.
-    cat("  - A total of", length(which(duplicated(fasta$Accession))), "duplicated protein accessions have been removed.\n")
+    message("  - A total of ", length(which(duplicated(fasta$Accession))), " duplicated protein accessions have been removed.")
     fasta <- fasta[!duplicated(fasta$Accession), ]
-    cat("  - Total number of remaining protein sequences:", nrow(fasta), "\n\n")
+    message("  - Total number of remaining protein sequences: ", nrow(fasta), "\n")
 
     # Proceed unless fasta df is empty after filtering.
     if (nrow(fasta) > 0) {
-      cat(" + Creating modified and unmodified fractions:\n")
+      message(" + Creating modified and unmodified fractions:")
 
       # Returns a list of the number of modifiable residues on all sequences, for each residue of ModifiableResidues.
       possible.modifiable.AAs <- as.data.frame(t(sapply(fasta$Sequence, function(x) {
@@ -91,7 +91,7 @@ proteinInput <- function(parameters) {
       # Proteins that contain at least a residue of ModifiableResidues, and thus are modifiable.
       modifiable.indices <- setdiff(1:nrow(fasta), unmodifiable.indices)
 
-      cat("  - A total of", length(unmodifiable.indices), "sequences are unmodifiable.\n")
+      message("  - A total of ", length(unmodifiable.indices), " sequences are unmodifiable.")
 
       # If there is not a specific protein list to be modified.
       if (is.na(parameters$PathToProteinList)) {
@@ -102,7 +102,7 @@ proteinInput <- function(parameters) {
           to.Modify <- fasta[to.modify.indices, ]
           rownames(to.Modify) <- 1:nrow(to.Modify)
 
-          cat("  - A total of", length(modifiable.indices), "sequences are modifiable, from which", parameters$FracModProt * 100, "% randomly selected to be modified.\n")
+          message("  - A total of ", length(modifiable.indices), " sequences are modifiable, from which ", parameters$FracModProt * 100, "% randomly selected to be modified.")
 
           to.be.Unmodified <- fasta[-to.modify.indices, ]
 
@@ -110,8 +110,8 @@ proteinInput <- function(parameters) {
           to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
           to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
 
-          cat("  - Modified fraction:", nrow(to.Modify), "proteins.\n")
-          cat("  - Unmodified fraction:", nrow(to.be.Unmodified), "proteins.\n\n")
+          message("  - Modified fraction: ", nrow(to.Modify), " proteins.")
+          message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.")
 
           # Empty dfs replaced with NULL.This covers the case when parameters$FracModProt = 1
           if (nrow(to.be.Unmodified) > 0) {
@@ -126,9 +126,9 @@ proteinInput <- function(parameters) {
           to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
           to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
 
-          cat("  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.\n")
-          cat("  - Modified fraction: 0 proteins.\n")
-          cat("  - Unmodified fraction:", nrow(to.be.Unmodified), "proteins.\n\n")
+          message("  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.")
+          message("  - Modified fraction: 0 proteins.")
+          message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
 
           return(list(to.Modify = NULL, to.be.Unmodified = to.be.Unmodified))
         }
@@ -139,13 +139,13 @@ proteinInput <- function(parameters) {
 
         if (class(error) != "try-error") {
           protein.list.input <- unique(as.vector(read.csv(parameters$PathToProteinList, header = F, stringsAsFactors = F)[, 1]))
-          cat("  - Protein list file", parameters$PathToProteinList, "loaded and contains", length(protein.list.input), "unique protein accessions.\n")
+          message("  - Protein list file ", parameters$PathToProteinList, " loaded and contains ", length(protein.list.input), " unique protein accessions.")
 
           mapping <- unlist(lapply(protein.list.input, function(x) which(fasta$Accession == x)))
           to.modify.indices <- intersect(mapping, modifiable.indices)
 
           if (length(to.modify.indices) > 0) {
-            cat(" - A total of", length(mapping), "protein accessions have found in fasta file from which", length(to.modify.indices), "are modifiable.\n")
+            message(" - A total of " , length(mapping), " protein accessions have found in fasta file from which ", length(to.modify.indices), " are modifiable.")
             to.Modify <- fasta[to.modify.indices, ]
             rownames(to.Modify) <- 1:nrow(to.Modify)
             to.be.Unmodified <- fasta[-to.modify.indices, ]
@@ -154,8 +154,8 @@ proteinInput <- function(parameters) {
             to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
             to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
 
-            cat("  - Modified fraction:", nrow(to.Modify), "proteins.\n")
-            cat("  - Unmodified fraction:", nrow(to.be.Unmodified), "proteins.\n\n")
+            message("  - Modified fraction: ", nrow(to.Modify), " proteins.")
+            message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
 
             if (nrow(to.be.Unmodified) > 0) {
               rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
@@ -168,23 +168,23 @@ proteinInput <- function(parameters) {
             to.be.Unmodified <- fasta
             to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
             to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
-            cat("  - Proteins in", parameters$PathToProteinList, "are not modifiable or are not found in", parameters$PathToFasta, ".\n")
-            cat("  - Modified fraction: 0 proteins.\n")
-            cat("  - Unmodified fraction:", nrow(to.be.Unmodified), "proteins.\n\n")
+            message("  - Proteins in ", parameters$PathToProteinList, " are not modifiable or are not found in ", parameters$PathToFasta, ".")
+            message("  - Modified fraction: 0 proteins.")
+            message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
 
             return(list(to.Modify = NULL, to.be.Unmodified = to.be.Unmodified))
           }
         } else {
-          cat(crayon::red("  - Protein list file", parameters$PathToProteinList, "couldn't be loaded!\n\n"))
+          message(crayon::red("  - Protein list file ", parameters$PathToProteinList, " couldn't be loaded!\n"))
           return(list(to.Modify = NULL, to.be.Unmodified = NULL))
         }
       }
     } else {
-      cat(crayon::red("  - There are no protein sequences left!\n\n"))
+      message(crayon::red("  - There are no protein sequences left!\n"))
       return(list(to.Modify = NULL, to.be.Unmodified = NULL))
     }
   } else {
-    cat(crayon::red("  - Fasta file", parameters$PathToFasta, "couldn't be loaded!\n\n"))
+    message(crayon::red("  - Fasta file ", parameters$PathToFasta, " couldn't be loaded!\n"))
     return(list(to.Modify = NULL, to.be.Unmodified = NULL))
   }
 }
@@ -198,7 +198,7 @@ proteinInput <- function(parameters) {
 #' @param parameters A list containing the following elements:
 #' \describe{
 #'   \item{PTMTypes}{A character vector specifying the types of post-translational modifications (PTMs) to be applied.}
-#'   \item{PTMTypesDist}{A numeric vector specifying the background frequency distribution of each PTM type.}
+#'   \item{PTMTypesDistr}{A numeric vector specifying the background frequency distribution of each PTM type.}
 #'   \item{ModifiableResidues}{A list of character vectors specifying the residues that can be modified for each PTM type.}
 #'   \item{ModifiableResiduesDistr}{A list of numeric vectors specifying the background frequency distribution of each residue type for modification.}
 #'   \item{PropModPerProt}{A numeric value indicating the proportion of proteoforms to generate per protein sequence.}
@@ -223,16 +223,18 @@ proteinInput <- function(parameters) {
 #' @keywords internal
 #'
 performModification <- function(to.Modify, parameters) {
-  cat(" + Performing modification:\n")
-  cat(
-    "  - Selected modification type(s)", paste0('"', paste0(parameters$PTMTypes, collapse = '", "'), '"'),
-    "with background frequency distribution of", paste0(paste0(parameters$PTMTypesDist * 100, "%"), collapse = ", "), "respectively.\n"
+  message(" + Performing modification:")
+  message(
+    "  - Selected modification type(s) ", paste0('"', paste0(unlist(parameters$PTMTypes), collapse = '", "'), '"'),
+    " with background frequency distribution of ", paste0(paste0(unlist(parameters$PTMTypesDistr) * 100, "%"), collapse = ", "), " respectively."
   )
 
-  for (i in 1:length(parameters$ModifiableResidues)) {
-    cat(
-      "  - For modification", paste0('"', parameters$PTMTypes[i], '"'), "residue(s)", paste0(parameters$ModifiableResidues[[i]], collapse = ", "),
-      "can be modified with background frequency distribution of", paste0(paste0(parameters$ModifiableResiduesDistr[[i]] * 100, "%"), collapse = ", "), "respectively.\n"
+  ptmtypes <- unlist(parameters$PTMTypes)
+
+  for (i in ptmtypes) {
+    message(
+      "  - For modification ", paste0('"', i, '"'), " residue(s) ", paste0(parameters$ModifiableResidues[[1]][[i]], collapse = ", "),
+      " can be modified with background frequency distribution of ", paste0(paste0(parameters$ModifiableResiduesDistr[[1]][[i]] * 100, "%"), collapse = ", "), " respectively."
     )
   }
 
@@ -252,34 +254,35 @@ performModification <- function(to.Modify, parameters) {
 
   # Modify the selected proteoforms.
   selected.modifications <- modify(mod.proteoforms$Sequence, parameters)
-  selected.modifications <- as.data.frame(do.call(rbind, selected.modifications))
+  #selected.modifications <- as.data.frame(do.call(rbind, selected.modifications))
 
   # Fill the columns.
   mod.proteoforms$PTMPos <- selected.modifications$Positions
   mod.proteoforms$PTMType <- selected.modifications$Types
 
   # Summarize modification types and residues modified by each type.
-  count.per.AAs <- Reduce(rbind, selected.modifications$Count)
-  count.per.AAs <- lapply(1:ncol(count.per.AAs), function(x) colSums(Reduce(rbind, count.per.AAs[, x])))
-
-  AAs.percentage <- sapply(count.per.AAs, function(x) sapply(x, function(y) y / sum(x) * 100))
-  if (length(parameters$PTMTypes) == 1) {
-    AAs.percentage <- list(as.vector(AAs.percentage))
+  Type_Count <- AA_Count <- list()
+  for (ptm in ptmtypes) {
+    AA_Count[[ptm]] <- list()
+    for (res in parameters$ModifiableResidues[[1]][[ptm]]) {
+      AA_Count[[ptm]][[res]] <- sum(unlist(sapply(selected.modifications$Count, function(x) x[[ptm]][[res]])))
+    }
+    Type_Count[[ptm]] <- sum(unlist(AA_Count[[ptm]]))
   }
-  Type.percentage <- sapply(count.per.AAs, function(x) sum(x)) / sum(unlist(count.per.AAs)) * 100
+  # print(count.per.AAs)
 
-  cat("  - Sequences modified!\n")
+  message("  - Sequences modified!")
 
-  for (i in 1:length(parameters$ModifiableResidues)) {
-    cat(
-      "  - For modification", paste0('"', parameters$PTMTypes[i], '"'), "and residue(s)", paste0(parameters$ModifiableResidues[[i]], collapse = ", "),
-      "the resulted frequency distribution is", paste0(paste0(round(AAs.percentage[[i]], 3), "%"), collapse = ", "), "respectively.\n"
+  for (ptm in ptmtypes) {
+    message(
+      "  - For modification ", paste0('"', ptm, '"'), " and residue(s) ", paste0(parameters$ModifiableResidues[[1]][[ptm]], collapse = ", "),
+      " the resulting relative frequency distribution is ", paste0(paste0(round(100 * unlist(AA_Count[[ptm]])/sum(unlist(AA_Count[[ptm]])), 3), "%"), collapse = ", "), " respectively."
     )
   }
 
-  cat(
-    "  - The resulted frequency distribution for modification type(s)", paste0('"', paste0(parameters$PTMTypes, collapse = '", "'), '"'),
-    "is", paste0(paste0(round(Type.percentage, 3), "%"), collapse = ", "), "respectively.\n"
+  message(
+    "  - The resulting relative frequency distribution for modification type(s) ", paste0('"', paste0(ptmtypes, collapse = '", "'), '"'),
+    " is ", paste0(paste0(round(100 * unlist(Type_Count)/sum(unlist(Type_Count)), 3), "%"), collapse = ", "), " respectively."
   )
 
   # Select a  fraction of selected to-modify sequences, to remain unmodified too.
@@ -288,10 +291,96 @@ performModification <- function(to.Modify, parameters) {
   unmod.proteoforms$PTMPos <- vector(mode = "list", length = nrow(unmod.proteoforms))
   unmod.proteoforms$PTMType <- vector(mode = "list", length = nrow(unmod.proteoforms))
 
-  cat("  - A fraction of", nrow(unmod.proteoforms), "modified protein sequences will maintain their unmodified counterpart", paste0("(", (1 - parameters$RemoveNonModFormFrac) * 100, "%)."), "\n\n")
+  message("  - A fraction of ", nrow(unmod.proteoforms), " modified protein sequences will maintain their unmodified counterpart ", paste0("(", (1 - parameters$RemoveNonModFormFrac) * 100, "%)."))
 
   return(list(mod.proteoforms = mod.proteoforms, unmod.proteoforms = unmod.proteoforms))
 }
+
+
+####################
+#' Modify single sequence
+#'
+#' This function modified based on the modification type and residue frequencies.
+#'
+#' @param seq A character vector of protein sequences to be modified.
+#' @param param A list of parameters for the modification process, including:
+#'  \itemize{
+#'  \item \code{ModifiableResidues}: A list of amino acid residues that can be modified for each PTM type.
+#'  \item \code{PTMTypes}: A character vector of modification types.
+#'  \item \code{PTMTypesDistr}: A numeric vector representing the background frequencies for each PTM type.
+#'  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
+#'  for each modifiable residue within each PTM type.
+#'  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson distribution,
+#'  which determines the number of modifications per sequence.
+#'  }
+#'
+#'
+#'  keywords internal
+modify_seq <- function(seq, pars) {
+  # Simplify parameters
+  pmod_res <- pars[[1]]
+  ptms <- pars[[2]]
+  pmod_res_distr <- pars[[3]]
+  ptms_distr <- pars[[4]]
+  lambda <- pars[[5]]
+
+  seq_string <- strsplit(seq, split = "")
+
+  # Run over modifications
+  out <- setNames(
+    lapply(ptms, function(x) {
+      weight <- pmod_res_distr[[x]]
+      names(weight) <- pmod_res[[x]]
+      # Old way, not sure whether necessary
+      # weight <- length(unlist(x[[y]])) / lengths(x[[y]]) * weight
+      weight[!is.finite(weight)] <- 0
+
+      # All modifiable residues
+      all_positions <- setNames(lapply(pmod_res[[x]], function(y) sum(y == seq_string[[1]])), pmod_res[[x]])
+
+      # Adjust by residue frequency in protein
+      weight <- sapply(pmod_res[[x]], function(y) {
+        weight[[y]] / all_positions[[y]] * sum(unlist(all_positions))
+      })
+
+      # Run over residue type to get modified residues
+      out <- lapply(pmod_res[[x]], function(y) {
+        # Find positions of residues
+        positions <- all_positions[[y]]
+        # residues <- seq_string[[1]][positions]
+        pos_len <- length(positions)
+        # no modification site
+        if(pos_len == 0) return(NULL)
+        # getting modified sites
+        out <- NULL
+        if (pos_len > 1) {
+          out <- sample(
+            x = positions,
+            size = weight[[y]] *  extraDistr::rtpois(n = 1, lambda = lambda * pos_len,
+                                      a = 1, b = pos_len)
+          )
+        } else if (runif(1) < weight[[y]]) {
+          out <- positions
+        }
+        return(out)
+      })
+      names(out) <- pmod_res[[x]]
+      nummod.per.residue <- lapply(out, function(y) {
+        length(y)
+      })
+      return(list(modified = unlist(out), count = nummod.per.residue))
+    }), ptms)
+  nummod.per.ptm <- lapply(out, function(x) {
+    x$count
+  })
+  names(nummod.per.ptm) <- ptms
+  Types <- unlist(lapply(ptms, function(x) rep(x, sum(unlist(nummod.per.ptm[[x]])))))
+  Positions <- unlist(lapply(ptms , function(x) unlist(out[[x]]$modified)))
+  return(list(Positions = Positions, Types = Types, Count = nummod.per.ptm))
+
+}
+
+
 #####################
 
 #' Modify Protein Sequences Based on Modification Type and Residue Frequencies
@@ -310,7 +399,7 @@ performModification <- function(to.Modify, parameters) {
 #'   \itemize{
 #'     \item \code{ModifiableResidues}: A list of amino acid residues that can be modified for each PTM type.
 #'     \item \code{PTMTypes}: A character vector of modification types.
-#'     \item \code{PTMTypesDist}: A numeric vector representing the background frequencies for each PTM type.
+#'     \item \code{PTMTypesDistr}: A numeric vector representing the background frequencies for each PTM type.
 #'     \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
 #'     for each modifiable residue within each PTM type.
 #'     \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson distribution,
@@ -338,59 +427,27 @@ performModification <- function(to.Modify, parameters) {
 #'
 #' @keywords internal
 modify <- function(seq, param) {
-  # Find the positions of candidate modification sites on the sequences.
-  possible.modification.sites <- lapply(seq, function(x) {
-    string <- strsplit(x, split = "")
-    return(lapply(param$ModifiableResidues, function(y) lapply(y, function(z) which(string[[1]] == z))))
-  })
 
-  # In case of multiple modification types, amino acid background frequences for each type are proportionally adjusted to background frequences of modification types.
-  param$ModifiableResiduesDistr <- lapply(1:length(param$PTMTypesDist), function(x) param$ModifiableResiduesDistr[[x]] * param$PTMTypesDist[x])
+  # Simplify parameters
+  pmod_res <- param$ModifiableResidues[[1]]
+  ptms <- param$PTMTypes[[1]]
+  ptms_distr <- param$PTMTypesDistr[[1]]
+  # In case of multiple modification types, amino acid background frequences
+  # for each type are proportionally adjusted to background frequences of modification types.
+  pmod_res_distr <- setNames(lapply(ptms,
+                                    function(x) unlist(param$ModifiableResiduesDistr[[1]][[x]]) *
+                                      ptms_distr[[x]]), ptms)
 
-  # Find probability weights to scale the distribution of modification per residue for every sequence to fit the background frequences globaly.
-  modification.probability.weight <- lapply(possible.modification.sites, function(x) {
-    lapply(1:length(x), function(y) {
-      weight <- length(unlist(x)) / lengths(x[[y]]) * param$ModifiableResiduesDistr[[y]]
-      weight[!is.finite(weight)] <- 0
-      return(weight)
-    })
-  })
+  pars <- list(pmod_res, ptms, pmod_res_distr, ptms_distr, param$PTMMultipleLambda)
+  # Run over all sequences
+  reported.modifications <- lapply(seq, function(x) modify_seq(x, pars))
 
-  # Sample possible modification sites for each sequence based on the adjusted probability weights and size based on a truncated poisson distribution.
-  selected.modification.sites <- lapply(1:length(possible.modification.sites), function(x) {
-    if (length(unlist(possible.modification.sites[[x]])) > 1) {
-      sort(sample(
-        x = unlist(possible.modification.sites[[x]]),
-        prob = rep(unlist(modification.probability.weight[[x]]), unlist(lapply(possible.modification.sites[[x]], function(y) lengths(y)))),
-        size = extraDistr::rtpois(n = 1, lambda = param$PTMMultipleLambda * length(unlist(possible.modification.sites[[x]])), a = 1, b = length(unlist(possible.modification.sites[[x]])))
-      ))
-    } else {
-      return(unlist(possible.modification.sites[[x]]))
-    }
-  })
+  # Combine all lists into a single data frame
+  reported.modifications <- data.frame(Positions = I(lapply(reported.modifications, '[[', 'Positions')),
+                                       Types = I(lapply(reported.modifications, '[[', 'Types')),
+                                       Counts = I(lapply(reported.modifications, '[[', 'Count')))
 
-  # Creating a report per sequence about the modification positions, types and the total number of modified AA per modification type.
-  modification.report <- lapply(1:length(selected.modification.sites), function(x) {
-    all.sites <- lapply(possible.modification.sites[[x]], function(y) unlist(y))
-
-    modifications.per.AA <- lapply(possible.modification.sites[[x]], function(y) sapply(y, function(z) length(intersect(z, selected.modification.sites[[x]]))))
-
-    selected.modification.positions <- lapply(all.sites, function(y) intersect(y, selected.modification.sites[[x]]))
-
-    modification.types <- unlist(lapply(1:length(selected.modification.positions), function(y) rep(param$PTMTypes[y], lengths(selected.modification.positions)[y])))
-
-    selected.modification.positions <- unlist(selected.modification.positions)
-
-    reported.modifications <- list(
-      Positions = selected.modification.positions[order(selected.modification.positions, decreasing = F)],
-      Types = modification.types[order(selected.modification.positions, decreasing = F)],
-      Count = modifications.per.AA
-    )
-
-    return(reported.modifications)
-  })
-
-  return(modification.report)
+  return(reported.modifications)
 }
 #####################
 
@@ -419,12 +476,12 @@ modify <- function(seq, param) {
 #'
 #' @keywords internal
 samplePreparation <- function(parameters) {
-  cat("#SAMPLE PREPARATION - Start\n\n")
+  message("#SAMPLE PREPARATION - Start\n")
 
   protein.Sets <- proteinInput(parameters = parameters)
 
   if (is.null(protein.Sets$to.Modify) & is.null(protein.Sets$to.be.Unmodified)) {
-    cat(crayon::red("#SAMPLE PREPARATION - Finish (Warning: Empty sets)"))
+    message(crayon::red("#SAMPLE PREPARATION - Finish (Warning: Empty sets)"))
     proteoforms <- NULL
   } else {
     if (!is.null(protein.Sets$to.Modify)) {
@@ -442,7 +499,7 @@ samplePreparation <- function(parameters) {
 
       rownames(proteoforms) <- 1:nrow(proteoforms)
 
-      cat("#SAMPLE PREPARATION - Finish\n\n")
+      message("#SAMPLE PREPARATION - Finish\n")
     } else {
       proteoforms <- protein.Sets$to.be.Unmodified
       rownames(proteoforms) <- 1:nrow(proteoforms)
@@ -451,7 +508,7 @@ samplePreparation <- function(parameters) {
       proteoforms$Proteoform_ID <- rep(1, nrow(proteoforms))
       proteoforms <- proteoforms[, c(1, 2, 5, 3, 4)]
 
-      cat("#SAMPLE PREPARATION - Finish\n\n")
+      message("#SAMPLE PREPARATION - Finish\n")
     }
   }
 
@@ -505,7 +562,8 @@ addProteoformAbundance <- function(proteoforms, parameters) {
     proteoforms[name] <- rnorm(n = nrow(proteoforms), mean = 0, sd = parameters$QuantNoise)
   }
 
-  if (is.na(parameters$UserInputFoldChanges_NumRegProteoforms)) {
+  if (is.na(parameters$UserInputFoldChanges_NumRegProteoforms) | is.na(parameters$UserInputFoldChanges_RegulationFC) |
+      parameters$UserInputFoldChanges_NumRegProteoforms == 0 | parameters$UserInputFoldChanges_RegulationFC == 0) {
     if (parameters$DiffRegFrac != 0) {
       # select differentially regulated proteoforms
       diff_reg_indices <- sample(1:nrow(proteoforms), size = parameters$DiffRegFrac * nrow(proteoforms))
@@ -554,7 +612,7 @@ addProteoformAbundance <- function(proteoforms, parameters) {
     proteoforms$Regulation_Pattern <- vector(mode = "list", length = nrow(proteoforms))
   }
 
-  cat(" + Add quan. distribution: Relative -> absolute\n")
+  message(" + Add quan. distribution: Relative -> absolute")
   vec <- rnorm(n = nrow(proteoforms), mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
   for (name in parameters$QuantColnames) {
     proteoforms[name] <- proteoforms[name] + vec
