@@ -155,6 +155,10 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="enrichment-loss">Enrichment Loss</h3>
 <p><em>Param$EnrichmentLoss</em>: The loss of phosphorylated peptides during enrichment. Set to <code>0.2</code>. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.</p>
 </section>
+</section>
+<section id="enrichment-quantitative-adjustement" class="level2">
+<h2 class="anchored" data-anchor-id="enrichment-quantitative-adjustement">Enrichment Quantitative adjustement</h2>
+<p><em>Param$EnrichmentQuantDiff</em>: The adjustment of peptide intensities after enrichment. Set to <code>0</code>. This parameter changes the mean intensities of all modified enriched peptides versus mean of all non-modified peptides to reflect the enrichment process.</p>
 <section id="enrichment-efficiency" class="level3">
 <h3 class="anchored" data-anchor-id="enrichment-efficiency">Enrichment Efficiency</h3>
 <p><em>Param$EnrichmentEfficiency</em>: The efficiency of enrichment for modified peptides. Default set to <code>1</code>. This parameter reflects how effectively modified peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities.<br>
