@@ -430,12 +430,13 @@ modify <- function(seq, param) {
 
   # Simplify parameters
   pmod_res <- param$ModifiableResidues[[1]]
+  pmod_res_distr <- param$ModifiableResiduesDistr[[1]]
   ptms <- param$PTMTypes[[1]]
   ptms_distr <- param$PTMTypesDistr[[1]]
   # In case of multiple modification types, amino acid background frequences
   # for each type are proportionally adjusted to background frequences of modification types.
   pmod_res_distr <- setNames(lapply(ptms,
-                                    function(x) unlist(param$ModifiableResiduesDistr[[1]][[x]]) *
+                                    function(x) unlist(pmod_res_distr[[x]]) *
                                       ptms_distr[[x]]), ptms)
 
   pars <- list(pmod_res, ptms, pmod_res_distr, ptms_distr, param$PTMMultipleLambda)
