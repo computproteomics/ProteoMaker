@@ -336,11 +336,13 @@ modify_seq <- function(seq, pars) {
       weight[!is.finite(weight)] <- 0
 
       # All modifiable residues
-      all_positions <- setNames(lapply(pmod_res[[x]], function(y) sum(y == seq_string[[1]])), pmod_res[[x]])
+      all_positions <- setNames(lapply(pmod_res[[x]], function(y) which(y == seq_string[[1]])), pmod_res[[x]])
 
       # Adjust by residue frequency in protein
       weight <- sapply(pmod_res[[x]], function(y) {
-        weight[[y]] / all_positions[[y]] * sum(unlist(all_positions))
+       ttt <-  weight[[y]] / length(all_positions[[y]]) * length(unlist(all_positions))
+       ttt[ttt > 1] <- 1
+       return(ttt)
       })
 
       # Run over residue type to get modified residues
@@ -362,6 +364,10 @@ modify_seq <- function(seq, pars) {
         } else if (runif(1) < weight[[y]]) {
           out <- positions
         }
+        print(positions)
+        print(weight)
+        print(out)
+        print(y)
         return(out)
       })
       names(out) <- pmod_res[[x]]
@@ -627,3 +633,4 @@ addProteoformAbundance <- function(proteoforms, parameters) {
   return(proteoforms)
 }
 #####################
+
