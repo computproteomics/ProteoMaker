@@ -36,7 +36,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Path to Protein List
 
-*Param\$PathToProteinList*: The file path to a list of proteins of interest, if any. This can be used to focus the analysis on a subset of proteins. Providing a specific list can streamline the analysis and enhance focus on a set of related proteoforms or biological pathways. Default set to `NULL`.
+*Param\$PathToProteinList*: The file path to a list of proteins of interest, if any. This can be used to focus the analysis on a subset of proteins. Providing a specific list can streamline the analysis and enhance focus on a set of related proteoforms or biological pathways. Default set to `NA`.
 
 ## Ground Truth Proteoform-Centric Data Generation
 
@@ -48,21 +48,21 @@ This document provides a detailed description of the parameters used in the Phos
 
 *Param\$PropModPerProt*: The proportion of modifiable proteins sampled for modifications. A value of `2` means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.
 
-*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `ph` for phosphorylation. This parameter allows for the inclusion of different types of PTMs in the simulation. For multiple parameter in the same simulation, use a list: `list(c("ph", "ac"))`
+*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph"). The mods name is mandatory.
 
-*Param\$PTMTypesDist*: The distribution of PTM types. Default set to `1`, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type.
+*Param\$PTMTypesDistr*: The distribution of PTM types. Default set to `1`, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type. Always provide as named list, e.g. `list(ph=0.5)`
 
-*Param\$PTMTypesMass*: The mass shifts associated with the PTM types. This can be `79.9663` for phosphorylation or multiple value in a list such as `list(c(79.9663, 42.0106))` . Accurate mass shifts determine the mz values of the peptides.
+*Param\$PTMTypesMass*: The mass shifts associated with the PTM types. This can be `79.9663` for phosphorylation or multiple value in a list such as `list(c(79.9663, 42.0106))` . Accurate mass shifts determine the mz values of the peptides. Use named list.
 
 *Param\$PTMMultipleLambda*: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to `0.5`, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.
 
-*Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually use `list(ph = c("S", "T", "Y"))`
+*Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually we use `list(ph = c("S", "T", "Y"))`
 
-*Param\$ModifiableResiduesDistr*: The relative distribution of modifiable residues. For phosphorylation, this can be set to `0.86` for serine, `0.13` for threonine, and `0.01` for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data.
+*Param\$ModifiableResiduesDistr*: The relative distribution of modifiable residues. For phosphorylation, this can be set to `0.86` for serine, `0.13` for threonine, and `0.01` for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data. Also given as named list.
 
 *Param\$RemoveNonModFormFrac*: The fraction of modifiable proteins without non-modified forms. Set to `0`. This parameter controls the presence of non-modified forms of proteins in the simulation.
 
-### Proteoform Abudance Generation
+### Proteoform Abundance Generation
 
 *Param\$QuantColnames*: The column names for quantitative values, structured as `C_<condition>_R_<replicate>`for a clear and organized structure for the quantitative data.
 
@@ -84,7 +84,7 @@ This document provides a detailed description of the parameters used in the Phos
 
 ### Enzyme
 
-*Param\$Enzyme*: The enzyme used for protein digestion. Set to `trypsin` by default ("(?!(RP\|KP))(?=(K\|R))(?!(K\|R)$)"). Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin.strict ("(?=(K|R))(?!(K|R)$)"), chymotrypsin.h ("(?!(FP\|YP\|PY\|WP))(?=(F\|Y\|W))(?!(F\|Y\|W)$)"), chymotrypsin.l ("(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)"), pepsin.2 ("(?=(F\|L\|W\|Y\|A\|E\|Q))(?!(F\|L\|W\|Y\|A\|E\|Q)$)"), pepsin.1.3 ("(?=(F|L))(?!(F|L)$)"), lysC ("(?=(K))(?!(K)$)"), argC ("(?!(RP))(?=(R))(?!(R)$)").
+*Param\$Enzyme*: The enzyme used for protein digestion. Set to `trypsin` by default `("(?!(RP\|KP))(?=(K\|R))(?!(K\|R)$)")`. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin.strict `("(?=(K|R))(?!(K|R)$)")`, chymotrypsin.h `("(?!(FP\|YP\|PY\|WP))(?=(F\|Y\|W))(?!(F\|Y\|W)$)")`, chymotrypsin.l `("(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)")`, pepsin.2 `("(?=(F\|L\|W\|Y\|A\|E\|Q))(?!(F\|L\|W\|Y\|A\|E\|Q)$)")`, pepsin.1.3 `("(?=(F|L))(?!(F|L)$)")`, lysC `("(?=(K))(?!(K)$)")`, and argC `("(?!(RP))(?=(R))(?!(R)$)")`.
 
 ### Proportion of Peptides with Missed Cleavages
 
@@ -110,15 +110,22 @@ This document provides a detailed description of the parameters used in the Phos
 
 *Param\$EnrichmentLoss*: The loss of phosphorylated peptides during enrichment. Set to `0.2`. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.
 
+## Enrichment Quantitative adjustement
+
+*Param\$EnrichmentQuantDiff*: The adjustment of peptide intensities after enrichment. Set to `0`. This parameter changes the mean intensities of all modified enriched peptides versus mean of all non-modified peptides to reflect the enrichment process.
+
 ### Enrichment Efficiency
 
-*Param\$EnrichmentEfficiency*: The efficiency of enrichment for phosphorylated peptides. Default set to `1`. This parameter reflects how effectively phosphorylated peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities. \
-The parameter adjusts the average intensities of modified versus non-modified peptides\
-to resemble the given proportion.
+*Param\$EnrichmentEfficiency*: The efficiency of enrichment for modified peptides. Default set to `1`. This parameter reflects how effectively modified peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities.\
+The parameter randomly removes non-modified peptides until reaching the given fraction of present modified peptides.
 
 ### Enrichment Protocol Noise
 
 *Param\$EnrichmentNoise*: The noise introduced by the enrichment protocol. Set to `0.2`. This parameter adds variability to the enrichment process.
+
+### Modification Loss
+
+*Param\$ModificationLoss*: Removal of modified peptides in non-enriched samples. The parameter denotes the fraction of to be removed peptides. Set to `0`.
 
 ## Mass Spectrometry (MS) Run Parameters
 
