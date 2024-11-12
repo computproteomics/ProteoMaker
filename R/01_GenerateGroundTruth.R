@@ -364,10 +364,6 @@ modify_seq <- function(seq, pars) {
         } else if (runif(1) < weight[[y]]) {
           out <- positions
         }
-        print(positions)
-        print(weight)
-        print(out)
-        print(y)
         return(out)
       })
       names(out) <- pmod_res[[x]]
