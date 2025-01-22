@@ -1,0 +1,490 @@
+params:
+  NumCond:
+    group: Experimental Design
+    type: paramGroundTruth
+    description: Number of conditions.
+    class: numeric
+    min: 2
+    max: 10
+    default: 2
+    value: 2
+  NumReps:
+    group: Experimental Design
+    type: paramGroundTruth
+    description: Number of replicates.
+    min: 1
+    max: 10
+    class: numeric
+    default: 3
+    value: 3
+  PathToFasta:
+    group: Input Data
+    type: paramGroundTruth
+    description: Path to input FASTA file.
+    class: file
+    min: NA
+    max: NA
+    default: fasta_example.fasta
+  PathToProteinList:
+    group: Input Data
+    type: paramGroundTruth
+    description: Path to input protein list (optional).
+    min: NA
+    max: NA
+    class: file
+    default: NA
+  PercExpressedProt:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Fraction of expressed proteins from fasta file.
+    min: 0
+    max: 1
+    class: numeric
+    default: 1
+    value: 0.95
+  FracModProt:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Fraction of proteins selected to be modified (0 for none, 1 for all).
+    min: 0
+    max: 1
+    class: numeric
+    default: 0
+    value: 0.8
+  PropModPerProt:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Factor for generating more that many modified proteoforms per selected
+      protein.
+    min: 0
+    max: 5
+    class: numeric
+    default: 0
+    value: 0.3
+  PTMMultipleLambda:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Poisson parameter for multiply modified proteins, scaled to the number
+      of possible PTM sites.
+    min: 0
+    max: 5
+    class: numeric
+    default: 0
+    value: 0.4
+  RemoveNonModFormFrac:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Fraction of modifiable proteins without non-modified forms.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0
+    value: 1
+  PTMTypes:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Types of post-translational modifications (PTMs), provided by their
+      (short) names such as "ph" for phosphorylation. When having single or multple
+      PTMs, embed all names per simulation in a list item, such as list(mods=c("ph")
+    class: ptm
+    min: NA
+    max: NA
+    choices:
+    - ph
+    - ox
+    - ac
+    - me
+    - de
+    - NA
+    default: NA
+    value:
+      mods:
+      - ox
+      - ph
+  PTMTypesDistr:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Distribution of PTM types. This means how much of which PTM type
+      is present. Given as named list of values that sum up to 1.0.
+    min: 0
+    max: 1
+    class: ptm
+    choices:
+    - 0
+    - 0.1
+    - 0.2
+    - 0.3
+    - 0.4
+    - 0.5
+    - 0.6
+    - 0.7
+    - 0.8
+    - 0.9
+    - 1
+    - NA
+    default: NA
+    value:
+    - ox: 1
+      ph: 5
+  PTMTypesMass:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Mass shifts for each PTM type. Also given as named list for the same
+      simulation
+    min: 0
+    max: 200
+    choices:
+    - 79.966331
+    - 15.994915
+    - 42.010565
+    - 14.01565
+    - 0.984016
+    - NA
+    class: ptm
+    default: NA
+    value:
+    - ox: 15.994915
+      ph: 79.966331
+  ModifiableResidues:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: 'Residues that can be modified for each PTM type. Given as a named
+      list of strings, each list element representing a PTM type and the residues
+      that can be modified for this PTM type. For example ph: ["S", "T"].'
+    min: NA
+    max: NA
+    class: ptm
+    choices:
+    - S
+    - T
+    - 'Y'
+    - K
+    - R
+    - H
+    - D
+    - E
+    - C
+    - M
+    - W
+    - F
+    - P
+    - 'N'
+    - Q
+    - A
+    - V
+    - I
+    - L
+    - G
+    default: NA
+    value:
+    - ox: M
+      ph:
+      - S
+      - T
+      - 'Y'
+  ModifiableResiduesDistr:
+    group: Ground Truth Data
+    type: paramGroundTruth
+    description: Distribution of modifications across residues. Same layout as for
+      PTMTypesDist.
+    min: 0
+    max: 1
+    class: ptm
+    choices:
+    - 0
+    - 0.1
+    - 0.2
+    - 0.3
+    - 0.4
+    - 0.5
+    - 0.6
+    - 0.7
+    - 0.8
+    - 0.9
+    - 1
+    - NA
+    default: NA
+    value:
+    - ox: 1.0
+      ph:
+      - 0.86
+      - 0.13
+      - 0.01
+  QuantNoise:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Noise level of quantitative values (standard deviation).
+    min: 0
+    max: 5
+    class: numeric
+    default: 0.5
+    value: 0.35
+  DiffRegFrac:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Fraction of differentially regulated proteoforms.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.3
+    value: 0.2
+  DiffRegMax:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Maximum amplitude of difference for differentially regulated proteoforms
+      (log2 scale).
+    min: 0
+    max: 10
+    class: numeric
+    default: 1
+    value: 10
+  UserInputFoldChanges_NumRegProteoforms:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Custom set of regulated proteoforms (optional). Number of regulated
+      proteoforms
+    min: 0
+    max: 1000
+    class: numeric
+    default: 0
+    value: 0
+  UserInputFoldChanges_RegulationFC:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Custom set of regulated proteoforms (optional). Fold change of regulation.
+    min: -10
+    max: 10
+    class: numeric
+    default: 0
+    value: 0
+  AbsoluteQuanMean:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Mean for absolute quantification.
+    min: 0
+    max: 100
+    class: numeric
+    default: 30.5
+    value: 30.5
+  AbsoluteQuanSD:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Standard deviation for absolute quantification.
+    min: 0
+    max: 10
+    class: numeric
+    default: 3.6
+    value: 3.6
+  ThreshNAQuantileProt:
+    group: Proteoform Quantities
+    type: paramProteoformAb
+    description: Quantile threshold for removing quantitative values.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.01
+    value: 0.01
+  Enzyme:
+    group: Enzymatic Digestion
+    type: paramDigest
+    description: Enzyme used for digestion (e.g., trypsin).
+    min: NA
+    max: NA
+    choices:
+    - trypsin
+    - trypsin.strict
+    - chymotrypsin.h
+    - chuymotrypsin.l
+    - pepsin.2
+    - pepsin1.3
+    - lysC
+    - argC
+    class: string
+    default: trypsin
+    value: trypsin.strict
+  PropMissedCleavages:
+    group: Enzymatic Digestion
+    type: paramDigest
+    description: Proportion of peptides with missed cleavages.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.01
+    value: 0.2
+  MaxNumMissedCleavages:
+    group: Enzymatic Digestion
+    type: paramDigest
+    description: Maximum number of missed cleavages per peptide.
+    min: 0
+    max: 10
+    class: numeric
+    default: 2
+    value: 3
+  PepMinLength:
+    group: Enzymatic Digestion
+    type: paramDigest
+    description: Minimum peptide length.
+    min: 1
+    max: 50
+    class: numeric
+    default: 7
+    value: 6
+  PepMaxLength:
+    group: Enzymatic Digestion
+    type: paramDigest
+    description: Maximum peptide length.
+    min: 1
+    max: 60
+    class: numeric
+    default: 30
+    value: 57
+  LeastAbundantLoss:
+    group: Enzymatic Digestion
+    type: paramDigest
+    description: Fraction of least abundant peptides to remove.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0
+    value: 0.05
+  EnrichmentLoss:
+    group: Sample Preparation
+    type: paramDigest
+    description: Fraction loss of peptides during enrichment.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.2
+    value: 0.1
+  EnrichmentEfficiency:
+    group: Sample Preparation
+    type: paramDigest
+    description: Efficiency of enrichment for modified peptides (fraction).
+    min: 0
+    max: 1
+    class: numeric
+    default: 1
+    value: 0.4
+  EnrichmentQuantDiff:
+    group: Sample Preparation
+    type: paramDigest
+    description: Quantitative difference (means on log-scale) between enriched and
+      non-enriched peptifdes in enriched samples.
+    min: -10
+    max: 10
+    class: numeric
+    default: 0.0
+    value: 0.7
+  EnrichmentNoise:
+    group: Sample Preparation
+    type: paramDigest
+    description: Noise due to enrichment protocol.
+    min: 0
+    max: 10
+    class: numeric
+    default: 0.2
+    value: 2
+  ModificationLoss:
+    group: Sample Preparation
+    type: paramDigest
+    description: Fraction loss of modified peptides in non-enriched samples during
+      sample preparation.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.0
+    value: 0.99
+  PercDetectability:
+    group: MS Run
+    type: paramMSRun
+    description: Keeping the given percentage of peptides according to their predicted
+      detectibility from PeptideRanger predictions (trained on ProteomicsDB).
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.25
+    value: 0.25
+  PercDetectedVal:
+    group: MS Run
+    type: paramMSRun
+    description: Fraction of detected values (replicate/condition).
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.5
+    value: 0.5
+  WeightDetectVal:
+    group: MS Run
+    type: paramMSRun
+    description: Weights for intensity-dependence of non-detection.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.1
+    value: 0.1
+  MSNoise:
+    group: MS Run
+    type: paramMSRun
+    description: Noise due to the MS instrument.
+    min: 0
+    max: 1
+    class: numeric
+    default: 0.25
+    value: 0.25
+  WrongIDs:
+    group: MS Search
+    type: paramMSRun
+    description: Fraction of wrong identifications.
+    min: 0
+    max: 0.1
+    class: numeric
+    default: 0.01
+    value: 0.01
+  WrongLocalizations:
+    group: MS Search
+    type: paramMSRun
+    description: Fraction of wrong localizations.
+    min: 0
+    max: 0.1
+    class: numeric
+    default: 0
+    value: 0
+  MaxNAPerPep:
+    group: MS Search Results Filter
+    type: paramMSRun
+    description: Maximum number of NA values per peptide allowed.
+    min: 0
+    max: 100
+    class: numeric
+    default: 100
+    value: 100
+  ProtSummarization:
+    group: Protein Summarization
+    type: paramDataAnalysis
+    description: Method for summarizing to proteins (e.g., sum.top3, medpolish).
+    min: NA
+    max: NA
+    choices:
+    - sum.top3
+    - medpolish
+    class: string
+    default: medpolish
+    value: medpolish
+  MinUniquePep:
+    group: Protein Summarization
+    type: paramDataAnalysis
+    description: Minimum number of unique peptides available.
+    min: 1
+    max: 10
+    class: numeric
+    default: 1
+    value: 1
+  StatPaired:
+    group: Statistical Testing
+    type: paramDataAnalysis
+    description: Whether the statistical testing is paired or unpaired.
+    min: no
+    max: yes
+    class: boolean
+    default: no
+    value: no

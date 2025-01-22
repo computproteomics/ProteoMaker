@@ -31,7 +31,7 @@ server <- function(input, output, session) {
 
   # Function to validate parameters based on their type and constraints
   validate_param_values <- function(param_name, param_info, input_value) {
-
+    print(paste("Validating parameter: ", param_name, param_info$class, input_value))
     class <- param_info$class
     min_val <- param_info$min
     max_val <- param_info$max
@@ -65,19 +65,30 @@ server <- function(input, output, session) {
       }
     } else if (class == "file") {
       # File check: Ensure the file is not NULL (if required)
-      if (!is.null(all(unlist(input_value))) & !is.na(all(unlist(input_value)))) {
+
+      if (!all(is.null(unlist(input_value))) & !all(is.na(unlist(input_value)))) {
         # Check if file exists
-        if (file.exists(input_value)) {
+        print(input_value)
+        print(names(input_value))
+        if (file.exists(input_value$datapath)) {
           valid <- TRUE
+          phosfake_config$fastaFilePath <<- ""
+          input_value <- input_value$datapath
+        } else if (file.exists(input_value)) {
+          valid <- TRUE
+          phosfake_config$fastaFilePath <<- ""
           # Check whether file is in the inst/Proteomes folder
-        } else if (grepl(input_value, list.files(path = phosfake_config$fastaFilePath))) {
+        } else if (grepl(input_value, list.files(path = system.file("Proteomes", package = "PhosFake")))) {
           valid <- TRUE
-          inputvalue <- paste0(phosfake_config$fastaFilePath, "/", input_value)
+          phosfake_config$fastaFilePath <<- system.file("Proteomes", package = "PhosFake")
         } else {
           valid <- FALSE
-          error_message <- paste("Error: File not available, please upload", param_name)
+          error_message <- paste("Error: File not available, please upload existing", param_name)
         }
+      } else {
+        phosfake_config$fastaFilePath <<- system.file("Proteomes", package = "PhosFake")
       }
+      output$PathToFasta_file <- renderText(basename(input_value))
     } else if (class == "boolean") {
       # Boolean check: Should be TRUE or FALSE
       if (!is.logical(input_value)) {
@@ -273,13 +284,13 @@ server <- function(input, output, session) {
     params <- parameters()
     # remove from params
     ptm_name <- input$ptm_types
-    if (length(ptm_pos) == 1) {
+    if (length(ptm_name) == 1) {
       ptms <- unlist(params$PTMTypes$value)
       params$PTMTypes$value <- list(mods = ptms[ptms != ptm_name])
       params$PTMTypesDistr$value[[1]][[ptm_name]] <- NULL
       params$PTMTypesMass$value[[1]][[ptm_name]] <- NULL
-      params$ModifiableResidues[[1]][[ptm_name]] <- NULL
-      params$ModifiableResiduesDistr[[1]][[ptm_name]] <- NULL
+      params$ModifiableResidues$value[[1]][[ptm_name]] <- NULL
+      params$ModifiableResiduesDistr$value[[1]][[ptm_name]] <- NULL
       parameters(params)
 
       # remove line of PTM from ptm_table
@@ -324,6 +335,8 @@ server <- function(input, output, session) {
                 output[[paste0(up_param_name,"_file")]] <- renderText({
                   basename(value)
                 })
+                if (!is.null(value$datapath))
+                  value <- value$datapath
               } else if (params[[up_param_name]]$class == "boolean") {
                 # update checkboxInput
                 updateCheckboxInput(session, up_param_name, value = value)
@@ -378,9 +391,9 @@ server <- function(input, output, session) {
   observe({
     all_valid(TRUE)
     params <- parameters()
+    print("Check and update parameters")
     for (param_name in names(params)) {
       # validate parameter values
-      # TODO Check ptm parameters
       value <- input[[param_name]]
       checked <- validate_param_values(param_name, params[[param_name]], value)
       if (!checked$valid) {
@@ -420,6 +433,8 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
 
     progress$set(message = "Running simulation...")
+
+    print(phosfake_config)
 
     # Initialize empty lists for each category
     Param <- list(
