@@ -65,7 +65,7 @@ server <- function(input, output, session) {
       }
     } else if (class == "file") {
       # File check: Ensure the file is not NULL (if required)
-      if (!is.null(input_value) & !is.na(input_value)) {
+      if (!is.null(all(unlist(input_value))) & !is.na(all(unlist(input_value)))) {
         # Check if file exists
         if (file.exists(input_value)) {
           valid <- TRUE
@@ -208,6 +208,8 @@ server <- function(input, output, session) {
       updateNumericInput(session, "ptm_aa_S", value = 0.86)
       updateNumericInput(session, "ptm_aa_T", value = 0.13)
       updateNumericInput(session, "ptm_aa_Y", value = 0.01)
+    } else if (input$ptm_types == "ox") {
+      updateNumericInput(session, "ptm_aa_M", value = 1)
     } else if (input$ptm_types == "ac") {
       updateNumericInput(session, "ptm_aa_K", value = 1)
     } else if (input$ptm_types == "me") {

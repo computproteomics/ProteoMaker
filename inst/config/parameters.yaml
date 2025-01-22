@@ -79,7 +79,7 @@ params:
     class: "ptm"
     min: NA
     max: NA
-    choices : ["ph", "ac", "me","de", NA]
+    choices : ["ph", "ox", "ac", "me","de", NA]
     default: NA
   PTMTypesDistr:
     group: "Ground Truth Data"
@@ -97,7 +97,7 @@ params:
     description: "Mass shifts for each PTM type. Also given as named list for the same simulation"
     min: 0
     max: 200
-    choices: [79.966331, 42.010565, 14.01565, 0.984016, NA]
+    choices: [79.966331, 15.994915, 42.010565, 14.01565, 0.984016, NA]
     class: "ptm"
     default: NA
   ModifiableResidues:
@@ -221,7 +221,7 @@ params:
     type: "paramDigest"
     description: "Maximum peptide length."
     min: 1
-    max: 50
+    max: 60
     class: "numeric"
     default: 30
   LeastAbundantLoss:
@@ -262,7 +262,7 @@ params:
     type: "paramDigest"
     description: "Noise due to enrichment protocol."
     min: 0
-    max: 1
+    max: 10
     class: "numeric"
     default: 0.2
   ModificationLoss:
