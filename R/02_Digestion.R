@@ -184,13 +184,13 @@ proteoformDigestion <- function(proteoform, parameters) {
 #' @importFrom scales rescale
 #' @keywords internal
 digestGroundTruth <- function(proteoforms, parameters) {
-    message("#PROTEOFORM DIGESTION - Start")
+    message("\n#PROTEOFORM DIGESTION - Start\n")
     message(" + Digestion input:")
     message("  - A total number of ", nrow(proteoforms), " proteoforms, is proceed for proteolytic digestion.")
     message("  - Unmodified fraction contains ", sum(lengths(proteoforms$PTMType) == 0), " proteoforms and modified fraction ", sum(lengths(proteoforms$PTMType) != 0), " proteoforms.")
     message(
         "  - Cleavage will be performed by ", parameters$Enzyme, " with a maximum of ", parameters$MaxNumMissedCleavages,
-        " miss-cleavages, to create peptides of length ", parameters$PepMinLength, " to ", parameters$PepMaxLength, " amino acids.\n"
+        " miss-cleavages, to create peptides of length ", parameters$PepMinLength, " to ", parameters$PepMaxLength, " amino acids."
     )
 
     # TODO REVERT
@@ -405,7 +405,7 @@ digestionProductSummarization <- function(peptides, parameters) {
 
 
     message(" + Summarization output:")
-    message("  - A total number of ", nrow(peptides), " summarized peptides is generated.")
+    message("  - A total number of ", nrow(peptides), " summarized peptides is generated.\n")
     message("#PEPTIDE SUMMARIZATION - Finish\n")
 
     return(peptides)
@@ -434,7 +434,7 @@ filterDigestedProt <- function(DigestedProt, parameters) {
 
     ## Removing fraction according to ModificationLoss parameter
     numRemove <- floor(nrow(DigestedProt) * parameters$ModificationLoss)
-    message("#ENRICHMENT SIMULATION - Start")
+    message("\n#ENRICHMENT SIMULATION - Start\n")
     message(" + Modification loss")
     message("  - Remove ", numRemove, " peptides in non-enriched fraction according to parameter ModificationLoss (",
         parameters$ModificationLoss, ")")
@@ -442,8 +442,8 @@ filterDigestedProt <- function(DigestedProt, parameters) {
     if (length(idx) > 0)
     DigestedProt <- DigestedProt[-idx, ]
 
-    if (sum(enriched) == 0) {
-      message("#ENRICHMENT SIMULATION - Finish")
+    if (sum(enriched) == 0 | is.na(parameters$EnrichPTM) | parameters$EnrichmentEfficiency == 0) {
+      message("\n#ENRICHMENT SIMULATION - Finish\n")
         return(list("NonEnriched" = DigestedProt, "Enriched" = NULL))
     } else {
         ## Exact copy of "sample"
@@ -456,8 +456,10 @@ filterDigestedProt <- function(DigestedProt, parameters) {
         idx <- sample(seq_len(nrow(enrichedtab)), size = numRemove, replace = FALSE)
         enrichedtab <- enrichedtab[-idx, ]
 
-        # TODO change to selected PTMs
-        modified <- lengths(enrichedtab$PTMType) != 0
+        # Select rows with PTM to be enriched
+        modified <- sapply(enrichedtab$PTMType, function(x) sum(unlist(x) == parameters$EnrichPTM) > 0)
+
+        message(" + Enriching PTM: ", parameters$EnrichPTM, ", having ", sum(modified), " peptides with this PTM in enriched fraction.")
 
         # Calculate total sum and average of intensities for modified and non-modified peptides in enriched fraction
         enrichedtab_modified <- enrichedtab[modified, parameters$QuantColnames]

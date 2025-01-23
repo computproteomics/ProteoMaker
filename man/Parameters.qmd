@@ -106,6 +106,10 @@ This document provides a detailed description of the parameters used in the Phos
 
 ## Sample Preparation Simulation Parameters
 
+### PTM for enrichment
+
+*Param\$EnrichPTM*: PTM that will be enriched. One can select only one PTM and all of its residues will be affected. Default is 'NA', so no PTM will be enriched.
+
 ### Enrichment Loss
 
 *Param\$EnrichmentLoss*: The loss of phosphorylated peptides during enrichment. Set to `0.2`. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.

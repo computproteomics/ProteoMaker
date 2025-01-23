@@ -232,6 +232,15 @@ params:
     max: 1
     class: "numeric"
     default: 0
+  EnrichPTM:
+    group: "Sample Preparation"
+    type: "paramDigest"
+    description: 'Post-translational modification (PTM) that will be enriched.'
+    class: "string"
+    min: NA
+    max: NA
+    choices : ["ph", "ox", "ac", "me","de", NA]
+    default: NA
   EnrichmentLoss:
     group: "Sample Preparation"
     type: "paramDigest"
