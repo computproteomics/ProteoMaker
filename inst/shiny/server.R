@@ -31,7 +31,7 @@ server <- function(input, output, session) {
 
   # Function to validate parameters based on their type and constraints
   validate_param_values <- function(param_name, param_info, input_value) {
-    print(paste("Validating parameter: ", param_name, param_info$class, input_value))
+    #print(paste("Validating parameter: ", param_name, param_info$class, input_value))
     class <- param_info$class
     min_val <- param_info$min
     max_val <- param_info$max
@@ -68,17 +68,20 @@ server <- function(input, output, session) {
 
       if (!all(is.null(unlist(input_value))) & !all(is.na(unlist(input_value)))) {
         # Check if file exists
-        print(input_value)
-        print(names(input_value))
-        if (file.exists(input_value$datapath)) {
-          valid <- TRUE
-          phosfake_config$fastaFilePath <<- ""
-          input_value <- input_value$datapath
+       if ("datapath" %in% names(input_value)) {
+          if (file.exists(input_value$datapath)) {
+            valid <- TRUE
+            phosfake_config$fastaFilePath <<- ""
+            input_value <- input_value$datapath
+          } else {
+            valid <- FALSE
+            error_message <- paste("Error: File not available, please upload existing", param_name)
+          }
+          # Check whether file is in the inst/Proteomes folder
         } else if (file.exists(input_value)) {
           valid <- TRUE
           phosfake_config$fastaFilePath <<- ""
-          # Check whether file is in the inst/Proteomes folder
-        } else if (grepl(input_value, list.files(path = system.file("Proteomes", package = "PhosFake")))) {
+        } else if (any(grepl(input_value, list.files(path = system.file("Proteomes", package = "PhosFake"))))) {
           valid <- TRUE
           phosfake_config$fastaFilePath <<- system.file("Proteomes", package = "PhosFake")
         } else {
@@ -119,51 +122,56 @@ server <- function(input, output, session) {
 
   # Separate validation for PTM parameters
   validate_ptm_params <- function(params, up_params) {
+    print("Check and update ptm parameters")
     valid <- TRUE
     message <- NULL
     # Check PTM parameters
-    ptms <- params$PTMTypes$value[[1]]
+    ptms <- up_params$PTMTypes$value[[1]]
+    print(ptms)
     if (!is.null(ptms)) {
       # check distr
       if (!all(sort(names(up_params$PTMTypesDistr$value[[1]])) == sort(ptms))) {
         valid <- FALSE
-        message <- "Error: PTMTypesDistr needs to be list of named vector/list containing the relative
+        error_message <- "Error: PTMTypesDistr needs to be list of named vector/list containing the relative
           frequency of each PTM."
       } else if (!all(sort(names(up_params$PTMTypesMass$value[[1]])) == sort(ptms))) {
         valid <- FALSE
-        message <- "Error: PTMTypesMass needs to be list of named vector/list containing the mass of each PTM."
+        error_message <- "Error: PTMTypesMass needs to be list of named vector/list containing the mass of each PTM."
       } else if (!all(sort(names(up_params$ModifiableResidues$value[[1]])) == sort(ptms))) {
         valid <- FALSE
-        message <- "Error: ModifiableResidues needs to be list of named vector/list containing the amino acids
+        error_message <- "Error: ModifiableResidues needs to be list of named vector/list containing the amino acids
           that can be modified by each PTM."
       } else if (!all(sort(names(up_params$ModifiableResiduesDistr$value[[1]])) == sort(ptms))) {
         valid <- FALSE
-        message <- "Error: ModifiableResiduesDistr needs to be list of named vector/list containing the relative
+        error_message <- "Error: ModifiableResiduesDistr needs to be list of named vector/list containing the relative
           frequency of each amino acid that can be modified by each PTM."
       } else if (!all(is.numeric(unlist(up_params$PTMTypesDistr$value)))) {
         valid <- FALSE
-        message <- "Error: PTMTypesDistr needs to be list of named vector/list containing the relative
+        error_message <- "Error: PTMTypesDistr needs to be list of named vector/list containing the relative
           frequency of each PTM."
       } else if (!all(is.numeric(unlist(up_params$PTMTypesMass$value)))) {
         valid <- FALSE
-        message <- "Error: PTMTypesMass needs to be list of named vector/list containing the mass of each PTM."
+        error_message <- "Error: PTMTypesMass needs to be list of named vector/list containing the mass of each PTM."
       } else if (!all(is.character(unlist(up_params$ModifiableResidues$value)))) {
         valid <- FALSE
-        message <- "Error: ModifiableResidues needs to be list of named vector/list containing the amino acids
+        error_message <- "Error: ModifiableResidues needs to be list of named vector/list containing the amino acids
           that can be modified by each PTM."
       } else if (!all(is.numeric(unlist(up_params$ModifiableResiduesDistr$value)))) {
         valid <- FALSE
-        message <- "Error: ModifiableResiduesDistr needs to be list of named vector/list containing the relative
+        error_message <- "Error: ModifiableResiduesDistr needs to be list of named vector/list containing the relative
           frequency of each amino acid that can be modified by each PTM."
       }
     }
 
-    # Overwrite paramter values when valid
+    # Overwrite parameter values when valid
     if (valid) {
+      print("Overwriting ptms")
+      params$PTMTypes$value <- up_params$PTMTypes$value
       params$PTMTypesDistr$value <- up_params$PTMTypesDistr$value
       params$PTMTypesMass$value <- up_params$PTMTypesMass$value
       params$ModifiableResidues$value <- up_params$ModifiableResidues$value
       params$ModifiableResiduesDistr$value <- up_params$ModifiableResiduesDistr$value
+
       parameters(params)
     }
 
@@ -171,7 +179,7 @@ server <- function(input, output, session) {
     if (valid) {
       return(list(valid = TRUE, message = paste("PTM parameters ares valid.")))
     } else {
-      return(list(valid = FALSE, message = message))
+      return(list(valid = FALSE, message = error_message))
     }
   }
 
@@ -358,7 +366,6 @@ server <- function(input, output, session) {
         checked <- validate_ptm_params(params, up_params)
         if (checked$valid) {
           update_ptm_info <- NULL
-          print(up_params)
           for (ptm_name in up_params$PTMTypes$value[[1]]) {
             ptm_fraction <- up_params$PTMTypesDistr$value[[1]][[ptm_name]]
             ptm_aa <- up_params$ModifiableResidues$value[[1]][[ptm_name]]
@@ -380,7 +387,6 @@ server <- function(input, output, session) {
           shinyalert(checked$message)
           all_valid(FALSE)
         }
-        parameters(params)
       }, error = function(e) {
         shinyalert("Error reading the YAML file: ", e$message)
       })
@@ -433,8 +439,6 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
 
     progress$set(message = "Running simulation...")
-
-    print(phosfake_config)
 
     # Initialize empty lists for each category
     Param <- list(

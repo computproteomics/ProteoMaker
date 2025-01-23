@@ -25,6 +25,7 @@ params:
     min: NA
     max: NA
     default: fasta_example.fasta
+    value: /tmp/Rtmp5NKXjQ/850e47342b79f136c6fc6485/0.fasta
   PathToProteinList:
     group: Input Data
     type: paramGroundTruth
@@ -403,7 +404,7 @@ params:
     max: 1
     class: numeric
     default: 0.25
-    value: 0.25
+    value: 0.75
   PercDetectedVal:
     group: MS Run
     type: paramMSRun

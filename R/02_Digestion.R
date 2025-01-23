@@ -456,6 +456,7 @@ filterDigestedProt <- function(DigestedProt, parameters) {
         idx <- sample(seq_len(nrow(enrichedtab)), size = numRemove, replace = FALSE)
         enrichedtab <- enrichedtab[-idx, ]
 
+        # TODO change to selected PTMs
         modified <- lengths(enrichedtab$PTMType) != 0
 
         # Calculate total sum and average of intensities for modified and non-modified peptides in enriched fraction
