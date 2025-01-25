@@ -72,7 +72,15 @@ server <- function(input, output, session) {
           if (file.exists(input_value$datapath)) {
             valid <- TRUE
             phosfake_config$fastaFilePath <<- ""
-            input_value <- input_value$datapath
+            # calculate sha256 of file
+            filehash <- digest::digest(file = input_value$datapath, algo = "crc32", serialize = FALSE)
+            # New file name
+            new_file_name <- paste0(phosfake_config$resultFilePath, "/",
+                                     basename(input_value$name), "_", filehash,
+                                    ".", tools::file_ext(input_value$datapath))
+            # Copy file to original name and hash, keep extension at the end
+            file.copy(input_value$datapath, new_file_name, overwrite = T)
+            input_value <- new_file_name
           } else {
             valid <- FALSE
             error_message <- paste("Error: File not available, please upload existing", param_name)

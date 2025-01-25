@@ -234,7 +234,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
       Param <- tParam
       # Add path to fasta file
       ttParam <- Param
-      ttParam$PathToFasta <- paste0(Config$fastaFilePath, "/", Param$PathToFasta)
+      ttParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
       groundTruth <- samplePreparation(parameters = ttParam)
       if (!is.null(groundTruth)) {
         save(groundTruth, Param, file = filename)

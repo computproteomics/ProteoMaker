@@ -12,11 +12,12 @@ RUN R -e 'BiocManager::install(c("preprocessCore","qvalue","limma","SummarizedEx
 
 RUN R -e 'install.packages("devtools");devtools::install_github("rr-2/PeptideRanger")'
 RUN R -e 'install.packages("devtools");devtools::install_github("computproteomics/polystest")'
-RUN R -e 'install.packages("devtools");devtools::install_github("veitveit/PhosFake")'
 
 # libraries for the shiny app
-RUN R -e 'install.packages(c("rmarkdoown","shinyWidgets","shinyBS","bslib","shinyalert","shinyjs","DT"))'
+RUN R -e 'install.packages(c("rmarkdown","shinyWidgets","shinyBS","bslib","shinyalert","shinyjs","DT"))'
 
+# Install PhosFake
+RUN R -e 'install.packages("devtools");devtools::install_github("veitveit/PhosFake")'
 
 RUN rm -rf /srv/shiny-server
 RUN mkdir /srv/shiny-server

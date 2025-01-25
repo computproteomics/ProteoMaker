@@ -26,9 +26,9 @@ Param <- def_param("tmp/parameters.yaml")
 Param$paramGroundTruth$PathToFasta <- "fasta_full_yeast.fasta"
 
 
-# Param$paramGroundTruth$NumReps <- c(3)
+ Param$paramGroundTruth$NumReps <- c(5)
 # Param$paramGroundTruth$NumCond <- 5
-Param$paramGroundTruth$PercExpressedProt <- 1.0
+Param$paramGroundTruth$PercExpressedProt <- 0.5
 
 Param$paramGroundTruth$FracModProt <- 0
 # Param$paramGroundTruth$PTMTypes <- list(mods=c("ph", "ox"))
@@ -51,8 +51,8 @@ Param$paramGroundTruth$FracModProt <- 0
 # Param$paramDataAnalysis$MinUniquePep <- 100
 
 # Param$paramProteoformAb$QuantNoise <- c(0.5)
-# Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
-# Param$paramProteoformAb$DiffRegMax <- seq(0.5, 2, 0.5)
+#Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
+ Param$paramProteoformAb$DiffRegMax <- c(3)
 # Param$paramDigest$Enzyme <- "trypsin"
 # Param$paramDigest$PropMissedCleavages <- 0.01
 # Param$paramDigest$MaxNumMissedCleavages <- 4
@@ -62,10 +62,10 @@ Param$paramGroundTruth$FracModProt <- 0
 # Param$paramDigest$EnrichmentEfficiency <- 0.8
 Param$paramDigest$EnrichPTM <- NA
 # Param$paramDigest$ModificationLoss <- 0.5
-Param$paramMSRun$PercDetectedVal <- 0.9
-Param$paramMSRun$PercDetectability <- 0.8
+Param$paramMSRun$PercDetectedVal <- 0.5
+Param$paramMSRun$PercDetectability <- 0.5
 # Param$paramMSRun$WrongLocalizations <- 0.1
-Param$paramMSRun$WrongIDs <- c(0.0, 0.001, 0.01, 0.1)
+Param$paramMSRun$WrongIDs <- seq(0,0.1,0.01)
 
 #####################
 ## Read parameters from yaml file
@@ -85,7 +85,7 @@ allBs <- run_sims(Param, phosfake_config)
 #####################
 ## Get the results of an individual simulation
 #####################
-res <- get_simulation(allBs[[1]]$Param, phosfake_config, "Digest")
+res <- get_simulation(allBs[[1]]$Param, phosfake_config)
 
 #####################
 ## Make matrix of benchmarks and save
@@ -97,5 +97,5 @@ write.csv(benchmarks, file = paste0(phosfake_config$resultFilePath, "/allBenchma
 ## Visualize the results
 #####################
 # visualize the benchmarks and parameters of the second simulation
-visualize_benchmarks(benchmarks,4)
+visualize_benchmarks(benchmarks,2)
 

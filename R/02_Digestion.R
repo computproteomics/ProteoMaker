@@ -435,13 +435,13 @@ filterDigestedProt <- function(DigestedProt, parameters) {
   ## Removing fraction according to ModificationLoss parameter
   numRemove <- 0
   if (sum(modified) > 0) {
-    numRemove <- floor(nrow(DigestedProt)[modified] * parameters$ModificationLoss)
+    numRemove <- floor(sum(modified) * parameters$ModificationLoss)
   }
   message("\n#ENRICHMENT SIMULATION - Start\n")
   message(" + Modification loss")
   message("  - Remove ", numRemove, " modified peptides in non-enriched fraction according to parameter ModificationLoss (",
           parameters$ModificationLoss, ")")
-  idx <- sample(seq_len(nrow(DigestedProt)), size = numRemove, replace = FALSE)
+  idx <- sample(which(modified), size = numRemove, replace = FALSE)
   nonenrichedtab <- DigestedProt
   if (length(idx) > 0)
     nonenrichedtab <- nonenrichedtab[-idx, ]
