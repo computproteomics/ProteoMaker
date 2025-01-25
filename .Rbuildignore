@@ -2,3 +2,10 @@
 ^Meta$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^SimulatedDataSets
+^inst/ExperimentalBenchmarks/
+^inst/img
+^.github/
+^.gitignore
+^inst/Proteomes/input_Stoechio
+^tmp/

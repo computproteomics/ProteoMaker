@@ -1,7 +1,5 @@
 # PhosFake: Simulating proteoforms in bottom-up proteomics
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4540737.svg)](https://doi.org/10.5281/zenodo.4540737)
-
 Phosfake is a platform for the  generation of an in-silico bottom-up proteomics data set with a ground truth on the level of proteoforms. 
 
 All the parameters that are used to generate the data are described in [man/Parameters.qmd](man/Parameters.html). The script that runs the entire pipeline is [`RunSims.R`](inst/cmd/RunSims.R). Alternatively, you can use the [Vignette](vignettes/Vignette.html). The simulations with multiple parameters can be set up and run. PhosFake also provides comparison of the results with the ground truth using [benchmarking metrics](man/Benchmarks.html) and visual comparison between simulated data sets.

@@ -25,7 +25,7 @@ params:
     min: NA
     max: NA
     default: fasta_example.fasta
-    value: /tmp/Rtmp5NKXjQ/850e47342b79f136c6fc6485/0.fasta
+    value: SimulatedDataSets/fasta_full_human.fasta_75e971bb.fasta
   PathToProteinList:
     group: Input Data
     type: paramGroundTruth
@@ -42,7 +42,7 @@ params:
     max: 1
     class: numeric
     default: 1
-    value: 0.95
+    value: 1
   FracModProt:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -51,7 +51,7 @@ params:
     max: 1
     class: numeric
     default: 0
-    value: 0.8
+    value: 0
   PropModPerProt:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -61,7 +61,7 @@ params:
     max: 5
     class: numeric
     default: 0
-    value: 0.3
+    value: 0
   PTMMultipleLambda:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -71,7 +71,7 @@ params:
     max: 5
     class: numeric
     default: 0
-    value: 0.4
+    value: 0
   RemoveNonModFormFrac:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -80,7 +80,7 @@ params:
     max: 1
     class: numeric
     default: 0
-    value: 1
+    value: 0
   PTMTypes:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -98,10 +98,6 @@ params:
     - de
     - NA
     default: NA
-    value:
-      mods:
-      - ox
-      - ph
   PTMTypesDistr:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -124,9 +120,6 @@ params:
     - 1
     - NA
     default: NA
-    value:
-    - ox: 1
-      ph: 5
   PTMTypesMass:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -143,9 +136,6 @@ params:
     - NA
     class: ptm
     default: NA
-    value:
-    - ox: 15.994915
-      ph: 79.966331
   ModifiableResidues:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -177,12 +167,6 @@ params:
     - L
     - G
     default: NA
-    value:
-    - ox: M
-      ph:
-      - S
-      - T
-      - 'Y'
   ModifiableResiduesDistr:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -205,12 +189,6 @@ params:
     - 1
     - NA
     default: NA
-    value:
-    - ox: 1.0
-      ph:
-      - 0.86
-      - 0.13
-      - 0.01
   QuantNoise:
     group: Proteoform Quantities
     type: paramProteoformAb
@@ -219,7 +197,7 @@ params:
     max: 5
     class: numeric
     default: 0.5
-    value: 0.35
+    value: 0.5
   DiffRegFrac:
     group: Proteoform Quantities
     type: paramProteoformAb
@@ -228,7 +206,7 @@ params:
     max: 1
     class: numeric
     default: 0.3
-    value: 0.2
+    value: 0.3
   DiffRegMax:
     group: Proteoform Quantities
     type: paramProteoformAb
@@ -238,7 +216,7 @@ params:
     max: 10
     class: numeric
     default: 1
-    value: 10
+    value: 1
   UserInputFoldChanges_NumRegProteoforms:
     group: Proteoform Quantities
     type: paramProteoformAb
@@ -302,7 +280,7 @@ params:
     - argC
     class: string
     default: trypsin
-    value: trypsin.strict
+    value: trypsin
   PropMissedCleavages:
     group: Enzymatic Digestion
     type: paramDigest
@@ -311,7 +289,7 @@ params:
     max: 1
     class: numeric
     default: 0.01
-    value: 0.2
+    value: 0.01
   MaxNumMissedCleavages:
     group: Enzymatic Digestion
     type: paramDigest
@@ -320,7 +298,7 @@ params:
     max: 10
     class: numeric
     default: 2
-    value: 3
+    value: 2
   PepMinLength:
     group: Enzymatic Digestion
     type: paramDigest
@@ -329,7 +307,7 @@ params:
     max: 50
     class: numeric
     default: 7
-    value: 6
+    value: 7
   PepMaxLength:
     group: Enzymatic Digestion
     type: paramDigest
@@ -338,7 +316,7 @@ params:
     max: 60
     class: numeric
     default: 30
-    value: 57
+    value: 30
   LeastAbundantLoss:
     group: Enzymatic Digestion
     type: paramDigest
@@ -347,7 +325,23 @@ params:
     max: 1
     class: numeric
     default: 0
-    value: 0.05
+    value: 0
+  EnrichPTM:
+    group: Sample Preparation
+    type: paramDigest
+    description: Post-translational modification (PTM) that will be enriched.
+    class: string
+    min: NA
+    max: NA
+    choices:
+    - ph
+    - ox
+    - ac
+    - me
+    - de
+    - NA
+    default: NA
+    value: ph
   EnrichmentLoss:
     group: Sample Preparation
     type: paramDigest
@@ -356,7 +350,7 @@ params:
     max: 1
     class: numeric
     default: 0.2
-    value: 0.1
+    value: 0.2
   EnrichmentEfficiency:
     group: Sample Preparation
     type: paramDigest
@@ -365,7 +359,7 @@ params:
     max: 1
     class: numeric
     default: 1
-    value: 0.4
+    value: 1
   EnrichmentQuantDiff:
     group: Sample Preparation
     type: paramDigest
@@ -375,7 +369,7 @@ params:
     max: 10
     class: numeric
     default: 0.0
-    value: 0.7
+    value: 0
   EnrichmentNoise:
     group: Sample Preparation
     type: paramDigest
@@ -384,7 +378,7 @@ params:
     max: 10
     class: numeric
     default: 0.2
-    value: 2
+    value: 0.2
   ModificationLoss:
     group: Sample Preparation
     type: paramDigest
@@ -394,7 +388,7 @@ params:
     max: 1
     class: numeric
     default: 0.0
-    value: 0.99
+    value: 0
   PercDetectability:
     group: MS Run
     type: paramMSRun
@@ -404,7 +398,7 @@ params:
     max: 1
     class: numeric
     default: 0.25
-    value: 0.75
+    value: 0.25
   PercDetectedVal:
     group: MS Run
     type: paramMSRun

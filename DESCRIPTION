@@ -1,7 +1,7 @@
 Package: PhosFake
 Type: Package
 Title: Simulations of LC-MS Data from Proteoforms
-Version: 0.4.0
+Version: 0.4.5
 Date: 2024-07-30
 Author: Veit Schwämmle, Marie Locard-Paulet
 Maintainer: Your Name <veits@bmb.sdu.dk>
@@ -35,7 +35,9 @@ Imports:
     scales,
     stringi,
     S4Vectors,
-    DT
+    DT,
+    PolySTest,
+    PeptideRanger
 Remotes: 
     rr-2/PeptideRanger, 
     computproteomics/PolySTest
@@ -49,7 +51,6 @@ Suggests:
     shinyalert,
     bslib,
     shinyjs,
-    DT
 License: MIT
 Encoding: UTF-8
 LazyData: true

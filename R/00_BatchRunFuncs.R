@@ -2,6 +2,13 @@
 #                       QC batch test of the parameters                        #
 ################################################################################
 #
+#' @keywords internal
+#' @importFrom stats rnorm runif quantile sd na.omit medpolish setNames
+#' @importFrom graphics barplot legend lines par
+#' @importFrom utils read.csv
+#' @importFrom stringr str_count
+NULL
+
 
 #' Set paths and general configuration for PhosFake
 #'

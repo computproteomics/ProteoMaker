@@ -39,7 +39,7 @@ proteinInput <- function(parameters) {
   # Check is the fasta file can be loaded.
   error <- try(protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
 
-  if (class(error) != "try-error") {
+  if (!inherits(error, "try-error")) {
 
     # Read fasta.
     fasta <- protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE)
@@ -137,7 +137,7 @@ proteinInput <- function(parameters) {
         # Check is the protein list file can be loaded.
         error <- try(read.csv(parameters$PathToProteinList, header = F, stringsAsFactors = F), silent = TRUE)
 
-        if (class(error) != "try-error") {
+        if (!inherits(error, "try-error")) {
           protein.list.input <- unique(as.vector(read.csv(parameters$PathToProteinList, header = F, stringsAsFactors = F)[, 1]))
           message("  - Protein list file ", parameters$PathToProteinList, " loaded and contains ", length(protein.list.input), " unique protein accessions.")
 
@@ -303,7 +303,7 @@ performModification <- function(to.Modify, parameters) {
 #' This function modified based on the modification type and residue frequencies.
 #'
 #' @param seq A character vector of protein sequences to be modified.
-#' @param param A list of parameters for the modification process, including:
+#' @param pars A list of parameters for the modification process, including:
 #'  \itemize{
 #'  \item \code{ModifiableResidues}: A list of amino acid residues that can be modified for each PTM type.
 #'  \item \code{PTMTypes}: A character vector of modification types.
