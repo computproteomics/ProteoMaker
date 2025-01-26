@@ -288,7 +288,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
               Param, list(Cores = Config$cores,
                           ClusterType = Config$clusterType)))
           peptable <- digestionProductSummarization(peptides = peptable,
-                                                    parameters = Param)
+                                                    parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType)))
           BeforeMS <- filterDigestedProt(DigestedProt = peptable,
                                          parameters = Param)
           save(Param, BeforeMS, file = filename)

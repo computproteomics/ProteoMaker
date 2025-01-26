@@ -8,7 +8,7 @@
 #####################
 phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"),
                                 resultFilePath = "SimulatedDataSets",
-                                cores = 1, clusterType = "PSOCK",
+                                cores = 2, clusterType = "PSOCK",
                                 runStatTests = T,
                                 calcAllBenchmarks = T
                                 )
@@ -23,10 +23,10 @@ Param <- def_param("tmp/parameters.yaml")
 # Overwrite the default values with the ones you want to test
 # You can use multiple values for each parameter that then will be combined for
 # all possible combinations in different simulated datasets
-Param$paramGroundTruth$PathToFasta <- "fasta_full_yeast.fasta"
+Param$paramGroundTruth$PathToFasta <- "fasta_full_human.fasta"
 
 
- Param$paramGroundTruth$NumReps <- c(5)
+Param$paramGroundTruth$NumReps <- c(5)
 # Param$paramGroundTruth$NumCond <- 5
 Param$paramGroundTruth$PercExpressedProt <- 0.5
 
@@ -63,9 +63,9 @@ Param$paramGroundTruth$FracModProt <- 0
 Param$paramDigest$EnrichPTM <- NA
 # Param$paramDigest$ModificationLoss <- 0.5
 Param$paramMSRun$PercDetectedVal <- 0.5
-Param$paramMSRun$PercDetectability <- 0.5
+Param$paramMSRun$PercDetectability <- 0.25
 # Param$paramMSRun$WrongLocalizations <- 0.1
-Param$paramMSRun$WrongIDs <- seq(0,0.3,0.01)
+Param$paramMSRun$WrongIDs <- 0 #seq(0,0.3,0.01)
 
 #####################
 ## Read parameters from yaml file
