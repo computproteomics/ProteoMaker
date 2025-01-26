@@ -1,10 +1,9 @@
 ---
-title: "PhosFake Parameters"
+title: "PhosFake Pipeline Parameters"
 format: html
 editor: visual
 ---
 
-# PhosFake Pipeline Parameters
 
 This document provides a detailed description of the parameters used in the PhosFake pipeline. PhosFake is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit [PhosFake on GitHub](https://github.com/veitveit/PhosFake).
 

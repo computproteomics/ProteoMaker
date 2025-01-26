@@ -52,7 +52,7 @@ Param$paramGroundTruth$FracModProt <- 0
 
 # Param$paramProteoformAb$QuantNoise <- c(0.5)
 #Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
- Param$paramProteoformAb$DiffRegMax <- c(3)
+ Param$paramProteoformAb$DiffRegMax <- c(5)
 # Param$paramDigest$Enzyme <- "trypsin"
 # Param$paramDigest$PropMissedCleavages <- 0.01
 # Param$paramDigest$MaxNumMissedCleavages <- 4
@@ -65,7 +65,7 @@ Param$paramDigest$EnrichPTM <- NA
 Param$paramMSRun$PercDetectedVal <- 0.5
 Param$paramMSRun$PercDetectability <- 0.5
 # Param$paramMSRun$WrongLocalizations <- 0.1
-Param$paramMSRun$WrongIDs <- seq(0,0.1,0.01)
+Param$paramMSRun$WrongIDs <- seq(0,0.3,0.01)
 
 #####################
 ## Read parameters from yaml file
@@ -98,4 +98,5 @@ write.csv(benchmarks, file = paste0(phosfake_config$resultFilePath, "/allBenchma
 #####################
 # visualize the benchmarks and parameters of the second simulation
 visualize_benchmarks(benchmarks,2)
+
 

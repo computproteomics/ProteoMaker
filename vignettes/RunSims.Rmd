@@ -62,7 +62,9 @@ phosfake_config <- set_phosfake(
 ## Set Simulation Parameters
 
 Generate a default list of testing parameters using the `def_param` function. You can overwrite the default values with those you want to test by changing the parameters directly, or by loading a yaml file. An example 
-for the yaml file with the default parameters is available [here](https://github.com/veitveit/PhosFake/blob/master/inst/config/parameters.yaml).
+for the yaml file with the default parameters is available [here](https://github.com/veitveit/PhosFake/blob/master/inst/config/parameters.yaml). 
+
+A more details documentation of the parameters can be found [here](https://computproteomics.bmb.sdu.dk/app_direct/PhosFake/Parameters.html).
 
 Multiple values for each parameter can be combined to generate different simulated datasets. This flexibility allows you to customize the simulations according to your arrays of experimental needs.
 

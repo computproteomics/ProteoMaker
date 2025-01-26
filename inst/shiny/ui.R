@@ -121,7 +121,10 @@ create_param_panels <- function(group, def_params) {
 # UI Section
 ui <- page_sidebar(
   # Load the audio file and play it automatically
-  title = h2("PhosFake Simulator"),
+  title = tagList(
+  tags$img(src = "PhosFakeLogo.png", height = "70px"),
+  h2("PhosFake Simulator")
+  ),
   theme = bs_theme(bootswatch = "vapor"),
   shinyjs::useShinyjs(),
   #bootstrapLib(bs_theme()),
@@ -167,7 +170,8 @@ ui <- page_sidebar(
       # Button to start simulation
       actionButton("start_sim", "Start Simulation"),
       checkboxInput("overwrite", "Overwrite existing files", value = FALSE),
-      tags$audio(src = "PhosFake Dreams.mp3", type = "audio/mp3", controls = NA),#, autoplay = NA),
+      tags$audio(src = "PhosFake Dreams.mp3", type = "audio/mp3", controls = NA, style = "width: 150px; height: 30px;"),
+      br(),#, autoplay = NA),
       checkboxInput("run_stat", "Run statistical tests on results", value = FALSE),
       checkboxInput("run_benchmarks", "Calculate benchmarking metrics", value = FALSE),
       textOutput("parameters_valid"),
