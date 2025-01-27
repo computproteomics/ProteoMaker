@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(PhosFake)
+library(ProteoMaker)
 
-test_check("PhosFake")
+test_check("ProteoMaker")

@@ -18,7 +18,7 @@
 #' @keywords internal
 param_table <- function() {
 
-    yaml_file <- system.file("config", "parameters.yaml", package = "PhosFake")
+    yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
 
     # Read the YAML file
     params <- yaml::yaml.load_file(yaml_file)$params

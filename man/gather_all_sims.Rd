@@ -8,7 +8,7 @@ gather_all_sims(Config, stage = "DataAnalysis")
 }
 \arguments{
 \item{Config}{A list of configuration settings, including file paths and
-computational settings, typically generated using \code{set_phosfake}.}
+computational settings, typically generated using \code{set_proteomaker}.}
 
 \item{stage}{A character string indicating the stage of the simulation for
 which the output is requested. Default is \code{"DataAnalysis"}. Values are \code{"GroundTruth"},
@@ -22,7 +22,7 @@ This function retrieves the parameters and benchmarks (if available) from all av
 and compiles them into a list for further analysis.
 }
 \examples{
-config <- set_phosfake(resultFilePath = tempdir())
+config <- set_proteomaker(resultFilePath = tempdir())
 all_results <- gather_all_sims(config)
 
 }

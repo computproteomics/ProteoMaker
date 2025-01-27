@@ -1,6 +1,6 @@
 library(PhosFake)
 # Load the YAML file
-yaml_file <- system.file("config", "parameters.yaml", package = "PhosFake")
+yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
 if (!file.exists(yaml_file) || file.size(yaml_file) == 0) {
   stop("YAML file could not be loaded or is empty.")
 }
@@ -9,9 +9,9 @@ if (is.null(def_params) || length(def_params) == 0) {
   stop("The params object is empty or invalid.")
 }
 
-phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"),
+proteomaker_config <- set_proteomaker(fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
                                 resultFilePath = "SimulatedDataSets",
-                                cores = 4, clusterType = "PSOCK",
+                                cores = 16, clusterType = "PSOCK",
                                 runStatTests = F,
                                 calcAllBenchmarks = T
 )

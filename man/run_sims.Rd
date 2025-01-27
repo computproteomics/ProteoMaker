@@ -11,7 +11,7 @@ run_sims(Parameters, Config, overwrite = FALSE)
 generated using \code{def_param}.}
 
 \item{Config}{A list containing configuration settings, such as file paths
-and computational settings, typically generated using \code{set_phosfake}.}
+and computational settings, typically generated using \code{set_proteomaker}.}
 
 \item{overwrite}{A logical value indicating whether to overwrite existing
 simulation results. Default is \code{FALSE}.}
@@ -29,6 +29,6 @@ saved to the output directory specified in \code{def_param}.
 }
 \examples{
 params <- def_param()
-config <- set_phosfake()
+config <- set_proteomaker()
 results <- run_sims(params, config)
 }

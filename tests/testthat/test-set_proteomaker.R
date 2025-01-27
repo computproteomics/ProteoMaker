@@ -1,7 +1,7 @@
 library(testthat)
-test_that("set_phosfake returns correct default configuration", {
-    config <- set_phosfake()
-    
+test_that("set_proteomaker returns correct default configuration", {
+    config <- set_proteomaker()
+
     expect_equal(grepl("Proteome", config$fastaFilePath), TRUE)
     expect_equal(config$resultFilePath, "SimulatedDatasets")
     expect_equal(config$cores, 2)
@@ -10,11 +10,11 @@ test_that("set_phosfake returns correct default configuration", {
     expect_equal(config$calcAllBenchmarks, TRUE)
 })
 
-test_that("set_phosfake allows custom configuration", {
-    config <- set_phosfake(fastaFilePath = "CustomProteomes", resultFilePath = "Results", 
-                           cores = 4, clusterType = "PSOCK", runStatTests = FALSE, 
+test_that("set_proteomaker allows custom configuration", {
+    config <- set_proteomaker(fastaFilePath = "CustomProteomes", resultFilePath = "Results",
+                           cores = 4, clusterType = "PSOCK", runStatTests = FALSE,
                            calcAllBenchmarks = FALSE)
-    
+
     expect_equal(config$fastaFilePath, "CustomProteomes")
     expect_equal(config$resultFilePath, "Results")
     expect_equal(config$cores, 4)
@@ -23,12 +23,12 @@ test_that("set_phosfake allows custom configuration", {
     expect_equal(config$calcAllBenchmarks, FALSE)
 })
 
-test_that("set_phosfake creates the result directory", {
+test_that("set_proteomaker creates the result directory", {
     temp_dir <- tempdir()
-    config <- set_phosfake(resultFilePath = file.path(temp_dir, "TestResults"))
-    
+    config <- set_proteomaker(resultFilePath = file.path(temp_dir, "TestResults"))
+
     expect_true(dir.exists(config$resultFilePath))
-    
+
     # Cleanup
     unlink(config$resultFilePath, recursive = TRUE)
 })

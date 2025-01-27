@@ -1,10 +1,10 @@
-# PhosFake: Simulating proteoforms in bottom-up proteomics
+# ProteoMaker: Simulating proteofor7ms in bottom-up proteomics
 
-Phosfake is a platform for the  generation of an in-silico bottom-up proteomics data set with a ground truth on the level of proteoforms. 
+ProteoMaker is a platform for the  generation of an in-silico bottom-up proteomics data set with a ground truth on the level of proteoforms. 
 
-All the parameters that are used to generate the data are described in [man/Parameters.qmd](man/Parameters.html). The script that runs the entire pipeline is [`RunSims.R`](inst/cmd/RunSims.R). Alternatively, you can use the [Vignette](vignettes/Vignette.html). The simulations with multiple parameters can be set up and run. PhosFake also provides comparison of the results with the ground truth using [benchmarking metrics](man/Benchmarks.html) and visual comparison between simulated data sets.
+All the parameters that are used to generate the data are described in [man/Parameters.qmd](man/Parameters.html). The script that runs the entire pipeline is [`RunSims.R`](inst/cmd/RunSims.R). Alternatively, you can use the [Vignette](vignettes/Vignette.html). The simulations with multiple parameters can be set up and run. ProteoMaker also provides comparison of the results with the ground truth using [benchmarking metrics](man/Benchmarks.html) and visual comparison between simulated data sets.
 
-The pipeline is described in the figure [`PhosFakeLayout.svg`](inst/img/PhosFakeLayout) and can be described as follows:
+The pipeline is described in the figure [`ProteoMakerLayout.svg`](inst/img/ProteoMakerLayout) and can be described as follows:
 
 0) General functions to run the simulations: [`00_BachRunFuncs.R`](R/00_BatchRunFuncs.R)
 1) Generation of ground truth data at the proteoform leve:l [`01_GenerateGroundTruth.R`](R/01_GenerateGroundTruth.R).
@@ -18,7 +18,7 @@ The pipeline is described in the figure [`PhosFakeLayout.svg`](inst/img/PhosFake
 
 Install the package from GitHub with `devtools`:
 ```
-devtools::install_github("veitveit/PhosFake")
+devtools::install_github("veitveit/ProteoMaker")
 ```
 
 ### Running full batches and benchmarking

@@ -1,11 +1,11 @@
-Package: PhosFake
+Package: ProteoMaker
 Type: Package
 Title: Simulations of LC-MS Data from Proteoforms
 Version: 0.4.6
 Date: 2024-07-30
 Author: Veit Schwämmle, Marie Locard-Paulet
 Maintainer: Your Name <veits@bmb.sdu.dk>
-Description: PhosFake is a package designed to simulate proteomics data from liquid-chromatography experiments. 
+Description: ProteoMaker is a package designed to simulate proteomics data from liquid-chromatography experiments. 
     It provides functions for generating ground truth data, simulating proteoform abundances, and performing 
     enzymatic digestion, mass spectrometry (MS) runs, and data analysis. The package includes functionality to 
     install necessary dependencies, load main scripts, and run simulations with configurable parameters.

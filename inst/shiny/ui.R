@@ -6,7 +6,7 @@ library(shinyalert)
 library(yaml)
 library(shinyjs)
 library(DT)
-library(PhosFake)
+library(ProteoMaker)
 
 # Function to create UI elements based on parameter type
 create_param_ui <- function(param_name, param_info) {
@@ -122,8 +122,8 @@ create_param_panels <- function(group, def_params) {
 ui <- page_sidebar(
   # Load the audio file and play it automatically
   title = tagList(
-  tags$img(src = "PhosFakeLogo.png", height = "70px"),
-  h2("PhosFake Simulator")
+  tags$img(src = "ProteoMakerLogo.png", height = "70px"),
+  h2("ProteoMaker Simulator")
   ),
   theme = bs_theme(bootswatch = "vapor"),
   shinyjs::useShinyjs(),
@@ -170,7 +170,8 @@ ui <- page_sidebar(
       # Button to start simulation
       actionButton("start_sim", "Start Simulation"),
       checkboxInput("run_stat", "Run statistical tests on results", value = FALSE),
-      tags$audio(src = "PhosFake Dreams.mp3", type = "audio/mp3", controls = NA, style = "width: 150px; height: 30px;"),#, autoplay = NA),
+      br(),
+      #tags$audio(src = "PhosFake Dreams.mp3", type = "audio/mp3", controls = NA, style = "width: 150px; height: 30px;"),#, autoplay = NA),
       checkboxInput("overwrite", "Overwrite existing files", value = FALSE),
       checkboxInput("run_benchmarks", "Calculate benchmarking metrics", value = FALSE),
       textOutput("parameters_valid"),

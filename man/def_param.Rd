@@ -29,6 +29,6 @@ and default value.
 }
 \examples{
 # Read YAML file from inst folder
-yaml_path <- system.file("config", "params.yaml", package = "PhosFake")
+yaml_path <- system.file("config", "params.yaml", package = "ProteoMaker")
 params <- def_param(yaml_path)
 }

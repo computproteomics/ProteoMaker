@@ -1,12 +1,12 @@
 ################################################################################
-#                       Run PhosFake                                           #
+#                       Run ProteoMaker                                           #
 ################################################################################
 
 
 #####################
 ## Paths and directories
 #####################
-phosfake_config <- set_phosfake(fastaFilePath = system.file("Proteomes", package = "PhosFake"),
+proteomaker <- set_proteomaker(fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
                                 resultFilePath = "SimulatedDataSets",
                                 cores = 2, clusterType = "PSOCK",
                                 runStatTests = T,
@@ -80,18 +80,18 @@ Param$paramMSRun$WrongIDs <- 0 #seq(0,0.3,0.01)
 #####################
 ## Run the simulations
 #####################
-allBs <- run_sims(Param, phosfake_config)
+allBs <- run_sims(Param, )
 
 #####################
 ## Get the results of an individual simulation
 #####################
-res <- get_simulation(allBs[[1]]$Param, phosfake_config)
+res <- get_simulation(allBs[[1]]$Param, )
 
 #####################
 ## Make matrix of benchmarks and save
 #####################
-benchmarks <- matrix_benchmarks(allBs, phosfake_config)
-write.csv(benchmarks, file = paste0(phosfake_config$resultFilePath, "/allBenchmarks.csv"))
+benchmarks <- matrix_benchmarks(allBs, )
+write.csv(benchmarks, file = paste0(proteomaker_conf$resultFilePath, "/allBenchmarks.csv"))
 
 #####################
 ## Visualize the results

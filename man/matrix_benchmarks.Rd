@@ -12,7 +12,7 @@ element contains simulation results and benchmarks for a specific parameter
 combination.}
 
 \item{Config}{A list of configuration settings, including file paths and
-computational settings, typically generated using \code{set_phosfake}.}
+computational settings, typically generated using \code{set_proteomaker}.}
 }
 \value{
 A data frame with rows representing each simulation and columns
@@ -24,7 +24,7 @@ simulations. It extracts benchmark metrics and associated parameter values,
 creating a comprehensive data frame for analysis.
 }
 \examples{
-conf <- set_phosfake(resultFilePath = tempdir())
+conf <- set_proteomaker(resultFilePath = tempdir())
 results <- run_sims(def_param(), conf)
 benchmark_matrix <- matrix_benchmarks(results, conf)
 

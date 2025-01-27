@@ -71,11 +71,11 @@ server <- function(input, output, session) {
        if ("datapath" %in% names(input_value)) {
           if (file.exists(input_value$datapath)) {
             valid <- TRUE
-            phosfake_config$fastaFilePath <<- ""
+            proteomaker_config$fastaFilePath <<- ""
             # calculate sha256 of file
             filehash <- digest::digest(file = input_value$datapath, algo = "crc32", serialize = FALSE)
             # New file name
-            new_file_name <- paste0(phosfake_config$resultFilePath, "/",
+            new_file_name <- paste0(proteomaker_config$resultFilePath, "/",
                                      basename(input_value$name), "_", filehash,
                                     ".", tools::file_ext(input_value$datapath))
             # Copy file to original name and hash, keep extension at the end
@@ -88,16 +88,16 @@ server <- function(input, output, session) {
           # Check whether file is in the inst/Proteomes folder
         } else if (file.exists(input_value)) {
           valid <- TRUE
-          phosfake_config$fastaFilePath <<- ""
-        } else if (any(grepl(input_value, list.files(path = system.file("Proteomes", package = "PhosFake"))))) {
+          proteomaker_config$fastaFilePath <<- ""
+        } else if (any(grepl(input_value, list.files(path = system.file("Proteomes", package = "ProteoMaker"))))) {
           valid <- TRUE
-          phosfake_config$fastaFilePath <<- system.file("Proteomes", package = "PhosFake")
+          proteomaker_config$fastaFilePath <<- system.file("Proteomes", package = "ProteoMaker")
         } else {
           valid <- FALSE
           error_message <- paste("Error: File not available, please upload existing", param_name)
         }
       } else {
-        phosfake_config$fastaFilePath <<- system.file("Proteomes", package = "PhosFake")
+        proteomaker_config$fastaFilePath <<- system.file("Proteomes", package = "ProteoMaker")
       }
       output$PathToFasta_file <- renderText(basename(input_value))
     } else if (class == "boolean") {
@@ -192,8 +192,8 @@ server <- function(input, output, session) {
   }
 
   # set global parameters
-  observeEvent(input$run_stat, phosfake_config$runStatTests <<- TRUE)
-  observeEvent(input$run_benchmarks, phosfake_config$calcAllBenchmarks <<- TRUE)
+  observeEvent(input$run_stat, proteomaker_config$runStatTests <<- TRUE)
+  observeEvent(input$run_benchmarks, proteomaker_config$calcAllBenchmarks <<- TRUE)
 
   # enable/disable button when results are avilable
   observeEvent(sim_available(), {
@@ -487,7 +487,7 @@ server <- function(input, output, session) {
     withCallingHandlers({
       shinyjs::html("sim_log", "")
       cat <- message
-      res <- run_sims(Param, phosfake_config, input$overwrite)
+      res <- run_sims(Param, proteomaker_config, input$overwrite)
       sim_results(res)
       message("---- Simulation completed ----")
     },
@@ -498,7 +498,7 @@ server <- function(input, output, session) {
 
     sim_available(TRUE)
 
-    ttable <- get_simulation(sim_results()[[1]]$Param, Config = phosfake_config, stage = input$result_type)
+    ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = input$result_type)
     ttable <- ttable[[which(names(ttable) != "Param")]]
     enable("result_subtable")
     updateSelectInput(session, choices = names(ttable[[1]]), inputId = "result_subtable")
@@ -525,7 +525,7 @@ server <- function(input, output, session) {
     if(sim_available()) {
       print("updating table")
 
-      ttable <- get_simulation(sim_results()[[1]]$Param, Config = phosfake_config, stage = input$result_type)
+      ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = input$result_type)
       ttable <- ttable[names(ttable) != "Param"]
       ttable <- ttable[[1]]
       if (!is.data.frame(ttable)) {
@@ -557,7 +557,7 @@ server <- function(input, output, session) {
   output$download_results <- downloadHandler(
     # Download file
     filename = function() {
-      "PhosFake_results.csv"
+      "ProteoMaker_results.csv"
     },
     content = function(file) {
       if (!is.null(sim_table())) {
