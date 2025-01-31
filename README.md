@@ -1,4 +1,4 @@
-# ProteoMaker: Simulating proteofor7ms in bottom-up proteomics
+# ProteoMaker: Simulating proteoforms in bottom-up proteomics
 
 ProteoMaker is a platform for the  generation of an in-silico bottom-up proteomics data set with a ground truth on the level of proteoforms. 
 
