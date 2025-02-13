@@ -1,4 +1,4 @@
-library(PhosFake)
+library(ProteoMaker)
 # Load the YAML file
 yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
 if (!file.exists(yaml_file) || file.size(yaml_file) == 0) {
@@ -11,7 +11,7 @@ if (is.null(def_params) || length(def_params) == 0) {
 
 proteomaker_config <- set_proteomaker(fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
                                 resultFilePath = "SimulatedDataSets",
-                                cores = 16, clusterType = "PSOCK",
+                                cores = 4, clusterType = "PSOCK",
                                 runStatTests = F,
                                 calcAllBenchmarks = T
 )

@@ -17,7 +17,7 @@ RUN R -e 'install.packages("devtools");devtools::install_github("computproteomic
 RUN R -e 'install.packages(c("rmarkdown","shinyWidgets","shinyBS","bslib","shinyalert","shinyjs","DT"))'
 
 # Install ProteoMaker
-RUN R -e 'install.packages("devtools");devtools::install_github("veitveit/ProteoMaker")'
+RUN R -e 'install.packages("devtools");devtools::install_github("computproteomics/ProteoMaker")'
 
 RUN rm -rf /srv/shiny-server
 RUN mkdir /srv/shiny-server

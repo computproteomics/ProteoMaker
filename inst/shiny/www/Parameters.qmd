@@ -1,12 +1,11 @@
 ---
-title: "PhosFake Parameters"
+title: "ProteoMaker Pipeline Parameters"
 format: html
 editor: visual
 ---
 
-# PhosFake Pipeline Parameters
 
-This document provides a detailed description of the parameters used in the PhosFake pipeline. PhosFake is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit [PhosFake on GitHub](https://github.com/veitveit/PhosFake).
+This document provides a detailed description of the parameters used in the ProteoMaker pipeline. ProteoMaker is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit [ProteoMaker on GitHub](https://github.com/computproteomics/ProteoMaker).
 
 ## Global Parameters
 
@@ -105,6 +104,10 @@ This document provides a detailed description of the parameters used in the Phos
 *Param\$LeastAbundantLoss*: The percentage of least abundant peptides to be removed. Set to `0.0`. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified.
 
 ## Sample Preparation Simulation Parameters
+
+### PTM for enrichment
+
+*Param\$EnrichPTM*: PTM that will be enriched. One can select only one PTM and all of its residues will be affected. Default is 'NA', so no PTM will be enriched.
 
 ### Enrichment Loss
 

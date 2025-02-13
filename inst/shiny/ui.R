@@ -170,8 +170,7 @@ ui <- page_sidebar(
       # Button to start simulation
       actionButton("start_sim", "Start Simulation"),
       checkboxInput("run_stat", "Run statistical tests on results", value = FALSE),
-      br(),
-      #tags$audio(src = "PhosFake Dreams.mp3", type = "audio/mp3", controls = NA, style = "width: 150px; height: 30px;"),#, autoplay = NA),
+      tags$audio(src = "ProteoMaker Dreams.mp3", type = "audio/mp3", controls = NA, style = "width: 150px; height: 30px;"),#, autoplay = NA),
       checkboxInput("overwrite", "Overwrite existing files", value = FALSE),
       checkboxInput("run_benchmarks", "Calculate benchmarking metrics", value = FALSE),
       textOutput("parameters_valid"),

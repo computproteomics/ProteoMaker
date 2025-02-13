@@ -1,40 +1,40 @@
 ---
-title: "PhosFake Vignette"
+title: "ProteoMaker Vignette"
 author: ""
-date: "2024-07-25"
+date: "2025-01-25"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{PhosFake Vignette}
+  %\VignetteIndexEntry{ProteoMaker Vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ## Introduction
 
-PhosFake is a simulation tool for generating synthetic proteomics datasets. This vignette will guide you through the process of setting up and running PhosFake simulations, as well as visualizing the results.
+ProteoMaker is a simulation tool for generating synthetic proteomics datasets. This vignette will guide you through the process of setting up and running ProteoMaker simulations, as well as visualizing the results.
 
 ## Installation
 
-PhosFake requires installation via the `devtools` package. You can install PhosFake using the following command:
+ProteoMaker requires installation via the `devtools` package. You can install ProteoMaker using the following command:
 
 ```{r}
-# Install PhosFake
+# Install ProteoMaker
 if (!requireNamespace("devtools", quietly = TRUE)) {
     install.packages("devtools", repos = "https://cran.r-project.org")
 }
-devtools::install_github("veitveit/PhosFake")
+devtools::install_github("computproteomics/ProteoMaker")
 ```
 
 And load the library
 ```{r}
-# Load PhosFake
-library(PhosFake)
+# Load ProteoMaker
+library(ProteoMaker)
 ```
 
 ## Configuration
 
 Set up the paths and directories for input and output data, and configure the computational settings. 
-This step ensures that the necessary directories exist and the computational resources are configured correctly. The fasta file path is set to the Proteomes folder in the PhosFake package with the following
+This step ensures that the necessary directories exist and the computational resources are configured correctly. The fasta file path is set to the Proteomes folder in the ProteoMaker package with the following
 proteomes: _fasta_example.fasta, fasta_full_human.fasta, fasta_full_mouse.fasta, fasta_full_yeast.fasta_
 
 In this case, the results will be written in the temporary folder. In case you want to run many simulations, we recommend keeping the results file in a different folder by changing the argument `resultFilePath`.
@@ -42,9 +42,9 @@ In this case, the results will be written in the temporary folder. In case you w
 
 ```{r}
 # Configure the paths and settings
-phosfake_config <- set_phosfake(
-  # Default path to the Proteomes folder in the PhosFake package
-  fastaFilePath =  system.file("Proteomes", package = "PhosFake"),
+proteomaker_config <- set_proteomaker(
+  # Default path to the Proteomes folder in the ProteoMaker package
+  fastaFilePath =  system.file("Proteomes", package = "ProteoMaker"),
   # Default path to the temporary directory
   resultFilePath = paste0(tempdir(), "/SimulatedDataSets"),
   # Increase to the number of cores you want to use. 
@@ -62,9 +62,9 @@ phosfake_config <- set_phosfake(
 ## Set Simulation Parameters
 
 Generate a default list of testing parameters using the `def_param` function. You can overwrite the default values with those you want to test by changing the parameters directly, or by loading a yaml file. An example 
-for the yaml file with the default parameters is available [here](https://github.com/veitveit/PhosFake/blob/master/inst/config/parameters.yaml). 
+for the yaml file with the default parameters is available [here](https://github.com/computproteomics/ProteoMaker/blob/master/inst/config/parameters.yaml). 
 
-A more details documentation of the parameters can be found [here](https://computproteomics.bmb.sdu.dk/app_direct/PhosFake/Parameters.html).
+A more details documentation of the parameters can be found [here](https://computproteomics.bmb.sdu.dk/app_direct/ProteoMaker/Parameters.html).
 
 Multiple values for each parameter can be combined to generate different simulated datasets. This flexibility allows you to customize the simulations according to your arrays of experimental needs.
 
@@ -105,7 +105,7 @@ Run the simulations using the defined parameters and configuration. This step ge
 
 ```{r}
 # Run the simulations
-allBs <- run_sims(Param, phosfake_config)
+allBs <- run_sims(Param, proteomaker_config)
 
 ```
 
@@ -115,7 +115,7 @@ Get the results of an individual simulation. This allows you to inspect the para
 
 ```{r}
 # Retrieve results}
-res <- get_simulation(allBs[[1]]$Param, phosfake_config)
+res <- get_simulation(allBs[[1]]$Param, proteomaker_config)
 
 ```
 
@@ -125,8 +125,8 @@ Create a matrix of benchmarks from all simulations and save it as a CSV file. Th
 
 ```{r}
 # Generate the benchmark matrix
-benchmarks <- matrix_benchmarks(allBs, phosfake_config)
-write.csv(benchmarks, file = paste0(phosfake_config$resultFilePath, "/allBenchmarks.csv"))
+benchmarks <- matrix_benchmarks(allBs, proteomaker_config)
+write.csv(benchmarks, file = paste0(proteomaker_config$resultFilePath, "/allBenchmarks.csv"))
 
 ```
 

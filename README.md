@@ -18,7 +18,7 @@ The pipeline is described in the figure [`ProteoMakerLayout.svg`](inst/img/Prote
 
 Install the package from GitHub with `devtools`:
 ```
-devtools::install_github("veitveit/ProteoMaker")
+devtools::install_github("computproteomics/ProteoMaker")
 ```
 
 ### Running full batches and benchmarking
