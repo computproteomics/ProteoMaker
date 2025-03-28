@@ -431,6 +431,7 @@ digestionProductSummarization <- function(peptides, parameters) {
 #'
 filterDigestedProt <- function(DigestedProt, parameters) {
   modified <- lengths(DigestedProt$PTMType) != 0
+  if (length(modified) == 0) modified <- NA
 
   ## Removing fraction according to ModificationLoss parameter
   numRemove <- 0

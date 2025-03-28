@@ -75,10 +75,10 @@ proteinInput <- function(parameters) {
       message(" + Creating modified and unmodified fractions:")
 
       # Returns a list of the number of modifiable residues on all sequences, for each residue of ModifiableResidues.
-      possible.modifiable.AAs <- as.data.frame(t(sapply(fasta$Sequence, function(x) {
+      possible.modifiable.AAs <- as.data.frame(sapply(fasta$Sequence, function(x) {
         string <- strsplit(x, split = "")
         return(sapply(unlist(parameters$ModifiableResidues), function(y) length(which(string[[1]] == y))))
-      })))
+      }))
 
       rownames(possible.modifiable.AAs) <- 1:nrow(possible.modifiable.AAs)
 
@@ -223,20 +223,24 @@ proteinInput <- function(parameters) {
 #' @keywords internal
 #'
 performModification <- function(to.Modify, parameters) {
-  message(" + Performing modification:")
-  message(
-    "  - Selected modification type(s) ", paste0('"', paste0(unlist(parameters$PTMTypes), collapse = '", "'), '"'),
-    " with background frequency distribution of ", paste0(paste0(unlist(parameters$PTMTypesDistr) * 100, "%"), collapse = ", "), " respectively."
-  )
 
   ptmtypes <- unlist(parameters$PTMTypes)
+  ptmtypes <- ptmtypes[!is.na(ptmtypes)]
 
-  for (i in ptmtypes) {
+  if (length(ptmtypes) > 0) {
+    message(" + Performing modification:")
     message(
-      "  - For modification ", paste0('"', i, '"'), " residue(s) ", paste0(parameters$ModifiableResidues[[1]][[i]], collapse = ", "),
-      " can be modified with background frequency distribution of ", paste0(paste0(parameters$ModifiableResiduesDistr[[1]][[i]] * 100, "%"), collapse = ", "), " respectively."
+      "  - Selected modification type(s) ", paste0('"', paste0(ptmtypes, collapse = '", "'), '"'),
+      " with background frequency distribution of ", paste0(paste0(unlist(parameters$PTMTypesDistr) * 100, "%"), collapse = ", "), " respectively."
     )
-  }
+
+
+    for (i in ptmtypes) {
+      message(
+        "  - For modification ", paste0('"', i, '"'), " residue(s) ", paste0(parameters$ModifiableResidues[[1]][[i]], collapse = ", "),
+        " can be modified with background frequency distribution of ", paste0(paste0(parameters$ModifiableResiduesDistr[[1]][[i]] * 100, "%"), collapse = ", "), " respectively."
+      )
+    }
 
   # All proteins in to.Modify set are selected to be modified at least once.
   # Then randomly a set of proteoforms from the imported to.Modify set is selected based on the fraction multiplier PropModPerProt - 1.
@@ -294,6 +298,11 @@ performModification <- function(to.Modify, parameters) {
   message("  - A fraction of ", nrow(unmod.proteoforms), " modified protein sequences will maintain their unmodified counterpart ", paste0("(", (1 - parameters$RemoveNonModFormFrac) * 100, "%)."))
 
   return(list(mod.proteoforms = mod.proteoforms, unmod.proteoforms = unmod.proteoforms))
+
+} else {
+  message(" + No modifications selected.")
+  return(list(mod.proteoforms = NULL, unmod.proteoforms = NULL))
+}
 }
 
 
@@ -340,9 +349,9 @@ modify_seq <- function(seq, pars) {
 
       # Adjust by residue frequency in protein
       weight <- sapply(pmod_res[[x]], function(y) {
-       ttt <-  weight[[y]] / length(all_positions[[y]]) * length(unlist(all_positions))
-       ttt[ttt > 1] <- 1
-       return(ttt)
+        ttt <-  weight[[y]] / length(all_positions[[y]]) * length(unlist(all_positions))
+        ttt[ttt > 1] <- 1
+        return(ttt)
       })
 
       # Run over residue type to get modified residues
@@ -359,7 +368,7 @@ modify_seq <- function(seq, pars) {
           out <- sample(
             x = positions,
             size = weight[[y]] *  extraDistr::rtpois(n = 1, lambda = lambda * pos_len,
-                                      a = 1, b = pos_len)
+                                                     a = 1, b = pos_len)
           )
         } else if (runif(1) < weight[[y]]) {
           out <- positions

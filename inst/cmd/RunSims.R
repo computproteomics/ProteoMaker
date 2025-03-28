@@ -16,7 +16,7 @@ proteomaker <- set_proteomaker(fastaFilePath = system.file("Proteomes", package 
 #####################
 ## Create default list of testing parameters
 #####################
-Param <- def_param("tmp/parameters.yaml")
+Param <- def_param("tmp/parameters.yml")
 # Param <- def_param()
 
 
@@ -80,12 +80,12 @@ Param$paramMSRun$WrongIDs <- 0 #seq(0,0.3,0.01)
 #####################
 ## Run the simulations
 #####################
-allBs <- run_sims(Param, )
+allBs <- run_sims(Param, Config = proteomaker)
 
 #####################
 ## Get the results of an individual simulation
 #####################
-res <- get_simulation(allBs[[1]]$Param, )
+res <- get_simulation(allBs[[1]]$Param, Config = proteomaker)
 
 #####################
 ## Make matrix of benchmarks and save

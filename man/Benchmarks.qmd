@@ -63,7 +63,7 @@ The following values and distributions are collected and will be used for compar
 ## Overview as table
 
 | Benchmark Name | Description | Category |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Total Number of Peptides | Counts both modified and non-modified peptides. Fixed PTMs are not considered "modified". | Peptide Level |
 | Number of Proteins | Total number of all proteins, independently whether shared or uniquely identified. | Peptide Level |
 | Proportion of Unique Modified and Non-Modified Peptides | Measures the proportion of peptides that are unique and either modified or non-modified. | Peptide Level |
