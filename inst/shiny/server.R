@@ -68,7 +68,7 @@ server <- function(input, output, session) {
 
       if (!all(is.null(unlist(input_value))) & !all(is.na(unlist(input_value)))) {
         # Check if file exists
-       if ("datapath" %in% names(input_value)) {
+        if ("datapath" %in% names(input_value)) {
           if (file.exists(input_value$datapath)) {
             valid <- TRUE
             proteomaker_config$fastaFilePath <<- ""
@@ -76,7 +76,7 @@ server <- function(input, output, session) {
             filehash <- digest::digest(file = input_value$datapath, algo = "crc32", serialize = FALSE)
             # New file name
             new_file_name <- paste0(proteomaker_config$resultFilePath, "/",
-                                     basename(input_value$name), "_", filehash,
+                                    basename(input_value$name), "_", filehash,
                                     ".", tools::file_ext(input_value$datapath))
             # Copy file to original name and hash, keep extension at the end
             file.copy(input_value$datapath, new_file_name, overwrite = T)
@@ -112,6 +112,8 @@ server <- function(input, output, session) {
         valid <- FALSE
         error_message <- paste("Error: Value for", param_name, "is not a valid option. Available choices:", paste(choices, collapse = ", "))
       }
+    } else if (class == "ptm") {
+      return(list(valid = TRUE, message = paste(param_name, "is a PTM parameter.")))
     }
     # Overwrite params value when valid
     if (valid) {
@@ -133,6 +135,15 @@ server <- function(input, output, session) {
     print("Check and update ptm parameters")
     valid <- TRUE
     message <- NULL
+
+    # Set default values
+    params$PTMTypes$value <- NULL
+    params$PTMTypesDistr$value <- NULL
+    params$PTMTypesMass$value <- NULL
+    params$ModifiableResidues$value <- NULL
+    params$ModifiableResiduesDistr$value <- NULL
+
+
     # Check PTM parameters
     ptms <- up_params$PTMTypes$value[[1]]
     ptms <- ptms[!is.na(ptms)]
@@ -182,411 +193,413 @@ server <- function(input, output, session) {
       params$PTMTypesMass$value <- up_params$PTMTypesMass$value
       params$ModifiableResidues$value <- up_params$ModifiableResidues$value
       params$ModifiableResiduesDistr$value <- up_params$ModifiableResiduesDistr$value
-
-      parameters(params)
     }
 
-    # return validation result
-    if (valid) {
-      return(list(valid = TRUE, message = paste("PTM parameters ares valid.")))
-    } else {
-      return(list(valid = FALSE, message = error_message))
+    parameters(params)
+
+  # return validation result
+  if (valid) {
+    return(list(valid = TRUE, message = paste("PTM parameters ares valid.")))
+  } else {
+    return(list(valid = FALSE, message = error_message))
+  }
+}
+
+# set global parameters
+observeEvent(input$run_stat, proteomaker_config$runStatTests <<- TRUE)
+observeEvent(input$run_benchmarks, proteomaker_config$calcAllBenchmarks <<- TRUE)
+
+# enable/disable button when results are avilable
+observeEvent(sim_available(), {
+  print("switching")
+  if (sim_available()) {
+    shinyjs::enable("results")
+    shinyjs::enable("result_subtable")
+  } else {
+    print("disabling")
+    shinyjs::disable("results")
+    shinyjs::disable("result_subtable")
+  }
+})
+
+# Render text about PTM table
+output$ptm_table <- renderText(ptm_info())
+
+
+# Placeholder for displaying selected values (can be modified for actual simulation)
+output$preview_text <- renderText({
+  paste("Selected values: \n", paste(sapply(names(parameters()), function(param_name) {
+    paste(param_name, "=", input[[param_name]])
+  }), collapse = "\n"))
+})
+
+# Allow changing theme
+# bs_themer()
+
+
+# Provide default parameters for each PTM
+observeEvent( input$ptm_types, {
+  params <- parameters()
+  # Provide different updates of distributions for ph, ac, me, de
+  updateNumericInput(session, "ptm_fraction", value = 1)# / (1 + length(params$PTMTypes$value)))
+  for(aa in params$ModifiableResidues$choices) {
+    updateNumericInput(session, paste0("ptm_aa_", aa), value = 0)
+  }
+  if (input$ptm_types == "ph") {
+    updateNumericInput(session, "ptm_aa_S", value = 0.86)
+    updateNumericInput(session, "ptm_aa_T", value = 0.13)
+    updateNumericInput(session, "ptm_aa_Y", value = 0.01)
+  } else if (input$ptm_types == "ox") {
+    updateNumericInput(session, "ptm_aa_M", value = 1)
+  } else if (input$ptm_types == "ac") {
+    updateNumericInput(session, "ptm_aa_K", value = 1)
+  } else if (input$ptm_types == "me") {
+    updateNumericInput(session, "ptm_aa_K", value = 0.75)
+    updateNumericInput(session, "ptm_aa_R", value = 0.25)
+  } else if (input$ptm_types == "de") {
+    updateNumericInput(session, "ptm_aa_N", value = 0.5)
+    updateNumericInput(session, "ptm_aa_Q", value = 0.5)
+  }
+})
+
+# Add PTM config to params and update PTM details in "ptm_table" (textOutput)
+observeEvent(input$add_ptm, {
+  params <- parameters()
+  # Add PTM to params
+  ptm_name <- input$ptm_types
+  if (ptm_name %in% unlist(params$PTMTypes$value)) {
+    shinyalert("Error: PTM already defined.")
+    return()
+  }
+  ptm_fraction <- input$ptm_fraction
+  ptm_aa <- c()
+  ptm_aa_freq <- c()
+  for (aa in params$ModifiableResidues$choices) {
+    tfreq <- input[[paste0("ptm_aa_", aa)]]
+    if (tfreq > 0) {
+      ptm_aa <- append(ptm_aa, aa)
+      ptm_aa_freq <- append(ptm_aa_freq, tfreq)
     }
   }
+  if (length(ptm_aa) > 0) {
+    # Normalize all PTM fractions to 1
+    ptm_aa_freq <- ptm_aa_freq / sum(ptm_aa_freq)
 
-  # set global parameters
-  observeEvent(input$run_stat, proteomaker_config$runStatTests <<- TRUE)
-  observeEvent(input$run_benchmarks, proteomaker_config$calcAllBenchmarks <<- TRUE)
+    # Update params
+    ptms <- params$PTMTypes$value[[1]]
+    params$PTMTypes$value <- list(mods = append(ptms, ptm_name))
+    params$PTMTypesDistr$value[[1]][[ptm_name]] <- ptm_fraction
+    params$PTMTypesMass$value[[1]][[ptm_name]] <- params$PTMTypesMass$choices[[which(params$PTMTypes$choices == ptm_name)]]
+    params$ModifiableResidues$value[[1]][[ptm_name]] <- ptm_aa
+    params$ModifiableResiduesDistr$value[[1]][[ptm_name]] <- ptm_aa_freq
+    parameters(params)
+    # Update PTM details in "ptm_table"
+    update_ptm_info <- paste0(ptm_info(), ifelse(is.null(ptm_info()), "", "<br/>"),
+                              paste0("PTM: ", ptm_name,
+                                     " | Frequency ", ptm_fraction, " | Amino acids: ",
+                                     paste0(sapply(seq_along(ptm_aa), function(i) paste(" ", ptm_aa[[i]], ": ",
+                                                                                        ptm_aa_freq[[i]])),
+                                            collapse = ",")
+                              )
+    )
+    ptm_info(update_ptm_info)
 
-  # enable/disable button when results are avilable
-  observeEvent(sim_available(), {
-    print("switching")
-    if (sim_available()) {
-      shinyjs::enable("results")
-      shinyjs::enable("result_subtable")
-    } else {
-      print("disabling")
-      shinyjs::disable("results")
-      shinyjs::disable("result_subtable")
-    }
-  })
+  } else {
+    shinyalert("Error: PTM must be defined for at least one amino acid.")
+  }
+})
 
-  # Render text about PTM table
-  output$ptm_table <- renderText(ptm_info())
+# Remove PTM from params and update PTM details in "ptm_table" (textOutput)
+observeEvent(input$del_ptm, {
+  params <- parameters()
+  # remove from params
+  ptm_name <- input$ptm_types
+  print(paste("Removing PTM", ptm_name))
+  if (length(ptm_name) == 1) {
+    ptms <- unlist(params$PTMTypes$value)
+    params$PTMTypes$value <- list(mods = ptms[ptms != ptm_name])
+    params$PTMTypesDistr$value[[1]][[ptm_name]] <- NULL
+    params$PTMTypesMass$value[[1]][[ptm_name]] <- NULL
+    params$ModifiableResidues$value[[1]][[ptm_name]] <- NULL
+    params$ModifiableResiduesDistr$value[[1]][[ptm_name]] <- NULL
+    parameters(params)
 
+    # remove line of PTM from ptm_table
+    t_ptm_info <- strsplit(ptm_info(), "<br/>")[[1]]
+    print(t_ptm_info)
+    line_to_remove <- grep(paste0("^PTM: ", ptm_name), t_ptm_info)
+    print(line_to_remove)
+    t_ptm_info <- t_ptm_info[-line_to_remove]
 
-  # Placeholder for displaying selected values (can be modified for actual simulation)
-  output$preview_text <- renderText({
-    paste("Selected values: \n", paste(sapply(names(parameters()), function(param_name) {
-      paste(param_name, "=", input[[param_name]])
-    }), collapse = "\n"))
-  })
+    ptm_info(paste0(t_ptm_info, collapse = "<br/>"))
+  }
+})
 
-  # Allow changing theme
-  # bs_themer()
-
-
-  # Provide default parameters for each PTM
-  observeEvent( input$ptm_types, {
+# Read yaml file using upload button
+observeEvent(input$yaml_file, {
+  print("Loading yaml file")
+  req(input$yaml_file)
+  isolate({
     params <- parameters()
-    # Provide different updates of distributions for ph, ac, me, de
-    updateNumericInput(session, "ptm_fraction", value = 1)# / (1 + length(params$PTMTypes$value)))
-    for(aa in params$ModifiableResidues$choices) {
-      updateNumericInput(session, paste0("ptm_aa_", aa), value = 0)
-    }
-    if (input$ptm_types == "ph") {
-      updateNumericInput(session, "ptm_aa_S", value = 0.86)
-      updateNumericInput(session, "ptm_aa_T", value = 0.13)
-      updateNumericInput(session, "ptm_aa_Y", value = 0.01)
-    } else if (input$ptm_types == "ox") {
-      updateNumericInput(session, "ptm_aa_M", value = 1)
-    } else if (input$ptm_types == "ac") {
-      updateNumericInput(session, "ptm_aa_K", value = 1)
-    } else if (input$ptm_types == "me") {
-      updateNumericInput(session, "ptm_aa_K", value = 0.75)
-      updateNumericInput(session, "ptm_aa_R", value = 0.25)
-    } else if (input$ptm_types == "de") {
-      updateNumericInput(session, "ptm_aa_N", value = 0.5)
-      updateNumericInput(session, "ptm_aa_Q", value = 0.5)
-    }
-  })
-
-  # Add PTM config to params and update PTM details in "ptm_table" (textOutput)
-  observeEvent(input$add_ptm, {
-    params <- parameters()
-    # Add PTM to params
-    ptm_name <- input$ptm_types
-    if (ptm_name %in% unlist(params$PTMTypes$value)) {
-      shinyalert("Error: PTM already defined.")
-      return()
-    }
-    ptm_fraction <- input$ptm_fraction
-    ptm_aa <- c()
-    ptm_aa_freq <- c()
-    for (aa in params$ModifiableResidues$choices) {
-      tfreq <- input[[paste0("ptm_aa_", aa)]]
-      if (tfreq > 0) {
-        ptm_aa <- append(ptm_aa, aa)
-        ptm_aa_freq <- append(ptm_aa_freq, tfreq)
+    # trycatch for errors running yaml.load_file
+    tryCatch({
+      up_params <- yaml::yaml.load_file(input$yaml_file$datapath)
+      if (is.null(up_params) || length(up_params) == 0) {
+        shinyalert("The params object is empty or invalid.")
       }
-    }
-    if (length(ptm_aa) > 0) {
-      # Normalize all PTM fractions to 1
-      ptm_aa_freq <- ptm_aa_freq / sum(ptm_aa_freq)
-
-      # Update params
-      ptms <- params$PTMTypes$value[[1]]
-      params$PTMTypes$value <- list(mods = append(ptms, ptm_name))
-      params$PTMTypesDistr$value[[1]][[ptm_name]] <- ptm_fraction
-      params$PTMTypesMass$value[[1]][[ptm_name]] <- params$PTMTypesMass$choices[[which(params$PTMTypes$choices == ptm_name)]]
-      params$ModifiableResidues$value[[1]][[ptm_name]] <- ptm_aa
-      params$ModifiableResiduesDistr$value[[1]][[ptm_name]] <- ptm_aa_freq
-      parameters(params)
-      # Update PTM details in "ptm_table"
-      update_ptm_info <- paste0(ptm_info(), ifelse(is.null(ptm_info()), "", "<br/>"),
-                                paste0("PTM: ", ptm_name,
-                                       " | Frequency ", ptm_fraction, " | Amino acids: ",
-                                       paste0(sapply(seq_along(ptm_aa), function(i) paste(" ", ptm_aa[[i]], ": ",
-                                                                                          ptm_aa_freq[[i]])),
-                                              collapse = ",")
-                                )
-      )
-      ptm_info(update_ptm_info)
-
-    } else {
-      shinyalert("Error: PTM must be defined for at least one amino acid.")
-    }
-  })
-
-  # Remove PTM from params and update PTM details in "ptm_table" (textOutput)
-  observeEvent(input$del_ptm, {
-    params <- parameters()
-    # remove from params
-    ptm_name <- input$ptm_types
-    print(paste("Removing PTM", ptm_name))
-    if (length(ptm_name) == 1) {
-      ptms <- unlist(params$PTMTypes$value)
-      params$PTMTypes$value <- list(mods = ptms[ptms != ptm_name])
-      params$PTMTypesDistr$value[[1]][[ptm_name]] <- NULL
-      params$PTMTypesMass$value[[1]][[ptm_name]] <- NULL
-      params$ModifiableResidues$value[[1]][[ptm_name]] <- NULL
-      params$ModifiableResiduesDistr$value[[1]][[ptm_name]] <- NULL
-      parameters(params)
-
-      # remove line of PTM from ptm_table
-      t_ptm_info <- strsplit(ptm_info(), "<br/>")[[1]]
-      print(t_ptm_info)
-      line_to_remove <- grep(paste0("^PTM: ", ptm_name), t_ptm_info)
-      print(line_to_remove)
-      t_ptm_info <- t_ptm_info[-line_to_remove]
-
-      ptm_info(paste0(t_ptm_info, collapse = "<br/>"))
-    }
-  })
-
-  # Read yaml file using upload button
-  observeEvent(input$yaml_file, {
-    print("Loading yaml file")
-    req(input$yaml_file)
-    isolate({
-      params <- parameters()
-      # trycatch for errors running yaml.load_file
-      tryCatch({
-        up_params <- yaml::yaml.load_file(input$yaml_file$datapath)
-        if (is.null(up_params) || length(up_params) == 0) {
-          shinyalert("The params object is empty or invalid.")
-        }
-        if (is.null(up_params$params)) {
-          shinyalert("Yaml file main item should be 'params
+      if (is.null(up_params$params)) {
+        shinyalert("Yaml file main item should be 'params
                      '")
-        }
-        up_params <- up_params$params
-        # Fill all fields
-        all_valid(TRUE)
-        for (up_param_name in names(up_params)) {
-          # validate parameter values
-          value <- up_params[[up_param_name]]$value
-          checked <- validate_param_values(up_param_name, params[[up_param_name]], value)
+      }
+      up_params <- up_params$params
+      # Fill all fields
+      all_valid(TRUE)
+      for (up_param_name in names(up_params)) {
+        # validate parameter values
+        value <- up_params[[up_param_name]]$value
+        checked <- validate_param_values(up_param_name, params[[up_param_name]], value)
 
-          if (checked$valid)  {
-            if (!is.null(value)) {
-              if (params[[up_param_name]]$class == "file") {
-                # update fileInput with file name (no path)
-                output[[paste0(up_param_name,"_file")]] <- renderText({
-                  basename(value)
-                })
-                if (!is.null(value$datapath))
-                  value <- value$datapath
-              } else if (params[[up_param_name]]$class == "boolean") {
-                # update checkboxInput
-                updateCheckboxInput(session, up_param_name, value = value)
-              } else if (params[[up_param_name]]$class == "list" | params[[up_param_name]]$class == "string") {
-                # update selectInput
-                value[is.na(value)] <- "NA"
-                updateSelectInput(session, up_param_name, selected = value)
-              } else if (params[[up_param_name]]$class == "numeric"){
-                # update textInput
-                updateNumericInput(session, up_param_name, value = value)
-              }
+        if (checked$valid)  {
+          if (!is.null(value)) {
+            if (params[[up_param_name]]$class == "file") {
+              # update fileInput with file name (no path)
+              output[[paste0(up_param_name,"_file")]] <- renderText({
+                basename(value)
+              })
+              if (!is.null(value$datapath))
+                value <- value$datapath
+            } else if (params[[up_param_name]]$class == "boolean") {
+              # update checkboxInput
+              updateCheckboxInput(session, up_param_name, value = value)
+            } else if (params[[up_param_name]]$class == "list" | params[[up_param_name]]$class == "string") {
+              # update selectInput
+              value[is.na(value)] <- "NA"
+              updateSelectInput(session, up_param_name, selected = value)
+            } else if (params[[up_param_name]]$class == "numeric"){
+              # update textInput
+              updateNumericInput(session, up_param_name, value = value)
             }
-          } else {
-            print("Error: Invalid parameter value")
-            shinyalert(checked$message)
-            all_valid(FALSE)
           }
-        }
-        checked <- validate_ptm_params(params, up_params)
-        if (checked$valid) {
-          update_ptm_info <- NULL
-          ptms <- up_params$PTMTypes$value[[1]]
-          ptms[ptms == "NA"] <- NA
-          ptms <- ptms[!is.na(ptms)]
-          if (length(ptms) == 0)
-            ptms <- NULL
-          for (ptm_name in ptms) {
-            print(paste("adding ptm:", ptm_name))
-            ptm_fraction <- up_params$PTMTypesDistr$value[[1]][[ptm_name]]
-            ptm_aa <- up_params$ModifiableResidues$value[[1]][[ptm_name]]
-            ptm_aa_freq <- up_params$ModifiableResiduesDistr$value[[1]][[ptm_name]]
-            # Update PTM details in "ptm_table"
-            update_ptm_info <- paste0(ptm_info(), ifelse(is.null(ptm_info()), "", "<br/>"),
-                                      paste0("PTM: ", ptm_name,
-                                             " | Frequency ", ptm_fraction, " | Amino acids: ",
-                                             paste0(sapply(seq_along(ptm_aa), function(i) paste(" ", ptm_aa[[i]], ": ",
-                                                                                                ptm_aa_freq[[i]])),
-                                                    collapse = ",")
-                                      )
-            )
-            ptm_info(update_ptm_info)
-          }
-          if (!is.null(update_ptm_info))
-            ptm_info(update_ptm_info)
         } else {
-          print("Error: Invalid PTM parameter value")
+          print("Error: Invalid parameter value")
           shinyalert(checked$message)
           all_valid(FALSE)
         }
-      }, error = function(e) {
-        shinyalert("Error reading the YAML file: ", e$message)
-      })
-    })
-  })
-
-  # Check and update parameters when any of the fields a changed
-  observe({
-    all_valid(TRUE)
-    params <- parameters()
-    print("Check and update parameters")
-    for (param_name in names(params)) {
-      # validate parameter values
-      value <- input[[param_name]]
-      checked <- validate_param_values(param_name, params[[param_name]], value)
-      if (!checked$valid) {
-        print("Error: Invalid parameter value")
+      }
+      checked <- validate_ptm_params(params, up_params)
+      if (checked$valid) {
+        update_ptm_info <- NULL
+        ptms <- up_params$PTMTypes$value[[1]]
+        ptms[ptms == "NA"] <- NA
+        ptms <- ptms[!is.na(ptms)]
+        if (length(ptms) == 0)
+          ptms <- NULL
+        for (ptm_name in ptms) {
+          print(paste("adding ptm:", ptm_name))
+          ptm_fraction <- up_params$PTMTypesDistr$value[[1]][[ptm_name]]
+          ptm_aa <- up_params$ModifiableResidues$value[[1]][[ptm_name]]
+          ptm_aa_freq <- up_params$ModifiableResiduesDistr$value[[1]][[ptm_name]]
+          # Update PTM details in "ptm_table"
+          update_ptm_info <- paste0(ptm_info(), ifelse(is.null(ptm_info()), "", "<br/>"),
+                                    paste0("PTM: ", ptm_name,
+                                           " | Frequency ", ptm_fraction, " | Amino acids: ",
+                                           paste0(sapply(seq_along(ptm_aa), function(i) paste(" ", ptm_aa[[i]], ": ",
+                                                                                              ptm_aa_freq[[i]])),
+                                                  collapse = ",")
+                                    )
+          )
+          ptm_info(update_ptm_info)
+        }
+        if (!is.null(update_ptm_info))
+          ptm_info(update_ptm_info)
+      } else {
+        print("Error: Invalid PTM parameter value")
         shinyalert(checked$message)
         all_valid(FALSE)
       }
+    }, error = function(e) {
+      shinyalert("Error reading the YAML file: ", e$message)
+    })
+  })
+
+})
+
+# Check and update parameters when any of the fields a changed
+observe({
+  all_valid(TRUE)
+  params <- parameters()
+  print("Check and update parameters")
+  for (param_name in names(params)) {
+    # validate parameter values
+    value <- input[[param_name]]
+    checked <- validate_param_values(param_name, params[[param_name]], value)
+    if (!checked$valid) {
+      print("Error: Invalid parameter value")
+      shinyalert(checked$message)
+      all_valid(FALSE)
     }
+  }
+})
+
+
+
+# Download the parameter file
+output$download_yaml <- downloadHandler(
+  filename = function() {
+    paste("parameters", "yaml", sep = ".")
+  },
+  content = function(file) {
+    # Add values from the input fields to the params list
+    tparams <- parameters()
+    for (param_name in names(tparams)) {
+      if (is.null(tparams[[param_name]]$value)) {
+        tparams[[param_name]]$value <- input[[param_name]]
+      }
+    }
+    tparams <- list(params=tparams)
+    # Write the yaml file
+    yaml::write_yaml(tparams, file)
+
+  }
+)
+
+observeEvent(input$start_sim, isolate({
+  message(" ---- Starting simulation ----")
+  sim_available(FALSE)
+  # message while running via progressbar
+  progress <- shiny::Progress$new()
+
+  progress$set(message = "Running simulation...")
+
+  # Initialize empty lists for each category
+  Param <- list(
+    paramGroundTruth = list(),
+    paramProteoformAb = list(),
+    paramDigest = list(),
+    paramMSRun = list(),
+    paramDataAnalysis = list()
+  )
+
+  message("read parameters")
+  params <- parameters()
+  print(params$PTMTypesDistr)
+  # Normalize PTM fractions to total of one
+  if(!is.null(params$PTMTypesDistr$value)) {
+    if (!all(is.na(params$PTMTypesDistr$value))) {
+      total_fractions <- sum(unlist(params$PTMTypesDistr$value))
+      for(i in 1:length(unlist(params$PTMTypesDistr$value)))
+        params$PTMTypesDistr$value[[1]][[i]] <- params$PTMTypesDistr$value[[1]][[i]] / total_fractions
+    }
+  }
+
+
+  # Iterate over each parameter and place it into the correct category based on "type"
+  for (param_name in names(params)) {
+    #print(param_name)
+    param_info <- params[[param_name]]
+    category <- param_info$type
+    value <- param_info$value
+    if (is.null(value))
+      value <- param_info$default
+    value[value == "NA"] <- NA
+    if (!is.null(category)) {
+      Param[[category]][[param_name]] <- value
+    }
+  }
+
+
+  withCallingHandlers({
+    shinyjs::html("sim_log", "")
+    cat <- message
+    res <- run_sims(Param, proteomaker_config, input$overwrite)
+    sim_results(res)
+    message("---- Simulation completed ----")
+  },
+  message = function(m) {
+    shinyjs::html(id = "sim_log", html = paste0(m$message), add = TRUE)
   })
 
 
+  sim_available(TRUE)
 
-  # Download the parameter file
-  output$download_yaml <- downloadHandler(
-    filename = function() {
-      paste("parameters", "yaml", sep = ".")
-    },
-    content = function(file) {
-      # Add values from the input fields to the params list
-      tparams <- parameters()
-      for (param_name in names(tparams)) {
-        if (is.null(tparams[[param_name]]$value)) {
-          tparams[[param_name]]$value <- input[[param_name]]
-        }
-      }
-      tparams <- list(params=tparams)
-      # Write the yaml file
-      yaml::write_yaml(tparams, file)
+  ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = input$result_type)
+  ttable <- ttable[[which(names(ttable) != "Param")]]
+  enable("result_subtable")
+  updateSelectInput(session, choices = names(ttable[[1]]), inputId = "result_subtable")
+  ttable <- ttable[[1]]
+  current_stage("DataAnalysis")
+  if (input$result_subtable == "globalBMs") {
+    # Create a data frame with item names and values as rows
+    ttable <- do.call(rbind, lapply(names(ttable), function(name) {
+      data.frame(
+        Item = name,
+        Value = paste(ttable[[name]], collapse = ", "),  # Make one value
+        stringsAsFactors = FALSE
+      )
+    }))
+  }
+  sim_table(as.data.frame(ttable))
 
-    }
-  )
+  on.exit(progress$close())
 
-  observeEvent(input$start_sim, isolate({
-    message(" ---- Starting simulation ----")
-    sim_available(FALSE)
-    # message while running via progressbar
-    progress <- shiny::Progress$new()
+}))
 
-    progress$set(message = "Running simulation...")
-
-    # Initialize empty lists for each category
-    Param <- list(
-      paramGroundTruth = list(),
-      paramProteoformAb = list(),
-      paramDigest = list(),
-      paramMSRun = list(),
-      paramDataAnalysis = list()
-    )
-
-    message("read parameters")
-    params <- parameters()
-    # Normalize PTM fractions to total of one
-    if(!is.null(params$PTMTypesDistr$value)) {
-      if (!all(is.na(params$PTMTypesDistr$value))) {
-        total_fractions <- sum(unlist(params$PTMTypesDistr$value))
-        for(i in 1:length(unlist(params$PTMTypesDistr$value)))
-          params$PTMTypesDistr$value[[1]][[i]] <- params$PTMTypesDistr$value[[1]][[i]] / total_fractions
-      }
-    }
-
-
-    # Iterate over each parameter and place it into the correct category based on "type"
-    for (param_name in names(params)) {
-      #print(param_name)
-      param_info <- params[[param_name]]
-      category <- param_info$type
-      value <- param_info$value
-      if (is.null(value))
-        value <- param_info$default
-      value[value == "NA"] <- NA
-      if (!is.null(category)) {
-        Param[[category]][[param_name]] <- value
-      }
-    }
-
-
-    withCallingHandlers({
-      shinyjs::html("sim_log", "")
-      cat <- message
-      res <- run_sims(Param, proteomaker_config, input$overwrite)
-      sim_results(res)
-      message("---- Simulation completed ----")
-    },
-    message = function(m) {
-      shinyjs::html(id = "sim_log", html = paste0(m$message), add = TRUE)
-    })
-
-
-    sim_available(TRUE)
+# update sim_table from result_type
+observeEvent(c(input$result_type, input$result_subtable), {
+  if(sim_available()) {
+    print("updating table")
 
     ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = input$result_type)
-    ttable <- ttable[[which(names(ttable) != "Param")]]
-    enable("result_subtable")
-    updateSelectInput(session, choices = names(ttable[[1]]), inputId = "result_subtable")
+    ttable <- ttable[names(ttable) != "Param"]
     ttable <- ttable[[1]]
-    current_stage("DataAnalysis")
+    if (!is.data.frame(ttable)) {
+      if (!(input$result_type == current_stage())) {
+        enable("result_subtable")
+        updateSelectInput(session, choices = names(ttable), inputId = "result_subtable")
+      }
+      ttable <- ttable[[input$result_subtable]]
+    } else {
+      updateSelectInput(session, choices = NULL, inputId = "result_subtable")
+      disable("result_subtable")
+    }
     if (input$result_subtable == "globalBMs") {
       # Create a data frame with item names and values as rows
       ttable <- do.call(rbind, lapply(names(ttable), function(name) {
         data.frame(
           Item = name,
-          Value = paste(ttable[[name]], collapse = ", "),  # Make one value
+          Value = paste(ttable[[name]], collapse = ", "),  # Wrap the list in I() to keep it as a list column
           stringsAsFactors = FALSE
         )
       }))
     }
     sim_table(as.data.frame(ttable))
+    current_stage(input$result_type)
+  }
+})
 
-    on.exit(progress$close())
-
-  }))
-
-  # update sim_table from result_type
-  observeEvent(c(input$result_type, input$result_subtable), {
-    if(sim_available()) {
-      print("updating table")
-
-      ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = input$result_type)
-      ttable <- ttable[names(ttable) != "Param"]
-      ttable <- ttable[[1]]
-      if (!is.data.frame(ttable)) {
-        if (!(input$result_type == current_stage())) {
-          enable("result_subtable")
-          updateSelectInput(session, choices = names(ttable), inputId = "result_subtable")
-        }
-        ttable <- ttable[[input$result_subtable]]
-      } else {
-        updateSelectInput(session, choices = NULL, inputId = "result_subtable")
-        disable("result_subtable")
-      }
-      if (input$result_subtable == "globalBMs") {
-        # Create a data frame with item names and values as rows
-        ttable <- do.call(rbind, lapply(names(ttable), function(name) {
-          data.frame(
-            Item = name,
-            Value = paste(ttable[[name]], collapse = ", "),  # Wrap the list in I() to keep it as a list column
-            stringsAsFactors = FALSE
-          )
-        }))
-      }
-      sim_table(as.data.frame(ttable))
-      current_stage(input$result_type)
-    }
-  })
-
-  # Button to retrieve results
-  output$download_results <- downloadHandler(
-    # Download file
-    filename = function() {
-      "ProteoMaker_results.csv"
-    },
-    content = function(file) {
-      if (!is.null(sim_table())) {
-        message(" ---- Retrieving results ----")
-        write.csv(as.data.frame(sim_table()), file, row.names = FALSE)
-      }
-    }
-  )
-
-
-  output$results_table <- renderDataTable({
+# Button to retrieve results
+output$download_results <- downloadHandler(
+  # Download file
+  filename = function() {
+    "ProteoMaker_results.csv"
+  },
+  content = function(file) {
     if (!is.null(sim_table())) {
-      datatable(sim_table(), options = list(pageLength = 10))
+      message(" ---- Retrieving results ----")
+      write.csv(as.data.frame(sim_table()), file, row.names = FALSE)
     }
-  })
+  }
+)
 
-  # File upload size limit
-  options(shiny.maxRequestSize=1*1024^3)
+
+output$results_table <- renderDataTable({
+  if (!is.null(sim_table())) {
+    datatable(sim_table(), options = list(pageLength = 10))
+  }
+})
+
+# File upload size limit
+options(shiny.maxRequestSize=1*1024^3)
 
 }
 
