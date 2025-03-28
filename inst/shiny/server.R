@@ -135,8 +135,11 @@ server <- function(input, output, session) {
     message <- NULL
     # Check PTM parameters
     ptms <- up_params$PTMTypes$value[[1]]
-    print(ptms)
-    if (!is.null(ptms)) {
+    ptms <- ptms[!is.na(ptms)]
+    if (is.null(ptms) || length(ptms) == 0) {
+      return(list(valid = TRUE, message = "No PTMs defined."))
+    }
+    if (!is.null(ptms) & length(ptms) > 0) {
       # check distr
       if (!all(sort(names(up_params$PTMTypesDistr$value[[1]])) == sort(ptms))) {
         valid <- FALSE
@@ -300,6 +303,7 @@ server <- function(input, output, session) {
     params <- parameters()
     # remove from params
     ptm_name <- input$ptm_types
+    print(paste("Removing PTM", ptm_name))
     if (length(ptm_name) == 1) {
       ptms <- unlist(params$PTMTypes$value)
       params$PTMTypes$value <- list(mods = ptms[ptms != ptm_name])
@@ -374,7 +378,13 @@ server <- function(input, output, session) {
         checked <- validate_ptm_params(params, up_params)
         if (checked$valid) {
           update_ptm_info <- NULL
-          for (ptm_name in up_params$PTMTypes$value[[1]]) {
+          ptms <- up_params$PTMTypes$value[[1]]
+          ptms[ptms == "NA"] <- NA
+          ptms <- ptms[!is.na(ptms)]
+          if (length(ptms) == 0)
+            ptms <- NULL
+          for (ptm_name in ptms) {
+            print(paste("adding ptm:", ptm_name))
             ptm_fraction <- up_params$PTMTypesDistr$value[[1]][[ptm_name]]
             ptm_aa <- up_params$ModifiableResidues$value[[1]][[ptm_name]]
             ptm_aa_freq <- up_params$ModifiableResiduesDistr$value[[1]][[ptm_name]]
@@ -389,7 +399,8 @@ server <- function(input, output, session) {
             )
             ptm_info(update_ptm_info)
           }
-          ptm_info(update_ptm_info)
+          if (!is.null(update_ptm_info))
+            ptm_info(update_ptm_info)
         } else {
           print("Error: Invalid PTM parameter value")
           shinyalert(checked$message)

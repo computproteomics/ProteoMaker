@@ -10,7 +10,7 @@ RUN R -e "install.packages(c('BiocManager','remotes','devtools'), repos='http://
 
 RUN R -e 'BiocManager::install(c("preprocessCore","qvalue","limma","SummarizedExperiment","cleaver", "S4Vectors"))'
 
-RUN R -e 'install.packages("devtools");devtools::install_github("rr-2/PeptideRanger")'
+RUN R -e 'install.packages("devtools");options(timeout=10000);devtools::install_github("rr-2/PeptideRanger")'
 RUN R -e 'install.packages("devtools");devtools::install_github("computproteomics/polystest")'
 
 # libraries for the shiny app
