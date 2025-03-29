@@ -206,8 +206,8 @@ server <- function(input, output, session) {
 }
 
 # set global parameters
-observeEvent(input$run_stat, proteomaker_config$runStatTests <<- TRUE)
-observeEvent(input$run_benchmarks, proteomaker_config$calcAllBenchmarks <<- TRUE)
+observeEvent(input$run_stat, proteomaker_config$runStatTests <<- input$run_stat)
+observeEvent(input$run_benchmarks, proteomaker_config$calcAllBenchmarks <<- input$run_benchmarks)
 
 # enable/disable button when results are avilable
 observeEvent(sim_available(), {
@@ -511,6 +511,7 @@ observeEvent(input$start_sim, isolate({
   withCallingHandlers({
     shinyjs::html("sim_log", "")
     cat <- message
+    print(proteomaker_config)
     res <- run_sims(Param, proteomaker_config, input$overwrite)
     sim_results(res)
     message("---- Simulation completed ----")
