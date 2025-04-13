@@ -4,6 +4,7 @@
 ^\.Rproj\.user$
 ^SimulatedDataSets
 ^inst/ExperimentalBenchmarks/
+^inst/shiny/www/*.mp3
 ^inst/img
 ^.github/
 ^.gitignore
