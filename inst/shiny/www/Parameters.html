@@ -117,7 +117,7 @@ ul.task-list li input[type="checkbox"] {
 <p><em>Param$QuantNoise</em>: The general noise level for all quantitative values, given as the standard deviation of a normal distribution. Default set to <code>0.0</code>. This parameter simulates technical and biological variations in the quantitative data.</p>
 <p><em>Param$DiffRegFrac</em>: The fraction of differentially regulated proteoforms. Default set to <code>0.0</code>. This parameter allows for the simulation of differential regulation, mimicking biological variability.</p>
 <p><em>Param$DiffRegMax</em>: The maximum amplitude of difference for differentially regulated proteins on a log2 scale. Set to <code>3</code>. This parameter defines the range of fold changes for differentially regulated proteins.</p>
-<p><em>Param$UserInputFoldChanges</em>: User-defined fold changes for regulated proteoforms. Set to <code>NULL</code>. This allows for custom input of fold changes if specific regulation patterns are desired.</p>
+<p><em>Param$UserInputFoldChanges</em>: User-defined fold changes for regulated proteoforms. Set to <code>NULL</code>. This allows for custom input of fold changes if specific regulation patterns are desired. This superseeds random selection. Note that this feature has not been tested extensively.</p>
 <p><em>Param$AbsoluteQuanMean</em>: The mean value for absolute quantitation. Set to <code>30.5</code>. This parameter sets the baseline for absolute quantitation values.</p>
 <p><em>Param$AbsoluteQuanSD</em>: The standard deviation for absolute quantitation. Set to <code>3.6</code>. This parameter models the variability in absolute quantitation.</p>
 <p><em>Param$ThreshNAQuantileProt</em>: The quantile threshold for removing quantitative values when <em>AbsoluteQuanMean</em> is not equal to <code>NA</code>. Set to <code>0.01</code>. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.</p>
@@ -180,7 +180,7 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 <section id="detectability-filter" class="level3">
 <h3 class="anchored" data-anchor-id="detectability-filter">Detectability filter</h3>
 <p><em>Param$PercDetectability:</em> Removing the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.25</p>
-<p><em>Param$PercDetectedPep</em>: The percentage of peptides detected during the MS run. Set to <code>0.3</code>. This parameter models the efficiency of peptide detection by the MS instrument.</p>
+<!--*Param\$PercDetectedPep*: The percentage of peptides detected during the MS run. Set to `0.3`. This parameter #models the efficiency of peptide detection by the MS instrument.-->
 </section>
 <section id="detected-values" class="level3">
 <h3 class="anchored" data-anchor-id="detected-values">Detected Values</h3>
@@ -203,7 +203,7 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 </section>
 <section id="wrong-localizations" class="level3">
 <h3 class="anchored" data-anchor-id="wrong-localizations">Wrong Localizations</h3>
-<p><em>Param$WrongLocalizations</em>: The percentage of wrong localizations in the MS search. Set to <code>0.01</code>. This parameter reflects the frequency of incorrect localization of PTM sites within identified peptides.</p>
+<p><em>Param$WrongLocalizations</em>: The percentage of wrong localizations in the MS search. Set to <code>0.01</code>. This parameter reflects the frequency of incorrect localization of PTM sites within identified peptides. Wrongly localized residues will be marked in the output (column <code>isMisLocated</code>).</p>
 </section>
 </section>
 <section id="filtering-ms-search-results" class="level2">

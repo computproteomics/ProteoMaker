@@ -71,7 +71,7 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$DiffRegMax*: The maximum amplitude of difference for differentially regulated proteins on a log2 scale. Set to `3`. This parameter defines the range of fold changes for differentially regulated proteins.
 
-*Param\$UserInputFoldChanges*: User-defined fold changes for regulated proteoforms. Set to `NULL`. This allows for custom input of fold changes if specific regulation patterns are desired.
+*Param\$UserInputFoldChanges*: User-defined fold changes for regulated proteoforms. Set to `NULL`. This allows for custom input of fold changes if specific regulation patterns are desired. This superseeds random selection. Note that this feature has not been tested extensively.
 
 *Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values.
 
@@ -136,7 +136,7 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 *Param\$PercDetectability:* Removing the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.25
 
-*Param\$PercDetectedPep*: The percentage of peptides detected during the MS run. Set to `0.3`. This parameter models the efficiency of peptide detection by the MS instrument.
+<!--*Param\$PercDetectedPep*: The percentage of peptides detected during the MS run. Set to `0.3`. This parameter #models the efficiency of peptide detection by the MS instrument.-->
 
 ### Detected Values
 
@@ -158,7 +158,7 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 ### Wrong Localizations
 
-*Param\$WrongLocalizations*: The percentage of wrong localizations in the MS search. Set to `0.01`. This parameter reflects the frequency of incorrect localization of PTM sites within identified peptides.
+*Param\$WrongLocalizations*: The percentage of wrong localizations in the MS search. Set to `0.01`. This parameter reflects the frequency of incorrect localization of PTM sites within identified peptides. Wrongly localized residues will be marked in the output (column `isMisLocated`).
 
 ## Filtering MS Search Results
 

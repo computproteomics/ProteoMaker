@@ -312,8 +312,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     # plot(0, xlim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), ylim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
     # points(diffs, StatsPep$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
     # abline(0,1)
-    # globalBMs["sumSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
-    # globalBMs["sumSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
+    globalBMs["sumSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
+    globalBMs["sumSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
 
     # Counting miscleavages
     if (sum(!is.na(Stats$MC)) > 0)
