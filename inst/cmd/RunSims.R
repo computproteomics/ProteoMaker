@@ -16,19 +16,19 @@ proteomaker <- set_proteomaker(fastaFilePath = system.file("Proteomes", package 
 #####################
 ## Create default list of testing parameters
 #####################
-Param <- def_param("tmp/parameters.yml")
-# Param <- def_param()
+# Param <- def_param("tmp/parameters.yml")
+Param <- def_param()
 
 
 # Overwrite the default values with the ones you want to test
 # You can use multiple values for each parameter that then will be combined for
 # all possible combinations in different simulated datasets
-Param$paramGroundTruth$PathToFasta <- "fasta_full_human.fasta"
+#Param$paramGroundTruth$PathToFasta <- "fasta_full_human.fasta"
 
 
 Param$paramGroundTruth$NumReps <- c(5)
 # Param$paramGroundTruth$NumCond <- 5
-Param$paramGroundTruth$PercExpressedProt <- 0.5
+Param$paramGroundTruth$PercExpressedProt <- 1
 
 Param$paramGroundTruth$FracModProt <- 0
 # Param$paramGroundTruth$PTMTypes <- list(mods=c("ph", "ox"))
@@ -85,7 +85,7 @@ allBs <- run_sims(Param, Config = proteomaker)
 #####################
 ## Get the results of an individual simulation
 #####################
-res <- get_simulation(allBs[[1]]$Param, Config = proteomaker)
+res <- get_simulation(allBs[[1]]$Param, Config = proteomaker, stage = "DataAnalysis")
 
 #####################
 ## Make matrix of benchmarks and save

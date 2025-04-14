@@ -552,7 +552,12 @@ observeEvent(c(input$result_type, input$result_subtable), {
 
     ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = input$result_type)
     ttable <- ttable[names(ttable) != "Param"]
+    if (input$result_type == "DataAnalysis" & length(ttable) > 1) {
+      ttable$globalBMs <- ttable$Benchmarks$globalBMs
+      ttable$Benchmarks  <- NULL
+    } else {
     ttable <- ttable[[1]]
+    }
     if (!is.data.frame(ttable)) {
       if (!(input$result_type == current_stage())) {
         enable("result_subtable")
