@@ -47,7 +47,7 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$PropModPerProt*: The proportion of modifiable proteins sampled for modifications. A value of `2` means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.
 
-*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph"). The mods name is mandatory.
+*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph")`. The mods name is mandatory.
 
 *Param\$PTMTypesDistr*: The distribution of PTM types. Default set to `1`, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type. Always provide as named list, e.g. `list(ph=0.5)`
 

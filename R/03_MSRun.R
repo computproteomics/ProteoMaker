@@ -97,9 +97,13 @@ MSRunSim <- function(Digested, parameters) {
         remove <- order(1/myprob * log(runif(length(allVals))), decreasing = T)[seq_len((1-parameters$PercDetectedVal)*length(allVals))]
         allVals[remove] <- NA
     }
+    if (length(remove) > 0) {
+        message("  - A total of ", length(remove), " intensities is removed.\n")
+    } else {
+        message("  - No intensities were removed.\n")
+    }
     MSRun[ ,parameters$QuantColnames] <- matrix(allVals, ncol=length(parameters$QuantColnames))
     message("  - A total of ", length(remove), " intensities is removed.\n")
-
     # Shuffle the intensities of randomly selected peptides, to express the wrong identification.
     shuffle <- order(runif(nrow(MSRun)), decreasing = T)[seq_len(parameters$WrongIDs*nrow(MSRun))]
     message(" + Addition of false identification:")

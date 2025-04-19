@@ -30,17 +30,13 @@ Param$paramGroundTruth$NumReps <- c(5)
 # Param$paramGroundTruth$NumCond <- 5
 Param$paramGroundTruth$PercExpressedProt <- 1
 
-Param$paramGroundTruth$FracModProt <- 0
-# Param$paramGroundTruth$PTMTypes <- list(mods=c("ph", "ox"))
-# Param$paramGroundTruth$PTMTypesDistr <- list(m1 = c(ph=0.5, ox = 0.4))
-# Param$paramGroundTruth$PTMTypesMass <- list(m1 = c(ph=79.966331, ox = 15.994915))
-# Param$paramGroundTruth$ModifiableResidues <- list(m1 = list(ph=c("S", "T", "Y"), ox = c("M", "K")))
-# Param$paramGroundTruth$ModifiableResiduesDistr <- list(m1 = list(ph=c(0.86, 0.13, 0.01), ox = c(0.5, 0.5)))
-# Param$paramGroundTruth$PTMTypes <- list(mods1 = c("ph", "ac"))
-# Param$paramGroundTruth$PTMTypesMass <- list(m1 = c(ph=79.966331, ac=42.010565))
-# Param$paramGroundTruth$PTMTypesDistr <- list(m1 = list(ph=0.5, ac=0.5), m2 = list(ph=0.1, ac=0.9))
-# Param$paramGroundTruth$ModifiableResidues <- list(m1 = list(ph=c("S", "T", "Y"), ac=c("K", "R")))
-# Param$paramGroundTruth$ModifiableResiduesDistr <- list(m1 = list(ph=c(0.86,0.13, 0.01), ac=c(0.5, 0.5)))
+Param$paramGroundTruth$FracModProt <- 0.5
+Param$paramGroundTruth$PTMTypes <- list(mods=c("ph", "ox"))
+Param$paramGroundTruth$PTMTypesDistr <- list(m1 = c(ph=0.5, ox = 0.4))
+Param$paramGroundTruth$PTMTypesMass <- list(m1 = c(ph=79.966331, ox = 15.994915))
+Param$paramGroundTruth$ModifiableResidues <- list(m1 = list(ph=c("S", "T", "Y"), ox = c("M", "K")))
+Param$paramGroundTruth$ModifiableResiduesDistr <- list(m1 = list(ph=c(0.86, 0.13, 0.01), ox = c(0.5, 0.5)))
+Param$paramDigest$EnrichPTM <- "ph"
 
 # Param$paramGroundTruth$PTMTypes <- list(mods=c("ph", "ox"))
 # Param$paramGroundTruth$PTMTypesDistr <- list(m1 = c(ph=0.5, ox = 0.04))
@@ -59,9 +55,8 @@ Param$paramGroundTruth$FracModProt <- 0
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
 
-# Param$paramDigest$EnrichmentEfficiency <- 0.8
-Param$paramDigest$EnrichPTM <- NA
-# Param$paramDigest$ModificationLoss <- 0.5
+Param$paramDigest$EnrichmentEfficiency <- 0.8
+Param$paramDigest$ModificationLoss <- 0.5
 Param$paramMSRun$PercDetectedVal <- 0.5
 Param$paramMSRun$PercDetectability <- 0.25
 # Param$paramMSRun$WrongLocalizations <- 0.1
@@ -97,6 +92,6 @@ write.csv(benchmarks, file = paste0(proteomaker_conf$resultFilePath, "/allBenchm
 ## Visualize the results
 #####################
 # visualize the benchmarks and parameters of the second simulation
-visualize_benchmarks(benchmarks,2)
+visualize_benchmarks(benchmarks, ref_par = "NumReps")
 
 

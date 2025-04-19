@@ -66,283 +66,361 @@ ul.task-list li input[type="checkbox"] {
 <section id="list-of-benchmarks" class="level2">
 <h2 class="anchored" data-anchor-id="list-of-benchmarks">List of Benchmarks</h2>
 <p>The following values and distributions are collected and will be used for comparing the results.</p>
+<p>The following values and distributions are collected and used for assessing quantitative and statistical fidelity of the simulation and benchmarking pipeline.</p>
 <section id="peptide-level" class="level3">
 <h3 class="anchored" data-anchor-id="peptide-level">Peptide Level</h3>
 <ul>
-<li><strong>Total Number of Peptides</strong>: Counts both modified and non-modified peptides. Fixed PTMs are not considered “modified”.</li>
-<li><strong>Number of Proteins</strong>: Total number of all proteins, independently whether shared or uniquely identified.</li>
-<li><strong>Proportion of Unique Modified and Non-Modified Peptides</strong>: Measures the proportion of peptides that are unique and either modified or non-modified.</li>
-<li><strong>Total Number of Unique Stripped Sequences</strong>: Counts the unique sequences after removing modifications.</li>
-<li><strong>Percentage Missingness</strong>: Calculates the percentage of missing values in the data.</li>
-<li><strong>AUC of ROC Curve for Correct Differentially Regulated Features</strong>: Area under the ROC curve for correctly identifying differentially regulated peptides.</li>
-<li><strong>TPR (True Positive Rate)</strong>: Found proportion of correct differentially regulated peptides, with FDR &lt; 0.05/0.01.</li>
-<li><strong>True FDR for Estimated FDR</strong>: True false discovery rate for an estimated FDR of 0.01/0.05.</li>
-<li><strong>Proportion of Cleaved Peptides</strong>: Proportion of peptides per number of miscleavages.</li>
-<li><strong>Retention Time Range</strong>: The range of retention times (max-min).</li>
-<li><strong>Dynamic Range</strong>: The dynamic range of peptide intensities on a log2 scale (max-min).</li>
-<li><strong>Number of Accepted PSMs</strong>: Count of accepted peptide-spectrum matches, based on scan numbers.</li>
-<li><strong>Sum of Squares Residuals Towards Actual Fold-Changes</strong>: Assigns mean fold-change for peptides with multiple assigned fold-changes, only calculated for the first 2 conditions.</li>
-<li><strong>Mean of Std. Dev. Within Replicates</strong>: The mean standard deviation within replicates of peptides with actual fold-changes, on a log scale.</li>
-<li><strong>Distribution of Quantitative Values (Skewness)</strong>: Measures how asymmetric the distribution of quantitative values is.</li>
-<li><strong>Distribution of Quantitative Values (Kurtosis)</strong>: Measures how normal (peaked) the distribution of quantitative values is.</li>
-<li><strong>Distribution of Quantitative Values (Standard Deviation)</strong>: Measures how broad the distribution of quantitative values is.</li>
+<li><p><strong>Total Number of Peptides</strong> (<code>numPeptides</code>, label: <strong>#Total peptides (mod+unmod)</strong>): Total count of all peptides (modified and unmodified). Fixed PTMs are not included.</p></li>
+<li><p><strong>Number of Proteins</strong> (<code>numProteins</code>, label: <strong>#Proteins (from peptides)</strong>): Total number of proteins represented by at least one peptide.</p></li>
+<li><p><strong>Proportion of Unique Modified and Non-Modified Peptides</strong> (<code>propUniquePep</code>, label: <strong>% Unique peptides (prot-specific)</strong>): Fraction of peptides mapping uniquely to one protein.</p></li>
+<li><p><strong>Total Number of Unique Stripped Sequences</strong> (<code>uniqueStrippedPep</code>, label: <strong>#Stripped sequences</strong>): Unique peptide sequences after removing PTM annotations.</p></li>
+<li><p><strong>Percentage Missingness</strong> (<code>percMissingPep</code>, label: <strong>% Missing peptide values</strong>): Percentage of missing values across peptide-level intensities.</p></li>
+<li><p><strong>AUC of ROC Curve for Correct Differentially Regulated Features</strong> (<code>aucDiffRegProteins.FDR_limma 2 vs 1.AUC</code>, label: <em>Peptide AUC (truth vs FDR)</em>): Area under the ROC curve for identifying true positives based on ground truth, based on Limma test</p></li>
+<li><p><strong>TPR (True Positive Rate)</strong> (<code>tprPep0.01.FDR_limma 2 vs 1.TPR</code>, <code>tprPep0.05.FDR_limma 2 vs 1.TPR</code>, label: <em>TPR peptide (FDR &lt; 0.01/0.05)</em>): True positive rate at estimated FDR thresholds of 0.01 and 0.05.</p></li>
+<li><p><strong>True FDR for Estimated FDR</strong> (<code>tFDRPep0.01.FDR_limma 2 vs 1.tFDR</code>, <code>tFDRPep0.05.FDR_limma 2 vs 1.tFDR</code>, label: <em>True FDR (peptides)</em>): Actual (true) FDR at estimated FDR levels of 0.01 and 0.05.</p></li>
+<li><p><strong>Proportion of Cleaved Peptides</strong> (<code>propMisCleavedPeps</code>, label: <em>Miscleavage distribution</em>): Proportional distribution of miscleavage events.</p></li>
+<li><p><strong>Dynamic Range</strong> (<code>dynRangePep</code>, label: <em>Dynamic range (peptides)</em>): Log2 range of peptide intensities.</p></li>
+<li><p><strong>Sum of Squared Residuals Towards Actual Fold-Changes</strong> (<code>sumSquareDiffFCPep</code>, label: <em>Fold-change error (peptides)</em>): Fold-change error (ground truth vs.&nbsp;measured), computed as squared differences for log2 FC.</p></li>
+<li><p><strong>Mean of Std. Dev. Within Replicates</strong> (<code>sdWithinRepsPep</code>, label: <em>Replicate SD (peptides)</em>): Within-group variation of regulated peptides.</p></li>
+<li><p><strong>Skewness</strong> (<code>skewnessPeps</code>, label: <em>Skewness (peptides)</em>): Asymmetry of peptide intensity distribution.</p></li>
+<li><p><strong>Kurtosis</strong> (<code>kurtosisPeps</code>, label: <em>Kurtosis (peptides)</em>): Peakedness (tailedness) of peptide intensity distribution.</p></li>
+<li><p><strong>Standard Deviation</strong> (<code>sdPeps</code>, label: <em>Overall SD (peptides)</em>): Spread of peptide intensity distribution.</p></li>
 </ul>
 </section>
 <section id="protein-level" class="level3">
 <h3 class="anchored" data-anchor-id="protein-level">Protein Level</h3>
 <ul>
-<li><strong>Number of Quantified Protein Groups</strong>: Total number of quantified protein groups.</li>
-<li><strong>Proportion of Quantified Uniquely Identified Proteins</strong>: Measures the proportion of uniquely identified proteins that are quantified.</li>
-<li><strong>Percentage Missingness</strong>: Calculates the percentage of missing values at the protein level.</li>
-<li><strong>Distribution of Non-Modified Peptides per Protein</strong>: Summarized by its mean, the distribution of non-modified peptides per protein.</li>
-<li><strong>AUC of ROC Curve for Correct Differentially Regulated Features</strong>: Area under the ROC curve for correctly identifying differentially regulated proteins.</li>
-<li><strong>True FDR for Estimated FDR</strong>: True false discovery rate for an estimated FDR of 0.01/0.05.</li>
-<li><strong>TPR (True Positive Rate)</strong>: Found proportion of correct differentially regulated proteins, with FDR &lt; 0.05/0.01.</li>
-<li><strong>Sum of Squares Residuals Towards Actual Fold-Changes</strong>: Takes the first non-zero one in case of multiples.</li>
-<li><strong>Dynamic Range</strong>: The dynamic range of protein intensities on a log2 scale (max-min).</li>
-<li><strong>Mean of Std. Dev. Within Replicates</strong>: The mean standard deviation within replicates of regulated proteins, on a log scale.</li>
-<li><strong>Proportion of Proteins with Miscleaved Peptides</strong>: Measures the proportion of proteins with miscleaved peptides.</li>
-<li><strong>Proportion of Regulated Proteins with Wrong Identified Peptides</strong>: Measures the proportion of regulated proteins with wrongly identified peptides, with FDR &lt; 0.01/0.05.</li>
-<li><strong>Distribution of Quantitative Values (Skewness)</strong>: Measures how asymmetric the distribution of quantitative values is at the protein level.</li>
-<li><strong>Distribution of Quantitative Values (Kurtosis)</strong>: Measures how normal (peaked) the distribution of quantitative values is at the protein level.</li>
-<li><strong>Distribution of Quantitative Values (Standard Deviation)</strong>: Measures how broad the distribution of quantitative values is at the protein level.</li>
+<li><p><strong>Number of Quantified Protein Groups</strong> (<code>numQuantProtGroups</code>, label: <strong>#Quantified proteins</strong>): Total number of proteins with quantified unmodified peptides.</p></li>
+<li><p><strong>Proportion of Quantified Uniquely Identified Proteins</strong> (<code>propUniqueProts</code>, label: <strong>% Unique proteins</strong>): Fraction of protein groups with only unique peptides.</p></li>
+<li><p><strong>Percentage Missingness</strong> (<code>percMissingProt</code>, label: <strong>% Missing protein values</strong>): Missingness of values across protein-level intensities.</p></li>
+<li><p><strong>Mean Number of Peptides per Protein</strong> (<code>meanPepPerProt</code>, label: <em>Peptides per protein</em>): Mean count of peptides per quantified protein.</p></li>
+<li><p><strong>AUC of ROC Curve for Correct Differentially Regulated Features</strong> (<code>aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC</code>, label: <em>Protein AUC (truth vs FDR)</em>): AUC for identifying differentially regulated proteins, applying PolySTest.</p></li>
+<li><p><strong>TPR (True Positive Rate)</strong> (<code>tprProt0.01.FDR_PolySTest 2 vs 1.tFDR</code>, <code>tprProt0.05.FDR_PolySTest 2 vs 1.tFDR</code>, label: <em>TPR protein (FDR &lt; 0.01/0.05)</em>): True positive rate for regulated proteins at estimated FDRs 0.01 and 0.05. Estimated with PolySTest.</p></li>
+<li><p><strong>True FDR for Estimated FDR</strong> (<code>tFDRProt0.01.FDR_PolySTest 2 vs 1.TPR</code>, <code>tFDRProt0.05.FDR_PolySTest 2 vs 1.TPR</code>, label: <em>True FDR (proteins)</em>): Actual FDR for proteins at estimated FDRs 0.01 and 0.05.</p></li>
+<li><p><strong>Sum of Squared Residuals Towards Actual Fold-Changes</strong> (<code>sumSquareDiffFCProt</code>, label: <em>Fold-change error (proteins)</em>): Average squared error between simulated and measured log2 fold-changes.</p></li>
+<li><p><strong>Dynamic Range</strong> (<code>dynRangeProt</code>, label: <em>Dynamic range (proteins)</em>): Log2 range of protein intensities.</p></li>
+<li><p><strong>Mean of Std. Dev. Within Replicates</strong> (<code>sdWithinRepsProt</code>, label: <em>Replicate SD (proteins)</em>): Within-group variation of regulated proteins.</p></li>
+<li><p><strong>Proportion of Proteins with Miscleaved Peptides</strong> (<code>propMisCleavedProts</code>, label: <strong>% Miscleaved proteins</strong>): Fraction of proteins having at least one miscleaved peptide.</p></li>
+<li><p><strong>Proportion of Regulated Proteins with Wrong Identified Peptides</strong> (<code>propDiffRegWrongIDProt0.01</code>, <code>propDiffRegWrongIDProt0.05</code>, label: <strong>% Wrong-ID (proteins)</strong>): Fraction of regulated proteins with wrongly identified peptides at 0.01 and 0.05 FDR.</p></li>
+<li><p><strong>Skewness</strong> (<code>skewnessProts</code>, label: <em>Skewness (proteins)</em>): Asymmetry in distribution of protein intensities.</p></li>
+<li><p><strong>Kurtosis</strong> (<code>kurtosisProts</code>, label: <em>Kurtosis (proteins)</em>): Peakedness of protein intensity distribution.</p></li>
+<li><p><strong>Standard Deviation</strong> (<code>sdProts</code>, label: <em>Overall SD (proteins)</em>): Overall spread of protein-level intensity values.</p></li>
 </ul>
 </section>
 <section id="ptm-level" class="level3">
 <h3 class="anchored" data-anchor-id="ptm-level">PTM Level</h3>
 <ul>
-<li><strong>Total Number and Mean of Quantitatively Represented Proteoforms per Protein</strong>: Includes protein groups, can only be calculated for in silico data.</li>
-<li><strong>Number of Modified Peptides</strong>: Total number of modified peptides.</li>
-<li><strong>Proportion of Modified Peptides with Identical Non-Modified Form</strong>: Measures the proportion of modified peptides that have an identical non-modified form.</li>
-<li><strong>AUC of ROC Curve for Correct Differentially Regulated Modified Peptides</strong>: After adjusting for protein amount, the area under the ROC curve for correctly identifying differentially regulated modified peptides.</li>
-<li><strong>True FDR for Estimated FDR</strong>: True false discovery rate for an estimated FDR of 0.01/0.05.</li>
-<li><strong>TPR (True Positive Rate)</strong>: Found proportion of correct differentially regulated modified peptides, with FDR &lt; 0.05/0.01.</li>
-<li><strong>Proportion of Wrongly Regulated Modified Peptides</strong>: Measures the proportion of wrongly regulated modified peptides, with FDR 0.01/0.05, no adjustment.</li>
-<li><strong>Proportion of Modified Peptides with Quantified Non-Modified Protein</strong>: Measures the proportion of modified peptides that have a quantified non-modified protein.</li>
-<li><strong>Sum of Squares of Residuals Towards Actual Fold-Changes</strong>: Only calculated for modified peptides.</li>
+<li><p><strong>Number and Mean of Proteoforms per Protein</strong> (<code>numProteoforms</code>, <code>meanProteoformsPerProt</code>, label: <strong>#Proteoforms</strong>, <em>Proteoforms per protein</em>): Total and mean count of distinct proteoforms across protein groups.</p></li>
+<li><p><strong>Number of Modified Peptides</strong> (<code>numModPeptides</code>, label: <strong>#Modified peptides</strong>): Total count of peptides carrying simulated PTMs.</p></li>
+<li><p><strong>Proportion of Modified Peptides with Identical Non-Modified Form</strong> (<code>propModAndUnmodPep</code>, label: <strong>% Modified with unmodified match</strong>): Fraction of modified peptides that have a corresponding unmodified form.</p></li>
+<li><p><strong>AUC for Correctly Regulated Modified Peptides</strong> (<code>aucDiffRegAdjModPep</code>, label: <em>AUC (adj. mod. peptides)</em>): AUC calculated after adjustment for parent protein abundance.</p></li>
+<li><p><strong>TPR</strong> (<code>tprAdjModPep0.01</code>, <code>tprAdjModPep0.05</code>, label: <em>TPR (adj. mod. peptides)</em>): True positive rate for regulated modified peptides at estimated FDRs 0.01 and 0.05.</p></li>
+<li><p><strong>True FDR</strong> (<code>tFDRAdjModPep0.01</code>, <code>tFDRAdjModPep0.05</code>, label: <em>True FDR (mod. peptides)</em>): Actual FDR of modified peptide results at FDRs 0.01 and 0.05.</p></li>
+<li><p><strong>Proportion of Wrongly Regulated Modified Peptides</strong> (<code>propDiffRegPepWrong0.01</code>, <code>propDiffRegPepWrong0.05</code>, label: <strong>% Wrongly significant (mod. peptides)</strong>): Fraction of modified peptides that are significant but not truly regulated.</p></li>
+<li><p><strong>Proportion of Modified Peptides with Quantified Protein</strong> (<code>percOverlapModPepProt</code>, label: <strong>% Mod peptides with protein quant</strong>): Fraction of modified peptides with quantifiable protein background.</p></li>
+<li><p><strong>Sum of Squared Residuals Towards Actual Fold-Changes</strong> (<code>sumSquareDiffFCModPep</code>, label: <em>Fold-change error (mod. peptides)</em>): Squared differences between simulated and measured log2 fold-changes of modified peptides.</p></li>
 </ul>
 </section>
 </section>
-<section id="overview-as-table" class="level2">
-<h2 class="anchored" data-anchor-id="overview-as-table">Overview as table</h2>
+<section id="benchmark-overview-table" class="level2">
+<h2 class="anchored" data-anchor-id="benchmark-overview-table">Benchmark Overview Table</h2>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Benchmark Name</th>
-<th>Description</th>
+<th>Benchmarking Metrics</th>
+<th>Name</th>
+<th>Label (for figures)</th>
 <th>Category</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Total Number of Peptides</td>
-<td>Counts both modified and non-modified peptides. Fixed PTMs are not considered “modified”.</td>
-<td>Peptide Level</td>
+<td>numPeptides</td>
+<td>#Total peptides (mod+unmod)</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
 <td>Number of Proteins</td>
-<td>Total number of all proteins, independently whether shared or uniquely identified.</td>
-<td>Peptide Level</td>
+<td>numProteins</td>
+<td>#Proteins (from peptides)</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
 <td>Proportion of Unique Modified and Non-Modified Peptides</td>
-<td>Measures the proportion of peptides that are unique and either modified or non-modified.</td>
-<td>Peptide Level</td>
+<td>propUniquePep</td>
+<td>% Unique peptides (prot-specific)</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
-<td>Total Number of Unique Stripped Sequences</td>
-<td>Counts the unique sequences after removing modifications.</td>
-<td>Peptide Level</td>
+<td>Unique Stripped Sequences</td>
+<td>uniqueStrippedPep</td>
+<td>#Stripped sequences</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
 <td>Percentage Missingness</td>
-<td>Calculates the percentage of missing values in the data.</td>
-<td>Peptide Level</td>
+<td>percMissingPep</td>
+<td>% Missing peptide values</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
-<td>AUC of ROC Curve for Correct Differentially Regulated Features</td>
-<td>Area under the ROC curve for correctly identifying differentially regulated peptides.</td>
-<td>Peptide Level</td>
+<td>AUC of ROC (Peptides)</td>
+<td>aucDiffRegPeptides.FDR_limma.2.vs.1.AUC</td>
+<td>Peptide AUC (truth vs FDR)</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
-<td>TPR (True Positive Rate)</td>
-<td>Found proportion of correct differentially regulated peptides, with FDR &lt; 0.05/0.01.</td>
-<td>Peptide Level</td>
+<td>TPR at FDR &lt; 0.01</td>
+<td>tprPep0.01.FDR_limma.2.vs.1.TPR</td>
+<td>TPR peptide (FDR &lt; 0.01)</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
-<td>True FDR for Estimated FDR</td>
-<td>True false discovery rate for an estimated FDR of 0.01/0.05.</td>
-<td>Peptide Level</td>
+<td>TPR at FDR &lt; 0.05</td>
+<td>tprPep0.05.FDR_limma.2.vs.1.TPR</td>
+<td>TPR peptide (FDR &lt; 0.05)</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
-<td>Proportion of Cleaved Peptides</td>
-<td>Proportion of peptides per number of miscleavages.</td>
-<td>Peptide Level</td>
+<td>True FDR at 0.01</td>
+<td>tFDRPep0.01.FDR_limma.2.vs.1.tFDR</td>
+<td>True FDR (peptides, 0.01)</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
-<td>Retention Time Range</td>
-<td>The range of retention times (max-min).</td>
-<td>Peptide Level</td>
+<td>True FDR at 0.05</td>
+<td>tFDRPep0.05.FDR_limma.2.vs.1.tFDR</td>
+<td>True FDR (peptides, 0.05)</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
+<td>Miscleavage Distribution</td>
+<td>propMisCleavedPeps</td>
+<td>Miscleavage distribution</td>
+<td>Peptide</td>
+</tr>
+<tr class="even">
 <td>Dynamic Range</td>
-<td>The dynamic range of peptide intensities on a log2 scale (max-min).</td>
-<td>Peptide Level</td>
-</tr>
-<tr class="even">
-<td>Number of Accepted PSMs</td>
-<td>Count of accepted peptide-spectrum matches, based on scan numbers.</td>
-<td>Peptide Level</td>
+<td>dynRangePep</td>
+<td>Dynamic range (peptides)</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
-<td>Sum of Squares Residuals Towards Actual Fold-Changes</td>
-<td>Assigns mean fold-change for peptides with multiple assigned fold-changes, only calculated for the first 2 conditions.</td>
-<td>Peptide Level</td>
+<td>Fold-Change Error</td>
+<td>sumSquareDiffFCPep</td>
+<td>Fold-change error (peptides)</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
-<td>Mean of Std. Dev. Within Replicates</td>
-<td>The mean standard deviation within replicates of peptides with actual fold-changes, on a log scale.</td>
-<td>Peptide Level</td>
+<td>Within-Replicate SD</td>
+<td>sdWithinRepsPep</td>
+<td>Replicate SD (peptides)</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
-<td>Distribution of Quantitative Values (Skewness)</td>
-<td>Measures how asymmetric the distribution of quantitative values is.</td>
-<td>Peptide Level</td>
+<td>Skewness</td>
+<td>skewnessPeps</td>
+<td>Skewness (peptides)</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
-<td>Distribution of Quantitative Values (Kurtosis)</td>
-<td>Measures how normal (peaked) the distribution of quantitative values is.</td>
-<td>Peptide Level</td>
+<td>Kurtosis</td>
+<td>kurtosisPeps</td>
+<td>Kurtosis (peptides)</td>
+<td>Peptide</td>
 </tr>
 <tr class="odd">
-<td>Distribution of Quantitative Values (Standard Deviation)</td>
-<td>Measures how broad the distribution of quantitative values is.</td>
-<td>Peptide Level</td>
+<td>Overall SD</td>
+<td>sdPeps</td>
+<td>Overall SD (peptides)</td>
+<td>Peptide</td>
 </tr>
 <tr class="even">
-<td>Number of Quantified Protein Groups</td>
-<td>Total number of quantified protein groups.</td>
-<td>Protein Level</td>
+<td>Quantified Protein Groups</td>
+<td>numQuantProtGroups</td>
+<td>#Quantified proteins</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>Proportion of Quantified Uniquely Identified Proteins</td>
-<td>Measures the proportion of uniquely identified proteins that are quantified.</td>
-<td>Protein Level</td>
+<td>Unique Proteins</td>
+<td>propUniqueProts</td>
+<td>% Unique proteins</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
 <td>Percentage Missingness</td>
-<td>Calculates the percentage of missing values at the protein level.</td>
-<td>Protein Level</td>
+<td>percMissingProt</td>
+<td>% Missing protein values</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>Distribution of Non-Modified Peptides per Protein</td>
-<td>Summarized by its mean, the distribution of non-modified peptides per protein.</td>
-<td>Protein Level</td>
+<td>Mean Peptides per Protein</td>
+<td>meanPepPerProt</td>
+<td>Peptides per protein</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
-<td>AUC of ROC Curve for Correct Differentially Regulated Features</td>
-<td>Area under the ROC curve for correctly identifying differentially regulated proteins.</td>
-<td>Protein Level</td>
+<td>AUC of ROC (Proteins)</td>
+<td>aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC</td>
+<td>Protein AUC (truth vs FDR)</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>True FDR for Estimated FDR</td>
-<td>True false discovery rate for an estimated FDR of 0.01/0.05.</td>
-<td>Protein Level</td>
+<td>TPR at FDR &lt; 0.01</td>
+<td>tprProt0.01.FDR_PolySTest.2.vs.1.TPR</td>
+<td>TPR protein (FDR &lt; 0.01)</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
-<td>TPR (True Positive Rate)</td>
-<td>Found proportion of correct differentially regulated proteins, with FDR &lt; 0.05/0.01.</td>
-<td>Protein Level</td>
+<td>TPR at FDR &lt; 0.05</td>
+<td>tprProt0.05.FDR_PolySTest.2.vs.1.TPR</td>
+<td>TPR protein (FDR &lt; 0.05)</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>Sum of Squares Residuals Towards Actual Fold-Changes</td>
-<td>Takes the first non-zero one in case of multiples.</td>
-<td>Protein Level</td>
+<td>True FDR at 0.01</td>
+<td>tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR</td>
+<td>True FDR (proteins, 0.01)</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
-<td>Dynamic Range</td>
-<td>The dynamic range of protein intensities on a log2 scale (max-min).</td>
-<td>Protein Level</td>
+<td>True FDR at 0.05</td>
+<td>tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR</td>
+<td>True FDR (proteins, 0.05)</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>Mean of Std. Dev. Within Replicates</td>
-<td>The mean standard deviation within replicates of regulated proteins, on a log scale.</td>
-<td>Protein Level</td>
+<td>Fold-Change Error</td>
+<td>sumSquareDiffFCProt</td>
+<td>Fold-change error (proteins)</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
-<td>Proportion of Proteins with Miscleaved Peptides</td>
-<td>Measures the proportion of proteins with miscleaved peptides.</td>
-<td>Protein Level</td>
+<td>Within-Replicate SD</td>
+<td>sdWithinRepsProt</td>
+<td>Replicate SD (proteins)</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>Proportion of Regulated Proteins with Wrong Identified Peptides</td>
-<td>Measures the proportion of regulated proteins with wrongly identified peptides, with FDR &lt; 0.01/0.05.</td>
-<td>Protein Level</td>
+<td>Miscleaved Proteins</td>
+<td>propMisCleavedProts</td>
+<td>% Miscleaved proteins</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
-<td>Distribution of Quantitative Values (Skewness)</td>
-<td>Measures how asymmetric the distribution of quantitative values is at the protein level.</td>
-<td>Protein Level</td>
+<td>Wrong ID Proteins at 0.01</td>
+<td>propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1</td>
+<td>% Wrong-ID (proteins, 0.01)</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>Distribution of Quantitative Values (Kurtosis)</td>
-<td>Measures how normal (peaked) the distribution of quantitative values is at the protein level.</td>
-<td>Protein Level</td>
+<td>Wrong ID Proteins at 0.05</td>
+<td>propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1</td>
+<td>% Wrong-ID (proteins, 0.05)</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
-<td>Distribution of Quantitative Values (Standard Deviation)</td>
-<td>Measures how broad the distribution of quantitative values is at the protein level.</td>
-<td>Protein Level</td>
+<td>Skewness</td>
+<td>skewnessProts</td>
+<td>Skewness (proteins)</td>
+<td>Protein</td>
 </tr>
 <tr class="odd">
-<td>Total Number and Mean of Quantitatively Represented Proteoforms per Protein</td>
-<td>Includes protein groups, can only be calculated for in silico data.</td>
-<td>PTM Level</td>
+<td>Kurtosis</td>
+<td>kurtosisProts</td>
+<td>Kurtosis (proteins)</td>
+<td>Protein</td>
 </tr>
 <tr class="even">
+<td>Overall SD</td>
+<td>sdProts</td>
+<td>Overall SD (proteins)</td>
+<td>Protein</td>
+</tr>
+<tr class="odd">
+<td>Total Proteoforms</td>
+<td>numProteoforms</td>
+<td>#Proteoforms</td>
+<td>PTM</td>
+</tr>
+<tr class="even">
+<td>Mean Proteoforms per Protein</td>
+<td>meanProteoformsPerProt</td>
+<td>Proteoforms per protein</td>
+<td>PTM</td>
+</tr>
+<tr class="odd">
 <td>Number of Modified Peptides</td>
-<td>Total number of modified peptides.</td>
-<td>PTM Level</td>
-</tr>
-<tr class="odd">
-<td>Proportion of Modified Peptides with Identical Non-Modified Form</td>
-<td>Measures the proportion of modified peptides that have an identical non-modified form.</td>
-<td>PTM Level</td>
+<td>numModPeptides</td>
+<td>#Modified peptides</td>
+<td>PTM</td>
 </tr>
 <tr class="even">
-<td>AUC of ROC Curve for Correct Differentially Regulated Modified Peptides</td>
-<td>After adjusting for protein amount, the area under the ROC curve for correctly identifying differentially regulated modified peptides.</td>
-<td>PTM Level</td>
+<td>Modified with Unmodified Match</td>
+<td>propModAndUnmodPep</td>
+<td>% Modified with unmodified match</td>
+<td>PTM</td>
 </tr>
 <tr class="odd">
-<td>True FDR for Estimated FDR</td>
-<td>True false discovery rate for an estimated FDR of 0.01/0.05.</td>
-<td>PTM Level</td>
+<td>AUC (Adj. Modified Peptides)</td>
+<td>aucDiffRegAdjModPep</td>
+<td>AUC (adj. mod. peptides)</td>
+<td>PTM</td>
 </tr>
 <tr class="even">
-<td>TPR (True Positive Rate)</td>
-<td>Found proportion of correct differentially regulated modified peptides, with FDR &lt; 0.05/0.01.</td>
-<td>PTM Level</td>
+<td>TPR (Adj. Mod Peptides) at 0.01</td>
+<td>tprAdjModPep0.01</td>
+<td>TPR (adj. mod. peptides, 0.01)</td>
+<td>PTM</td>
 </tr>
 <tr class="odd">
-<td>Proportion of Wrongly Regulated Modified Peptides</td>
-<td>Measures the proportion of wrongly regulated modified peptides, with FDR 0.01/0.05, no adjustment.</td>
-<td>PTM Level</td>
+<td>TPR (Adj. Mod Peptides) at 0.05</td>
+<td>tprAdjModPep0.05</td>
+<td>TPR (adj. mod. peptides, 0.05)</td>
+<td>PTM</td>
 </tr>
 <tr class="even">
-<td>Proportion of Modified Peptides with Quantified Non-Modified Protein</td>
-<td>Measures the proportion of modified peptides that have a quantified non-modified protein.</td>
-<td>PTM Level</td>
+<td>True FDR (Adj. Mod Peptides) at 0.01</td>
+<td>tFDRAdjModPep0.01</td>
+<td>True FDR (mod. peptides, 0.01)</td>
+<td>PTM</td>
 </tr>
 <tr class="odd">
-<td>Sum of Squares of Residuals Towards Actual Fold-Changes</td>
-<td>Only calculated for modified peptides.</td>
-<td>PTM Level</td>
+<td>True FDR (Adj. Mod Peptides) at 0.05</td>
+<td>tFDRAdjModPep0.05</td>
+<td>True FDR (mod. peptides, 0.05)</td>
+<td>PTM</td>
+</tr>
+<tr class="even">
+<td>Wrongly Significant Mod Peptides (0.01)</td>
+<td>propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1</td>
+<td>% Wrongly significant (mod. peptides, 0.01)</td>
+<td>PTM</td>
+</tr>
+<tr class="odd">
+<td>Wrongly Significant Mod Peptides (0.05)</td>
+<td>propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1</td>
+<td>% Wrongly significant (mod. peptides, 0.05)</td>
+<td>PTM</td>
+</tr>
+<tr class="even">
+<td>Modified Peptides with Protein Quant</td>
+<td>percOverlapModPepProt</td>
+<td>% Mod peptides with protein quant</td>
+<td>PTM</td>
+</tr>
+<tr class="odd">
+<td>Fold-Change Error (Mod Peptides)</td>
+<td>sumSquareDiffFCModPep</td>
+<td>Fold-change error (mod. peptides)</td>
+<td>PTM</td>
 </tr>
 </tbody>
 </table>

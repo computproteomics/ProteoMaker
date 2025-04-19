@@ -132,10 +132,13 @@ write.csv(benchmarks, file = paste0(proteomaker_config$resultFilePath, "/allBenc
 
 ## Visualizing Results
 
-Visualize the results of the benchmarks to analyze the performance and outcomes of the simulations. Visualization aids in interpreting the data and identifyinsg trends or anomalies
+Visualize the results of the benchmarks to compare the performance and outcomes of different simulations. You need to provide a 
+parameter as reference. The following function allows for two different visualizations: normal plots for one parameters set as `ref_par`, and 2D color plots for two parameters as `ref_par`.
+another for the parameters. 
+
 
 ```{r}
 # visualize the benchmarks and parameters of the second simulation
-visualize_benchmarks(benchmarks, 2)
+visualize_benchmarks(benchmarks, "NumReps")
 
 ```
