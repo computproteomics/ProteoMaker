@@ -47,7 +47,7 @@ proteomaker_config <- set_proteomaker(
   fastaFilePath =  system.file("Proteomes", package = "ProteoMaker"),
   # Default path to the temporary directory
   resultFilePath = paste0(tempdir(), "/SimulatedDataSets"),
-  # Increase to the number of cores you want to use. 
+  # Increase to the number of cores you want to use.                                                                     
   # Large numbers can lead to considerably higher RAM usage
   cores = 1, 
   # Should work on all operation systems. If you have problems, try "FORK" instead
@@ -55,7 +55,7 @@ proteomaker_config <- set_proteomaker(
   # Run statistical tests on the simulated data to compare ground truth with simulated values
   runStatTests = TRUE,
   # Calculate all benchmarks for the simulated data
-  calcAllBenchmarks = TRUE
+  calcAllBenchmarks = TRUE               
 )
 ```
 
@@ -137,8 +137,8 @@ parameter as reference. The following function allows for two different visualiz
 another for the parameters. 
 
 
-```{r}
+```{r fig.height = 8, fig.weight = 6}
 # visualize the benchmarks and parameters of the second simulation
-visualize_benchmarks(benchmarks, "NumReps")
+visualize_benchmarks(benchmarks, ref_par = "NumReps")
 
 ```

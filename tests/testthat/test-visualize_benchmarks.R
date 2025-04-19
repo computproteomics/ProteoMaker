@@ -7,7 +7,6 @@ test_that("visualize_benchmarks returns a plotly object", {
     proteomaker_config <- set_proteomaker(resultFilePath = tempdir())
     benchmarks <- run_sims(Param, proteomaker_config)
     benchmatrix <- matrix_benchmarks(benchmarks, proteomaker_config)
-    result <- suppressWarnings(visualize_benchmarks(benchmatrix, current_row = 1))
-    expect_true(inherits(result, "plotly"))
+    result <- visualize_benchmarks(benchmatrix)
 })
 

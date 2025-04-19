@@ -34,6 +34,8 @@ Imports:
     e1071,
     scales,
     stringi,
+    lattice,
+    RColorBrewer,
     S4Vectors,
     DT,
     PolySTest,

@@ -720,6 +720,7 @@ visualize_benchmarks <- function(benchmatrix,
       stop(paste("Too many benchmarks selected. Please select a maximum of", length(titles)))
     }
     titles <- titles[benchmarks]
+
     # check whether in benchmatrix
     if (length(titles) > 0) {
       for(i in names(titles)) {
@@ -742,7 +743,7 @@ visualize_benchmarks <- function(benchmatrix,
     plotmfrow <- c(5, ceiling(n_plots / 5))
   }
   par(mfrow=plotmfrow, cex.main=0.75, cex.lab = 0.75, cex.axis = 0.75,
-      mgp = c(1.5, 0.3, 0), mar=c(3, 3, 2, 2.5), xpd = TRUE)
+      mgp = c(1.5, 0.3, 0), mar=c(3, 3, 1.5, 1.5), xpd = TRUE)
 
   # Generate a dark qualitative color palette
   dark_colors <- NULL
@@ -874,8 +875,8 @@ visualize_benchmarks <- function(benchmatrix,
 #'
 #' @examples
 #' benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker()), set_proteomaker())
-#' visualize_benchmarks(benchmarks, current_row = 1)
-visualize_benchmarks_old <- function(BenchMatrix, current_row = 1) {
+#' visualize_one_sim(benchmarks, current_row = 1)
+visualize_one_sim <- function(BenchMatrix, current_row = 1) {
   # get parameter names
   param_t <- param_table()
   param_names <- rownames(param_t)
