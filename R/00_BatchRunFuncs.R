@@ -577,7 +577,7 @@ matrix_benchmarks <- function(allBs, Config) {
 #' benchmark_matrix <- matrix_benchmarks(results, conf)
 #' visualize_benchmarks(benchmark_matrix, ref_par = "NumReps")
 #'
-#' @importFrom RColorBrewer brewer.pal
+#' @importFrom colorspace qualitative_hcl
 #' @importFrom lattice levelplot
 #'
 #' @export
@@ -594,53 +594,53 @@ visualize_benchmarks <- function(benchmatrix,
   colnames(benchmatrix) <- make.names(colnames(benchmatrix))
 
   titles <- c(
-    numPeptides = "#Total peptides (mod+unmod)",
-    numProteins = "#Proteins (from peptides)",
-    propUniquePep = "% Unique peptides (prot-specific)",
-    uniqueStrippedPep = "#Stripped sequences",
-    percMissingPep = "% Missing peptide values",
-    aucDiffRegPeptides.FDR_limma.2.vs.1.AUC = "Peptide AUC (truth vs FDR)",
-    tprPep0.01.FDR_limma.2.vs.1.TPR = "TPR peptide (FDR < 0.01)",
-    tprPep0.05.FDR_limma.2.vs.1.TPR = "TPR peptide (FDR < 0.05)",
-    tFDRPep0.01.FDR_limma.2.vs.1.tFDR = "True FDR (peptides, 0.01)",
-    tFDRPep0.05.FDR_limma.2.vs.1.tFDR = "True FDR (peptides, 0.05)",
-    propMisCleavedPeps.0 = "No miscleavage fraction",
-    dynRangePep = "Dynamic range (peptides)",
-    sumSquareDiffFCPep = "Fold-change error (peptides)",
-    sdWithinRepsPep = "Replicate SD (peptides)",
-    skewnessPeps = "Skewness (peptides)",
-    kurtosisPeps = "Kurtosis (peptides)",
-    sdPeps = "Overall SD (peptides)",
-    numQuantProtGroups = "#Quantified proteins",
-    propUniqueProts = "% Unique proteins",
-    percMissingProt = "% Missing protein values",
-    meanPepPerProt = "Peptides per protein",
-    aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC = "Protein AUC (truth vs FDR)",
-    tprProt0.01.FDR_PolySTest.2.vs.1.TPR = "TPR protein (FDR < 0.01)",
-    tprProt0.05.FDR_PolySTest.2.vs.1.TPR = "TPR protein (FDR < 0.05)",
-    tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR = "True FDR (proteins, 0.01)",
-    tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR = "True FDR (proteins, 0.05)",
-    sumSquareDiffFCProt = "Fold-change error (proteins)",
-    sdWithinRepsProt = "Replicate SD (proteins)",
-    propMisCleavedProts = "% Miscleaved proteins",
-    propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 = "% Wrong-ID (proteins, 0.01)",
-    propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1 = "% Wrong-ID (proteins, 0.05)",
-    skewnessProts = "Skewness (proteins)",
-    kurtosisProts = "Kurtosis (proteins)",
-    sdProts = "Overall SD (proteins)",
-    numProteoforms = "#Proteoforms",
-    meanProteoformsPerProt = "Proteoforms per protein",
-    numModPeptides = "#Modified peptides",
-    propModAndUnmodPep = "% Modified with unmodified match",
-    aucDiffRegAdjModPep = "AUC (adj. mod. peptides)",
-    tprAdjModPep0.01 = "TPR (adj. mod. peptides, 0.01)",
-    tprAdjModPep0.05 = "TPR (adj. mod. peptides, 0.05)",
-    tFDRAdjModPep0.01 = "True FDR (mod. peptides, 0.01)",
-    tFDRAdjModPep0.05 = "True FDR (mod. peptides, 0.05)",
-    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "% Wrongly significant (mod. peptides, 0.01)",
-    propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 = "% Wrongly significant (mod. peptides, 0.05)",
-    percOverlapModPepProt = "% Mod peptides with protein quant",
-    sumSquareDiffFCModPep = "Fold-change error (mod. peptides)"
+    numPeptides = "I: #Total peptides (mod+unmod)",
+    numProteins = "II: #Proteins (from peptides)",
+    propUniquePep = "III: % Unique peptides (prot-specific)",
+    uniqueStrippedPep = "IV: #Stripped sequences",
+    percMissingPep = "V: % Missing peptide values",
+    aucDiffRegPeptides.FDR_limma.2.vs.1.AUC = "VI: Peptide AUC (truth vs FDR)",
+    tprPep0.01.FDR_limma.2.vs.1.TPR = "VII: TPR peptide (FDR < 0.01)",
+    tprPep0.05.FDR_limma.2.vs.1.TPR = "VIII: TPR peptide (FDR < 0.05)",
+    tFDRPep0.01.FDR_limma.2.vs.1.tFDR = "IX: True FDR (peptides, 0.01)",
+    tFDRPep0.05.FDR_limma.2.vs.1.tFDR = "X: True FDR (peptides, 0.05)",
+    propMisCleavedPeps.0 = "XI: No miscleavage fraction",
+    dynRangePep = "XII: Dynamic range (peptides)",
+    sumSquareDiffFCPep = "XIII: Fold-change error (peptides)",
+    sdWithinRepsPep = "XIV: Replicate SD (peptides)",
+    skewnessPeps = "XV: Skewness (peptides)",
+    kurtosisPeps = "XVI: Kurtosis (peptides)",
+    sdPeps = "XVII: Overall SD (peptides)",
+    numQuantProtGroups = "XVIII: #Quantified proteins",
+    propUniqueProts = "XIX: % Unique proteins",
+    percMissingProt = "XX: % Missing protein values",
+    meanPepPerProt = "XXI: Peptides per protein",
+    aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC = "XXII: Protein AUC (truth vs FDR)",
+    tprProt0.01.FDR_PolySTest.2.vs.1.TPR = "XXIII: TPR protein (FDR < 0.01)",
+    tprProt0.05.FDR_PolySTest.2.vs.1.TPR = "XXIV: TPR protein (FDR < 0.05)",
+    tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR = "XXV: True FDR (proteins, 0.01)",
+    tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR = "XXVI: True FDR (proteins, 0.05)",
+    sumSquareDiffFCProt = "XXVII: Fold-change error (proteins)",
+    sdWithinRepsProt = "XXVIII: Replicate SD (proteins)",
+    propMisCleavedProts = "XXIX: % Miscleaved proteins",
+    propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 = "XXX: % Wrong-ID (proteins, 0.01)",
+    propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1 = "XXXI: % Wrong-ID (proteins, 0.05)",
+    skewnessProts = "XXXII: Skewness (proteins)",
+    kurtosisProts = "XXXIII: Kurtosis (proteins)",
+    sdProts = "XXXIV: Overall SD (proteins)",
+    numProteoforms = "XXXV: #Proteoforms",
+    meanProteoformsPerProt = "XXXVI: Proteoforms per protein",
+    numModPeptides = "XXXVII: #Modified peptides",
+    propModAndUnmodPep = "XXXVIII: % Modified with unmodified match",
+    aucDiffRegAdjModPep = "XXXIX: AUC (adj. mod. peptides)",
+    tprAdjModPep0.01 = "XL: TPR (adj. mod. peptides, 0.01)",
+    tprAdjModPep0.05 = "XLI: TPR (adj. mod. peptides, 0.05)",
+    tFDRAdjModPep0.01 = "XLII: True FDR (mod. peptides, 0.01)",
+    tFDRAdjModPep0.05 = "XLIII: True FDR (mod. peptides, 0.05)",
+    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "XLIV: % Wrongly significant (mod. peptides, 0.01)",
+    propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 = "XLV: % Wrongly significant (mod. peptides, 0.05)",
+    percOverlapModPepProt = "XLVI: % Mod peptides with protein quant",
+    sumSquareDiffFCModPep = "XLVII: Fold-change error (mod. peptides)"
   )
 
   titles_params <- c(
@@ -690,6 +690,13 @@ visualize_benchmarks <- function(benchmatrix,
     StatPaired = "Paired testing enabled"
   )
 
+  # Setting fixed color code
+  dark_colors <- colorspace::qualitative_hcl(n = length(titles), palette = "Dark 3")
+  M <- matrix(1:100, nrow = 10, byrow = TRUE)
+  M <- M[M <= length(dark_colors) & M > 0]
+  dark_colors <- dark_colors[as.vector(M)]
+  names(dark_colors) <- names(titles)
+
   # Allow at most two parameters
   if (length(ref_par) > 2) {
     stop("Please provide at most two parameters for visualization.")
@@ -734,6 +741,7 @@ visualize_benchmarks <- function(benchmatrix,
     stop("Please provide a character vector of benchmark names or numeric vector of indices.")
   }
   benchmarks <- names(titles)
+  dark_colors <- dark_colors[benchmarks]
 
   n_plots <- length(titles)
   # Adapt to plot number with 5 columns max and max. 25 plots per page
@@ -742,18 +750,12 @@ visualize_benchmarks <- function(benchmatrix,
   } else {
     plotmfrow <- c(5, ceiling(n_plots / 5))
   }
-  par(mfrow=plotmfrow, cex.main=0.75, cex.lab = 0.75, cex.axis = 0.75,
-      mgp = c(1.5, 0.3, 0), mar=c(3, 3, 1.5, 1.5), xpd = TRUE)
+  par(mfrow=plotmfrow, cex.main=0.9, cex.lab = 0.75, cex.axis = 0.7,
+      mgp = c(1.5, 0.3, 0), mar=c(3, 3, 1.5, 1.5), xpd = TRUE, font.main = 2)
 
   # Generate a dark qualitative color palette
-  dark_colors <- NULL
-  if (is.null(cols)) {
-    dark_colors <- RColorBrewer::brewer.pal(min(n_plots, 8), "Dark2")  # max 8 unique colors in Dark2
-  } else {
+  if (!is.null(cols)) {
     dark_colors <- rep(cols, length.out = n_plots)
-  }
-  if (n_plots > 8) {
-    dark_colors <- rep(dark_colors, length.out = n_plots)
   }
 
   pch.vals <- rep(c(1, 16, 17, 15, 3, 4, 8), length.out = n_plots)
@@ -773,12 +775,12 @@ visualize_benchmarks <- function(benchmatrix,
         abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
         abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
 
-        title(main = paste0(titles[i], "\nvs. ", params[ref_par]),
+        title(main = paste0(titles[i]),
               col.main = col, font.main = 2)
       } else {
         plot(benchmatrix[, ref_par], rep(0, length(benchmatrix[, i])), type = "n",
              xlab = params, ylab = titles[i],
-             main = paste0(titles[i], "\nvs. ", params[ref_par]),
+             main = paste0(titles[i]),
              col.main = col, font.main = 2)
       }
     } else {
@@ -811,7 +813,7 @@ visualize_benchmarks <- function(benchmatrix,
 
 
         # Colorized title
-        title(main = paste0(titles[i], "\nvs. ", params[1], " and ", params[2]),
+        title(main = paste0(titles[i]),
               col.main = col, font.main = 2)
 
         # Expand singleton axes to avoid collapsed plots
@@ -848,7 +850,8 @@ visualize_benchmarks <- function(benchmatrix,
     }
   }
   # Reset plotting layout
-  par(mfrow = c(1, 1), cex.main = 1.2, cex.lab = 1, cex.axis = 1, xpd = FALSE)
+  par(mfrow = c(1, 1), cex.main = 1.2, cex.lab = 1, cex.axis = 1, xpd = FALSE,
+      font.main = 1)
 
 }
 

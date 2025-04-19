@@ -35,7 +35,7 @@ Imports:
     scales,
     stringi,
     lattice,
-    RColorBrewer,
+    colorspace,
     S4Vectors,
     DT,
     PolySTest,
