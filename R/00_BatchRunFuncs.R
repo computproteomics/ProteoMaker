@@ -769,7 +769,7 @@ visualize_benchmarks <- function(benchmatrix,
     if (length(ref_par) == 1) {
       if (all(is.finite(range(benchmatrix[, i])))) {
         plot(benchmatrix[, ref_par], benchmatrix[, i],
-             xlab = params, ylab = titles[i],
+             xlab = params, ylab = names(titles)[i],
              pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1)
 
         abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
@@ -779,7 +779,7 @@ visualize_benchmarks <- function(benchmatrix,
               col.main = col, font.main = 2)
       } else {
         plot(benchmatrix[, ref_par], rep(0, length(benchmatrix[, i])), type = "n",
-             xlab = params, ylab = titles[i],
+             xlab = params, ylab = names(titles)[i],
              main = paste0(titles[i]),
              col.main = col, font.main = 2)
       }
