@@ -51,15 +51,15 @@ Param$paramDigest$EnrichPTM <- "ph"
 #Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
  Param$paramProteoformAb$DiffRegMax <- c(5)
 # Param$paramDigest$Enzyme <- "trypsin"
-# Param$paramDigest$PropMissedCleavages <- 0.01
-# Param$paramDigest$MaxNumMissedCleavages <- 4
+Param$paramDigest$PropMissedCleavages <- 2
+ Param$paramDigest$MaxNumMissedCleavages <- 4
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
 
 Param$paramDigest$EnrichmentEfficiency <- 0.8
 Param$paramDigest$ModificationLoss <- 0.5
 Param$paramMSRun$PercDetectedVal <- 0.5
-Param$paramMSRun$PercDetectability <- 0.25
+Param$paramMSRun$PercDetectability <- 1
 # Param$paramMSRun$WrongLocalizations <- 0.1
 Param$paramMSRun$WrongIDs <- 0 #seq(0,0.3,0.01)
 

@@ -696,6 +696,9 @@ visualize_benchmarks <- function(benchmatrix,
   M <- M[M <= length(dark_colors) & M > 0]
   dark_colors <- dark_colors[as.vector(M)]
   names(dark_colors) <- names(titles)
+  # Setting fixed character for pch
+  pch.vals <- rep(c(1, 16, 17, 15, 3, 4, 8), length.out = length(titles))
+  names(pch.vals) <- names(titles)
 
   # Allow at most two parameters
   if (length(ref_par) > 2) {
@@ -742,6 +745,7 @@ visualize_benchmarks <- function(benchmatrix,
   }
   benchmarks <- names(titles)
   dark_colors <- dark_colors[benchmarks]
+  pch.vals <- pch.vals[benchmarks]
 
   n_plots <- length(titles)
   # Adapt to plot number with 5 columns max and max. 25 plots per page
@@ -758,13 +762,10 @@ visualize_benchmarks <- function(benchmatrix,
     dark_colors <- rep(cols, length.out = n_plots)
   }
 
-  pch.vals <- rep(c(1, 16, 17, 15, 3, 4, 8), length.out = n_plots)
-
   # Loop through all metrics
   for (i in names(titles)) {
-    idx <- which(names(titles) == i)
     col <- dark_colors[i]
-    pch.use <- pch.vals[idx]
+    pch.use <- pch.vals[i]
     # Single plots when having one parameter
     if (length(ref_par) == 1) {
       if (all(is.finite(range(benchmatrix[, i])))) {
