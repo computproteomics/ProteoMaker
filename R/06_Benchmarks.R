@@ -252,7 +252,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     #     type="n", xlab="Ground truth", ylab="Measured ratios")
     # points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
     # abline(0,1)
-    globalBMs["sumSquareDiffFCProt"] <- sumsquare / sum(diffs != 0)
+    globalBMs["sumSquareDiffFCProt"] <- sumsquare / sum(diffs != 0, na.rm=T)
 
     # Calculating mean of peptide sds within replicates (only peptides with regulations)
     sds <- 0
