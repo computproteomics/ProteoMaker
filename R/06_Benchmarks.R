@@ -237,7 +237,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
         tampl <- na.omit(amplitudes[i][[1]])
         if (length(tampl)> 0) {
             tval <- patterns[i][[1]] * tampl
-            if(length(tval) > 2) {
+            if(length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval) & !is.na(Stats$`log-ratios 2 vs 1`[i]))) {
                 tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
                 diffs[i] <- tval
                 sumsquare <- sumsquare + (tval - Stats$`log-ratios 2 vs 1`[i]) * (tval - Stats$`log-ratios 2 vs 1`[i])

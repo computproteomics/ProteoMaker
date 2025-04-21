@@ -87,7 +87,7 @@ res <- get_simulation(allBs[[1]]$Param, Config = proteomaker, stage = "DataAnaly
 ## Make matrix of benchmarks and save
 #####################
 benchmarks <- matrix_benchmarks(allBs, )
-write.csv(benchmarks, file = paste0(proteomaker_conf$resultFilePath, "/allBenchmarks.csv"))
+write.csv(benchmarks, file = paste0(proteomaker$resultFilePath, "/allBenchmarks.csv"))
 
 #####################
 ## Visualize the results
