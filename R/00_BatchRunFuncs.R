@@ -768,7 +768,7 @@ visualize_benchmarks <- function(benchmatrix,
     pch.use <- pch.vals[i]
     # Single plots when having one parameter
     if (length(ref_par) == 1) {
-      if (all(is.finite(range(benchmatrix[, i])))) {
+      if (all(is.finite(range(benchmatrix[, i], na.rm=T)))) {
         plot(benchmatrix[, ref_par], benchmatrix[, i],
              xlab = params, ylab = i,
              pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1)
@@ -830,8 +830,8 @@ visualize_benchmarks <- function(benchmatrix,
 
 
         # Add colorbar along right side
-        bar_x <- max(x_vals) -  diff(range(x_vals)) * 0.5
-        bar_w <- diff(range(x_vals)) * 0.03
+        bar_x <- max(x_vals, na.rm=T) -  diff(range(x_vals, na.rm=T)) * 0.5
+        bar_w <- diff(range(x_vals, na.rm=T)) * 0.03
         rect_x <- c(bar_x, bar_x + bar_w)
 
         # Color bar segments
