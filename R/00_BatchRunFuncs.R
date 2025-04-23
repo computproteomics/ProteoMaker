@@ -843,14 +843,14 @@ visualize_benchmarks <- function(benchmatrix,
                col = image_colors[k], border = NA)
         }
         # rectangle around all rectangles with white border
-        rect(rect_x[1], min(y_vals), rect_x[2], max(y_vals),
+        rect(rect_x[1], min(y_vals, na.rm=T), rect_x[2], max(y_vals, na.rm=T),
              col = NA, border = "#333333", lwd = 0.5)
 
         # Add legend labels on the colorbar
         legend_labels <- pretty(zlim, n = 3)
-        if (diff(range(zlim)) > 0) {
-          legend_pos <- approx(zlim, range(bar_y_vals), xout = legend_labels)$y
-          text(x = rect_x[2] + 0.02 * diff(range(x_vals)),
+        if (diff(range(zlim, na.rm=T)) > 0) {
+          legend_pos <- approx(zlim, range(bar_y_vals, na.rm=T), xout = legend_labels)$y
+          text(x = rect_x[2] + 0.02 * diff(range(x_vals, na.rm=T)),
                y = legend_pos,
                labels = round(legend_labels, 2),
                cex = 0.6, adj = 0)
