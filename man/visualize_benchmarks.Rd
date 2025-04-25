@@ -8,6 +8,7 @@ visualize_benchmarks(
   benchmatrix,
   benchmarks = NULL,
   ref_par = "WrongIDs",
+  fullrange = FALSE,
   cols = NULL
 )
 }
@@ -20,6 +21,9 @@ to be visualized. If \code{NULL}, all benchmarks will be plotted.}
 
 \item{ref_par}{A character vector specifying the names of the parameters to
 be used for visualization. It can contain one or two parameters.}
+
+\item{fullrange}{A logical value indicating whether to use the maximal range of
+set of benchmarks (works only for one `ref_par`)}
 
 \item{cols}{A character vector specifying the colors to be used for the
 visualization. If \code{NULL}, default colors will be used.}

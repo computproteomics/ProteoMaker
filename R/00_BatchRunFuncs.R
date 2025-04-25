@@ -565,6 +565,8 @@ matrix_benchmarks <- function(allBs, Config) {
 #' to be visualized. If \code{NULL}, all benchmarks will be plotted.
 #' @param ref_par A character vector specifying the names of the parameters to
 #' be used for visualization. It can contain one or two parameters.
+#' @param fullrange A logical value indicating whether to use the maximal range of
+#' set of benchmarks (works only for one `ref_par`)
 #' @param cols A character vector specifying the colors to be used for the
 #' visualization. If \code{NULL}, default colors will be used.
 #'
@@ -584,6 +586,7 @@ matrix_benchmarks <- function(allBs, Config) {
 visualize_benchmarks <- function(benchmatrix,
                                  benchmarks = NULL,
                                  ref_par = "WrongIDs",
+                                 fullrange = FALSE,
                                  cols = NULL) {
   # Require at least one row in benchmatrix
   if (nrow(benchmatrix) < 1) {
@@ -642,6 +645,40 @@ visualize_benchmarks <- function(benchmatrix,
     percOverlapModPepProt = "XLVI: % Mod peptides with protein quant",
     sumSquareDiffFCModPep = "XLVII: Fold-change error (mod. peptides)"
   )
+
+  # maximal ranges of each parameters for alternative visualization
+  ranges <-  lapply(titles, function(x) c(0, NA))
+  names(ranges) <- names(titles)
+  ranges[["propUniquePep"]] <-
+    ranges[["aucDiffRegPeptides.FDR_limma.2.vs.1.AUC"]] <-
+    ranges[["tprPep0.01.FDR_limma.2.vs.1.TPR"]] <-
+    ranges[["tprPep0.05.FDR_limma.2.vs.1.TPR"]] <-
+    ranges[["tFDRPep0.01.FDR_limma.2.vs.1.tFDR"]] <-
+    ranges[["tFDRPep0.05.FDR_limma.2.vs.1.tFDR"]] <-
+    ranges[["propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propUniqueProts"]] <-
+    ranges[["aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC"]] <-
+    ranges[["tprProt0.01.FDR_PolySTest.2.vs.1.TPR"]] <-
+    ranges[["tprProt0.05.FDR_PolySTest.2.vs.1.TPR"]] <-
+    ranges[["tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR"]] <-
+    ranges[["tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR"]] <-
+    ranges[["propMisCleavedPeps.0"]] <-
+    ranges[["propMisCleavedProts"]] <-
+    ranges[["propModAndUnmodPep"]] <-
+    ranges[["propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propMisCleavedPeps.0"]] <- c(0, 1)
+  ranges[["percMissingPep"]] <- c(0, 100)
+  ranges[["skewnessPeps"]] <-
+    ranges[["kurtosisPeps"]] <-
+    ranges[["skewnessProts"]] <-
+    ranges[["kurtosisProts"]] <- c(NA, NA)
+
 
   titles_params <- c(
     NumCond = "Number of conditions",
@@ -768,11 +805,22 @@ visualize_benchmarks <- function(benchmatrix,
     pch.use <- pch.vals[i]
     # Single plots when having one parameter
     if (length(ref_par) == 1) {
+      # change to full range if set
+      myrange <- range(benchmatrix[, i], na.rm = TRUE)
+      if (fullrange) {
+        if(!is.na(ranges[[i]][1])) {
+          myrange[1] <- ranges[[i]][1]
+        }
+        if(!is.na(ranges[[i]][2])) {
+          myrange[2] <- ranges[[i]][2]
+        }
+      }
       if (all(is.finite(range(benchmatrix[, i], na.rm=T)))) {
+
         plot(benchmatrix[, ref_par], benchmatrix[, i],
              xlab = params, ylab = i,
-             pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1)
-
+             pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
+             ylim = myrange)
         abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
         abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
 
@@ -782,7 +830,8 @@ visualize_benchmarks <- function(benchmatrix,
         plot(benchmatrix[, ref_par], rep(0, length(benchmatrix[, i])), type = "n",
              xlab = params, ylab = i,
              main = paste0(titles[i]),
-             col.main = col, font.main = 2)
+             col.main = col, font.main = 2,
+             myrange)
       }
     } else {
       # colormaps showing the benchmarks in a 2-dim plot as colors
@@ -790,6 +839,7 @@ visualize_benchmarks <- function(benchmatrix,
       # and plot it
 
       if (length(ref_par) == 2) {
+
         x_vals <- sort(unique(benchmatrix[, ref_par[1]]))
         y_vals <- sort(unique(benchmatrix[, ref_par[2]]))
 
@@ -805,7 +855,9 @@ visualize_benchmarks <- function(benchmatrix,
         n_colors <- 100
         col_ramp <- colorRampPalette(c("white", col))
         image_colors <- col_ramp(n_colors)
-        zlim <- range(z_mat, na.rm = TRUE)
+        zlim <- myrange
+
+
         if(any(!is.finite(zlim))) {
           zlim <- c(0, 0)
         }
