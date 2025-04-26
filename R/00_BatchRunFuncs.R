@@ -855,8 +855,7 @@ visualize_benchmarks <- function(benchmatrix,
         n_colors <- 100
         col_ramp <- colorRampPalette(c("white", col))
         image_colors <- col_ramp(n_colors)
-        zlim <- myrange
-
+        zlim <- range(z_mat, na.rm=T)
 
         if(any(!is.finite(zlim))) {
           zlim <- c(0, 0)
