@@ -785,12 +785,8 @@ visualize_benchmarks <- function(benchmatrix,
   pch.vals <- pch.vals[benchmarks]
 
   n_plots <- length(titles)
-  # Adapt to plot number with 5 columns max and max. 25 plots per page
-  if (n_plots > 16) {
-    plotmfrow <- c(4, 4)
-  } else {
-    plotmfrow <- c(4, ceiling(n_plots / 4))
-  }
+  # Always 4x34 to ensure sizes
+  plotmfrow <- c(4, 4)
   par(mfrow=plotmfrow, cex.main=0.9, cex.lab = 0.75, cex.axis = 0.7,
       mgp = c(1.5, 0.3, 0), mar=c(3, 3, 1.5, 1.5), xpd = TRUE, font.main = 2)
 
