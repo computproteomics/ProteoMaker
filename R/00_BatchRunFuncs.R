@@ -47,7 +47,7 @@ NULL
 #' resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
 set_proteomaker <- function(fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
                             resultFilePath = "SimulatedDatasets",
-                            cores = 2, clusterType = "FORK",
+                            cores = 2, clusterType = "PSOCK",
                             runStatTests = TRUE, calcAllBenchmarks = TRUE) {
   dir.create(resultFilePath, showWarnings = FALSE)
   return(list(fastaFilePath = fastaFilePath, resultFilePath = resultFilePath,
