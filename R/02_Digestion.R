@@ -219,7 +219,10 @@ digestGroundTruth <- function(proteoforms, parameters) {
   # Sample peptides per MC by size determined by PropMissedCleavages.
   if (parameters$MaxNumMissedCleavages > 0) {
     if (parameters$PropMissedCleavages != 0 & parameters$PropMissedCleavages != 1) {
-      MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^2 * parameters$PropMissedCleavages^x)
+      # set max number of missed cleavages for probability calculation to min 5
+      max_misscleav <- ifelse(parameters$MaxNumMissedCleavages < 5, 5, parameters$MaxNumMissedCleavages)
+      MC.proportions <- sapply(0:parameters$MaxNumMissedCleavages, function(x) (1 - parameters$PropMissedCleavages)^(max_misscleav-x) *
+                                 parameters$PropMissedCleavages^x)
       MC.proportions <- scales::rescale(x = MC.proportions, to = c(0, 1), from = c(0, max(MC.proportions, na.rm = T)))
       peptide.indices <- lapply(1:parameters$MaxNumMissedCleavages, function(x) which(peptides$MC == x))
       peptide.indices <- unlist(lapply(1:parameters$MaxNumMissedCleavages, function(x) sample(peptide.indices[[x]], size = ceiling(sum(peptides$MC == 0) * MC.proportions[x + 1]), replace = FALSE)))
