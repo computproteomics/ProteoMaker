@@ -8,7 +8,7 @@ set_proteomaker(
   fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
   resultFilePath = "SimulatedDatasets",
   cores = 2,
-  clusterType = "FORK",
+  clusterType = "PSOCK",
   runStatTests = TRUE,
   calcAllBenchmarks = TRUE
 )
