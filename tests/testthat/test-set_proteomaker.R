@@ -5,20 +5,20 @@ test_that("set_proteomaker returns correct default configuration", {
     expect_equal(grepl("Proteome", config$fastaFilePath), TRUE)
     expect_equal(config$resultFilePath, "SimulatedDatasets")
     expect_equal(config$cores, 2)
-    expect_equal(config$clusterType, "FORK")
+    expect_equal(config$clusterType, "PSOCK")
     expect_equal(config$runStatTests, TRUE)
     expect_equal(config$calcAllBenchmarks, TRUE)
 })
 
 test_that("set_proteomaker allows custom configuration", {
     config <- set_proteomaker(fastaFilePath = "CustomProteomes", resultFilePath = "Results",
-                           cores = 4, clusterType = "PSOCK", runStatTests = FALSE,
+                           cores = 4, clusterType = "FORK", runStatTests = FALSE,
                            calcAllBenchmarks = FALSE)
 
     expect_equal(config$fastaFilePath, "CustomProteomes")
     expect_equal(config$resultFilePath, "Results")
     expect_equal(config$cores, 4)
-    expect_equal(config$clusterType, "PSOCK")
+    expect_equal(config$clusterType, "FORK")
     expect_equal(config$runStatTests, FALSE)
     expect_equal(config$calcAllBenchmarks, FALSE)
 })
