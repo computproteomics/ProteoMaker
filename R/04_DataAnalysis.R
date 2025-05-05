@@ -19,6 +19,8 @@
 #' @return A data frame containing summarized protein-level data, where each row represents a protein, and the columns include protein information and summarized quantification data.
 #'
 #' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
+#' @importFrom tidyr pivot_longer
+#' @importFrom MASS rlm
 #'
 #' @keywords internal
 #'
@@ -78,12 +80,18 @@ proteinSummarisation <- function(peptable, parameters) {
         if (nrow(tmp) >= minUniquePep) {
             tmp <- as.matrix(tmp)
             if (method == "sum.top3") {
-                tmp <- tmp[order(rowSums(tmp), decreasing = T),]
+                tmp <- tmp[order(rowSums(tmp), decreasing = T),, drop =F ]
                 if (nrow(tmp) >= 3) {
                     out <- log2(colSums(2^tmp[1:3,], na.rm = T))
                 } else {
                     out <- log2(colSums(2^tmp, na.rm = T))
                 }
+            } else if (method == "median") {
+                    out <- t(t(tmp) - apply(tmp, 2, median, na.rm = T))
+            } else if (method == "mean") {
+              out <- t(t(tmp) - apply(tmp, 2, mean, na.rm = T))
+            } else if (method == "sum") {
+                out <- log2(colSums(2^tmp, na.rm = T))
             } else if (method == "medpolish"){
                 summed <- NULL
                 if (nrow(tmp) == 1) {
@@ -93,8 +101,30 @@ proteinSummarisation <- function(peptable, parameters) {
                 }
                 if (length(summed) > 0)
                     out <- summed
+            } else if (method == "rlm") {
+              if (nrow(tmp) > 1) {
+              tmp <- as.data.frame(tmp)
+              tmp$peptide <- rownames(tmp)
+              long_df <- pivot_longer(tmp,
+                                      cols = -peptide,
+                                      names_to = "sample",
+                                      values_to = "intensity")
+              fit <- rlm(intensity ~ peptide + sample, data = long_df, na.action = na.omit)
+              coefs <- coef(fit)
+              sample_coefs <- coefs[grep("^sample", names(coefs))]
+
+              # Include intercept (baseline)
+              baseline <- coefs["(Intercept)"]
+              sample_names <- gsub("^sample", "", names(sample_coefs))
+
+              # Set full abundance vector
+              out <- setNames(baseline + sample_coefs, sample_names)
+              } else {
+                out <- tmp[1, QuantColnames]
+              }
+
             } else {
-                # Any other method to add
+                error("No valid method provided!")
             }
         }
         return(out)
@@ -109,7 +139,9 @@ proteinSummarisation <- function(peptable, parameters) {
 
         cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
         parallel::setDefaultCluster(cluster)
-        parallel::clusterExport(cluster, c("peptable","summarizeProtein","minUniquePep","prot_ind","other_cols","QuantColnames"), envir = environment())
+        parallel::clusterExport(cluster, c("peptable","summarizeProtein","minUniquePep",
+                                           "prot_ind","other_cols","QuantColnames", "rlm", "pivot_longer"),
+                                envir = environment())
         proteins <- parallel::parLapply(cluster, 1:(length(prot_ind)-1), function(i) {
             tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
             rownames(tmp) <- tmp$Sequence

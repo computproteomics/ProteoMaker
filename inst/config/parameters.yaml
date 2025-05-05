@@ -348,10 +348,11 @@ params:
   ProtSummarization:
     group: "Protein Summarization"
     type: "paramDataAnalysis"
-    description: "Method for summarizing to proteins (e.g., sum.top3, medpolish)."
+    description: "Method for summarizing to proteins (sum.top3, median, mean,
+    sum, medpolish or rlm). sum and sum.top3 are on absolute scale, not on log2."
     min: NA
     max: NA
-    choices: ["sum.top3", "medpolish"]
+    choices: ["sum.top3", "medpolish", "median", "mean", "sum", "rlm"]
     class: "string"
     default: "medpolish"
   MinUniquePep:

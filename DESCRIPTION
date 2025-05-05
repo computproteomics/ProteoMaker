@@ -39,7 +39,9 @@ Imports:
     S4Vectors,
     DT,
     PolySTest,
-    PeptideRanger
+    PeptideRanger,
+    tidyr,
+    MASS
 Remotes: 
     rr-2/PeptideRanger, 
     computproteomics/PolySTest
