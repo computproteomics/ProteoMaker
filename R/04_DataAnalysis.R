@@ -140,8 +140,16 @@ proteinSummarisation <- function(peptable, parameters) {
         cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
         parallel::setDefaultCluster(cluster)
         parallel::clusterExport(cluster, c("peptable","summarizeProtein","minUniquePep",
-                                           "prot_ind","other_cols","QuantColnames", "rlm", "pivot_longer"),
+                                           "prot_ind","other_cols","QuantColnames"),
                                 envir = environment())
+        # load required packages on all workers
+        parallel::clusterEvalQ(cluster, {
+          library(MASS)
+          # Add others if needed
+          library(dplyr)
+          library(tidyr)
+          # etc.
+        })
         proteins <- parallel::parLapply(cluster, 1:(length(prot_ind)-1), function(i) {
             tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
             rownames(tmp) <- tmp$Sequence
