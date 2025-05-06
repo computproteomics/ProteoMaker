@@ -87,15 +87,15 @@ proteinSummarisation <- function(peptable, parameters) {
                     out <- log2(colSums(2^tmp, na.rm = T))
                 }
             } else if (method == "median") {
-                    out <- t(t(tmp) - apply(tmp, 2, median, na.rm = T))
+                    out <- apply(tmp, 2, median, na.rm = T)
             } else if (method == "mean") {
-              out <- t(t(tmp) - apply(tmp, 2, mean, na.rm = T))
+              out <- apply(tmp, 2, mean, na.rm = T)
             } else if (method == "sum") {
                 out <- log2(colSums(2^tmp, na.rm = T))
             } else if (method == "medpolish"){
                 summed <- NULL
-                if (nrow(tmp) == 1) {
-                    summed <- tmp - mean(summed, na.rm=TRUE)
+                if (nrow(tmp) <= 3) {
+                    summed <- tmp - median(summed, na.rm=TRUE)
                 } else {
                     summed <- medpolish(tmp, na.rm=T, trace.iter=F)$col
                 }

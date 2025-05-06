@@ -64,7 +64,7 @@ Param$paramMSRun$MSNoise <- 1
 # Param$paramMSRun$WrongLocalizations <- 0.1
 # Param$paramMSRun$WrongIDs <- 0 #seq(0,0.3,0.01)
 
-Param$paramDataAnalysis$ProtSummarization <- "medpolish"
+Param$paramDataAnalysis$ProtSummarization <- "median"
 
 #####################
 ## Read parameters from yaml file
