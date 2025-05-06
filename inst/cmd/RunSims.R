@@ -51,7 +51,7 @@ Param$paramGroundTruth$NumReps <- c(5)
 #Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
  # Param$paramProteoformAb$DiffRegMax <- c(5)
 # Param$paramDigest$Enzyme <- "trypsin"
-# Param$paramDigest$PropMissedCleavages <- 1
+ # Param$paramDigest$PropMissedCleavages <- 0.8
  # Param$paramDigest$MaxNumMissedCleavages <- 4
 # Param$paramDigest$PepMinLength <- 7
 # Param$paramDigest$PepMaxLength <- 30
