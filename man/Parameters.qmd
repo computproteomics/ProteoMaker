@@ -4,7 +4,6 @@ format: html
 editor: visual
 ---
 
-
 This document provides a detailed description of the parameters used in the ProteoMaker pipeline. ProteoMaker is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit [ProteoMaker on GitHub](https://github.com/computproteomics/ProteoMaker).
 
 ## Global Parameters
@@ -170,7 +169,7 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 ### Summarization Method
 
-*Param\$ProtSummarization*: The method for protein summarization. Currently set to `medpolish`. This parameter determines how peptide-level data is aggregated to the protein level.
+*Param\$ProtSummarization*: The method for protein summarization. Currently set to `median`. Other options are `sum,` `sum.top3`, `mean` and `medpolish`.This parameter determines how peptide-level data is aggregated to the protein level.
 
 ### Minimum Number of Unique Peptides
 

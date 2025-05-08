@@ -1,4 +1,12 @@
 params:
+  ProteoMakerVersion:
+    group: "Experimental Design"
+    type: "paramGroundTruth"
+    description: "Keeping version to ensure reproducibility. Automatically set when running simulation."
+    class: "string"
+    min: NA
+    max: NA
+    default: "dev"
   NumCond:
     group: "Experimental Design"
     type: "paramGroundTruth"

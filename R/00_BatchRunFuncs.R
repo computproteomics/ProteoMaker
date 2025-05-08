@@ -202,6 +202,10 @@ generate_combinations <- function(params) {
 #' config <- set_proteomaker()
 #' results <- run_sims(params, config)
 run_sims <- function(Parameters, Config, overwrite = FALSE) {
+
+  # Ensuring ProteoMaker version in parameters (for hashing)
+  Parameters$paramGroundTruth$ProteoMakerVersion <- packageVersion("ProteoMaker")
+
   # Generate combinations for each parameter set
   listtogroundtruth <- generate_combinations(Parameters$paramGroundTruth)
   listtoproteoformab <- generate_combinations(Parameters$paramProteoformAb)
