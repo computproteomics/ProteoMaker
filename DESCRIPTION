@@ -1,7 +1,7 @@
 Package: ProteoMaker
 Type: Package
 Title: Simulations of LC-MS Data from Proteoforms
-Version: 0.5.4
+Version: 0.5.5
 Date: 2024-07-30
 Author: Veit Schwämmle, Marie Locard-Paulet
 Maintainer: Your Name <veits@bmb.sdu.dk>
