@@ -644,7 +644,7 @@ visualize_benchmarks <- function(benchmatrix,
     tprAdjModPep0.05 = "XLI: TPR (adj. mod. peptides, 0.05)",
     tFDRAdjModPep0.01 = "XLII: True FDR (mod. peptides, 0.01)",
     tFDRAdjModPep0.05 = "XLIII: True FDR (mod. peptides, 0.05)",
-    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "XLIV: Fractio wrongly significant (mod. peptides, 0.01)",
+    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "XLIV: Fraction wrongly significant (mod. peptides, 0.01)",
     propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 = "XLV: Fraction wrongly significant (mod. peptides, 0.05)",
     percOverlapModPepProt = "XLVI: Fraction mod peptides with protein quant",
     sumSquareDiffFCModPep = "XLVII: Fold-change error (mod. peptides)"
@@ -914,6 +914,122 @@ visualize_benchmarks <- function(benchmatrix,
       font.main = 1)
 
 }
+
+
+#' Render a Benchmark Summary Table
+#'
+#' This function summarizes benchmark results from a matrix of metrics
+#' (typically produced by proteomics simulations or evaluation pipelines).
+#' It returns a human-readable table with either raw values (if one row)
+#' or value ranges (if multiple rows). It also prints a markdown version
+#' of the table in the console
+#'
+#' @param benchmatrix A data frame or matrix containing benchmark metrics.
+#' @param benchmarks A character vector of benchmark variable names, or a numeric vector of column indices.
+#'        If NULL, the first 12 defined benchmarks will be used.
+#'
+#' @return A data frame summarizing the selected benchmark metrics.
+#' @examples
+#' conf <- set_proteomaker(resultFilePath = tempdir())
+#' results <- run_sims(def_param(), conf)
+#' benchmark_matrix <- matrix_benchmarks(results, conf)
+#' render_benchmark_table(benchmatrix = my_bench_df)
+render_benchmark_table <- function(benchmatrix,
+                                   benchmarks = NULL) {
+  colnames(benchmatrix) <- make.names(colnames(benchmatrix))
+
+  # Define human-readable titles
+  titles <- c(
+    numPeptides = "I: #Total peptides (mod+unmod)",
+    numProteins = "II: #Proteins (from peptides)",
+    propUniquePep = "III: Fraction unique peptides (prot-specific)",
+    uniqueStrippedPep = "IV: #Stripped sequences",
+    percMissingPep = "V: % Missing peptide values",
+    aucDiffRegPeptides.FDR_limma.2.vs.1.AUC = "VI: Peptide AUC (truth vs FDR)",
+    tprPep0.01.FDR_limma.2.vs.1.TPR = "VII: TPR peptide (FDR < 0.01)",
+    tprPep0.05.FDR_limma.2.vs.1.TPR = "VIII: TPR peptide (FDR < 0.05)",
+    tFDRPep0.01.FDR_limma.2.vs.1.tFDR = "IX: True FDR (peptides, 0.01)",
+    tFDRPep0.05.FDR_limma.2.vs.1.tFDR = "X: True FDR (peptides, 0.05)",
+    propMisCleavedPeps.0 = "XI: No miscleavage fraction",
+    dynRangePep = "XII: Dynamic range (peptides)",
+    sumSquareDiffFCPep = "XIII: Fold-change error (peptides)",
+    sdWithinRepsPep = "XIV: Replicate SD (peptides)",
+    skewnessPeps = "XV: Skewness (peptides)",
+    kurtosisPeps = "XVI: Kurtosis (peptides)",
+    sdPeps = "XVII: Overall SD (peptides)",
+    numQuantProtGroups = "XVIII: #Quantified proteins",
+    propUniqueProts = "XIX: Fraction unique proteins",
+    percMissingProt = "XX: Fraction missing protein values",
+    meanPepPerProt = "XXI: Peptides per protein",
+    aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC = "XXII: Protein AUC (truth vs FDR)",
+    tprProt0.01.FDR_PolySTest.2.vs.1.TPR = "XXIII: TPR protein (FDR < 0.01)",
+    tprProt0.05.FDR_PolySTest.2.vs.1.TPR = "XXIV: TPR protein (FDR < 0.05)",
+    tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR = "XXV: True FDR (proteins, 0.01)",
+    tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR = "XXVI: True FDR (proteins, 0.05)",
+    sumSquareDiffFCProt = "XXVII: Fold-change error (proteins)",
+    sdWithinRepsProt = "XXVIII: Replicate SD (proteins)",
+    propMisCleavedProts = "XXIX: Fraction miscleaved proteins",
+    propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 = "XXX: Fraction wrong-ID (proteins, 0.01)",
+    propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1 = "XXXI: Fraction wrong-ID (proteins, 0.05)",
+    skewnessProts = "XXXII: Skewness (proteins)",
+    kurtosisProts = "XXXIII: Kurtosis (proteins)",
+    sdProts = "XXXIV: Overall SD (proteins)",
+    numProteoforms = "XXXV: #Proteoforms",
+    meanProteoformsPerProt = "XXXVI: Proteoforms per protein",
+    numModPeptides = "XXXVII: #Modified peptides",
+    propModAndUnmodPep = "XXXVIII: Fraction modified with unmodified match",
+    aucDiffRegAdjModPep = "XXXIX: AUC (adj. mod. peptides)",
+    tprAdjModPep0.01 = "XL: TPR (adj. mod. peptides, 0.01)",
+    tprAdjModPep0.05 = "XLI: TPR (adj. mod. peptides, 0.05)",
+    tFDRAdjModPep0.01 = "XLII: True FDR (mod. peptides, 0.01)",
+    tFDRAdjModPep0.05 = "XLIII: True FDR (mod. peptides, 0.05)",
+    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "XLIV: Fraction wrongly significant (mod. peptides, 0.01)",
+    propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 = "XLV: Fraction wrongly significant (mod. peptides, 0.05)",
+    percOverlapModPepProt = "XLVI: Fraction mod peptides with protein quant",
+    sumSquareDiffFCModPep = "XLVII: Fold-change error (mod. peptides)"
+  )
+
+  # Select benchmarks
+  if (is.null(benchmarks)) {
+    titles <- titles[1:12]
+  } else if (is.character(benchmarks)) {
+    benchmarks <- make.names(benchmarks)
+    titles <- titles[benchmarks]
+  } else if (is.numeric(benchmarks)) {
+    titles <- titles[benchmarks]
+  }
+
+  selected_cols <- intersect(names(titles), colnames(benchmatrix))
+  out_data <- benchmatrix[, selected_cols, drop = FALSE]
+
+  # Create summary output
+  summarize_column <- function(x) {
+    if (length(x) == 1 || nrow(benchmatrix) == 1) {
+      round(x[1], 4)
+    } else {
+      rng <- range(x, na.rm = TRUE)
+      if (isTRUE(all.equal(rng[1], rng[2], tolerance = 1e-6))) {
+        round(rng[1], 4)
+      } else {
+        paste0(round(rng[1], 4), "–", round(rng[2], 4))
+      }
+    }
+  }
+
+  summary_df <- as.data.frame(lapply(out_data, summarize_column))
+  colnames(summary_df) <- titles[selected_cols]
+
+  # Print markdown table if requested
+    if (requireNamespace("knitr", quietly = TRUE)) {
+      print(knitr::kable(summary_df, format = "markdown", align = "c"))
+    } else {
+      warning("knitr package not installed. Install it or set print_table = FALSE.")
+    }
+
+  return(summary_df)
+}
+
+
 
 
 #' Visualize benchmarks for a specific simulation
