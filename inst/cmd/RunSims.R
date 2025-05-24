@@ -66,7 +66,7 @@ Param$paramMSRun$MSNoise <- 1
 
 Param$paramDataAnalysis$ProtSummarization <- "median"
 Param$paramDataAnalysis$IncludeModPep <- F
-Param$paramDataAnalysis$SharedPep <- F
+Param$paramDataAnalysis$SharedPep <- T
 
 
 #####################

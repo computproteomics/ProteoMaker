@@ -929,11 +929,6 @@ visualize_benchmarks <- function(benchmatrix,
 #'        If NULL, the first 12 defined benchmarks will be used.
 #'
 #' @return A data frame summarizing the selected benchmark metrics.
-#' @examples
-#' conf <- set_proteomaker(resultFilePath = tempdir())
-#' results <- run_sims(def_param(), conf)
-#' benchmark_matrix <- matrix_benchmarks(results, conf)
-#' render_benchmark_table(benchmatrix = my_bench_df)
 render_benchmark_table <- function(benchmatrix,
                                    benchmarks = NULL) {
   colnames(benchmatrix) <- make.names(colnames(benchmatrix))
@@ -1011,7 +1006,7 @@ render_benchmark_table <- function(benchmatrix,
       if (isTRUE(all.equal(rng[1], rng[2], tolerance = 1e-6))) {
         round(rng[1], 4)
       } else {
-        paste0(round(rng[1], 4), "–", round(rng[2], 4))
+        paste0(round(rng[1], 4), "-", round(rng[2], 4))
       }
     }
   }
