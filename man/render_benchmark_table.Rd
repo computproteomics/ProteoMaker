@@ -22,9 +22,3 @@ It returns a human-readable table with either raw values (if one row)
 or value ranges (if multiple rows). It also prints a markdown version
 of the table in the console
 }
-\examples{
-conf <- set_proteomaker(resultFilePath = tempdir())
-results <- run_sims(def_param(), conf)
-benchmark_matrix <- matrix_benchmarks(results, conf)
-render_benchmark_table(benchmatrix = my_bench_df)
-}
