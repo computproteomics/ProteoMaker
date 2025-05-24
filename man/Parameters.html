@@ -103,7 +103,7 @@ ul.task-list li input[type="checkbox"] {
 <p><em>Param$PercExpressedProt:</em> The percentage of proteins from the fasta file selected for the ground truth generation. The selection is random and should simulate that not all proteins in a cell are actually expressed. The default value is s1.</p>
 <p><em>Param$FracModProt</em>: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to <code>0.0</code>, indicating no proteins will be modified.</p>
 <p><em>Param$PropModPerProt</em>: The proportion of modifiable proteins sampled for modifications. A value of <code>2</code> means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.</p>
-<p><em>Param$PTMTypes</em>: The types of PTMs to be considered. Default set to <code>NA</code> for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: <code>list(mods=c("ph", "ac"))</code>, `list(mods=“ph”). The mods name is mandatory.</p>
+<p><em>Param$PTMTypes</em>: The types of PTMs to be considered. Default set to <code>NA</code> for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: <code>list(mods=c("ph", "ac"))</code>, <code>list(mods="ph")</code>. The mods name is mandatory.</p>
 <p><em>Param$PTMTypesDistr</em>: The distribution of PTM types. Default set to <code>1</code>, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type. Always provide as named list, e.g.&nbsp;<code>list(ph=0.5)</code></p>
 <p><em>Param$PTMTypesMass</em>: The mass shifts associated with the PTM types. This can be <code>79.9663</code> for phosphorylation or multiple value in a list such as <code>list(c(79.9663, 42.0106))</code> . Accurate mass shifts determine the mz values of the peptides. Use named list.</p>
 <p><em>Param$PTMMultipleLambda</em>: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to <code>0.5</code>, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.</p>
@@ -217,7 +217,7 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 <h2 class="anchored" data-anchor-id="protein-summarization">Protein Summarization</h2>
 <section id="summarization-method" class="level3">
 <h3 class="anchored" data-anchor-id="summarization-method">Summarization Method</h3>
-<p><em>Param$ProtSummarization</em>: The method for protein summarization. Currently set to <code>medpolish</code>. This parameter determines how peptide-level data is aggregated to the protein level.</p>
+<p><em>Param$ProtSummarization</em>: The method for protein summarization. Currently set to <code>median</code>. Other options are <code>sum,</code> <code>sum.top3</code>, <code>mean</code> and <code>medpolish</code>.This parameter determines how peptide-level data is aggregated to the protein level.</p>
 </section>
 <section id="minimum-number-of-unique-peptides" class="level3">
 <h3 class="anchored" data-anchor-id="minimum-number-of-unique-peptides">Minimum Number of Unique Peptides</h3>

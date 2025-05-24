@@ -1,0 +1,28 @@
+# Proteomes
+
+## Human
+file:  fasta_full_human.fasta  
+download date: 24.05.2025  
+sequences: 20422
+species id: 9606
+query: (taxonomy_id:9606) AND (reviewed:true)
+
+## Mouse
+file:  fasta_full_mouse.fasta  
+download date: 24.05.2025  
+sequences: 17237
+species id: 10090
+query: (taxonomy_id:10090) AND (reviewed:true)
+
+## Baker's Yeast
+file:  fasta_full_yeast.fasta  
+download date: 24.05.2025  
+sequences: 7919
+species id: 4932
+query: (taxonomy_id:4932) AND (reviewed:true)
+
+
+
+
+
+

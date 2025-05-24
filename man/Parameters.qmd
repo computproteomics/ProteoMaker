@@ -171,9 +171,17 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 *Param\$ProtSummarization*: The method for protein summarization. Currently set to `median`. Other options are `sum,` `sum.top3`, `mean` and `medpolish`.This parameter determines how peptide-level data is aggregated to the protein level.
 
+### Shared Peptides
+
+*Param\$SharedPep*: Boolean whether to include shared peptides in the summarization. Set to `FALSE`. This parameter allows for the inclusion of peptides that are shared between multiple proteins, which can affect quantitation and identification.
+
 ### Minimum Number of Unique Peptides
 
 *Param\$MinUniquePep*: The minimum number of unique peptides required for summarization. Set to `1`. This parameter ensures that proteins are summarized only if they have sufficient peptide evidence.
+
+### Include Modified Peptides
+
+*Param\$IncludeModPep*: Boolean indicating whether to include modified peptides in the summarization. Set to `TRUE`. This parameter allows for the inclusion of peptides with post-translational modifications in the protein quantitation.
 
 ## Statistical Testing of Peptides and Proteins
 

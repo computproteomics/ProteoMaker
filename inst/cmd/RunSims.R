@@ -65,6 +65,9 @@ Param$paramMSRun$MSNoise <- 1
 # Param$paramMSRun$WrongIDs <- 0 #seq(0,0.3,0.01)
 
 Param$paramDataAnalysis$ProtSummarization <- "median"
+Param$paramDataAnalysis$IncludeModPep <- F
+Param$paramDataAnalysis$SharedPep <- F
+
 
 #####################
 ## Read parameters from yaml file

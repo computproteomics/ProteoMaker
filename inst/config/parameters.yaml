@@ -353,6 +353,14 @@ params:
     max: 100
     class: "numeric"
     default: 100
+  SharedPep:
+    group: "Protein Summarization"
+    type: "paramDataAnalysis"
+    description: "Include shared peptides in summariation"
+    min: false
+    max: true
+    class: "boolean"
+    default: false
   ProtSummarization:
     group: "Protein Summarization"
     type: "paramDataAnalysis"
@@ -371,6 +379,14 @@ params:
     max: 10
     class: "numeric"
     default: 1
+  IncludeModPep:
+    group: "Protein Summarization"
+    type: "paramDataAnalysis"
+    description: "Include modified peptides in summarization"
+    min: false
+    max: true
+    class: "boolean"
+    default: false
   StatPaired:
     group: "Statistical Testing"
     type: "paramDataAnalysis"

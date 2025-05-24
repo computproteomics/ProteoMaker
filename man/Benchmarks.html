@@ -100,7 +100,7 @@ ul.task-list li input[type="checkbox"] {
 <li><p><strong>Sum of Squared Residuals Towards Actual Fold-Changes</strong> (<code>sumSquareDiffFCProt</code>, label: <em>Fold-change error (proteins)</em>): Average squared error between simulated and measured log2 fold-changes.</p></li>
 <li><p><strong>Dynamic Range</strong> (<code>dynRangeProt</code>, label: <em>Dynamic range (proteins)</em>): Log2 range of protein intensities.</p></li>
 <li><p><strong>Mean of Std. Dev. Within Replicates</strong> (<code>sdWithinRepsProt</code>, label: <em>Replicate SD (proteins)</em>): Within-group variation of regulated proteins.</p></li>
-<li><p><strong>Proportion of Proteins with Miscleaved Peptides</strong> (<code>propMisCleavedProts</code>, label: <strong>% Miscleaved proteins</strong>): Fraction of proteins having at least one miscleaved peptide.</p></li>
+<li><p><strong>Proportion of Proteins with Miscleaved Peptides</strong> (<code>propMisCleavedProts</code>, label: <strong>% Miscleaved proteins</strong>): Vector of fraction of proteins having at least [0-n] miscleaved peptides.</p></li>
 <li><p><strong>Proportion of Regulated Proteins with Wrong Identified Peptides</strong> (<code>propDiffRegWrongIDProt0.01</code>, <code>propDiffRegWrongIDProt0.05</code>, label: <strong>% Wrong-ID (proteins)</strong>): Fraction of regulated proteins with wrongly identified peptides at 0.01 and 0.05 FDR.</p></li>
 <li><p><strong>Skewness</strong> (<code>skewnessProts</code>, label: <em>Skewness (proteins)</em>): Asymmetry in distribution of protein intensities.</p></li>
 <li><p><strong>Kurtosis</strong> (<code>kurtosisProts</code>, label: <em>Kurtosis (proteins)</em>): Peakedness of protein intensity distribution.</p></li>
@@ -202,7 +202,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="odd">
 <td>Miscleavage Distribution</td>
-<td>propMisCleavedPeps</td>
+<td>propMisCleavedPeps.[0-n]</td>
 <td>Miscleavage distribution</td>
 <td>Peptide</td>
 </tr>

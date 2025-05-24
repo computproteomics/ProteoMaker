@@ -30,11 +30,20 @@ proteinSummarisation <- function(peptable, parameters) {
 
     minUniquePep <- parameters$MinUniquePep
 
+    includeModPep <- parameters$IncludeModPep
+
+    sharedPep <- parameters$SharedPep
+
     QuantColnames <- parameters$QuantColnames
 
-    message(" + Remove all modified peptides")
-    peptable <- peptable[sapply(peptable$PTMType, function(x) length(x) == 0),]
-    message("  - Remaining number of non-modified peptides: ", nrow(peptable), "")
+    if (!includeModPep) {
+        # Remove all modified peptides
+        peptable <- peptable[!sapply(peptable$PTMType, function(x) length(x) > 0), ]
+        message("  - Removed all modified peptides, remaining number of peptides: ", nrow(peptable), "")
+    } else {
+        message("  - Keeping modified peptides")
+    }
+    message("  - Remaining number of peptides: ", nrow(peptable), "")
 
     message(" + Protein summarisation")
 
@@ -50,7 +59,9 @@ proteinSummarisation <- function(peptable, parameters) {
     message("  - Sorted protein table")
 
     # Reducing table to relevant columns
-    peptable <- peptable[peptable$num_accs == 1, ]
+    if (!sharedPep) {
+      peptable <- peptable[peptable$num_accs == 1, ]
+    }
 
     # Vector with row indices of protein groups
     all_accs <- peptable$merged_accs
