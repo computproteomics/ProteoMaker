@@ -30,7 +30,7 @@ A list containing the following elements:
     \item{tFDRPep0.01}{True FDR at 0.01 threshold for peptides.}
     \item{tFDRPep0.05}{True FDR at 0.05 threshold for peptides.}
     \item{propMisCleavedPeps}{Proportion of miscleaved peptides.}
-    \item{sumSquareDiffFCPep}{Sum of squared differences in fold changes for peptides.}
+    \item{meanSquareDiffFCPep}{Mean of squared differences in fold changes for peptides.}
     \item{sdWithinRepsPep}{Standard deviation within replicates for peptides.}
     \item{skewnessPeps}{Skewness of peptide intensities.}
     \item{kurtosisPeps}{Kurtosis of peptide intensities.}
@@ -45,7 +45,7 @@ A list containing the following elements:
     \item{tFDRProt0.05}{True FDR at 0.05 threshold for proteins.}
     \item{tprProt0.01}{True positive rate at FDR < 0.01 for proteins.}
     \item{tprProt0.05}{True positive rate at FDR < 0.05 for proteins.}
-    \item{sumSquareDiffFCProt}{Sum of squared differences in fold changes for proteins.}
+    \item{meanSquareDiffFCProt}{Mean of squared differences in fold changes for proteins.}
     \item{sdWithinRepsProt}{Standard deviation within replicates for proteins.}
     \item{propMisCleavedProts}{Proportion of miscleaved proteins.}
     \item{skewnessProts}{Skewness of protein intensities.}
@@ -63,7 +63,7 @@ A list containing the following elements:
     \item{propDiffRegPepWrong0.01}{Proportion of differentially regulated peptides at FDR < 0.01 with wrong identifications.}
     \item{propDiffRegPepWrong0.05}{Proportion of differentially regulated peptides at FDR < 0.05 with wrong identifications.}
     \item{percOverlapModPepProt}{Percentage of overlap between modified peptides and their proteins.}
-    \item{sumSquareDiffFCModPep}{Sum of squared differences in fold changes for modified peptides.}
+    \item{meanSquareDiffFCModPep}{Mean of squared differences in fold changes for modified peptides.}
   }
   \item{PepStat}{A list containing ROC curves and statistics for peptides.}
   \item{ProtStat}{A list containing ROC curves and statistics for proteins.}

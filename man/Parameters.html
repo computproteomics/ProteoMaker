@@ -219,9 +219,17 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 <h3 class="anchored" data-anchor-id="summarization-method">Summarization Method</h3>
 <p><em>Param$ProtSummarization</em>: The method for protein summarization. Currently set to <code>median</code>. Other options are <code>sum,</code> <code>sum.top3</code>, <code>mean</code> and <code>medpolish</code>.This parameter determines how peptide-level data is aggregated to the protein level.</p>
 </section>
+<section id="shared-peptides" class="level3">
+<h3 class="anchored" data-anchor-id="shared-peptides">Shared Peptides</h3>
+<p><em>Param$SharedPep</em>: Boolean whether to include shared peptides in the summarization. Set to <code>FALSE</code>. This parameter allows for the inclusion of peptides that are shared between multiple proteins, which can affect quantitation and identification.</p>
+</section>
 <section id="minimum-number-of-unique-peptides" class="level3">
 <h3 class="anchored" data-anchor-id="minimum-number-of-unique-peptides">Minimum Number of Unique Peptides</h3>
 <p><em>Param$MinUniquePep</em>: The minimum number of unique peptides required for summarization. Set to <code>1</code>. This parameter ensures that proteins are summarized only if they have sufficient peptide evidence.</p>
+</section>
+<section id="include-modified-peptides" class="level3">
+<h3 class="anchored" data-anchor-id="include-modified-peptides">Include Modified Peptides</h3>
+<p><em>Param$IncludeModPep</em>: Boolean indicating whether to include modified peptides in the summarization. Set to <code>TRUE</code>. This parameter allows for the inclusion of peptides with post-translational modifications in the protein quantitation.</p>
 </section>
 </section>
 <section id="statistical-testing-of-peptides-and-proteins" class="level2">

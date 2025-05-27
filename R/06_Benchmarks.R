@@ -78,7 +78,7 @@ calcROC <- function(Stats, columnName, groundtruthColumn="min1Reg") {
 #'     \item{tFDRPep0.01}{True FDR at 0.01 threshold for peptides.}
 #'     \item{tFDRPep0.05}{True FDR at 0.05 threshold for peptides.}
 #'     \item{propMisCleavedPeps}{Proportion of miscleaved peptides.}
-#'     \item{sumSquareDiffFCPep}{Sum of squared differences in fold changes for peptides.}
+#'     \item{meanSquareDiffFCPep}{Mean of squared differences in fold changes for peptides.}
 #'     \item{sdWithinRepsPep}{Standard deviation within replicates for peptides.}
 #'     \item{skewnessPeps}{Skewness of peptide intensities.}
 #'     \item{kurtosisPeps}{Kurtosis of peptide intensities.}
@@ -93,7 +93,7 @@ calcROC <- function(Stats, columnName, groundtruthColumn="min1Reg") {
 #'     \item{tFDRProt0.05}{True FDR at 0.05 threshold for proteins.}
 #'     \item{tprProt0.01}{True positive rate at FDR < 0.01 for proteins.}
 #'     \item{tprProt0.05}{True positive rate at FDR < 0.05 for proteins.}
-#'     \item{sumSquareDiffFCProt}{Sum of squared differences in fold changes for proteins.}
+#'     \item{meanSquareDiffFCProt}{Mean of squared differences in fold changes for proteins.}
 #'     \item{sdWithinRepsProt}{Standard deviation within replicates for proteins.}
 #'     \item{propMisCleavedProts}{Proportion of miscleaved proteins.}
 #'     \item{skewnessProts}{Skewness of protein intensities.}
@@ -111,7 +111,7 @@ calcROC <- function(Stats, columnName, groundtruthColumn="min1Reg") {
 #'     \item{propDiffRegPepWrong0.01}{Proportion of differentially regulated peptides at FDR < 0.01 with wrong identifications.}
 #'     \item{propDiffRegPepWrong0.05}{Proportion of differentially regulated peptides at FDR < 0.05 with wrong identifications.}
 #'     \item{percOverlapModPepProt}{Percentage of overlap between modified peptides and their proteins.}
-#'     \item{sumSquareDiffFCModPep}{Sum of squared differences in fold changes for modified peptides.}
+#'     \item{meanSquareDiffFCModPep}{Mean of squared differences in fold changes for modified peptides.}
 #'   }
 #'   \item{PepStat}{A list containing ROC curves and statistics for peptides.}
 #'   \item{ProtStat}{A list containing ROC curves and statistics for proteins.}
@@ -135,16 +135,16 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
         # Peptide level
         numPeptides=0, numProteins=0, dynRangePep=0, propUniquePep=0, uniqueStrippedPep=0, percMissingPep=0,
         aucDiffRegPeptides=list(), tprPep0.01=list(), tprPep0.05=list(), tFDRPep0.01=list(), tFDRPep0.05=list(),
-        propMisCleavedPeps=list(),sumSquareDiffFCPep=0, sdWithinRepsPep=0, skewnessPeps=0, kurtosisPeps=0, sdPeps=0,
+        propMisCleavedPeps=list(),meanSquareDiffFCPep=0, sdWithinRepsPep=0, skewnessPeps=0, kurtosisPeps=0, sdPeps=0,
         # Protein level
         numQuantProtGroups=0, dynRangeProt=0, propUniqueProts=0, percMissingProt=0, meanPepPerProt=0, aucDiffRegProteins=list(),
-        tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), sumSquareDiffFCProt=0, sdWithinRepsProt=0,
+        tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), meanSquareDiffFCProt=0, sdWithinRepsProt=0,
         propMisCleavedProts=0,
         propDiffRegWrongIDProt0.01=list(),propDiffRegWrongIDProt0.05=list(),skewnessProts=0, kurtosisProts=0, sdProts=0,
         # PTM level
         numProteoforms=0, numModPeptides=0, meanProteoformsPerProt=0, propModAndUnmodPep=0, aucDiffRegAdjModPep=list(),
         tFDRAdjModPep0.01=list(), tFDRAdjModPep0.05=list(), tprAdjModPep0.01=list(), tprAdjModPep0.05=list(),
-        propDiffRegPepWrong0.01=list(),propDiffRegPepWrong0.05=list(), percOverlapModPepProt=0, sumSquareDiffFCModPep=0)
+        propDiffRegPepWrong0.01=list(),propDiffRegPepWrong0.05=list(), percOverlapModPepProt=0, meanSquareDiffFCModPep=0)
 
 
     #### Calculating peptide numbers
@@ -252,7 +252,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     #     type="n", xlab="Ground truth", ylab="Measured ratios")
     # points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
     # abline(0,1)
-    globalBMs["sumSquareDiffFCProt"] <- sumsquare / sum(diffs != 0, na.rm=T)
+    globalBMs["meanSquareDiffFCProt"] <- sumsquare / sum(diffs != 0, na.rm=T)
 
     # Calculating mean of peptide sds within replicates (only peptides with regulations)
     sds <- 0
@@ -312,8 +312,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     # plot(0, xlim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), ylim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
     # points(diffs, StatsPep$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
     # abline(0,1)
-    globalBMs["sumSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
-    globalBMs["sumSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
+    globalBMs["meanSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
+    globalBMs["meanSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
 
     # Counting miscleavages
     if (sum(!is.na(Stats$MC)) > 0)

@@ -80,7 +80,7 @@ ul.task-list li input[type="checkbox"] {
 <li><p><strong>True FDR for Estimated FDR</strong> (<code>tFDRPep0.01.FDR_limma 2 vs 1.tFDR</code>, <code>tFDRPep0.05.FDR_limma 2 vs 1.tFDR</code>, label: <em>True FDR (peptides)</em>): Actual (true) FDR at estimated FDR levels of 0.01 and 0.05.</p></li>
 <li><p><strong>Proportion of Cleaved Peptides</strong> (<code>propMisCleavedPeps</code>, label: <em>Miscleavage distribution</em>): Proportional distribution of miscleavage events.</p></li>
 <li><p><strong>Dynamic Range</strong> (<code>dynRangePep</code>, label: <em>Dynamic range (peptides)</em>): Log2 range of peptide intensities.</p></li>
-<li><p><strong>Sum of Squared Residuals Towards Actual Fold-Changes</strong> (<code>sumSquareDiffFCPep</code>, label: <em>Fold-change error (peptides)</em>): Fold-change error (ground truth vs.&nbsp;measured), computed as squared differences for log2 FC.</p></li>
+<li><p><strong>Mean of Squared Residuals Towards Actual Fold-Changes</strong> (<code>meanSquareDiffFCPep</code>, label: <em>Fold-change error (peptides)</em>): Fold-change error (ground truth vs.&nbsp;measured), computed as squared differences for log2 FC.</p></li>
 <li><p><strong>Mean of Std. Dev. Within Replicates</strong> (<code>sdWithinRepsPep</code>, label: <em>Replicate SD (peptides)</em>): Within-group variation of regulated peptides.</p></li>
 <li><p><strong>Skewness</strong> (<code>skewnessPeps</code>, label: <em>Skewness (peptides)</em>): Asymmetry of peptide intensity distribution.</p></li>
 <li><p><strong>Kurtosis</strong> (<code>kurtosisPeps</code>, label: <em>Kurtosis (peptides)</em>): Peakedness (tailedness) of peptide intensity distribution.</p></li>
@@ -97,7 +97,7 @@ ul.task-list li input[type="checkbox"] {
 <li><p><strong>AUC of ROC Curve for Correct Differentially Regulated Features</strong> (<code>aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC</code>, label: <em>Protein AUC (truth vs FDR)</em>): AUC for identifying differentially regulated proteins, applying PolySTest.</p></li>
 <li><p><strong>TPR (True Positive Rate)</strong> (<code>tprProt0.01.FDR_PolySTest 2 vs 1.tFDR</code>, <code>tprProt0.05.FDR_PolySTest 2 vs 1.tFDR</code>, label: <em>TPR protein (FDR &lt; 0.01/0.05)</em>): True positive rate for regulated proteins at estimated FDRs 0.01 and 0.05. Estimated with PolySTest.</p></li>
 <li><p><strong>True FDR for Estimated FDR</strong> (<code>tFDRProt0.01.FDR_PolySTest 2 vs 1.TPR</code>, <code>tFDRProt0.05.FDR_PolySTest 2 vs 1.TPR</code>, label: <em>True FDR (proteins)</em>): Actual FDR for proteins at estimated FDRs 0.01 and 0.05.</p></li>
-<li><p><strong>Sum of Squared Residuals Towards Actual Fold-Changes</strong> (<code>sumSquareDiffFCProt</code>, label: <em>Fold-change error (proteins)</em>): Average squared error between simulated and measured log2 fold-changes.</p></li>
+<li><p><strong>Mean of Squared Residuals Towards Actual Fold-Changes</strong> (<code>meanSquareDiffFCProt</code>, label: <em>Fold-change error (proteins)</em>): Average squared error between simulated and measured log2 fold-changes.</p></li>
 <li><p><strong>Dynamic Range</strong> (<code>dynRangeProt</code>, label: <em>Dynamic range (proteins)</em>): Log2 range of protein intensities.</p></li>
 <li><p><strong>Mean of Std. Dev. Within Replicates</strong> (<code>sdWithinRepsProt</code>, label: <em>Replicate SD (proteins)</em>): Within-group variation of regulated proteins.</p></li>
 <li><p><strong>Proportion of Proteins with Miscleaved Peptides</strong> (<code>propMisCleavedProts</code>, label: <strong>% Miscleaved proteins</strong>): Vector of fraction of proteins having at least [0-n] miscleaved peptides.</p></li>
@@ -118,7 +118,7 @@ ul.task-list li input[type="checkbox"] {
 <li><p><strong>True FDR</strong> (<code>tFDRAdjModPep0.01</code>, <code>tFDRAdjModPep0.05</code>, label: <em>True FDR (mod. peptides)</em>): Actual FDR of modified peptide results at FDRs 0.01 and 0.05.</p></li>
 <li><p><strong>Proportion of Wrongly Regulated Modified Peptides</strong> (<code>propDiffRegPepWrong0.01</code>, <code>propDiffRegPepWrong0.05</code>, label: <strong>% Wrongly significant (mod. peptides)</strong>): Fraction of modified peptides that are significant but not truly regulated.</p></li>
 <li><p><strong>Proportion of Modified Peptides with Quantified Protein</strong> (<code>percOverlapModPepProt</code>, label: <strong>% Mod peptides with protein quant</strong>): Fraction of modified peptides with quantifiable protein background.</p></li>
-<li><p><strong>Sum of Squared Residuals Towards Actual Fold-Changes</strong> (<code>sumSquareDiffFCModPep</code>, label: <em>Fold-change error (mod. peptides)</em>): Squared differences between simulated and measured log2 fold-changes of modified peptides.</p></li>
+<li><p><strong>Mean of Squared Residuals Towards Actual Fold-Changes</strong> (<code>meanSquareDiffFCModPep</code>, label: <em>Fold-change error (mod. peptides)</em>): Squared differences between simulated and measured log2 fold-changes of modified peptides.</p></li>
 </ul>
 </section>
 </section>
@@ -214,7 +214,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="odd">
 <td>Fold-Change Error</td>
-<td>sumSquareDiffFCPep</td>
+<td>meanSquareDiffFCPep</td>
 <td>Fold-change error (peptides)</td>
 <td>Peptide</td>
 </tr>
@@ -298,7 +298,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="odd">
 <td>Fold-Change Error</td>
-<td>sumSquareDiffFCProt</td>
+<td>meanSquareDiffFCProt</td>
 <td>Fold-change error (proteins)</td>
 <td>Protein</td>
 </tr>
@@ -418,7 +418,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="odd">
 <td>Fold-Change Error (Mod Peptides)</td>
-<td>sumSquareDiffFCModPep</td>
+<td>meanSquareDiffFCModPep</td>
 <td>Fold-change error (mod. peptides)</td>
 <td>PTM</td>
 </tr>

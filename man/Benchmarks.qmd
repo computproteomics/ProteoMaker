@@ -34,7 +34,7 @@ The following values and distributions are collected and used for assessing quan
 
 -   **Dynamic Range** (`dynRangePep`, label: *Dynamic range (peptides)*): Log2 range of peptide intensities.
 
--   **Sum of Squared Residuals Towards Actual Fold-Changes** (`sumSquareDiffFCPep`, label: *Fold-change error (peptides)*): Fold-change error (ground truth vs. measured), computed as squared differences for log2 FC.
+-   **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCPep`, label: *Fold-change error (peptides)*): Fold-change error (ground truth vs. measured), computed as squared differences for log2 FC.
 
 -   **Mean of Std. Dev. Within Replicates** (`sdWithinRepsPep`, label: *Replicate SD (peptides)*): Within-group variation of regulated peptides.
 
@@ -60,7 +60,7 @@ The following values and distributions are collected and used for assessing quan
 
 -   **True FDR for Estimated FDR** (`tFDRProt0.01.FDR_PolySTest 2 vs 1.TPR`, `tFDRProt0.05.FDR_PolySTest 2 vs 1.TPR`, label: *True FDR (proteins)*): Actual FDR for proteins at estimated FDRs 0.01 and 0.05.
 
--   **Sum of Squared Residuals Towards Actual Fold-Changes** (`sumSquareDiffFCProt`, label: *Fold-change error (proteins)*): Average squared error between simulated and measured log2 fold-changes.
+-   **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCProt`, label: *Fold-change error (proteins)*): Average squared error between simulated and measured log2 fold-changes.
 
 -   **Dynamic Range** (`dynRangeProt`, label: *Dynamic range (proteins)*): Log2 range of protein intensities.
 
@@ -94,12 +94,12 @@ The following values and distributions are collected and used for assessing quan
 
 -   **Proportion of Modified Peptides with Quantified Protein** (`percOverlapModPepProt`, label: **% Mod peptides with protein quant**): Fraction of modified peptides with quantifiable protein background.
 
--   **Sum of Squared Residuals Towards Actual Fold-Changes** (`sumSquareDiffFCModPep`, label: *Fold-change error (mod. peptides)*): Squared differences between simulated and measured log2 fold-changes of modified peptides.
+-   **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCModPep`, label: *Fold-change error (mod. peptides)*): Squared differences between simulated and measured log2 fold-changes of modified peptides.
 
 ## Benchmark Overview Table
 
 | Benchmarking Metrics | Name | Label (for figures) | Category |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | Total Number of Peptides | numPeptides | #Total peptides (mod+unmod) | Peptide |
 | Number of Proteins | numProteins | #Proteins (from peptides) | Peptide |
 | Proportion of Unique Modified and Non-Modified Peptides | propUniquePep | \% Unique peptides (prot-specific) | Peptide |
@@ -112,7 +112,7 @@ The following values and distributions are collected and used for assessing quan
 | True FDR at 0.05 | tFDRPep0.05.FDR_limma.2.vs.1.tFDR | True FDR (peptides, 0.05) | Peptide |
 | Miscleavage Distribution | propMisCleavedPeps.\[0-n\] | Miscleavage distribution | Peptide |
 | Dynamic Range | dynRangePep | Dynamic range (peptides) | Peptide |
-| Fold-Change Error | sumSquareDiffFCPep | Fold-change error (peptides) | Peptide |
+| Fold-Change Error | meanSquareDiffFCPep | Fold-change error (peptides) | Peptide |
 | Within-Replicate SD | sdWithinRepsPep | Replicate SD (peptides) | Peptide |
 | Skewness | skewnessPeps | Skewness (peptides) | Peptide |
 | Kurtosis | kurtosisPeps | Kurtosis (peptides) | Peptide |
@@ -126,7 +126,7 @@ The following values and distributions are collected and used for assessing quan
 | TPR at FDR \< 0.05 | tprProt0.05.FDR_PolySTest.2.vs.1.TPR | TPR protein (FDR \< 0.05) | Protein |
 | True FDR at 0.01 | tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR | True FDR (proteins, 0.01) | Protein |
 | True FDR at 0.05 | tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR | True FDR (proteins, 0.05) | Protein |
-| Fold-Change Error | sumSquareDiffFCProt | Fold-change error (proteins) | Protein |
+| Fold-Change Error | meanSquareDiffFCProt | Fold-change error (proteins) | Protein |
 | Within-Replicate SD | sdWithinRepsProt | Replicate SD (proteins) | Protein |
 | Miscleaved Proteins | propMisCleavedProts | \% Miscleaved proteins | Protein |
 | Wrong ID Proteins at 0.01 | propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 | \% Wrong-ID (proteins, 0.01) | Protein |
@@ -146,4 +146,4 @@ The following values and distributions are collected and used for assessing quan
 | Wrongly Significant Mod Peptides (0.01) | propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 | \% Wrongly significant (mod. peptides, 0.01) | PTM |
 | Wrongly Significant Mod Peptides (0.05) | propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 | \% Wrongly significant (mod. peptides, 0.05) | PTM |
 | Modified Peptides with Protein Quant | percOverlapModPepProt | \% Mod peptides with protein quant | PTM |
-| Fold-Change Error (Mod Peptides) | sumSquareDiffFCModPep | Fold-change error (mod. peptides) | PTM |
+| Fold-Change Error (Mod Peptides) | meanSquareDiffFCModPep | Fold-change error (mod. peptides) | PTM |
