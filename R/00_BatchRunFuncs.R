@@ -588,6 +588,7 @@ matrix_benchmarks <- function(allBs, Config) {
 #'
 #' @importFrom colorspace qualitative_hcl
 #' @importFrom lattice levelplot
+#' @importFrom gplots plotCI
 #'
 #' @export
 visualize_benchmarks <- function(benchmatrix,
@@ -842,7 +843,7 @@ visualize_benchmarks <- function(benchmatrix,
           x <- unique(benchmatrix[, ref_par])
         }
 
-        plotCI(x ,y ,
+        gplots::plotCI(x ,y ,
                uiw = uiw,
                gap = 0,
                sfrac = 0.02,

@@ -9,7 +9,8 @@ visualize_benchmarks(
   benchmarks = NULL,
   ref_par = "WrongIDs",
   fullrange = FALSE,
-  cols = NULL
+  cols = NULL,
+  errorbar = FALSE
 )
 }
 \arguments{
@@ -27,6 +28,10 @@ set of benchmarks (works only for one `ref_par`)}
 
 \item{cols}{A character vector specifying the colors to be used for the
 visualization. If \code{NULL}, default colors will be used.}
+
+\item{errorbar}{A logical value indicating whether to show mean +/- standard
+deviations in the
+visualization. Default is \code{FALSE}. This parameter is not applied to the color maps.}
 }
 \value{
 A bar plot or a colored map visualizing the specified benchmarks against the
