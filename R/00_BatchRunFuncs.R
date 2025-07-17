@@ -573,6 +573,9 @@ matrix_benchmarks <- function(allBs, Config) {
 #' set of benchmarks (works only for one `ref_par`)
 #' @param cols A character vector specifying the colors to be used for the
 #' visualization. If \code{NULL}, default colors will be used.
+#' @param errorbar A logical value indicating whether to show mean +/- standard
+#' deviations in the
+#' visualization. Default is \code{FALSE}. This parameter is not applied to the color maps.
 #'
 #' @return A bar plot or a colored map visualizing the specified benchmarks against the
 #' reference parameters.
@@ -591,7 +594,8 @@ visualize_benchmarks <- function(benchmatrix,
                                  benchmarks = NULL,
                                  ref_par = "WrongIDs",
                                  fullrange = FALSE,
-                                 cols = NULL) {
+                                 cols = NULL,
+                                 errorbar = FALSE) {
   # Require at least one row in benchmatrix
   if (nrow(benchmatrix) < 1) {
     stop("No data available for visualization.")
@@ -816,11 +820,35 @@ visualize_benchmarks <- function(benchmatrix,
         }
       }
       if (all(is.finite(range(benchmatrix[, i], na.rm=T)))) {
+        x <- benchmatrix[, ref_par]
+        y <- benchmatrix[, i]
+        uiw <- NA
+        if (errorbar) {
+          # Calculate upper and lower error bounds if errorbar is TRUE
+          uiw <- unlist(by(benchmatrix[, i], benchmatrix[, ref_par], function(x) {
+            if (length(x) > 1) {
+              return(sd(x, na.rm = TRUE))
+            } else {
+              return(NA)
+            }
+          }))
+          y <- unlist(by(benchmatrix[, i], benchmatrix[, ref_par], function(x) {
+            if (length(x) > 1) {
+              return(mean(x, na.rm = TRUE))
+            } else {
+              return(NA)
+            }
+          }))
+          x <- unique(benchmatrix[, ref_par])
+        }
 
-        plot(benchmatrix[, ref_par], benchmatrix[, i],
-             xlab = params, ylab = i,
-             pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
-             ylim = myrange)
+        plotCI(x ,y ,
+               uiw = uiw,
+               gap = 0,
+               sfrac = 0.02,
+               xlab = params, ylab = i,
+               pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
+               ylim = myrange)
         abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
         abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
 
@@ -1015,11 +1043,11 @@ render_benchmark_table <- function(benchmatrix,
   colnames(summary_df) <- titles[selected_cols]
 
   # Print markdown table if requested
-    if (requireNamespace("knitr", quietly = TRUE)) {
-      print(knitr::kable(summary_df, format = "markdown", align = "c"))
-    } else {
-      warning("knitr package not installed. Install it or set print_table = FALSE.")
-    }
+  if (requireNamespace("knitr", quietly = TRUE)) {
+    print(knitr::kable(summary_df, format = "markdown", align = "c"))
+  } else {
+    warning("knitr package not installed. Install it or set print_table = FALSE.")
+  }
 
   return(summary_df)
 }

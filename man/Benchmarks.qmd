@@ -99,7 +99,7 @@ The following values and distributions are collected and used for assessing quan
 ## Benchmark Overview Table
 
 | Benchmarking Metrics | Name | Label (for figures) | Category |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Total Number of Peptides | numPeptides | #Total peptides (mod+unmod) | Peptide |
 | Number of Proteins | numProteins | #Proteins (from peptides) | Peptide |
 | Proportion of Unique Modified and Non-Modified Peptides | propUniquePep | \% Unique peptides (prot-specific) | Peptide |
