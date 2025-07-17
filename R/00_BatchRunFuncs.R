@@ -842,14 +842,20 @@ visualize_benchmarks <- function(benchmatrix,
           }))
           x <- unique(benchmatrix[, ref_par])
         }
+        if (any(is.character(x))) {
+          xf <- factor(x, levels = unique(x))   # preserve order
+          x  <- as.numeric(xf)
+        }
 
         gplots::plotCI(x ,y ,
                uiw = uiw,
                gap = 0,
+               xaxt = "n",
                sfrac = 0.02,
                xlab = params, ylab = i,
                pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
                ylim = myrange)
+        axis(1, at = x, labels = levels(xf), las = 1)
         abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
         abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
 
