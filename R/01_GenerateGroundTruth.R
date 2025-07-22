@@ -612,7 +612,7 @@ addProteoformAbundance <- function(proteoforms, parameters) {
     # [diff_reg_indices, "Regulation_Pattern"]
     proteoforms[diff_reg_indices, parameters$QuantColnames] <-
       # add regulation pattern*regulation amplitude to random noise
-      proteoforms[diff_reg_indices, parameters$QuantColnames] +
+      proteoforms[diff_reg_indices, parameters$QuantColnames, drop = FALSE] +
 
       # generate regulation patterns for all regulated proteoforms
       t(sapply(1:length(diff_reg_indices), function(x) {
