@@ -3,3 +3,4 @@ SimulatedDataSets/*
 /Meta/
 .Rproj.user
 .Rhistory
+inst/shiny/SimulatedDataSets/
