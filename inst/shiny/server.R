@@ -578,6 +578,12 @@ observeEvent(c(input$result_type, input$result_subtable), {
         )
       }))
     }
+    ttable <- as.data.frame(ttable) %>%
+      mutate(across(where(is.list),
+                    \(x) vapply(x, function(el)
+                      paste(el, collapse = "|"),
+                      FUN.VALUE = character(1))))
+
     sim_table(as.data.frame(ttable))
     current_stage(input$result_type)
   }
@@ -595,11 +601,6 @@ output$download_results <- downloadHandler(
       message(" ---- Retrieving results ----")
       # Turn lists in to strings
       out_data <- sim_table()
-      out_data <- out_data %>%
-        mutate(across(where(is.list),
-                      \(x) vapply(x, function(el)
-                        paste(el, collapse = "|"),
-                        FUN.VALUE = character(1))))
       write.csv(out_data, file, row.names = FALSE)
     }
   }
