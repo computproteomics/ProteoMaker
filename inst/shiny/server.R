@@ -565,7 +565,7 @@ observeEvent(c(input$result_type, input$result_subtable), {
       }
       ttable <- ttable[[input$result_subtable]]
     } else {
-      updateSelectInput(session, choices = NULL, inputId = "result_subtable")
+      updateSelectInput(session, selected = "NA", choices = c("NA" = ""), inputId = "result_subtable")
       disable("result_subtable")
     }
     if (input$result_subtable == "globalBMs") {
@@ -585,14 +585,22 @@ observeEvent(c(input$result_type, input$result_subtable), {
 
 # Button to retrieve results
 output$download_results <- downloadHandler(
+  print("Updated Download Handler"),
   # Download file
   filename = function() {
-    "ProteoMaker_results.csv"
+    paste0("ProteoMaker_results_", input$result_type, ".csv")
   },
   content = function(file) {
     if (!is.null(sim_table())) {
       message(" ---- Retrieving results ----")
-      write.csv(as.data.frame(sim_table()), file, row.names = FALSE)
+      # Turn lists in to strings
+      out_data <- sim_table()
+      out_data <- out_data %>%
+        mutate(across(where(is.list),
+                      \(x) vapply(x, function(el)
+                        paste(el, collapse = "|"),
+                        FUN.VALUE = character(1))))
+      write.csv(out_data, file, row.names = FALSE)
     }
   }
 )
@@ -603,6 +611,73 @@ output$results_table <- renderDataTable({
     datatable(sim_table(), options = list(pageLength = 10))
   }
 })
+
+output$download_all_results <- downloadHandler(
+
+  filename = function() {
+    paste0("ProteoMaker_all_results_", Sys.Date(), ".zip")
+  },
+  content = function(file) {
+    if(sim_available()) {
+      message(" ---- Downloading all results ----")
+    # Create a temporary directory to store the results
+    temp_dir <- tempdir()
+    # Create a subdirectory for ProteoMaker results
+    result_dir <- file.path(temp_dir, "ProteoMaker_results")
+    dir.create(result_dir, showWarnings = FALSE)
+
+    stages_all <- c("GroundTruth", "ProteoformAb",
+                    "Digest", "MSRun", "DataAnalysis")
+
+    # Save each simulation result as a CSV file
+    for (i in stages_all) {
+      ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = i)
+
+      ttable <- ttable[names(ttable) != "Param"]
+      if (i == "DataAnalysis" & length(ttable) > 1) {
+        ttable$globalBMs <- ttable$Benchmarks$globalBMs
+        ttable$globalBMs <- do.call(rbind, lapply(names(ttable$globalBMs), function(name) {
+          data.frame(
+            Item = name,
+            Value = paste(ttable$globalBMs[[name]], collapse = ", "),  # Wrap the list in I() to keep it as a list column
+            stringsAsFactors = FALSE
+          )
+        }))
+        ttable$Benchmarks  <- NULL
+      } else {
+        ttable <- ttable[[1]]
+      }
+      if (!is.data.frame(ttable)) {
+        for (n in names(ttable)) {
+          print(head(ttable[[n]]))
+          if (!is.null(ttable[[n]])) {
+          ttable[[n]] <- ttable[[n]] %>%
+            mutate(across(where(is.list),
+                          \(x) vapply(x, function(el)
+                            paste(el, collapse = "|"),
+                            FUN.VALUE = character(1))))
+          write.csv(ttable[[n]], file = file.path(result_dir, paste0("ProteoMaker_results_", i, "_", n, ".csv")), row.names = FALSE)
+          }
+        }
+      } else {
+        if (!is.null(ttable)) {
+
+        ttable <- ttable %>%
+          mutate(across(where(is.list),
+                        \(x) vapply(x, function(el)
+                          paste(el, collapse = "|"),
+                          FUN.VALUE = character(1))))
+
+        write.csv(ttable, file = file.path(result_dir, paste0("ProteoMaker_results_", i, ".csv")), row.names = FALSE)
+        }
+      }
+    }
+
+    # Create a zip file containing all results
+    zip::zipr(file, files = list.files(result_dir, full.names = TRUE))
+  }
+  }
+)
 
 # File upload size limit
 options(shiny.maxRequestSize=1*1024^3)

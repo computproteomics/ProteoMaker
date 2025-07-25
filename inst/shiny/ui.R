@@ -186,13 +186,14 @@ ui <- page_sidebar(
        h3("Get Results"),
        # List to select type of results
        layout_column_wrap(
-         width = 1/3,
+         width = 1/4,
          heights_equal = "row",
          selectInput("result_type", "Select Simulation Stage", choices = c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"),
                      selected = "MSRun"),
          selectInput("result_subtable", "Table", choices = c()),
          # Disabled button to download results
-         downloadButton("download_results", "Download Results")
+         downloadButton("download_results", "Download Results"),
+         downloadButton("download_all_results", "Download All Results (zip file)"),
        ),br(),
        dataTableOutput("results_table")
   )
