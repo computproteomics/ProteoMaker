@@ -842,8 +842,8 @@ visualize_benchmarks <- function(benchmatrix,
           }))
           x <- unique(benchmatrix[, ref_par])
         }
+        xf <- factor(x, levels = unique(x))   # preserve order
         if (any(is.character(x))) {
-          xf <- factor(x, levels = unique(x))   # preserve order
           x  <- as.numeric(xf)
         }
 
