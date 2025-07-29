@@ -855,7 +855,11 @@ visualize_benchmarks <- function(benchmatrix,
                xlab = params, ylab = i,
                pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
                ylim = myrange)
+        if (errorbar) {
         axis(1, at = x, labels = levels(xf), las = 1)
+        } else {
+          axis(1, at = x, labels = x, las = 1)
+        }
         abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
         abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
 
