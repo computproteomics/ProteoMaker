@@ -7,6 +7,7 @@ library(yaml)
 library(shinyjs)
 library(DT)
 library(ProteoMaker)
+library(dplyr)
 
 # Function to create UI elements based on parameter type
 create_param_ui <- function(param_name, param_info) {
