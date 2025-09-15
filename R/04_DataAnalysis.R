@@ -165,6 +165,7 @@ proteinSummarisation <- function(peptable, parameters) {
             tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
             rownames(tmp) <- tmp$Sequence
             out <- tmp[1,]
+            rownames(out) <- names(prot_ind)[i]
             tout <- summarizeProtein(tmp[,QuantColnames,drop=F])
             if (!is.null(tout)) {
                 out[QuantColnames] <- tout
@@ -181,6 +182,7 @@ proteinSummarisation <- function(peptable, parameters) {
             tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
             rownames(tmp) <- tmp$Sequence
             out <- tmp[1,]
+            rownames(out) <- names(prot_ind)[i]
             tout <- summarizeProtein(tmp[,QuantColnames,drop=F])
             if (!is.null(tout)) {
             out[QuantColnames] <- tout
@@ -192,8 +194,20 @@ proteinSummarisation <- function(peptable, parameters) {
             return(out)
         })
     }
-    # join all protein data
-    protmat <- do.call(rbind, proteins)
+    # Join all protein data ensuring unique, meaningful row names
+    valid <- !vapply(proteins, is.null, logical(1))
+    if (any(valid)) {
+      # Compute group names from merged accession keys (skip the end sentinel)
+      group_names_all <- names(prot_ind)[1:(length(prot_ind)-1)]
+      group_names <- group_names_all[valid]
+      # Remove any pre-existing rownames on pieces to avoid rbind name conflicts
+      proteins_clean <- lapply(proteins[valid], function(x) { rownames(x) <- NULL; x })
+      protmat <- do.call(rbind, proteins_clean)
+      # Assign unique, transparent row names based on merged accession keys
+      rownames(protmat) <- make.unique(group_names)
+    } else {
+      protmat <- NULL
+    }
     protmat[protmat == -Inf] <- NA
     protmat <- protmat[rowSums(is.na(protmat[,QuantColnames])) < length(QuantColnames), ]
 
@@ -203,4 +217,3 @@ proteinSummarisation <- function(peptable, parameters) {
     return(protmat)
 
 }
-

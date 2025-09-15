@@ -36,156 +36,168 @@
 #'
 proteinInput <- function(parameters) {
   message(" + Importing data:")
+  # Helper to add PTM columns to an unmodified dataframe
+  add_unmod_cols <- function(df) {
+    df$PTMPos <- vector(mode = "list", length = nrow(df))
+    df$PTMType <- vector(mode = "list", length = nrow(df))
+    df
+  }
   # Check is the fasta file can be loaded.
   error <- try(protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
-
-  if (!inherits(error, "try-error")) {
-
-    # Read fasta.
-    fasta <- protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE)
-    fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
-    rownames(fasta) <- 1:nrow(fasta)
-    message("  - File ", parameters$PathToFasta, " imported, containing ", nrow(fasta), " protein sequences.")
-
-    # Filter non-expressed proteins (random)
-    if (parameters$PercExpressedProt < 1) {
-      to.keep <- round(parameters$PercExpressedProt * nrow(fasta))
-      fasta <- fasta[sample(1:nrow(fasta), size = to.keep), ]
-      message("  - A total of ", nrow(fasta), " protein sequences have been randomly selected to be expressed.")
-    }
-
-    # Filter proteins carrying unusual amino acids.
-    knownAA <- c("A", "L", "R", "K", "N", "M", "D", "F", "C", "P", "E", "S", "Q", "T", "G", "W", "H", "Y", "I", "V")
-    unknownAA <- setdiff(LETTERS, knownAA)
-    initialRows <- nrow(fasta)
-    fasta <- fasta[if (initialRows > 1) {
-      rowSums(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
-    } else {
-      sum(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
-    }, ]
-    message("  - A total of ", initialRows - nrow(fasta), " protein sequences have been removed due to unusual amino acids ", paste0("(", paste0(unknownAA, collapse = ","), ")"), " composition.")
-
-    # Remove duplicated protein accessions.
-    message("  - A total of ", length(which(duplicated(fasta$Accession))), " duplicated protein accessions have been removed.")
-    fasta <- fasta[!duplicated(fasta$Accession), ]
-    message("  - Total number of remaining protein sequences: ", nrow(fasta), "\n")
-
-    # Proceed unless fasta df is empty after filtering.
-    if (nrow(fasta) > 0) {
-      message(" + Creating modified and unmodified fractions:")
-
-      # Returns a list of the number of modifiable residues on all sequences, for each residue of ModifiableResidues.
-      possible.modifiable.AAs <- as.data.frame(sapply(fasta$Sequence, function(x) {
-        string <- strsplit(x, split = "")
-        return(sapply(unlist(parameters$ModifiableResidues), function(y) length(which(string[[1]] == y))))
-      }))
-
-      rownames(possible.modifiable.AAs) <- 1:nrow(possible.modifiable.AAs)
-
-      # Add an additional column, denoting the number of ModifiableResidues residue types found for each protein.
-      possible.modifiable.AAs$Modifiable <- sapply(1:nrow(possible.modifiable.AAs), function(x) length(which(possible.modifiable.AAs[x, ] > 0)))
-
-      # Proteins that contain at least one of the ModifiableResidues.
-      unmodifiable.indices <- which(possible.modifiable.AAs$Modifiable == 0)
-
-      # Proteins that contain at least a residue of ModifiableResidues, and thus are modifiable.
-      modifiable.indices <- setdiff(1:nrow(fasta), unmodifiable.indices)
-
-      message("  - A total of ", length(unmodifiable.indices), " sequences are unmodifiable.")
-
-      # If there is not a specific protein list to be modified.
-      if (is.na(parameters$PathToProteinList)) {
-        # If the set of proteins can be fractionated. This covers the case when parameters$FracModProt = 0
-        if ((parameters$FracModProt * length(modifiable.indices)) >= 1) {
-          # Randomly select a FracModProt % of modifiable proteins (modifiable.indices).
-          to.modify.indices <- sample(modifiable.indices, size = parameters$FracModProt * length(modifiable.indices))
-          to.Modify <- fasta[to.modify.indices, ]
-          rownames(to.Modify) <- 1:nrow(to.Modify)
-
-          message("  - A total of ", length(modifiable.indices), " sequences are modifiable, from which ", parameters$FracModProt * 100, "% randomly selected to be modified.")
-
-          to.be.Unmodified <- fasta[-to.modify.indices, ]
-
-          # Add additional columns to the unmodified fraction df.
-          to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
-          to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
-
-          message("  - Modified fraction: ", nrow(to.Modify), " proteins.")
-          message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.")
-
-          # Empty dfs replaced with NULL.This covers the case when parameters$FracModProt = 1
-          if (nrow(to.be.Unmodified) > 0) {
-            rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
-          } else {
-            to.be.Unmodified <- NULL
-          }
-
-          return(list(to.Modify = to.Modify, to.be.Unmodified = to.be.Unmodified))
-        } else {
-          to.be.Unmodified <- fasta
-          to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
-          to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
-
-          message("  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.")
-          message("  - Modified fraction: 0 proteins.")
-          message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
-
-          return(list(to.Modify = NULL, to.be.Unmodified = to.be.Unmodified))
-        }
-      } else { # If there is a specific protein list to be modified.
-
-        # Check is the protein list file can be loaded.
-        error <- try(read.csv(parameters$PathToProteinList, header = F, stringsAsFactors = F), silent = TRUE)
-
-        if (!inherits(error, "try-error")) {
-          protein.list.input <- unique(as.vector(read.csv(parameters$PathToProteinList, header = F, stringsAsFactors = F)[, 1]))
-          message("  - Protein list file ", parameters$PathToProteinList, " loaded and contains ", length(protein.list.input), " unique protein accessions.")
-
-          mapping <- unlist(lapply(protein.list.input, function(x) which(fasta$Accession == x)))
-          to.modify.indices <- intersect(mapping, modifiable.indices)
-
-          if (length(to.modify.indices) > 0) {
-            message(" - A total of " , length(mapping), " protein accessions have found in fasta file from which ", length(to.modify.indices), " are modifiable.")
-            to.Modify <- fasta[to.modify.indices, ]
-            rownames(to.Modify) <- 1:nrow(to.Modify)
-            to.be.Unmodified <- fasta[-to.modify.indices, ]
-
-            # Add additional columns to the unmodified fraction df.
-            to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
-            to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
-
-            message("  - Modified fraction: ", nrow(to.Modify), " proteins.")
-            message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
-
-            if (nrow(to.be.Unmodified) > 0) {
-              rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
-            } else {
-              to.be.Unmodified <- NULL
-            }
-
-            return(list(to.Modify = to.Modify, to.be.Unmodified = to.be.Unmodified))
-          } else {
-            to.be.Unmodified <- fasta
-            to.be.Unmodified$PTMPos <- vector(mode = "list", length = nrow(to.be.Unmodified))
-            to.be.Unmodified$PTMType <- vector(mode = "list", length = nrow(to.be.Unmodified))
-            message("  - Proteins in ", parameters$PathToProteinList, " are not modifiable or are not found in ", parameters$PathToFasta, ".")
-            message("  - Modified fraction: 0 proteins.")
-            message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
-
-            return(list(to.Modify = NULL, to.be.Unmodified = to.be.Unmodified))
-          }
-        } else {
-          message(crayon::red("  - Protein list file ", parameters$PathToProteinList, " couldn't be loaded!\n"))
-          return(list(to.Modify = NULL, to.be.Unmodified = NULL))
-        }
-      }
-    } else {
-      message(crayon::red("  - There are no protein sequences left!\n"))
-      return(list(to.Modify = NULL, to.be.Unmodified = NULL))
-    }
-  } else {
+  # Early return on error to avoid wrapping the full function in an if-block
+  if (inherits(error, "try-error")) {
     message(crayon::red("  - Fasta file ", parameters$PathToFasta, " couldn't be loaded!\n"))
-    return(list(to.Modify = NULL, to.be.Unmodified = NULL))
+    return(list(to.Modify = NULL, to.be.Unmodified = NULL, SearchIndex = NULL))
+  }
+
+  # Read fasta.
+  fasta <- protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE)
+  fasta <- data.frame(Sequence = unlist(fasta), Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta)), stringsAsFactors = F)
+  rownames(fasta) <- 1:nrow(fasta)
+  message("  - File ", parameters$PathToFasta, " imported, containing ", nrow(fasta), " protein sequences.")
+
+  # Filter proteins carrying unusual amino acids.
+  knownAA <- c("A", "L", "R", "K", "N", "M", "D", "F", "C", "P", "E", "S", "Q", "T", "G", "W", "H", "Y", "I", "V")
+  unknownAA <- setdiff(LETTERS, knownAA)
+  initialRows <- nrow(fasta)
+  fasta <- fasta[if (initialRows > 1) {
+    rowSums(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
+  } else {
+    sum(sapply(unknownAA, grepl, x = fasta$Sequence)) == 0
+  }, ]
+  message("  - A total of ", initialRows - nrow(fasta), " protein sequences have been removed due to unusual amino acids ", paste0("(", paste0(unknownAA, collapse = ","), ")"), " composition.")
+
+  # Remove duplicated protein accessions.
+  message("  - A total of ", length(which(duplicated(fasta$Accession))), " duplicated protein accessions have been removed.")
+  fasta <- fasta[!duplicated(fasta$Accession), ]
+  message("  - Total number of remaining protein sequences: ", nrow(fasta), "\n")
+
+  # Keep full set of protein sequences
+  all_prot_seqs <- fasta
+
+  # Filter non-expressed proteins (random)
+  if (parameters$PercExpressedProt < 1) {
+    to.keep <- round(parameters$PercExpressedProt * nrow(fasta))
+    fasta <- fasta[sample(1:nrow(fasta), size = to.keep), ]
+    message("  - A total of ", nrow(fasta), " protein sequences have been randomly selected to be expressed.")
+  }
+  
+
+  # Build index on the full set before filtering by expression.
+  # If digestion settings are not provided at this stage, fall back to a simple protein index.
+  has_digest_params <- all(c("Enzyme","PepMinLength","PepMaxLength","MaxNumMissedCleavages") %in% names(parameters)) &&
+    !is.null(parameters$Enzyme) && !is.na(parameters$Enzyme)
+  if (has_digest_params) {
+    SearchIndex <- build_search_index_from_df(all_prot_seqs, parameters)
+  } else {
+    SearchIndex <- build_protein_index_from_df(all_prot_seqs)
+  }
+
+  # Early return if no sequences remain after filtering
+  if (nrow(fasta) == 0) {
+    message(crayon::red("  - There are no protein sequences left!\n"))
+    return(list(to.Modify = NULL, to.be.Unmodified = NULL, SearchIndex = SearchIndex))
+  }
+
+  message(" + Creating modified and unmodified fractions:")
+
+  # Returns a list of the number of modifiable residues on all sequences, for each residue of ModifiableResidues.
+  possible.modifiable.AAs <- as.data.frame(sapply(fasta$Sequence, function(x) {
+    string <- strsplit(x, split = "")
+    return(sapply(unlist(parameters$ModifiableResidues), function(y) length(which(string[[1]] == y))))
+  }))
+
+  rownames(possible.modifiable.AAs) <- 1:nrow(possible.modifiable.AAs)
+
+  # Add an additional column, denoting the number of ModifiableResidues residue types found for each protein.
+  possible.modifiable.AAs$Modifiable <- sapply(1:nrow(possible.modifiable.AAs), function(x) length(which(possible.modifiable.AAs[x, ] > 0)))
+
+  # Proteins that contain at least one of the ModifiableResidues.
+  unmodifiable.indices <- which(possible.modifiable.AAs$Modifiable == 0)
+
+  # Proteins that contain at least a residue of ModifiableResidues, and thus are modifiable.
+  modifiable.indices <- setdiff(1:nrow(fasta), unmodifiable.indices)
+
+  message("  - A total of ", length(unmodifiable.indices), " sequences are unmodifiable.")
+
+  # If there is not a specific protein list to be modified.
+  if (is.na(parameters$PathToProteinList)) {
+    # If the set of proteins can be fractionated. This covers the case when parameters$FracModProt = 0
+    if ((parameters$FracModProt * length(modifiable.indices)) >= 1) {
+      # Randomly select a FracModProt % of modifiable proteins (modifiable.indices).
+      to.modify.indices <- sample(modifiable.indices, size = parameters$FracModProt * length(modifiable.indices))
+      to.Modify <- fasta[to.modify.indices, ]
+      rownames(to.Modify) <- 1:nrow(to.Modify)
+
+      message("  - A total of ", length(modifiable.indices), " sequences are modifiable, from which ", parameters$FracModProt * 100, "% randomly selected to be modified.")
+
+      to.be.Unmodified <- fasta[-to.modify.indices, ]
+      # Add additional columns to the unmodified fraction df.
+      to.be.Unmodified <- add_unmod_cols(to.be.Unmodified)
+
+      message("  - Modified fraction: ", nrow(to.Modify), " proteins.")
+      message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.")
+
+      # Empty dfs replaced with NULL.This covers the case when parameters$FracModProt = 1
+      if (nrow(to.be.Unmodified) > 0) {
+        rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
+      } else {
+        to.be.Unmodified <- NULL
+      }
+
+          return(list(to.Modify = to.Modify, to.be.Unmodified = to.be.Unmodified, SearchIndex = SearchIndex))
+    } else {
+      to.be.Unmodified <- add_unmod_cols(fasta)
+
+      message("  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.")
+      message("  - Modified fraction: 0 proteins.")
+      message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
+
+          return(list(to.Modify = NULL, to.be.Unmodified = to.be.Unmodified, SearchIndex = SearchIndex))
+    }
+  } else { # If there is a specific protein list to be modified.
+
+      # Check is the protein list file can be loaded.
+      list_try <- try(read.csv(parameters$PathToProteinList, header = F, stringsAsFactors = F), silent = TRUE)
+
+      # Early return on error to avoid wrapping the branch in an if-block
+      if (inherits(list_try, "try-error")) {
+        message(crayon::red("  - Protein list file ", parameters$PathToProteinList, " couldn't be loaded!\n"))
+        return(list(to.Modify = NULL, to.be.Unmodified = NULL, SearchIndex = SearchIndex))
+      }
+
+    protein.list.input <- unique(as.vector(list_try[, 1]))
+    message("  - Protein list file ", parameters$PathToProteinList, " loaded and contains ", length(protein.list.input), " unique protein accessions.")
+
+    mapping <- unlist(lapply(protein.list.input, function(x) which(fasta$Accession == x)))
+    to.modify.indices <- intersect(mapping, modifiable.indices)
+
+    if (length(to.modify.indices) > 0) {
+      message(" - A total of " , length(mapping), " protein accessions have found in fasta file from which ", length(to.modify.indices), " are modifiable.")
+      to.Modify <- fasta[to.modify.indices, ]
+      rownames(to.Modify) <- 1:nrow(to.Modify)
+      to.be.Unmodified <- fasta[-to.modify.indices, ]
+      # Add additional columns to the unmodified fraction df.
+      to.be.Unmodified <- add_unmod_cols(to.be.Unmodified)
+
+      message("  - Modified fraction: ", nrow(to.Modify), " proteins.")
+      message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
+
+      if (nrow(to.be.Unmodified) > 0) {
+        rownames(to.be.Unmodified) <- 1:nrow(to.be.Unmodified)
+      } else {
+        to.be.Unmodified <- NULL
+      }
+
+      return(list(to.Modify = to.Modify, to.be.Unmodified = to.be.Unmodified, SearchIndex = SearchIndex))
+    } else {
+      to.be.Unmodified <- add_unmod_cols(fasta)
+      message("  - Proteins in ", parameters$PathToProteinList, " are not modifiable or are not found in ", parameters$PathToFasta, ".")
+      message("  - Modified fraction: 0 proteins.")
+      message("  - Unmodified fraction: ", nrow(to.be.Unmodified), " proteins.\n")
+
+      return(list(to.Modify = NULL, to.be.Unmodified = to.be.Unmodified, SearchIndex = SearchIndex))
+    }
   }
 }
 #####################
@@ -242,67 +254,67 @@ performModification <- function(to.Modify, parameters) {
       )
     }
 
-  # All proteins in to.Modify set are selected to be modified at least once.
-  # Then randomly a set of proteoforms from the imported to.Modify set is selected based on the fraction multiplier PropModPerProt - 1.
-  # The size of mod.proteoforms set depends to PropModPerProt. (When 1 a proteoform set of size equal to to.Modify is created, when 2 the size is double etc etc)
-  mod.proteoforms <- to.Modify
+    # All proteins in to.Modify set are selected to be modified at least once.
+    # Then randomly a set of proteoforms from the imported to.Modify set is selected based on the fraction multiplier PropModPerProt - 1.
+    # The size of mod.proteoforms set depends to PropModPerProt. (When 1 a proteoform set of size equal to to.Modify is created, when 2 the size is double etc etc)
+    mod.proteoforms <- to.Modify
 
-  if (parameters$PropModPerProt >= 2) {
-    mod.proteoforms <- rbind(mod.proteoforms, to.Modify[sample(x = 1:nrow(to.Modify), size = (parameters$PropModPerProt - 1) * nrow(to.Modify), replace = T), ])
-    mod.proteoforms <- mod.proteoforms[order(mod.proteoforms$Accession), ]
-  }
-
-  # Create additional columns for modification positions and modification type.
-  mod.proteoforms$PTMPos <- vector(mode = "list", length = nrow(mod.proteoforms))
-  mod.proteoforms$PTMType <- vector(mode = "list", length = nrow(mod.proteoforms))
-
-  # Modify the selected proteoforms.
-  selected.modifications <- modify(mod.proteoforms$Sequence, parameters)
-  #selected.modifications <- as.data.frame(do.call(rbind, selected.modifications))
-
-  # Fill the columns.
-  mod.proteoforms$PTMPos <- selected.modifications$Positions
-  mod.proteoforms$PTMType <- selected.modifications$Types
-
-  # Summarize modification types and residues modified by each type.
-  Type_Count <- AA_Count <- list()
-  for (ptm in ptmtypes) {
-    AA_Count[[ptm]] <- list()
-    for (res in parameters$ModifiableResidues[[1]][[ptm]]) {
-      AA_Count[[ptm]][[res]] <- sum(unlist(sapply(selected.modifications$Count, function(x) x[[ptm]][[res]])))
+    if (parameters$PropModPerProt >= 2) {
+      mod.proteoforms <- rbind(mod.proteoforms, to.Modify[sample(x = 1:nrow(to.Modify), size = (parameters$PropModPerProt - 1) * nrow(to.Modify), replace = T), ])
+      mod.proteoforms <- mod.proteoforms[order(mod.proteoforms$Accession), ]
     }
-    Type_Count[[ptm]] <- sum(unlist(AA_Count[[ptm]]))
-  }
-  # print(count.per.AAs)
 
-  message("  - Sequences modified!")
+    # Create additional columns for modification positions and modification type.
+    mod.proteoforms$PTMPos <- vector(mode = "list", length = nrow(mod.proteoforms))
+    mod.proteoforms$PTMType <- vector(mode = "list", length = nrow(mod.proteoforms))
 
-  for (ptm in ptmtypes) {
+    # Modify the selected proteoforms.
+    selected.modifications <- modify(mod.proteoforms$Sequence, parameters)
+    #selected.modifications <- as.data.frame(do.call(rbind, selected.modifications))
+
+    # Fill the columns.
+    mod.proteoforms$PTMPos <- selected.modifications$Positions
+    mod.proteoforms$PTMType <- selected.modifications$Types
+
+    # Summarize modification types and residues modified by each type.
+    Type_Count <- AA_Count <- list()
+    for (ptm in ptmtypes) {
+      AA_Count[[ptm]] <- list()
+      for (res in parameters$ModifiableResidues[[1]][[ptm]]) {
+        AA_Count[[ptm]][[res]] <- sum(unlist(sapply(selected.modifications$Count, function(x) x[[ptm]][[res]])))
+      }
+      Type_Count[[ptm]] <- sum(unlist(AA_Count[[ptm]]))
+    }
+    # print(count.per.AAs)
+
+    message("  - Sequences modified!")
+
+    for (ptm in ptmtypes) {
+      message(
+        "  - For modification ", paste0('"', ptm, '"'), " and residue(s) ", paste0(parameters$ModifiableResidues[[1]][[ptm]], collapse = ", "),
+        " the resulting relative frequency distribution is ", paste0(paste0(round(100 * unlist(AA_Count[[ptm]])/sum(unlist(AA_Count[[ptm]])), 3), "%"), collapse = ", "), " respectively."
+      )
+    }
+
     message(
-      "  - For modification ", paste0('"', ptm, '"'), " and residue(s) ", paste0(parameters$ModifiableResidues[[1]][[ptm]], collapse = ", "),
-      " the resulting relative frequency distribution is ", paste0(paste0(round(100 * unlist(AA_Count[[ptm]])/sum(unlist(AA_Count[[ptm]])), 3), "%"), collapse = ", "), " respectively."
+      "  - The resulting relative frequency distribution for modification type(s) ", paste0('"', paste0(ptmtypes, collapse = '", "'), '"'),
+      " is ", paste0(paste0(round(100 * unlist(Type_Count)/sum(unlist(Type_Count)), 3), "%"), collapse = ", "), " respectively."
     )
+
+    # Select a  fraction of selected to-modify sequences, to remain unmodified too.
+    unmodified.proteoforms.indices <- sample(1:nrow(to.Modify), size = (1 - parameters$RemoveNonModFormFrac) * nrow(to.Modify))
+    unmod.proteoforms <- to.Modify[unmodified.proteoforms.indices, ]
+    unmod.proteoforms$PTMPos <- vector(mode = "list", length = nrow(unmod.proteoforms))
+    unmod.proteoforms$PTMType <- vector(mode = "list", length = nrow(unmod.proteoforms))
+
+    message("  - A fraction of ", nrow(unmod.proteoforms), " modified protein sequences will maintain their unmodified counterpart ", paste0("(", (1 - parameters$RemoveNonModFormFrac) * 100, "%)."))
+
+    return(list(mod.proteoforms = mod.proteoforms, unmod.proteoforms = unmod.proteoforms))
+
+  } else {
+    message(" + No modifications selected.")
+    return(list(mod.proteoforms = NULL, unmod.proteoforms = NULL))
   }
-
-  message(
-    "  - The resulting relative frequency distribution for modification type(s) ", paste0('"', paste0(ptmtypes, collapse = '", "'), '"'),
-    " is ", paste0(paste0(round(100 * unlist(Type_Count)/sum(unlist(Type_Count)), 3), "%"), collapse = ", "), " respectively."
-  )
-
-  # Select a  fraction of selected to-modify sequences, to remain unmodified too.
-  unmodified.proteoforms.indices <- sample(1:nrow(to.Modify), size = (1 - parameters$RemoveNonModFormFrac) * nrow(to.Modify))
-  unmod.proteoforms <- to.Modify[unmodified.proteoforms.indices, ]
-  unmod.proteoforms$PTMPos <- vector(mode = "list", length = nrow(unmod.proteoforms))
-  unmod.proteoforms$PTMType <- vector(mode = "list", length = nrow(unmod.proteoforms))
-
-  message("  - A fraction of ", nrow(unmod.proteoforms), " modified protein sequences will maintain their unmodified counterpart ", paste0("(", (1 - parameters$RemoveNonModFormFrac) * 100, "%)."))
-
-  return(list(mod.proteoforms = mod.proteoforms, unmod.proteoforms = unmod.proteoforms))
-
-} else {
-  message(" + No modifications selected.")
-  return(list(mod.proteoforms = NULL, unmod.proteoforms = NULL))
-}
 }
 
 
@@ -524,7 +536,7 @@ samplePreparation <- function(parameters) {
     }
   }
 
-  return(proteoforms)
+  return(list(proteoforms = proteoforms, search_index = protein.Sets$SearchIndex))
 }
 #####################
 
@@ -638,4 +650,3 @@ addProteoformAbundance <- function(proteoforms, parameters) {
   return(proteoforms)
 }
 #####################
-

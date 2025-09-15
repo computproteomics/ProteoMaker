@@ -247,7 +247,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
       ttParam <- Param
       ttParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
       groundTruth <- samplePreparation(parameters = ttParam)
-      if (!is.null(groundTruth)) {
+      if (!is.null(groundTruth$proteoforms)) {
         save(groundTruth, Param, file = filename)
       }
     }
@@ -270,7 +270,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
         load(filename)
       } else {
         Param <- tParam
-        proteoformAb <- addProteoformAbundance(proteoforms = groundTruth, parameters = Param)
+        proteoformAb <- addProteoformAbundance(proteoforms = groundTruth$proteoforms, parameters = Param)
         save(proteoformAb, Param, file = filename)
       }
       pfParam <- Param
@@ -318,7 +318,8 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
                 Digested = BeforeMS[[i]],
                 parameters = c(Param,
                                list(Cores = Config$cores,
-                                    ClusterType = Config$clusterType)))
+                                    ClusterType = Config$clusterType)),
+                search_index = groundTruth$search_index)
             }
             names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
             save(Param, AfterMSRun, file = filename)
@@ -1292,5 +1293,4 @@ plot_params <- function(BenchMatrix, current_row = 1) {
   # Combine all meter plots
   subplot(meters, nrows = nrows, margin = 0.01)
 }
-
 

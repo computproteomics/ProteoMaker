@@ -118,7 +118,14 @@ fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA
 #' @importFrom stats aggregate
 #' @keywords internal
 proteoformDigestion <- function(proteoform, parameters) {
-  peptides <- fastDigest(sequence = proteoform$Sequence, enzyme = parameters$Enzyme, missed = parameters$MaxNumMissedCleavages, length.max = parameters$PepMaxLength, length.min = parameters$PepMinLength)
+  # Compute peptides directly via fastDigest (no SearchIndex usage)
+  peptides <- fastDigest(
+    sequence = proteoform$Sequence,
+    enzyme = parameters$Enzyme,
+    missed = parameters$MaxNumMissedCleavages,
+    length.max = parameters$PepMaxLength,
+    length.min = parameters$PepMinLength
+  )
 
   if (!is.null(peptides)) {
     peptides$Accession <- proteoform$Accession
@@ -185,6 +192,7 @@ proteoformDigestion <- function(proteoform, parameters) {
 #' @keywords internal
 digestGroundTruth <- function(proteoforms, parameters) {
   message("\n#PROTEOFORM DIGESTION - Start\n")
+  # Use direct digestion path (no SearchIndex build or usage)
   message(" + Digestion input:")
   message("  - A total number of ", nrow(proteoforms), " proteoforms, is proceed for proteolytic digestion.")
   message("  - Unmodified fraction contains ", sum(lengths(proteoforms$PTMType) == 0), " proteoforms and modified fraction ", sum(lengths(proteoforms$PTMType) != 0), " proteoforms.")

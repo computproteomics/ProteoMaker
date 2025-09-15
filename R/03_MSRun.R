@@ -22,7 +22,7 @@
 #' @importFrom crayon red
 #'
 #' @keywords internal
-MSRunSim <- function(Digested, parameters) {
+MSRunSim <- function(Digested, parameters, search_index) {
 
     # TODO: what about multiples from different fractions?
 
@@ -104,26 +104,182 @@ MSRunSim <- function(Digested, parameters) {
     }
     MSRun[ ,parameters$QuantColnames] <- matrix(allVals, ncol=length(parameters$QuantColnames))
     message("  - A total of ", length(remove), " intensities is removed.\n")
-    # Shuffle the intensities of randomly selected peptides, to express the wrong identification.
-    shuffle <- order(runif(nrow(MSRun)), decreasing = T)[seq_len(parameters$WrongIDs*nrow(MSRun))]
+    # Select rows to be assigned wrong identifications
+    n_wrong <- as.integer(parameters$WrongIDs * nrow(MSRun))
+    wrong_rows <- integer(0)
+    if (n_wrong > 0) {
+      wrong_rows <- order(runif(nrow(MSRun)), decreasing = TRUE)[seq_len(n_wrong)]
+    }
     message(" + Addition of false identification:")
-    message("  - FDR selected is ", parameters$WrongIDs*100, "% and corresponds to ", length(shuffle), " peptides.")
+    message("  - FDR selected is ", parameters$WrongIDs*100, "% and corresponds to ", length(wrong_rows), " peptides.")
 
-    if(length(shuffle) >= 2) {
+    # Initialize WrongID flag
+    MSRun$WrongID <- FALSE
 
-        permutate <- c(shuffle[2:length(shuffle)], shuffle[1])
+    if (length(wrong_rows) > 0) {
+      # Cache peptide templates per protein index
+      tmpl_cache <- vector("list", length(search_index$proteins))
+      # Maintain a set of sequences already present and newly assigned to avoid duplicates
+      existing_seq_norm <- as.character(gsub("[I]", "L", MSRun$Sequence))
+      newly_assigned <- character(0)
 
-        MSRun[shuffle, parameters$QuantColnames] <- MSRun[permutate, parameters$QuantColnames]
+      for (ri in wrong_rows) {
+        # Sample an index protein by weight
+        pick_idx <- sample(seq_along(search_index$proteins), size = 1, replace = TRUE, prob = search_index$weights)
+        idx_prot <- search_index$proteins[[pick_idx]]
+        # Build or fetch a decoy peptide template
+        if (is.null(tmpl_cache[[pick_idx]])) {
+          if (!is.null(idx_prot$starts) && !is.null(idx_prot$stops)) {
+            tmpl <- protein_peptide_template_from_index(idx_prot)
+          } else {
+            # Build template on-the-fly using current digestion parameters
+            tmpl <- fastDigest(
+              sequence = idx_prot$sequence,
+              enzyme = parameters$Enzyme,
+              missed = parameters$MaxNumMissedCleavages,
+              length.max = parameters$PepMaxLength,
+              length.min = parameters$PepMinLength
+            )
+            # Ensure the structure matches the template expected fields
+            if (!is.null(tmpl) && nrow(tmpl) > 0) {
+              if (is.null(tmpl$MZ2)) {
+                # fastDigest already provides MZ1-3; if not, skip
+              }
+            }
+          }
+          tmpl_cache[[pick_idx]] <- tmpl
+        } else {
+          tmpl <- tmpl_cache[[pick_idx]]
+        }
+        # If no peptides available, skip
+        if (is.null(tmpl) || nrow(tmpl) == 0) {
+          next
+        }
+        # Prefer decoy peptides not already present in the dataset and not already assigned in this pass
+        cand_norm <- gsub("[I]", "L", tmpl$Peptide)
+        ok <- which(!(cand_norm %in% existing_seq_norm) & !(cand_norm %in% newly_assigned))
+        pick_idx2 <- NA_integer_
+        if (length(ok) > 0) {
+          pick_idx2 <- sample(ok, size = 1)
+        } else {
+          # fallback: avoid identical to the current row's sequence if possible
+          avoid_curr <- which(cand_norm != existing_seq_norm[ri] & !(cand_norm %in% newly_assigned))
+          if (length(avoid_curr) > 0) {
+            pick_idx2 <- sample(avoid_curr, size = 1)
+          } else {
+            pick_idx2 <- sample.int(nrow(tmpl), size = 1)
+          }
+        }
+        decoy <- tmpl[pick_idx2, ]
+        # Overwrite identification fields; keep intensities unchanged
+        decoy_seq_norm <- gsub("[I]", "L", decoy$Peptide)
+        MSRun$Sequence[ri] <- decoy_seq_norm
+        MSRun$Peptide[ri] <- list(decoy$Peptide)
+        MSRun$Start[ri] <- list(decoy$Start)
+        MSRun$Stop[ri]  <- list(decoy$Stop)
+        MSRun$MC[ri]    <- list(decoy$MC)
+        MSRun$MZ1[ri]   <- decoy$MZ1
+        MSRun$MZ2[ri]   <- decoy$MZ2
+        MSRun$MZ3[ri]   <- decoy$MZ3
+        # Assign precise peptide->protein mapping if available in index
+        if (!is.null(search_index$pep2prot) && length(search_index$pep2prot) > 0 && decoy_seq_norm %in% names(search_index$pep2prot)) {
+          MSRun$Accession[ri] <- list(search_index$pep2prot[[decoy_seq_norm]])
+        } else {
+          MSRun$Accession[ri] <- list(idx_prot$accession)
+        }
+        # Assign PTMs on decoy if the original identification carried PTMs and decoy has compatible residues
+        orig_ptm_types <- MSRun$PTMType[[ri]]
+        if (!is.null(orig_ptm_types) && length(orig_ptm_types) > 0) {
+          # Determine available modifiable positions on the decoy segment for each PTM type
+          decoy_start <- decoy$Start
+          decoy_stop  <- decoy$Stop
+          assigned_pos <- integer(0)
+          assigned_type <- character(0)
 
-        #Add annotation column for true and false positive identifications.
-        MSRun$WrongID <- F
-        MSRun$WrongID[shuffle] <- T
+          # Mass shifts per PTM type (if available)
+          ptm_mass_map <- NULL
+          if (!is.null(parameters$PTMTypesMass)) {
+            ptm_mass_map <- parameters$PTMTypesMass[[1]]
+            if (!is.null(parameters$PTMTypes) && length(parameters$PTMTypes) > 0) {
+              names(ptm_mass_map) <- parameters$PTMTypes[[1]]
+            }
+          }
 
-    } else {
+          for (t in unique(orig_ptm_types)) {
+            # how many of this type were on the original
+            n_needed <- sum(orig_ptm_types == t)
+            avail_sites <- integer(0)
+            # Prefer index-provided protein-level modifiable sites per PTM type
+            if (!is.null(idx_prot$modpos) && !is.null(idx_prot$modpos[[t]])) {
+              avail_sites <- idx_prot$modpos[[t]]
+              # restrict to this peptide window
+              if (length(avail_sites) > 0) {
+                avail_sites <- avail_sites[avail_sites >= decoy_start & avail_sites <= decoy_stop]
+              }
+            }
+            # Fallback: scan peptide sequence for modifiable residues by type
+            if (length(avail_sites) == 0 && !is.null(parameters$ModifiableResidues)) {
+              mod_aas <- NULL
+              # handle both list-of-list structure and flat mapping gracefully
+              if (!is.null(parameters$ModifiableResidues[[1]]) && !is.null(parameters$ModifiableResidues[[1]][[t]])) {
+                mod_aas <- parameters$ModifiableResidues[[1]][[t]]
+              } else if (!is.null(parameters$ModifiableResidues[[t]])) {
+                mod_aas <- parameters$ModifiableResidues[[t]]
+              }
+              if (!is.null(mod_aas)) {
+                seg <- substring(idx_prot$sequence, decoy_start, decoy_stop)
+                if (nchar(seg) > 0) {
+                  seg_chars <- strsplit(seg, "")[[1]]
+                  rel <- which(seg_chars %in% mod_aas)
+                  if (length(rel) > 0) {
+                    avail_sites <- decoy_start + rel - 1
+                  }
+                }
+              }
+            }
+            if (length(avail_sites) > 0) {
+              n_pick <- min(n_needed, length(avail_sites))
+              pick <- if (n_pick > 0) sample(avail_sites, size = n_pick, replace = FALSE) else integer(0)
+              if (length(pick) > 0) {
+                assigned_pos <- c(assigned_pos, pick - decoy_start + 1)
+                assigned_type <- c(assigned_type, rep(t, length(pick)))
+              }
+            }
+          }
 
-        #Add annotation column for jsut true positive identifications.
-        MSRun$WrongID <- F
+          if (length(assigned_pos) > 0) {
+            # Assign PTM positions/types to decoy
+            MSRun$PTMPos[ri]  <- list(as.integer(assigned_pos))
+            MSRun$PTMType[ri] <- list(assigned_type)
+            # Adjust M/Z by the total mass shift from assigned PTMs, if mass map is available
+            if (!is.null(ptm_mass_map)) {
+              mass_add <- sum(vapply(assigned_type, function(tt) {
+                mv <- ptm_mass_map[[tt]]
+                if (is.null(mv) || is.na(mv)) 0 else as.numeric(mv)
+              }, numeric(1)))
+              if (!is.na(mass_add) && mass_add != 0) {
+                MSRun$MZ1[ri] <- MSRun$MZ1[ri] + mass_add
+                MSRun$MZ2[ri] <- MSRun$MZ2[ri] + mass_add/2
+                MSRun$MZ3[ri] <- MSRun$MZ3[ri] + mass_add/3
+              }
+            }
+          } else {
+            # no compatible sites on decoy; leave as unmodified
+            MSRun$PTMPos[ri]  <- list(NULL)
+            MSRun$PTMType[ri] <- list(NULL)
+          }
+        } else {
+          # Original had no PTMs; keep decoy unmodified
+          MSRun$PTMPos[ri]  <- list(NULL)
+          MSRun$PTMType[ri] <- list(NULL)
+        }
+        # Flag as wrong ID
+        MSRun$WrongID[ri] <- TRUE
 
+        # Track assigned decoy to avoid duplicates for subsequent rows
+        newly_assigned <- c(newly_assigned, decoy_seq_norm)
+        existing_seq_norm <- c(existing_seq_norm, decoy_seq_norm)
+      }
     }
 
     message("  - FDR addition finished.\n")
@@ -227,4 +383,3 @@ MSRunSim <- function(Digested, parameters) {
 
 }
 #####################
-
