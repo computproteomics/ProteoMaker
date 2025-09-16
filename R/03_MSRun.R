@@ -117,62 +117,71 @@ MSRunSim <- function(Digested, parameters, search_index) {
     MSRun$WrongID <- FALSE
 
     if (length(wrong_rows) > 0) {
-      # Cache peptide templates per protein index
-      tmpl_cache <- vector("list", length(search_index$proteins))
-      # Maintain a set of sequences already present and newly assigned to avoid duplicates
+      # Prepare index sampling and candidate pool
+      nprot <- length(search_index$proteins)
+      if (nprot <= 0) stop("No decoy proteins available in index for wrong-ID assignment.")
+      w <- search_index$weights
+      if (length(w) != nprot || any(!is.finite(w)) || sum(w, na.rm = TRUE) <= 0) {
+        w <- rep(1 / nprot, nprot)
+      }
+      tmpl_cache <- vector("list", nprot)
+      ok_cache <- vector("list", nprot)
+      # Maintain normalized sequences to avoid duplicates
       existing_seq_norm <- as.character(gsub("[I]", "L", MSRun$Sequence))
       newly_assigned <- character(0)
+      unique_pool <- new.env(parent = emptyenv())
+      # Build per-protein candidate lists; dismiss problematic proteins
+      for (pj in seq_len(nprot)) {
+        ip <- search_index$proteins[[pj]]
+        tmpl <- NULL
+        if (!is.null(ip$starts) && !is.null(ip$stops) && !is.null(ip$valid_mc)) {
+          tmpl <- protein_peptide_template_from_index(ip)
+        }
+        if (!is.null(tmpl) && nrow(tmpl) > 0) {
+          cn <- gsub("[I]", "L", tmpl$Peptide)
+          ok <- which(!(cn %in% existing_seq_norm))
+          if (length(ok) > 0) {
+            tmpl_cache[[pj]] <- tmpl
+            ok_cache[[pj]] <- ok
+            for (uu in unique(cn[ok])) assign(uu, TRUE, envir = unique_pool)
+          } else {
+            ok_cache[[pj]] <- integer(0)
+          }
+        } else {
+          ok_cache[[pj]] <- integer(0)
+        }
+      }
+      has_cand <- vapply(ok_cache, function(x) length(x) > 0, logical(1))
+      if (!any(has_cand)) stop("No decoy peptides available for wrong-ID assignment (all candidates overlap current dataset).")
+      w[!has_cand] <- 0
+      if (sum(w) > 0) w <- w / sum(w) else stop("No decoy proteins with candidates available after filtering.")
+      total_unique_decoys <- length(ls(envir = unique_pool, all.names = TRUE))
+      message("  - Wrong-ID decoy pool: ", total_unique_decoys, " unique peptides across ", sum(has_cand), " proteins.")
 
       for (ri in wrong_rows) {
-        # Sample an index protein by weight
-        pick_idx <- sample(seq_along(search_index$proteins), size = 1, replace = TRUE, prob = search_index$weights)
-        idx_prot <- search_index$proteins[[pick_idx]]
-        # Build or fetch a decoy peptide template
-        if (is.null(tmpl_cache[[pick_idx]])) {
-          if (!is.null(idx_prot$starts) && !is.null(idx_prot$stops)) {
-            tmpl <- protein_peptide_template_from_index(idx_prot)
-          } else {
-            # Build template on-the-fly using current digestion parameters
-            tmpl <- fastDigest(
-              sequence = idx_prot$sequence,
-              enzyme = parameters$Enzyme,
-              missed = parameters$MaxNumMissedCleavages,
-              length.max = parameters$PepMaxLength,
-              length.min = parameters$PepMinLength
-            )
-            # Ensure the structure matches the template expected fields
-            if (!is.null(tmpl) && nrow(tmpl) > 0) {
-              if (is.null(tmpl$MZ2)) {
-                # fastDigest already provides MZ1-3; if not, skip
-              }
-            }
-          }
-          tmpl_cache[[pick_idx]] <- tmpl
-        } else {
+        # Try sampling until a protein with remaining candidates is found
+        attempts <- 0
+        repeat {
+          attempts <- attempts + 1
+          if (sum(w) == 0) stop("No decoy peptides remaining for wrong-ID assignment (assigned ", length(newly_assigned), " of ", length(wrong_rows), ").")
+          pick_idx <- sample.int(nprot, size = 1, replace = TRUE, prob = w)
+          if (is.na(pick_idx) || pick_idx < 1 || pick_idx > nprot) next
           tmpl <- tmpl_cache[[pick_idx]]
+          if (is.null(tmpl) || nrow(tmpl) == 0) { w[pick_idx] <- 0; if (sum(w)>0) w <- w / sum(w); next }
+          cn_all <- gsub("[I]", "L", tmpl$Peptide)
+          ok <- ok_cache[[pick_idx]]
+          if (length(ok) == 0) { w[pick_idx] <- 0; if (sum(w)>0) w <- w / sum(w); next }
+          ok2 <- ok[!(cn_all[ok] %in% newly_assigned)]
+          if (length(ok2) == 0) { w[pick_idx] <- 0; if (sum(w)>0) w <- w / sum(w); next }
+          pick_idx2 <- sample(ok2, size = 1)
+          decoy <- tmpl[pick_idx2, ]
+          decoy_seq_norm <- cn_all[pick_idx2]
+          # consume this candidate
+          ok_cache[[pick_idx]] <- setdiff(ok, pick_idx2)
+          if (length(ok_cache[[pick_idx]]) == 0) { w[pick_idx] <- 0; if (sum(w)>0) w <- w / sum(w) }
+          break
         }
-        # If no peptides available, skip
-        if (is.null(tmpl) || nrow(tmpl) == 0) {
-          next
-        }
-        # Prefer decoy peptides not already present in the dataset and not already assigned in this pass
-        cand_norm <- gsub("[I]", "L", tmpl$Peptide)
-        ok <- which(!(cand_norm %in% existing_seq_norm) & !(cand_norm %in% newly_assigned))
-        pick_idx2 <- NA_integer_
-        if (length(ok) > 0) {
-          pick_idx2 <- sample(ok, size = 1)
-        } else {
-          # fallback: avoid identical to the current row's sequence if possible
-          avoid_curr <- which(cand_norm != existing_seq_norm[ri] & !(cand_norm %in% newly_assigned))
-          if (length(avoid_curr) > 0) {
-            pick_idx2 <- sample(avoid_curr, size = 1)
-          } else {
-            pick_idx2 <- sample.int(nrow(tmpl), size = 1)
-          }
-        }
-        decoy <- tmpl[pick_idx2, ]
         # Overwrite identification fields; keep intensities unchanged
-        decoy_seq_norm <- gsub("[I]", "L", decoy$Peptide)
         MSRun$Sequence[ri] <- decoy_seq_norm
         MSRun$Peptide[ri] <- list(decoy$Peptide)
         MSRun$Start[ri] <- list(decoy$Start)

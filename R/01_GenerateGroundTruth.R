@@ -89,8 +89,13 @@ proteinInput <- function(parameters) {
     !is.null(parameters$Enzyme) && !is.na(parameters$Enzyme)
   if (has_digest_params) {
     SearchIndex <- build_search_index_from_df(all_prot_seqs, parameters)
+    n_proteins <- if (!is.null(SearchIndex$proteins)) length(SearchIndex$proteins) else 0
+    n_shared <- if (!is.null(SearchIndex$pep2prot)) length(SearchIndex$pep2prot) else 0
+    message("  - Built protein index: ", n_proteins, " proteins; shared peptides mapped: ", n_shared)
   } else {
     SearchIndex <- build_protein_index_from_df(all_prot_seqs)
+    n_proteins <- if (!is.null(SearchIndex$proteins)) length(SearchIndex$proteins) else 0
+    message("  - Built simple protein index (no digestion params): ", n_proteins, " proteins")
   }
 
   # Early return if no sequences remain after filtering
