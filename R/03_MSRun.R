@@ -109,6 +109,36 @@ MSRunSim <- function(Digested, parameters, search_index) {
     if (n_wrong > 0) {
       wrong_rows <- order(runif(nrow(MSRun)), decreasing = TRUE)[seq_len(n_wrong)]
     }
+    # Report decoy availability before wrong-ID selection
+    nprot_idx <- length(search_index$proteins)
+    if (nprot_idx > 0) {
+      exist_norm <- as.character(gsub("[I]", "L", MSRun$Sequence))
+      avail_env <- new.env(parent = emptyenv())
+      prot_with_cand <- 0L
+      for (pj in seq_len(nprot_idx)) {
+        ip <- search_index$proteins[[pj]]
+        if (!is.null(ip$starts) && !is.null(ip$stops) && !is.null(ip$valid_mc)) {
+          tmpl <- protein_peptide_template_from_index(ip)
+          if (!is.null(tmpl) && nrow(tmpl) > 0) {
+            cn <- gsub("[I]", "L", tmpl$Peptide)
+            ok <- which(!(cn %in% exist_norm))
+            if (length(ok) > 0) {
+              prot_with_cand <- prot_with_cand + 1L
+              for (uu in unique(cn[ok])) assign(uu, TRUE, envir = avail_env)
+            }
+          }
+        }
+      }
+      tot_avail <- length(ls(envir = avail_env, all.names = TRUE))
+      message(" + Decoy availability:")
+      message("  - Decoy index proteins: ", nprot_idx)
+      message("  - Available unique decoy peptides: ", tot_avail, " across ", prot_with_cand, " proteins.")
+    } else {
+      message(" + Decoy availability:")
+      message("  - Decoy index proteins: 0")
+      message("  - Available unique decoy peptides: 0 across 0 proteins.")
+    }
+
     message(" + Addition of false identification:")
     message("  - FDR selected is ", parameters$WrongIDs*100, "% and corresponds to ", length(wrong_rows), " peptides.")
 
