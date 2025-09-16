@@ -103,7 +103,6 @@ MSRunSim <- function(Digested, parameters, search_index) {
         message("  - No intensities were removed.\n")
     }
     MSRun[ ,parameters$QuantColnames] <- matrix(allVals, ncol=length(parameters$QuantColnames))
-    message("  - A total of ", length(remove), " intensities is removed.\n")
     # Select rows to be assigned wrong identifications
     n_wrong <- as.integer(parameters$WrongIDs * nrow(MSRun))
     wrong_rows <- integer(0)
@@ -124,6 +123,7 @@ MSRunSim <- function(Digested, parameters, search_index) {
       if (length(w) != nprot || any(!is.finite(w)) || sum(w, na.rm = TRUE) <= 0) {
         w <- rep(1 / nprot, nprot)
       }
+      message("  - Decoy index proteins: ", nprot)
       tmpl_cache <- vector("list", nprot)
       ok_cache <- vector("list", nprot)
       # Maintain normalized sequences to avoid duplicates
@@ -139,6 +139,7 @@ MSRunSim <- function(Digested, parameters, search_index) {
         }
         if (!is.null(tmpl) && nrow(tmpl) > 0) {
           cn <- gsub("[I]", "L", tmpl$Peptide)
+          # exclude sequences that are already present in the dataset
           ok <- which(!(cn %in% existing_seq_norm))
           if (length(ok) > 0) {
             tmpl_cache[[pj]] <- tmpl
@@ -171,7 +172,8 @@ MSRunSim <- function(Digested, parameters, search_index) {
           cn_all <- gsub("[I]", "L", tmpl$Peptide)
           ok <- ok_cache[[pick_idx]]
           if (length(ok) == 0) { w[pick_idx] <- 0; if (sum(w)>0) w <- w / sum(w); next }
-          ok2 <- ok[!(cn_all[ok] %in% newly_assigned)]
+          # avoid reusing decoys already assigned in this pass; allow those present in dataset
+          ok2 <- ok[!(cn_all[ok] %in% newly_assigned) & (cn_all[ok] != existing_seq_norm[ri])]
           if (length(ok2) == 0) { w[pick_idx] <- 0; if (sum(w)>0) w <- w / sum(w); next }
           pick_idx2 <- sample(ok2, size = 1)
           decoy <- tmpl[pick_idx2, ]

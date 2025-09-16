@@ -86,6 +86,8 @@ build_search_index <- function(parameters) {
   # Precompute per-protein cleavage segments and valid windows per start
   idx <- vector("list", length = nrow(df))
   total_valid <- 0L
+  dropped_no_windows <- 0L
+  windows_per_protein <- integer(nrow(df))
   # Peptide (normalized I->L) -> proteins mapping; we fill only for peptides observed in >= 2 proteins later
   pep2prot_env <- new.env(parent = emptyenv())
   add_map <- function(pep_vec, acc) {
@@ -127,8 +129,10 @@ build_search_index <- function(parameters) {
       n_valid <- n_valid + length(local)
     }
 
+    windows_per_protein[i] <- n_valid
     if (n_valid == 0L) {
       idx[[i]] <- NULL
+      dropped_no_windows <- dropped_no_windows + 1L
     } else {
       total_valid <- total_valid + n_valid
       # Optional: precompute modifiable positions per PTM type (can be used downstream)
@@ -168,12 +172,21 @@ build_search_index <- function(parameters) {
     }
   }
 
-  idx <- idx[!vapply(idx, is.null, logical(1))]
-  weights <- vapply(idx, function(x) x$n_valid, integer(1))
-  weights <- weights / sum(weights)
+  keep_mask <- !vapply(idx, is.null, logical(1))
+  idx <- idx[keep_mask]
+  raw_w <- if (length(idx) > 0) vapply(idx, function(x) x$n_valid, integer(1)) else integer(0)
+  if (length(raw_w) > 0 && sum(raw_w) > 0) {
+    weights <- raw_w / sum(raw_w)
+  } else if (length(raw_w) > 0) {
+    # Degenerate case: valid proteins but zero total windows (should not happen); fall back to uniform
+    weights <- rep(1/length(raw_w), length(raw_w))
+  } else {
+    weights <- numeric(0)
+  }
 
   t1 <- proc.time()[[3]]
   cat(" + Proteins indexed:", length(idx), "\n")
+  cat(" + Proteins with zero valid peptide windows:", dropped_no_windows, "\n")
   cat(" + Total valid peptide windows:", sum(vapply(idx, function(x) x$n_valid, integer(1))), "\n")
   cat(sprintf(" + Time: %.3f sec\n", t1 - t0))
   cat("#INDEX BUILD - Finish\n")
@@ -190,6 +203,37 @@ build_search_index <- function(parameters) {
     }
   } else {
     pep2prot <- list()
+  }
+
+  # Consistency report
+  cat("\n#INDEX CONSISTENCY REPORT\n")
+  cat(" + Indexed proteins:", length(idx), "\n")
+  cat(" + Dropped proteins (no windows):", dropped_no_windows, "\n")
+  if (length(windows_per_protein) > 0) {
+    wp <- windows_per_protein[windows_per_protein > 0]
+    if (length(wp) > 0) {
+      cat(" + Windows per protein (non-zero): min=", min(wp), " median=", stats::median(wp), " mean=", round(mean(wp),2), " max=", max(wp), "\n", sep="")
+    }
+  }
+  if (length(weights) > 0) {
+    if (any(!is.finite(weights)) || abs(sum(weights) - 1) > 1e-6) {
+      cat(" + WARNING: weights invalid (non-finite or not summing to 1).\n")
+    }
+  } else {
+    cat(" + WARNING: No weights computed (empty index).\n")
+  }
+  n_shared <- length(pep2prot)
+  cat(" + Shared peptides (pep2prot entries):", n_shared, "\n")
+  if (n_shared > 0) {
+    amb_deg <- vapply(pep2prot, length, integer(1))
+    cat(" + Peptide sharedness (proteins per peptide): min=", min(amb_deg), " median=", stats::median(amb_deg), " mean=", round(mean(amb_deg),2), " max=", max(amb_deg), "\n", sep="")
+    # Show up to 5 most ambiguous peptides
+    top_idx <- order(amb_deg, decreasing = TRUE)[seq_len(min(5, length(amb_deg)))]
+    cat(" + Top shared peptides (truncated):\n")
+    for (k in top_idx) {
+      nm <- names(pep2prot)[k]
+      cat("    - ", substr(nm, 1, 30), if (nchar(nm) > 30) "..." else "", " -> ", amb_deg[k], " proteins\n", sep="")
+    }
   }
 
   list(proteins = idx, weights = weights, pep2prot = pep2prot, params = parameters, build_time_sec = t1 - t0)
