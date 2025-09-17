@@ -231,7 +231,7 @@ fastDigest <- function(proteoform, parameters, searchIndex) {
   acc <- proteoform$Accession
   # Find index entry for this accession (index is assumed to be present)
   idx_match <- which(vapply(searchIndex$proteins, function(x) identical(x$accession, acc), logical(1)))
-  if (length(idx_match) == 0) stop("Accession not found in search index: ", acc)
+  if (length(idx_match) == 0) return(NULL)
   e <- searchIndex$proteins[[idx_match[1]]]
 
   starts_idx <- rep(seq_along(e$starts), lengths(e$valid_mc))
@@ -380,7 +380,12 @@ digestGroundTruth <- function(proteoforms, parameters, searchIndex = NULL) {
   }
 
   message("  - All proteoforms are digested successfully!")
-
+  # Discard proteoforms without valid peptide windows or missing from index
+  num_discarded <- sum(vapply(peptides, is.null, logical(1)))
+  if (num_discarded > 0) {
+    message("  - Discarded ", num_discarded, " proteoforms without valid peptide windows (or not found in index).")
+  }
+  peptides <- peptides[!vapply(peptides, is.null, logical(1))]
   peptides <- dplyr::bind_rows(peptides)
 
   # Sample peptides per MC by size determined by PropMissedCleavages.
