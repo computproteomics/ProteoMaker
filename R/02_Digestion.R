@@ -181,7 +181,7 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
   cores_use <- if (!is.null(cores) && cores > 1) min(cores, parallel::detectCores()) else 1L
   if (length(idx) > 0) {
     if (!is.null(cores) && cores > 1 && cl_type %in% c("fork","psock")) {
-      message(" + Precomputing window probabilities: parallel (", toupper(cl_type), ", cores=", cores_use, ") over ", length(idx), " proteins …")
+      message(" + Precomputing window probabilities: parallel (", toupper(cl_type), ") over ", length(idx), " proteins …")
     } else {
       message(" + Precomputing window probabilities: serial over ", length(idx), " proteins …")
     }
@@ -198,6 +198,8 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
       if (length(tasks) > 0) {
         cl <- parallel::makeCluster(cores_use, type = toupper(cl_type))
         on.exit(parallel::stopCluster(cl), add = TRUE)
+        # Report actual worker count after cluster is up
+        message("   - Parallel cluster started with ", length(cl), " workers")
         aa_count <- aa_maps$aa_to_count
         parallel::clusterExport(cl, varlist = c("aa_count"), envir = environment())
         parts <- parallel::parLapply(cl, tasks, function(t) {
