@@ -22,7 +22,7 @@
 #' @importFrom crayon red
 #'
 #' @keywords internal
-MSRunSim <- function(Digested, parameters) {
+MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
     # TODO: what about multiples from different fractions?
 
@@ -108,23 +108,47 @@ MSRunSim <- function(Digested, parameters) {
     shuffle <- order(runif(nrow(MSRun)), decreasing = T)[seq_len(parameters$WrongIDs*nrow(MSRun))]
     message(" + Addition of false identification:")
     message("  - FDR selected is ", parameters$WrongIDs*100, "% and corresponds to ", length(shuffle), " peptides.")
-
-    if(length(shuffle) >= 2) {
-
-        permutate <- c(shuffle[2:length(shuffle)], shuffle[1])
-
-        MSRun[shuffle, parameters$QuantColnames] <- MSRun[permutate, parameters$QuantColnames]
-
-        #Add annotation column for true and false positive identifications.
-        MSRun$WrongID <- F
-        MSRun$WrongID[shuffle] <- T
-
-    } else {
-
-        #Add annotation column for jsut true positive identifications.
-        MSRun$WrongID <- F
-
+    if (!is.null(searchIndex)) {
+        # Estimate donor windows and peptidoform space
+        non_null <- vapply(searchIndex$proteins, function(x) !is.null(x), logical(1))
+        nz_proteins <- sum(non_null)
+        total_windows <- if (nz_proteins > 0) sum(vapply(searchIndex$proteins[non_null], function(x) x$n_valid, integer(1))) else 0L
+        message("  - Donor windows (non-zero): ", total_windows, " across ", nz_proteins, " proteins.")
+        # Estimate the size of the global peptidoform space (log-scale to avoid overflow)
+        tot_log_pf <- .pm_total_peptidoforms_log(searchIndex, parameters)
+        if (is.finite(tot_log_pf)) {
+            tot_log10 <- tot_log_pf / log(10)
+            expo <- floor(tot_log10)
+            mant <- 10^(tot_log10 - expo)
+            message(sprintf("  - Donor pool size (approx): %.3g x 10^%d peptidoforms.", mant, expo))
+        }
     }
+
+    # Build peptidoform donors from the global index if provided
+    if (!is.null(searchIndex) && length(shuffle) > 0) {
+        donors <- .pm_sample_uniform_peptidoforms(searchIndex, parameters, length(shuffle))
+        if (!is.null(donors) && nrow(donors) == length(shuffle)) {
+            # Preview a few substituted peptidoforms
+            prev_n <- min(5L, nrow(donors))
+            if (prev_n > 0) {
+              ann <- mapply(.pm_annotate_peptidoform, donors$Peptide[seq_len(prev_n)], donors$PTMPos[seq_len(prev_n)], donors$PTMType[seq_len(prev_n)], SIMPLIFY = TRUE)
+              message("  - Examples of substituted peptidoforms (Accession -> Peptidoform):")
+              for (ii in seq_len(prev_n)) {
+                message("    ", donors$Accession[[ii]], " -> ", ann[[ii]])
+              }
+            }
+            # Keep intensities from MSRun; replace identities to simulate wrong IDs
+            # Update sequence (I->L normalized) and PTM annotations; accession as list
+            MSRun$Sequence[shuffle] <- gsub("[I]", "L", donors$Peptide)
+            MSRun$PTMPos[shuffle] <- donors$PTMPos
+            MSRun$PTMType[shuffle] <- donors$PTMType
+            if ("Accession" %in% names(MSRun)) MSRun$Accession[shuffle] <- as.list(donors$Accession)
+        }
+    }
+
+    # Annotate wrong IDs; keep existing intensities
+    MSRun$WrongID <- FALSE
+    if (length(shuffle) > 0) MSRun$WrongID[shuffle] <- TRUE
 
     message("  - FDR addition finished.\n")
 
@@ -226,5 +250,160 @@ MSRunSim <- function(Digested, parameters) {
     return(MSRun)
 
 }
-#####################
 
+# Internal helpers to sample uniform peptidoforms from a full index
+.pm_get_ptm_config <- function(parameters) {
+  # Defaults if parameters are missing/NA
+  default_types <- c("ph", "ox", "ac", "me", "de")
+  default_residues <- list(
+    ph = c("S", "T", "Y"),
+    ox = c("M", "W", "C", "Y"),
+    ac = c("K"),
+    me = c("K", "R"),
+    de = c("D", "E")
+  )
+  ptm_types <- tryCatch(parameters$PTMTypes, error = function(e) NULL)
+  if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) {
+    ptm_types <- list(default_types)
+  }
+  # Flatten one level if provided as list-of-one
+  if (is.list(ptm_types) && length(ptm_types) == 1) ptm_types <- ptm_types[[1]]
+  ptm_types <- ptm_types[!is.na(ptm_types)]
+  modres <- tryCatch(parameters$ModifiableResidues, error = function(e) NULL)
+  if (is.null(modres) || length(modres) == 0 || all(is.na(modres))) {
+    modres_map <- default_residues
+  } else {
+    # If nested list, pick first layer
+    if (is.list(modres) && length(modres) == 1 && is.list(modres[[1]])) {
+      modres_map <- modres[[1]]
+    } else if (is.list(modres)) {
+      modres_map <- modres
+    } else {
+      modres_map <- default_residues
+    }
+  }
+  list(types = ptm_types, residues = modres_map)
+}
+
+.pm_build_aa_maps <- function(parameters) {
+  cfg <- .pm_get_ptm_config(parameters)
+  aa_to_types <- setNames(vector("list", length = 26L), LETTERS)
+  for (ptm in cfg$types) {
+    aa <- cfg$residues[[ptm]]
+    if (!is.null(aa) && length(aa) > 0) for (a in aa) aa_to_types[[a]] <- unique(c(aa_to_types[[a]], ptm))
+  }
+  aa_to_count <- setNames(integer(26L), LETTERS)
+  for (a in names(aa_to_types)) aa_to_count[[a]] <- length(aa_to_types[[a]])
+  list(aa_to_types = aa_to_types, aa_to_count = aa_to_count)
+}
+
+.pm_window_log_count <- function(seqi, start_pos, stop_pos, aa_to_count) {
+  pep <- substring(seqi, start_pos, stop_pos)
+  aa <- strsplit(pep, "", fixed = TRUE)[[1]]
+  sum(log1p(as.numeric(aa_to_count[aa])))
+}
+
+.pm_sample_uniform_peptidoform_in_window <- function(seqi, start_pos, stop_pos, aa_to_types) {
+  pep <- substring(seqi, start_pos, stop_pos)
+  aa <- strsplit(pep, "", fixed = TRUE)[[1]]
+  ptm_positions <- integer(0)
+  ptm_types <- character(0)
+  for (j in seq_along(aa)) {
+    allowed <- aa_to_types[[aa[j]]]
+    k <- length(allowed)
+    draw <- sample.int(k + 1L, 1L) - 1L
+    if (draw > 0L) {
+      ptm_positions <- c(ptm_positions, j)
+      ptm_types <- c(ptm_types, allowed[[draw]])
+    }
+  }
+  list(
+    Peptide = pep,
+    Start = start_pos,
+    Stop = stop_pos,
+    PTMPos = if (length(ptm_positions)) list(ptm_positions) else list(integer(0)),
+    PTMType = if (length(ptm_types)) list(ptm_types) else list(character(0))
+  )
+}
+
+.pm_sample_uniform_peptidoforms <- function(index, parameters, N) {
+  if (is.null(index) || is.na(N) || N <= 0) return(NULL)
+  maps <- .pm_build_aa_maps(parameters)
+  pidxs <- integer(0); mcs <- integer(0)
+  starts <- integer(0); stops <- integer(0); logc <- numeric(0)
+  for (pi in seq_along(index$proteins)) {
+    e <- index$proteins[[pi]]
+    if (is.null(e)) next
+    if (length(e$valid_mc) == 0) next
+    s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
+    MC <- unlist(e$valid_mc)
+    if (length(MC) == 0) next
+    st_pos <- e$starts[s_rep]
+    en_pos <- e$stops[s_rep + MC]
+    lc <- mapply(function(a,b) .pm_window_log_count(e$sequence, a, b, maps$aa_to_count), st_pos, en_pos)
+    pidxs <- c(pidxs, rep.int(pi, length(MC)))
+    mcs   <- c(mcs, MC)
+    starts<- c(starts, st_pos)
+    stops <- c(stops, en_pos)
+    logc  <- c(logc, lc)
+  }
+  if (length(logc) == 0) return(NULL)
+  maxl <- max(logc)
+  probs <- exp(logc - maxl)
+  probs <- probs / sum(probs)
+  pick <- sample.int(length(probs), size = N, replace = TRUE, prob = probs)
+  out <- vector("list", length(pick))
+  for (i in seq_along(pick)) {
+    k <- pick[[i]]
+    e <- index$proteins[[pidxs[[k]]]]
+    sp <- starts[[k]]; ep <- stops[[k]]
+    spf <- .pm_sample_uniform_peptidoform_in_window(e$sequence, sp, ep, maps$aa_to_types)
+    out[[i]] <- data.frame(
+      Accession = e$accession,
+      Peptide = spf$Peptide,
+      Start = spf$Start,
+      Stop = spf$Stop,
+      MC = mcs[[k]],
+      stringsAsFactors = FALSE
+    )
+    out[[i]]$PTMPos <- spf$PTMPos
+    out[[i]]$PTMType <- spf$PTMType
+  }
+  do.call(rbind, out)
+}
+
+# Render a human-readable peptidoform by annotating PTMs in the sequence, e.g., S[ph]
+.pm_annotate_peptidoform <- function(pep, pos, typ) {
+  if (length(pos) == 0 || length(unlist(pos)) == 0) return(pep)
+  p <- unlist(pos)
+  t <- unlist(typ)
+  chars <- strsplit(pep, "", fixed = TRUE)[[1]]
+  ord <- order(p, decreasing = TRUE)
+  for (i in ord) {
+    k <- p[[i]]
+    if (k >= 1 && k <= length(chars)) chars[k] <- paste0(chars[k], "[", t[[i]], "]")
+  }
+  paste0(chars, collapse = "")
+}
+
+# Compute total number of peptidoforms in log-scale (natural log)
+.pm_total_peptidoforms_log <- function(index, parameters) {
+  maps <- .pm_build_aa_maps(parameters)
+  logc <- numeric(0)
+  for (pi in seq_along(index$proteins)) {
+    e <- index$proteins[[pi]]
+    if (is.null(e)) next
+    if (length(e$valid_mc) == 0) next
+    s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
+    MC <- unlist(e$valid_mc)
+    if (length(MC) == 0) next
+    st_pos <- e$starts[s_rep]
+    en_pos <- e$stops[s_rep + MC]
+    lc <- mapply(function(a,b) .pm_window_log_count(e$sequence, a, b, maps$aa_to_count), st_pos, en_pos)
+    logc <- c(logc, lc)
+  }
+  if (length(logc) == 0) return(-Inf)
+  maxl <- max(logc)
+  maxl + log(sum(exp(logc - maxl)))
+}
+#####################

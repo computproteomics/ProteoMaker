@@ -3,6 +3,209 @@
 ################################################################################
 
 
+# Internal helpers for enzyme cleavage and indexing (package-internal)
+# These utilities can be reused by digestion and potential indexing/caching.
+# They are intentionally lightweight and keep behavior consistent with fastDigest.
+
+#' @keywords internal
+enzymeRegex <- function(enzyme) {
+  if (enzyme == "trypsin") return("(?!(RP|KP))(?=(K|R))(?!(K|R)$)")
+  if (enzyme == "trypsin.strict") return("(?=(K|R))(?!(K|R)$)")
+  if (enzyme == "chymotrypsin.h") return("(?!(FP|YP|PY|WP))(?=(F|Y|W))(?!(F|Y|W)$)")
+  if (enzyme == "chymotrypsin.l") return("(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)")
+  if (enzyme == "pepsin.2") return("(?=(F|L|W|Y|A|E|Q))(?!(F|L|W|Y|A|E|Q)$)")
+  if (enzyme == "pepsin.1.3") return("(?=(F|L))(?!(F|L)$)")
+  if (enzyme == "lysC") return("(?=(K))(?!(K)$)")
+  if (enzyme == "argC") return("(?!(RP))(?=(R))(?!(R)$)")
+  stop(sprintf("Unsupported enzyme: %s", enzyme))
+}
+
+#' @keywords internal
+cleavageSites <- function(sequence, cre) {
+  loc <- stringi::stri_locate_all_regex(sequence, cre)[[1]]
+  if (is.null(loc) || is.na(loc[1, 1])) integer(0) else as.integer(loc[, 1])
+}
+
+#' @keywords internal
+segmentsFromSites <- function(sequence, sites) {
+  if (length(sites) == 0) {
+    list(starts = 1L, stops = nchar(sequence))
+  } else {
+    list(starts = c(1L, sites + 1L), stops = c(sites, nchar(sequence)))
+  }
+}
+
+#' @keywords internal
+enumerateValidWindows <- function(starts, stops, pep_min, pep_max, max_mc) {
+  valid_per_start <- vector("list", length(starts))
+  n_valid <- 0L
+  for (s in seq_along(starts)) {
+    local <- integer(0)
+    for (mc in 0:max_mc) {
+      e <- s + mc
+      if (e > length(stops)) break
+      L <- stops[e] - starts[s] + 1L
+      if (L >= pep_min && L <= pep_max) local <- c(local, mc)
+    }
+    valid_per_start[[s]] <- local
+    n_valid <- n_valid + length(local)
+  }
+  list(valid_mc = valid_per_start, n_valid = n_valid)
+}
+
+#' Build a lightweight search index from in-memory sequences
+#'
+#' @param proteins data.frame with columns Accession and Sequence
+#' @param parameters list with Enzyme, PepMinLength, PepMaxLength, MaxNumMissedCleavages
+#' @param includePep2Prot logical, whether to compute shared peptide map
+#' @return list with proteins, weights, optional pep2prot, params, build_time_sec
+#' @keywords internal
+buildSearchIndexFromSequences <- function(proteins, parameters) {
+  t0 <- proc.time()[[3]]
+  cre <- enzymeRegex(parameters$Enzyme)
+
+  idx <- vector("list", nrow(proteins))
+  dropped_no_windows <- 0L
+  windows_per_protein <- integer(nrow(proteins))
+  pep2prot_env <- new.env(parent = emptyenv())
+
+  add_map <- function(pep_vec, acc) {
+    if (length(pep_vec) == 0) return(invisible(NULL))
+    up <- unique(pep_vec)
+    for (p in up) {
+      if (exists(p, envir = pep2prot_env, inherits = FALSE)) {
+        current <- get(p, envir = pep2prot_env, inherits = FALSE)
+        if (!(acc %in% current)) assign(p, c(current, acc), envir = pep2prot_env)
+      } else {
+        assign(p, acc, envir = pep2prot_env)
+      }
+    }
+  }
+
+  for (i in seq_len(nrow(proteins))) {
+    seqi <- proteins$Sequence[i]
+    sites <- cleavageSites(seqi, cre)
+    seg   <- segmentsFromSites(seqi, sites)
+    win   <- enumerateValidWindows(seg$starts, seg$stops,
+                                   parameters$PepMinLength,
+                                   parameters$PepMaxLength,
+                                   parameters$MaxNumMissedCleavages)
+
+    windows_per_protein[i] <- win$n_valid
+    if (win$n_valid == 0L) {
+      idx[[i]] <- NULL
+      dropped_no_windows <- dropped_no_windows + 1L
+      next
+    }
+
+    idx[[i]] <- list(
+      accession = proteins$Accession[i],
+      sequence  = seqi,
+      starts    = seg$starts,
+      stops     = seg$stops,
+      valid_mc  = win$valid_mc,
+      n_valid   = win$n_valid
+    )
+
+    starts_idx <- rep(seq_along(seg$starts), lengths(win$valid_mc))
+    MC <- unlist(win$valid_mc)
+    if (length(MC) > 0) {
+      stops_idx <- starts_idx + MC
+      pep <- substring(seqi, seg$starts[starts_idx], seg$stops[stops_idx])
+      pep_norm <- gsub("I", "L", pep, perl = TRUE)
+      add_map(pep_norm, proteins$Accession[i])
+    }
+  }
+
+  keep_mask <- !vapply(idx, is.null, logical(1))
+  idx <- idx[keep_mask]
+  raw_w <- if (length(idx) > 0) vapply(idx, function(x) x$n_valid, integer(1)) else integer(0)
+  weights <- if (length(raw_w) == 0) {
+    numeric(0)
+  } else if (sum(raw_w) > 0) {
+    raw_w / sum(raw_w)
+  } else {
+    rep(1 / length(raw_w), length(raw_w))
+  }
+
+  t1 <- proc.time()[[3]]
+
+  pep2prot <- list()
+  if (length(ls(envir = pep2prot_env, all.names = TRUE)) > 0) {
+    keys <- ls(envir = pep2prot_env, all.names = TRUE)
+    vals <- lapply(keys, function(k) unique(get(k, envir = pep2prot_env, inherits = FALSE)))
+    keep <- vapply(vals, function(v) length(v) > 1, logical(1))
+    if (any(keep)) {
+      pep2prot <- stats::setNames(lapply(vals[keep], function(x) sort(x)), keys[keep])
+    }
+  }
+
+  list(
+    proteins = idx,
+    weights = weights,
+    pep2prot = pep2prot,
+    params = parameters,
+    build_time_sec = t1 - t0,
+    dropped_no_windows = dropped_no_windows,
+    windows_per_protein = windows_per_protein
+  )
+}
+
+#' Build a search index directly from FASTA on disk (full proteome)
+#'
+#' Uses the same logic as BuildSearchIndex CLI but stays in-package.
+#' @param parameters list with PathToFasta, Enzyme, PepMinLength, PepMaxLength, MaxNumMissedCleavages
+#' @return index list as in buildSearchIndexFromSequences
+#' @keywords internal
+buildSearchIndexFromFasta <- function(parameters) {
+  t_start <- proc.time()[[3]]
+  message("\n#PROTEOME INDEX - Start\n")
+  message(" + FASTA: ", parameters$PathToFasta)
+  message(" + Enzyme: ", parameters$Enzyme,
+          ", len ", parameters$PepMinLength, "-", parameters$PepMaxLength,
+          ", maxMC=", parameters$MaxNumMissedCleavages)
+
+  fasta_obj <- try(protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
+  if (inherits(fasta_obj, "try-error")) stop("Failed to read FASTA: ", parameters$PathToFasta)
+  df <- data.frame(
+    Accession = sub(".*[|]([^.]+)[|].*", "\\1", names(fasta_obj)),
+    Sequence  = unlist(fasta_obj),
+    stringsAsFactors = FALSE
+  )
+  # Filter unusual amino acids and duplicates
+  knownAA <- c("A","L","R","K","N","M","D","F","C","P","E","S","Q","T","G","W","H","Y","I","V")
+  badAA <- setdiff(LETTERS, knownAA)
+  if (nrow(df) > 0) {
+    keep <- !Reduce(`|`, lapply(badAA, function(x) grepl(x, df$Sequence, fixed = TRUE)))
+    df <- df[keep, , drop = FALSE]
+  }
+  df <- df[!duplicated(df$Accession), , drop = FALSE]
+  message(" + Proteins after filtering: ", nrow(df))
+
+  idx <- buildSearchIndexFromSequences(df, parameters)
+
+  total_windows <- if (length(idx$proteins) > 0) sum(vapply(idx$proteins, function(x) x$n_valid, integer(1))) else 0L
+  wp <- idx$windows_per_protein[idx$windows_per_protein > 0]
+  med_wp <- if (length(wp) > 0) stats::median(wp) else NA
+  mean_wp <- if (length(wp) > 0) round(mean(wp), 2) else NA
+  min_wp <- if (length(wp) > 0) min(wp) else NA
+  max_wp <- if (length(wp) > 0) max(wp) else NA
+  n_shared <- length(idx$pep2prot)
+  t_total <- proc.time()[[3]] - t_start
+
+  message(" + Indexed proteins: ", length(idx$proteins))
+  message(" + Dropped (no windows): ", idx$dropped_no_windows)
+  message(" + Total valid windows: ", total_windows)
+  message(" + Windows/protein (nz) min/med/mean/max: ", min_wp, "/", med_wp, "/", mean_wp, "/", max_wp)
+  message(" + Shared peptides (>=2 proteins): ", n_shared)
+  message(sprintf(" + Time: %.3f sec", t_total))
+  message("#PROTEOME INDEX - Finish\n")
+
+  idx
+}
+
+
+
 #' Perform enzymatic digestion on a single protein sequence
 #'
 #' This function simulates enzymatic digestion on a single protein sequence, supporting multiple
@@ -24,78 +227,42 @@
 #' @importFrom stringi stri_locate_all_regex
 #' @importFrom crayon red
 #' @keywords internal
-fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA, length.min = NA, mass.max = NA, mass.min = NA) {
-  cleavage_rules <- dplyr::case_when(
-    enzyme == "trypsin" ~ "(?!(RP|KP))(?=(K|R))(?!(K|R)$)",
-    enzyme == "trypsin.strict" ~ "(?=(K|R))(?!(K|R)$)",
-    enzyme == "chymotrypsin.h" ~ "(?!(FP|YP|PY|WP))(?=(F|Y|W))(?!(F|Y|W)$)",
-    enzyme == "chymotrypsin.l" ~ "(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)",
-    enzyme == "pepsin.2" ~ "(?=(F|L|W|Y|A|E|Q))(?!(F|L|W|Y|A|E|Q)$)",
-    enzyme == "pepsin.1.3" ~ "(?=(F|L))(?!(F|L)$)",
-    enzyme == "lysC" ~ "(?=(K))(?!(K)$)",
-    enzyme == "argC" ~ "(?!(RP))(?=(R))(?!(R)$)"
+fastDigest <- function(proteoform, parameters, searchIndex) {
+  acc <- proteoform$Accession
+  # Find index entry for this accession (index is assumed to be present)
+  idx_match <- which(vapply(searchIndex$proteins, function(x) identical(x$accession, acc), logical(1)))
+  if (length(idx_match) == 0) stop("Accession not found in search index: ", acc)
+  e <- searchIndex$proteins[[idx_match[1]]]
+
+  starts_idx <- rep(seq_along(e$starts), lengths(e$valid_mc))
+  MC <- unlist(e$valid_mc)
+  if (length(MC) == 0) return(NULL)
+  stops_idx <- starts_idx + MC
+
+  peptides <- data.frame(
+    Peptide = substring(e$sequence, e$starts[starts_idx], e$stops[stops_idx]),
+    Start = e$starts[starts_idx],
+    Stop  = e$stops[stops_idx],
+    MC    = MC,
+    stringsAsFactors = FALSE
   )
 
-  if (!is.na(cleavage_rules)) {
-    cleave <- stringi::stri_locate_all_regex(str = sequence, pattern = cleavage_rules)[[1]][, 1]
-  } else {
-    message(crayon::red(enzyme, " is invalid enzyme argument!"))
-    return(NULL)
-  }
+  if (nrow(peptides) == 0) return(NULL)
 
-  start <- c(1, cleave + 1)
-  stop <- c(cleave, nchar(sequence))
+  AAs <- strsplit(peptides$Peptide, split = "")
+  AA.mass <- c(
+    "A" = 71.03711, "R" = 156.10111, "N" = 114.04293, "D" = 115.02694, "C" = 103.00919,
+    "E" = 129.04259, "Q" = 128.05858, "G" = 57.02146, "H" = 137.05891, "I" = 113.08406,
+    "L" = 113.08406, "K" = 128.09496, "M" = 131.04049, "F" = 147.06841, "P" = 97.05276,
+    "S" = 87.03203, "T" = 101.04768, "W" = 186.07931, "Y" = 163.06333, "V" = 99.06841
+  )
+  peptide.mass <- sapply(AAs, function(x) sum(AA.mass[x], 18.01528))
+  peptides$MZ1 <- peptide.mass + 1.007276466
+  peptides$MZ2 <- (peptide.mass + (1.007276466 * 2)) / 2
+  peptides$MZ3 <- (peptide.mass + (1.007276466 * 3)) / 3
 
-  if (is.na(cleave[1])) {
-    return(NULL)
-  }
-
-  missed <- min(length(start) - 2, missed)
-
-  peptides <- lapply(0:missed, function(x) {
-    data.frame(
-      Peptide = substring(sequence, start[1:(length(start) - x)], stop[(x + 1):length(stop)]),
-      Start = start[1:(length(start) - x)],
-      Stop = stop[(x + 1):length(stop)],
-      MC = x, stringsAsFactors = F
-    )
-  })
-  peptides <- dplyr::bind_rows(peptides)
-
-  if (!is.na(length.max) & !is.na(length.min)) {
-    lengths <- nchar(peptides$Peptide)
-    peptides <- peptides[(lengths >= length.min & lengths <= length.max), ]
-  }
-
-  if (nrow(peptides) > 0) {
-    AAs <- strsplit(peptides$Peptide, split = "")
-
-    AA.mass <- c(
-      "A" = 71.03711, "R" = 156.10111, "N" = 114.04293, "D" = 115.02694, "C" = 103.00919,
-      "E" = 129.04259, "Q" = 128.05858, "G" = 57.02146, "H" = 137.05891, "I" = 113.08406,
-      "L" = 113.08406, "K" = 128.09496, "M" = 131.04049, "F" = 147.06841, "P" = 97.05276,
-      "S" = 87.03203, "T" = 101.04768, "W" = 186.07931, "Y" = 163.06333, "V" = 99.06841
-    )
-
-    peptide.mass <- sapply(AAs, function(x) sum(AA.mass[x], 18.01528))
-    peptides$MZ1 <- peptide.mass + 1.007276466
-    peptides$MZ2 <- (peptide.mass + (1.007276466 * 2)) / 2
-    peptides$MZ3 <- (peptide.mass + (1.007276466 * 3)) / 3
-  } else {
-    return(NULL)
-  }
-
-  if (!is.na(mass.max) & !is.na(mass.min)) {
-    peptides <- peptides[(peptides$MZ1 >= mass.min & peptides$MZ1 <= mass.max), ]
-  }
-
-  if (nrow(peptides) > 0) {
-    rownames(peptides) <- 1:nrow(peptides)
-  } else {
-    return(NULL)
-  }
-
-  return(peptides)
+  rownames(peptides) <- if (nrow(peptides) > 0) 1:nrow(peptides) else NULL
+  peptides
 }
 #####################
 
@@ -117,8 +284,8 @@ fastDigest <- function(sequence, enzyme = "trypsin", missed = 0, length.max = NA
 #' @importFrom dplyr bind_cols
 #' @importFrom stats aggregate
 #' @keywords internal
-proteoformDigestion <- function(proteoform, parameters) {
-  peptides <- fastDigest(sequence = proteoform$Sequence, enzyme = parameters$Enzyme, missed = parameters$MaxNumMissedCleavages, length.max = parameters$PepMaxLength, length.min = parameters$PepMinLength)
+proteoformDigestion <- function(proteoform, parameters, searchIndex = NULL) {
+  peptides <- fastDigest(proteoform = proteoform, parameters = parameters, searchIndex = searchIndex)
 
   if (!is.null(peptides)) {
     peptides$Accession <- proteoform$Accession
@@ -183,7 +350,7 @@ proteoformDigestion <- function(proteoform, parameters) {
 #' @importFrom parallel makeCluster detectCores setDefaultCluster clusterExport stopCluster parLapply
 #' @importFrom scales rescale
 #' @keywords internal
-digestGroundTruth <- function(proteoforms, parameters) {
+digestGroundTruth <- function(proteoforms, parameters, searchIndex = NULL) {
   message("\n#PROTEOFORM DIGESTION - Start\n")
   message(" + Digestion input:")
   message("  - A total number of ", nrow(proteoforms), " proteoforms, is proceed for proteolytic digestion.")
@@ -205,11 +372,11 @@ digestGroundTruth <- function(proteoforms, parameters) {
     cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
     #on.exit(parallel::stopCluster(cluster))
     parallel::setDefaultCluster(cluster)
-    parallel::clusterExport(cluster, c("proteoforms", "parameters", "proteoformDigestion", "fastDigest"), envir = environment())
-    peptides <- parallel::parLapply(cluster, 1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters))
+    parallel::clusterExport(cluster, c("proteoforms", "parameters", "proteoformDigestion", "fastDigest", "searchIndex"), envir = environment())
+    peptides <- parallel::parLapply(cluster, 1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters, searchIndex = searchIndex))
     parallel::stopCluster(cluster)
   } else {
-    peptides <- lapply(1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters))
+    peptides <- lapply(1:nrow(proteoforms), function(x) proteoformDigestion(proteoform = proteoforms[x, ], parameters = parameters, searchIndex = searchIndex))
   }
 
   message("  - All proteoforms are digested successfully!")

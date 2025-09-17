@@ -287,11 +287,16 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
           load(filename)
         } else {
           Param <- tParam
+          # Build full FASTA search index for later reuse (per digestion parameter set)
+          idxParam <- Param
+          idxParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
+          SearchIndex <- buildSearchIndexFromFasta(parameters = idxParam)
           peptable <- digestGroundTruth(
             proteoforms = proteoformAb,
             parameters = c(
               Param, list(Cores = Config$cores,
-                          ClusterType = Config$clusterType)))
+                          ClusterType = Config$clusterType)),
+            searchIndex = SearchIndex)
           peptable <- digestionProductSummarization(peptides = peptable,
                                                     parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType)))
           BeforeMS <- filterDigestedProt(DigestedProt = peptable,
@@ -318,7 +323,8 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
                 Digested = BeforeMS[[i]],
                 parameters = c(Param,
                                list(Cores = Config$cores,
-                                    ClusterType = Config$clusterType)))
+                                    ClusterType = Config$clusterType)),
+                searchIndex = SearchIndex)
             }
             names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
             save(Param, AfterMSRun, file = filename)
@@ -1292,5 +1298,3 @@ plot_params <- function(BenchMatrix, current_row = 1) {
   # Combine all meter plots
   subplot(meters, nrows = nrows, margin = 0.01)
 }
-
-
