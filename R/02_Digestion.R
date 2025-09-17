@@ -174,32 +174,69 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
   }
 
   aa_maps <- buildAAMapsDigest(parameters)
-  pidxs <- integer(0); starts_flat <- integer(0); stops_flat <- integer(0); mcs_flat <- integer(0); logc <- numeric(0)
+  windows_flat <- data.frame(p=integer(0), start=integer(0), stop=integer(0), mc=integer(0), log_count=numeric(0), stringsAsFactors = FALSE)
+  cores <- tryCatch(parameters$Cores, error = function(e) NULL)
+  cl_type <- tolower(tryCatch(parameters$ClusterType, error = function(e) ""))
+  # Announce heavy precomputation and parallelization plan
+  cores_use <- if (!is.null(cores) && cores > 1) min(cores, parallel::detectCores()) else 1L
   if (length(idx) > 0) {
-    for (pi in seq_along(idx)) {
-      e <- idx[[pi]]
-      if (is.null(e) || length(e$valid_mc) == 0) next
-      s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
-      MC <- unlist(e$valid_mc)
-      if (length(MC) == 0) next
-      st_pos <- e$starts[s_rep]
-      en_pos <- e$stops[s_rep + MC]
-      lc <- mapply(function(a, b) windowLogCountDigest(e$sequence, a, b, aa_maps$aa_to_count), st_pos, en_pos)
-      pidxs <- c(pidxs, rep.int(pi, length(MC)))
-      starts_flat <- c(starts_flat, st_pos)
-      stops_flat <- c(stops_flat, en_pos)
-      mcs_flat <- c(mcs_flat, MC)
-      logc <- c(logc, lc)
+    if (!is.null(cores) && cores > 1 && cl_type %in% c("fork","psock")) {
+      message(" + Precomputing window probabilities: parallel (", toupper(cl_type), ", cores=", cores_use, ") over ", length(idx), " proteins …")
+    } else {
+      message(" + Precomputing window probabilities: serial over ", length(idx), " proteins …")
     }
   }
-  windows_flat <- data.frame(
-    p = pidxs,
-    start = starts_flat,
-    stop = stops_flat,
-    mc = mcs_flat,
-    log_count = logc,
-    stringsAsFactors = FALSE
-  )
+  if (length(idx) > 0) {
+    if (!is.null(cores) && cores > 1 && cl_type %in% c("fork","psock")) {
+      # Build compact per-protein tasks to avoid shipping the whole index
+      tasks <- lapply(seq_along(idx), function(pi){
+        e <- idx[[pi]]
+        if (is.null(e) || length(e$valid_mc) == 0) return(NULL)
+        list(pi = pi, sequence = e$sequence, starts = e$starts, stops = e$stops, valid_mc = e$valid_mc)
+      })
+      tasks <- tasks[!vapply(tasks, is.null, logical(1))]
+      if (length(tasks) > 0) {
+        cl <- parallel::makeCluster(cores_use, type = toupper(cl_type))
+        on.exit(parallel::stopCluster(cl), add = TRUE)
+        aa_count <- aa_maps$aa_to_count
+        parallel::clusterExport(cl, varlist = c("aa_count"), envir = environment())
+        parts <- parallel::parLapply(cl, tasks, function(t) {
+          s_rep <- rep(seq_along(t$starts), lengths(t$valid_mc))
+          MC <- unlist(t$valid_mc)
+          if (length(MC) == 0) return(NULL)
+          st_pos <- t$starts[s_rep]
+          en_pos <- t$stops[s_rep + MC]
+          lc <- mapply(function(a, b) {
+            pep <- substring(t$sequence, a, b)
+            aa <- strsplit(pep, "", fixed = TRUE)[[1]]
+            sum(log1p(as.numeric(aa_count[aa])))
+          }, st_pos, en_pos)
+          data.frame(p = rep.int(t$pi, length(MC)), start = st_pos, stop = en_pos, mc = MC, log_count = lc, stringsAsFactors = FALSE)
+        })
+        parts <- parts[!vapply(parts, is.null, logical(1))]
+        if (length(parts) > 0) windows_flat <- do.call(rbind, parts)
+      }
+    } else {
+      # Serial fallback
+      pidxs <- integer(0); starts_flat <- integer(0); stops_flat <- integer(0); mcs_flat <- integer(0); logc <- numeric(0)
+      for (pi in seq_along(idx)) {
+        e <- idx[[pi]]
+        if (is.null(e) || length(e$valid_mc) == 0) next
+        s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
+        MC <- unlist(e$valid_mc)
+        if (length(MC) == 0) next
+        st_pos <- e$starts[s_rep]
+        en_pos <- e$stops[s_rep + MC]
+        lc <- mapply(function(a, b) windowLogCountDigest(e$sequence, a, b, aa_maps$aa_to_count), st_pos, en_pos)
+        pidxs <- c(pidxs, rep.int(pi, length(MC)))
+        starts_flat <- c(starts_flat, st_pos)
+        stops_flat <- c(stops_flat, en_pos)
+        mcs_flat <- c(mcs_flat, MC)
+        logc <- c(logc, lc)
+      }
+      windows_flat <- data.frame(p = pidxs, start = starts_flat, stop = stops_flat, mc = mcs_flat, log_count = logc, stringsAsFactors = FALSE)
+    }
+  }
   if (nrow(windows_flat) > 0) {
     maxl <- max(windows_flat$log_count)
     window_probs <- exp(windows_flat$log_count - maxl)

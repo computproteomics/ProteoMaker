@@ -290,6 +290,8 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
           # Build full FASTA search index for later reuse (per digestion parameter set)
           idxParam <- Param
           idxParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
+          idxParam$Cores <- Config$cores
+          idxParam$ClusterType <- Config$clusterType
           SearchIndex <- buildSearchIndexFromFasta(parameters = idxParam)
           peptable <- digestGroundTruth(
             proteoforms = proteoformAb,
