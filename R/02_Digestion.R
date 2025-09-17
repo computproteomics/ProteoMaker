@@ -200,8 +200,16 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
         on.exit(parallel::stopCluster(cl), add = TRUE)
         # Report actual worker count after cluster is up
         message("   - Parallel cluster started with ", length(cl), " workers")
+        # Optional: sample worker PIDs to confirm processes are alive
+        pids <- try(parallel::clusterEvalQ(cl, Sys.getpid()), silent = TRUE)
+        if (!inherits(pids, "try-error")) {
+          uniq <- unique(unlist(pids))
+          message("   - Worker PIDs (sample): ", paste(head(uniq, 5L), collapse = ", "), if (length(uniq) > 5) " …" else "")
+        }
         aa_count <- aa_maps$aa_to_count
         parallel::clusterExport(cl, varlist = c("aa_count"), envir = environment())
+        t_win0 <- proc.time()[[3]]
+        message("   - Dispatching ", length(tasks), " protein tasks across ", length(cl), " workers …")
         parts <- parallel::parLapply(cl, tasks, function(t) {
           s_rep <- rep(seq_along(t$starts), lengths(t$valid_mc))
           MC <- unlist(t$valid_mc)
@@ -217,6 +225,8 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
         })
         parts <- parts[!vapply(parts, is.null, logical(1))]
         if (length(parts) > 0) windows_flat <- do.call(rbind, parts)
+        t_win1 <- proc.time()[[3]]
+        message(sprintf("   - Precompute finished: %s windows [%.2f s]", format(nrow(windows_flat), big.mark=","), t_win1 - t_win0))
       }
     } else {
       # Serial fallback
