@@ -103,13 +103,12 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
         message("  - No intensities were removed.\n")
     }
     MSRun[ ,parameters$QuantColnames] <- matrix(allVals, ncol=length(parameters$QuantColnames))
-    message("  - A total of ", length(remove), " intensities is removed.\n")
     # Shuffle the intensities of randomly selected peptides, to express the wrong identification.
     shuffle <- order(runif(nrow(MSRun)), decreasing = T)[seq_len(parameters$WrongIDs*nrow(MSRun))]
     message(" + Addition of false identification:")
     message("  - FDR selected is ", parameters$WrongIDs*100, "% and corresponds to ", length(shuffle), " peptides.")
-    if (!is.null(searchIndex)) {
-        # Estimate donor windows and peptidoform space
+    if (!is.null(searchIndex) && length(shuffle) > 0) {
+        # Estimate donor windows and peptidoform space only if needed
         non_null <- vapply(searchIndex$proteins, function(x) !is.null(x), logical(1))
         nz_proteins <- sum(non_null)
         total_windows <- if (nz_proteins > 0) sum(vapply(searchIndex$proteins[non_null], function(x) x$n_valid, integer(1))) else 0L
@@ -328,42 +327,20 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
 .pm_sample_uniform_peptidoforms <- function(index, parameters, N) {
   if (is.null(index) || is.na(N) || N <= 0) return(NULL)
-  maps <- .pm_build_aa_maps(parameters)
-  pidxs <- integer(0); mcs <- integer(0)
-  starts <- integer(0); stops <- integer(0); logc <- numeric(0)
-  for (pi in seq_along(index$proteins)) {
-    e <- index$proteins[[pi]]
-    if (is.null(e)) next
-    if (length(e$valid_mc) == 0) next
-    s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
-    MC <- unlist(e$valid_mc)
-    if (length(MC) == 0) next
-    st_pos <- e$starts[s_rep]
-    en_pos <- e$stops[s_rep + MC]
-    lc <- mapply(function(a,b) .pm_window_log_count(e$sequence, a, b, maps$aa_to_count), st_pos, en_pos)
-    pidxs <- c(pidxs, rep.int(pi, length(MC)))
-    mcs   <- c(mcs, MC)
-    starts<- c(starts, st_pos)
-    stops <- c(stops, en_pos)
-    logc  <- c(logc, lc)
-  }
-  if (length(logc) == 0) return(NULL)
-  maxl <- max(logc)
-  probs <- exp(logc - maxl)
-  probs <- probs / sum(probs)
-  pick <- sample.int(length(probs), size = N, replace = TRUE, prob = probs)
+  if (is.null(index$windows_flat) || is.null(index$window_probs) || length(index$window_probs) == 0) return(NULL)
+  pick <- sample.int(nrow(index$windows_flat), size = N, replace = TRUE, prob = index$window_probs)
   out <- vector("list", length(pick))
   for (i in seq_along(pick)) {
-    k <- pick[[i]]
-    e <- index$proteins[[pidxs[[k]]]]
-    sp <- starts[[k]]; ep <- stops[[k]]
-    spf <- .pm_sample_uniform_peptidoform_in_window(e$sequence, sp, ep, maps$aa_to_types)
+    w <- index$windows_flat[pick[[i]], ]
+    e <- index$proteins[[ w$p ]]
+    sp <- w$start; ep <- w$stop
+    spf <- .pm_sample_uniform_peptidoform_in_window(e$sequence, sp, ep, index$aa_to_types)
     out[[i]] <- data.frame(
       Accession = e$accession,
       Peptide = spf$Peptide,
       Start = spf$Start,
       Stop = spf$Stop,
-      MC = mcs[[k]],
+      MC = w$mc,
       stringsAsFactors = FALSE
     )
     out[[i]]$PTMPos <- spf$PTMPos
@@ -388,22 +365,7 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
 # Compute total number of peptidoforms in log-scale (natural log)
 .pm_total_peptidoforms_log <- function(index, parameters) {
-  maps <- .pm_build_aa_maps(parameters)
-  logc <- numeric(0)
-  for (pi in seq_along(index$proteins)) {
-    e <- index$proteins[[pi]]
-    if (is.null(e)) next
-    if (length(e$valid_mc) == 0) next
-    s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
-    MC <- unlist(e$valid_mc)
-    if (length(MC) == 0) next
-    st_pos <- e$starts[s_rep]
-    en_pos <- e$stops[s_rep + MC]
-    lc <- mapply(function(a,b) .pm_window_log_count(e$sequence, a, b, maps$aa_to_count), st_pos, en_pos)
-    logc <- c(logc, lc)
-  }
-  if (length(logc) == 0) return(-Inf)
-  maxl <- max(logc)
-  maxl + log(sum(exp(logc - maxl)))
+  if (!is.null(index$total_log_pf)) return(index$total_log_pf)
+  -Inf
 }
 #####################

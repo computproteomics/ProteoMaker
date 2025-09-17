@@ -119,6 +119,12 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
 
   keep_mask <- !vapply(idx, is.null, logical(1))
   idx <- idx[keep_mask]
+  # Accession -> index lookup for O(1) access during digestion
+  acc2idx <- integer(0)
+  if (length(idx) > 0) {
+    accs <- vapply(idx, function(x) x$accession, character(1))
+    acc2idx <- stats::setNames(seq_along(accs), accs)
+  }
   raw_w <- if (length(idx) > 0) vapply(idx, function(x) x$n_valid, integer(1)) else integer(0)
   weights <- if (length(raw_w) == 0) {
     numeric(0)
@@ -126,6 +132,82 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
     raw_w / sum(raw_w)
   } else {
     rep(1 / length(raw_w), length(raw_w))
+  }
+
+  # Precompute peptidoform window probabilities for fast donor sampling in MS stage
+  buildAAMapsDigest <- function(parameters) {
+    default_types <- c("ph", "ox", "ac", "me", "de")
+    default_residues <- list(
+      ph = c("S", "T", "Y"),
+      ox = c("M", "W", "C", "Y"),
+      ac = c("K"),
+      me = c("K", "R"),
+      de = c("D", "E")
+    )
+    ptm_types <- parameters$PTMTypes
+    if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) ptm_types <- list(default_types)
+    if (is.list(ptm_types) && length(ptm_types) == 1) ptm_types <- ptm_types[[1]]
+    ptm_types <- ptm_types[!is.na(ptm_types)]
+    modres <- parameters$ModifiableResidues
+    if (is.null(modres) || length(modres) == 0 || all(is.na(modres))) {
+      modres_map <- default_residues
+    } else if (is.list(modres) && length(modres) == 1 && is.list(modres[[1]])) {
+      modres_map <- modres[[1]]
+    } else if (is.list(modres)) {
+      modres_map <- modres
+    } else {
+      modres_map <- default_residues
+    }
+    aa_to_types <- setNames(vector("list", length = 26L), LETTERS)
+    for (ptm in ptm_types) {
+      aa <- modres_map[[ptm]]
+      if (!is.null(aa) && length(aa) > 0) for (a in aa) aa_to_types[[a]] <- unique(c(aa_to_types[[a]], ptm))
+    }
+    aa_to_count <- setNames(integer(26L), LETTERS)
+    for (a in names(aa_to_types)) aa_to_count[[a]] <- length(aa_to_types[[a]])
+    list(aa_to_types = aa_to_types, aa_to_count = aa_to_count)
+  }
+  windowLogCountDigest <- function(seqi, start_pos, stop_pos, aa_to_count) {
+    pep <- substring(seqi, start_pos, stop_pos)
+    aa <- strsplit(pep, "", fixed = TRUE)[[1]]
+    sum(log1p(as.numeric(aa_to_count[aa])))
+  }
+
+  aa_maps <- buildAAMapsDigest(parameters)
+  pidxs <- integer(0); starts_flat <- integer(0); stops_flat <- integer(0); mcs_flat <- integer(0); logc <- numeric(0)
+  if (length(idx) > 0) {
+    for (pi in seq_along(idx)) {
+      e <- idx[[pi]]
+      if (is.null(e) || length(e$valid_mc) == 0) next
+      s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
+      MC <- unlist(e$valid_mc)
+      if (length(MC) == 0) next
+      st_pos <- e$starts[s_rep]
+      en_pos <- e$stops[s_rep + MC]
+      lc <- mapply(function(a, b) windowLogCountDigest(e$sequence, a, b, aa_maps$aa_to_count), st_pos, en_pos)
+      pidxs <- c(pidxs, rep.int(pi, length(MC)))
+      starts_flat <- c(starts_flat, st_pos)
+      stops_flat <- c(stops_flat, en_pos)
+      mcs_flat <- c(mcs_flat, MC)
+      logc <- c(logc, lc)
+    }
+  }
+  windows_flat <- data.frame(
+    p = pidxs,
+    start = starts_flat,
+    stop = stops_flat,
+    mc = mcs_flat,
+    log_count = logc,
+    stringsAsFactors = FALSE
+  )
+  if (nrow(windows_flat) > 0) {
+    maxl <- max(windows_flat$log_count)
+    window_probs <- exp(windows_flat$log_count - maxl)
+    window_probs <- window_probs / sum(window_probs)
+    total_log_pf <- maxl + log(sum(exp(windows_flat$log_count - maxl)))
+  } else {
+    window_probs <- numeric(0)
+    total_log_pf <- -Inf
   }
 
   t1 <- proc.time()[[3]]
@@ -142,6 +224,11 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
 
   list(
     proteins = idx,
+    acc2idx = acc2idx,
+    windows_flat = windows_flat,
+    window_probs = window_probs,
+    total_log_pf = total_log_pf,
+    aa_to_types = aa_maps$aa_to_types,
     weights = weights,
     pep2prot = pep2prot,
     params = parameters,
@@ -230,9 +317,15 @@ buildSearchIndexFromFasta <- function(parameters) {
 fastDigest <- function(proteoform, parameters, searchIndex) {
   acc <- proteoform$Accession
   # Find index entry for this accession (index is assumed to be present)
-  idx_match <- which(vapply(searchIndex$proteins, function(x) identical(x$accession, acc), logical(1)))
-  if (length(idx_match) == 0) return(NULL)
-  e <- searchIndex$proteins[[idx_match[1]]]
+  e <- NULL
+  if (!is.null(searchIndex$acc2idx) && !is.null(searchIndex$acc2idx[[acc]])) {
+    e <- searchIndex$proteins[[ searchIndex$acc2idx[[acc]] ]]
+  } else {
+    # Fallback linear scan (should be rare)
+    idx_match <- which(vapply(searchIndex$proteins, function(x) identical(x$accession, acc), logical(1)))
+    if (length(idx_match) == 0) return(NULL)
+    e <- searchIndex$proteins[[idx_match[1]]]
+  }
 
   starts_idx <- rep(seq_along(e$starts), lengths(e$valid_mc))
   MC <- unlist(e$valid_mc)
@@ -360,9 +453,8 @@ digestGroundTruth <- function(proteoforms, parameters, searchIndex = NULL) {
     " miss-cleavages, to create peptides of length ", parameters$PepMinLength, " to ", parameters$PepMaxLength, " amino acids."
   )
 
-  # TODO REVERT
-  parameters$Cores <- NULL
-  if (!is.null(parameters$Cores)) {
+  # Prefer serial digestion unless FORK clusters are used (to avoid copying large index)
+  if (!is.null(parameters$Cores) && parameters$Cores > 1 && identical(tolower(parameters$ClusterType), "fork")) {
     cores <- parameters$Cores
 
     if (parallel::detectCores() <= parameters$Cores) {
