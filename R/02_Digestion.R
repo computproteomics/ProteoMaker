@@ -299,32 +299,33 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
 
   # Precompute peptidoform window probabilities for fast donor sampling in MS stage
   buildAAMapsDigest <- function(parameters) {
-    default_types <- c("ph", "ox", "ac", "me", "de")
-    default_residues <- list(
-      ph = c("S", "T", "Y"),
-      ox = c("M", "W", "C", "Y"),
-      ac = c("K"),
-      me = c("K", "R"),
-      de = c("D", "E")
-    )
+    # Build residue->PTM types and counts from parameters only; do not assume defaults
     ptm_types <- parameters$PTMTypes
-    if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) ptm_types <- list(default_types)
-    if (is.list(ptm_types) && length(ptm_types) == 1) ptm_types <- ptm_types[[1]]
-    ptm_types <- ptm_types[!is.na(ptm_types)]
+    # Normalize to a flat character vector of PTM type names, or empty if none
+    if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) {
+      ptm_types <- character(0)
+    } else if (is.list(ptm_types) && length(ptm_types) == 1) {
+      ptm_types <- ptm_types[[1]]
+      ptm_types <- ptm_types[!is.na(ptm_types)]
+    }
+
     modres <- parameters$ModifiableResidues
     if (is.null(modres) || length(modres) == 0 || all(is.na(modres))) {
-      modres_map <- default_residues
+      modres_map <- list()
     } else if (is.list(modres) && length(modres) == 1 && is.list(modres[[1]])) {
       modres_map <- modres[[1]]
     } else if (is.list(modres)) {
       modres_map <- modres
     } else {
-      modres_map <- default_residues
+      modres_map <- list()
     }
+
     aa_to_types <- setNames(vector("list", length = 26L), LETTERS)
-    for (ptm in ptm_types) {
-      aa <- modres_map[[ptm]]
-      if (!is.null(aa) && length(aa) > 0) for (a in aa) aa_to_types[[a]] <- unique(c(aa_to_types[[a]], ptm))
+    if (length(ptm_types) > 0) {
+      for (ptm in ptm_types) {
+        aa <- modres_map[[ptm]]
+        if (!is.null(aa) && length(aa) > 0) for (a in aa) aa_to_types[[a]] <- unique(c(aa_to_types[[a]], ptm))
+      }
     }
     aa_to_count <- setNames(integer(26L), LETTERS)
     for (a in names(aa_to_types)) aa_to_count[[a]] <- length(aa_to_types[[a]])
