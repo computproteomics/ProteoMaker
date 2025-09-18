@@ -83,6 +83,15 @@ proteinSummarisation <- function(peptable, parameters) {
     colnames(protmat) <- colnames(peptable)
 
     message("  - Initiated protein matrix for ", length(prot_ind), " protein groups")
+    # Diagnostics: potential duplicate first sequences across protein groups
+    if ((length(prot_ind) - 1) > 1 && "Sequence" %in% colnames(peptable)) {
+        first_rows <- prot_ind[1:(length(prot_ind)-1)]
+        first_seq <- peptable$Sequence[first_rows]
+        dup_count <- sum(duplicated(first_seq))
+        if (dup_count > 0) {
+            message("  - Note: ", dup_count, " protein groups share the same first peptide sequence; row names will use group keys to avoid clashes.")
+        }
+    }
     message("  - Summarizing proteins, this can take a while")
 
     # Function to summarize protein groups
@@ -170,6 +179,8 @@ proteinSummarisation <- function(peptable, parameters) {
                 out[QuantColnames] <- tout
                 # add other information
                 out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
+                # ensure unique row name per protein group (use group key)
+                rownames(out) <- names(prot_ind)[i]
             } else {
                 out <- NULL
             }
@@ -186,6 +197,7 @@ proteinSummarisation <- function(peptable, parameters) {
             out[QuantColnames] <- tout
             # add other information
             out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
+            rownames(out) <- names(prot_ind)[i]
             } else {
                 out <- NULL
             }
@@ -193,6 +205,7 @@ proteinSummarisation <- function(peptable, parameters) {
         })
     }
     # join all protein data
+    proteins <- Filter(Negate(is.null), proteins)
     protmat <- do.call(rbind, proteins)
     protmat[protmat == -Inf] <- NA
     protmat <- protmat[rowSums(is.na(protmat[,QuantColnames])) < length(QuantColnames), ]
@@ -203,4 +216,3 @@ proteinSummarisation <- function(peptable, parameters) {
     return(protmat)
 
 }
-
