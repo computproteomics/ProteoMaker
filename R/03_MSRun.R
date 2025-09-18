@@ -296,12 +296,6 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
   list(aa_to_types = aa_to_types, aa_to_count = aa_to_count)
 }
 
-.pm_window_log_count <- function(seqi, start_pos, stop_pos, aa_to_count) {
-  pep <- substring(seqi, start_pos, stop_pos)
-  aa <- strsplit(pep, "", fixed = TRUE)[[1]]
-  sum(log1p(as.numeric(aa_to_count[aa])))
-}
-
 .pm_sample_uniform_peptidoform_in_window <- function(seqi, start_pos, stop_pos, aa_to_types) {
   pep <- substring(seqi, start_pos, stop_pos)
   aa <- strsplit(pep, "", fixed = TRUE)[[1]]
@@ -327,26 +321,48 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
 .pm_sample_uniform_peptidoforms <- function(index, parameters, N) {
   if (is.null(index) || is.na(N) || N <= 0) return(NULL)
-  if (is.null(index$windows_flat) || is.null(index$window_probs) || length(index$window_probs) == 0) return(NULL)
-  pick <- sample.int(nrow(index$windows_flat), size = N, replace = TRUE, prob = index$window_probs)
-  out <- vector("list", length(pick))
-  for (i in seq_along(pick)) {
-    w <- index$windows_flat[pick[[i]], ]
-    e <- index$proteins[[ w$p ]]
-    sp <- w$start; ep <- w$stop
-    spf <- .pm_sample_uniform_peptidoform_in_window(e$sequence, sp, ep, index$aa_to_types)
-    out[[i]] <- data.frame(
-      Accession = e$accession,
-      Peptide = spf$Peptide,
-      Start = spf$Start,
-      Stop = spf$Stop,
-      MC = w$mc,
-      stringsAsFactors = FALSE
-    )
-    out[[i]]$PTMPos <- spf$PTMPos
-    out[[i]]$PTMType <- spf$PTMType
+
+  # Prefer per-protein sampling if win_count/pf_total are available
+  has_pp <- length(index$proteins) > 0 && !is.null(index$proteins[[1]]$win_count)
+
+  # Build PTM assignment map once
+  aa_to_types <- if (!is.null(index$aa_to_types)) index$aa_to_types else .pm_build_aa_maps(parameters)$aa_to_types
+
+  if (isTRUE(has_pp)) {
+    # Protein weights
+    pf <- vapply(index$proteins, function(e) if (is.null(e)) 0 else as.numeric(e$pf_total), numeric(1))
+    if (!any(pf > 0)) return(NULL)
+    prot_idx <- sample.int(length(index$proteins), size = N, replace = TRUE, prob = pf)
+    by_prot <- split(seq_len(N), prot_idx)
+    out <- vector("list", N)
+    ptr <- 1L
+    for (pi_chr in names(by_prot)) {
+      pi <- as.integer(pi_chr)
+      e <- index$proteins[[pi]]
+      req <- length(by_prot[[pi_chr]])
+      wc <- e$win_count
+      if (is.null(wc) || length(wc) == 0 || !any(is.finite(wc))) next
+      probs <- wc / sum(wc)
+      sel <- sample.int(length(wc), size = req, replace = TRUE, prob = probs)
+      for (jj in seq_len(req)) {
+        k <- sel[[jj]]
+        sp <- e$win_start[[k]]; ep <- e$win_stop[[k]]
+        spf <- .pm_sample_uniform_peptidoform_in_window(e$sequence, sp, ep, aa_to_types)
+        row <- data.frame(Accession = e$accession,
+                          Peptide = spf$Peptide,
+                          Start = spf$Start,
+                          Stop = spf$Stop,
+                          MC = e$win_mc[[k]],
+                          stringsAsFactors = FALSE)
+        row$PTMPos <- spf$PTMPos; row$PTMType <- spf$PTMType
+        out[[ptr]] <- row; ptr <- ptr + 1L
+      }
+    }
+    return(do.call(rbind, out))
   }
-  do.call(rbind, out)
+
+  # No per-protein data available
+  return(NULL)
 }
 
 # Render a human-readable peptidoform by annotating PTMs in the sequence, e.g., S[ph]
@@ -365,7 +381,9 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
 # Compute total number of peptidoforms in log-scale (natural log)
 .pm_total_peptidoforms_log <- function(index, parameters) {
-  if (!is.null(index$total_log_pf)) return(index$total_log_pf)
-  -Inf
+  if (is.null(index) || is.null(index$proteins)) return(-Inf)
+  tot <- sum(vapply(index$proteins, function(e) if (is.null(e) || is.null(e$pf_total)) 0 else as.numeric(e$pf_total), numeric(1)))
+  if (!is.finite(tot) || tot <= 0) return(-Inf)
+  log(tot)
 }
 #####################

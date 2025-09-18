@@ -86,16 +86,61 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
     seqi <- proteins$Sequence[i]
     sites <- cleavageSites(seqi, cre)
     seg   <- segmentsFromSites(seqi, sites)
-    win   <- enumerateValidWindows(seg$starts, seg$stops,
-                                   parameters$PepMinLength,
-                                   parameters$PepMaxLength,
-                                   parameters$MaxNumMissedCleavages)
 
-    windows_per_protein[i] <- win$n_valid
-    if (win$n_valid == 0L) {
+    # Vectorized enumeration of valid windows
+    S <- length(seg$starts)
+    if (S == 0) {
       idx[[i]] <- NULL
       dropped_no_windows <- dropped_no_windows + 1L
       next
+    }
+    target_min <- seg$starts + (parameters$PepMinLength - 1L)
+    target_max <- seg$starts + (parameters$PepMaxLength - 1L)
+    e_min <- pmax(seq_len(S), findInterval(target_min - 1L, seg$stops) + 1L)
+    e_max <- pmin(seq_len(S) + parameters$MaxNumMissedCleavages, findInterval(target_max, seg$stops))
+    counts <- e_max - e_min + 1L
+    counts[counts < 0L] <- 0L
+    n_valid <- sum(counts)
+    windows_per_protein[i] <- n_valid
+    if (n_valid == 0L) {
+      idx[[i]] <- NULL
+      dropped_no_windows <- dropped_no_windows + 1L
+      next
+    }
+
+    # Expand to per-window vectors
+    s_rep   <- rep.int(seq_len(S), counts)
+    end_idx <- rep(e_min, counts) + sequence(counts) - 1L
+    win_start <- seg$starts[s_rep]
+    win_stop  <- seg$stops[end_idx]
+    win_mc    <- end_idx - s_rep
+
+    # Per-residue PTM counts and per-window peptidoform counts via log-prefix
+    aa_chars <- strsplit(seqi, "", fixed = TRUE)[[1]]
+    # Build per-AA PTM count map (use existing maps below)
+    # Reuse aa_maps built later; compute locally here
+    # Build small map on the fly: default handled by log1p(0)
+    # For speed, derive counts via string match with ModifiableResidues would be heavier; use existing mapping below
+    # We rebuild a minimal map here:
+    # Simpler: get from parameters via buildAAMapsDigest in this scope
+    # However, aa_maps is created later; reusing buildAAMapsDigest now
+    aac_map <- tryCatch(buildAAMapsDigest(parameters)$aa_to_count, error = function(e) NULL)
+    if (is.null(aac_map)) {
+      aac_map <- setNames(integer(26L), LETTERS)
+    }
+    ai_counts <- as.integer(aac_map[match(aa_chars, LETTERS)])
+    ai_counts[is.na(ai_counts)] <- 0L
+    log_prefix <- c(0, cumsum(log1p(ai_counts)))
+    log_cnt <- log_prefix[win_stop + 1L] - log_prefix[win_start]
+    win_count <- as.numeric(exp(log_cnt))
+    pf_total <- sum(win_count)
+
+    # valid_mc reconstructed for compatibility
+    valid_mc <- vector("list", S)
+    if (length(win_mc) > 0) {
+      split_list <- split(win_mc, s_rep)
+      idx_names <- as.integer(names(split_list))
+      valid_mc[idx_names] <- split_list
     }
 
     idx[[i]] <- list(
@@ -103,15 +148,19 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
       sequence  = seqi,
       starts    = seg$starts,
       stops     = seg$stops,
-      valid_mc  = win$valid_mc,
-      n_valid   = win$n_valid
+      valid_mc  = valid_mc,
+      n_valid   = n_valid,
+      ai_counts = ai_counts,
+      pf_total  = pf_total,
+      win_start = win_start,
+      win_stop  = win_stop,
+      win_mc    = win_mc,
+      win_count = win_count
     )
 
-    starts_idx <- rep(seq_along(seg$starts), lengths(win$valid_mc))
-    MC <- unlist(win$valid_mc)
-    if (length(MC) > 0) {
-      stops_idx <- starts_idx + MC
-      pep <- substring(seqi, seg$starts[starts_idx], seg$stops[stops_idx])
+    # Peptide -> protein map (I->L normalized) from window vectors
+    if (length(win_start) > 0) {
+      pep <- substring(seqi, win_start, win_stop)
       pep_norm <- gsub("I", "L", pep, perl = TRUE)
       add_map(pep_norm, proteins$Accession[i])
     }
@@ -167,98 +216,7 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
     for (a in names(aa_to_types)) aa_to_count[[a]] <- length(aa_to_types[[a]])
     list(aa_to_types = aa_to_types, aa_to_count = aa_to_count)
   }
-  windowLogCountDigest <- function(seqi, start_pos, stop_pos, aa_to_count) {
-    pep <- substring(seqi, start_pos, stop_pos)
-    aa <- strsplit(pep, "", fixed = TRUE)[[1]]
-    sum(log1p(as.numeric(aa_to_count[aa])))
-  }
-
   aa_maps <- buildAAMapsDigest(parameters)
-  windows_flat <- data.frame(p=integer(0), start=integer(0), stop=integer(0), mc=integer(0), log_count=numeric(0), stringsAsFactors = FALSE)
-  cores <- tryCatch(parameters$Cores, error = function(e) NULL)
-  cl_type <- tolower(tryCatch(parameters$ClusterType, error = function(e) ""))
-  # Announce heavy precomputation and parallelization plan
-  cores_use <- if (!is.null(cores) && cores > 1) min(cores, parallel::detectCores()) else 1L
-  if (length(idx) > 0) {
-    if (!is.null(cores) && cores > 1 && cl_type %in% c("fork","psock")) {
-      message(" + Precomputing window probabilities: parallel (", toupper(cl_type), ") over ", length(idx), " proteins …")
-    } else {
-      message(" + Precomputing window probabilities: serial over ", length(idx), " proteins …")
-    }
-  }
-  if (length(idx) > 0) {
-    if (!is.null(cores) && cores > 1 && cl_type %in% c("fork","psock")) {
-      # Build compact per-protein tasks to avoid shipping the whole index
-      tasks <- lapply(seq_along(idx), function(pi){
-        e <- idx[[pi]]
-        if (is.null(e) || length(e$valid_mc) == 0) return(NULL)
-        list(pi = pi, sequence = e$sequence, starts = e$starts, stops = e$stops, valid_mc = e$valid_mc)
-      })
-      tasks <- tasks[!vapply(tasks, is.null, logical(1))]
-      if (length(tasks) > 0) {
-        cl <- parallel::makeCluster(cores_use, type = toupper(cl_type))
-        on.exit(parallel::stopCluster(cl), add = TRUE)
-        # Report actual worker count after cluster is up
-        message("   - Parallel cluster started with ", length(cl), " workers")
-        # Optional: sample worker PIDs to confirm processes are alive
-        pids <- try(parallel::clusterEvalQ(cl, Sys.getpid()), silent = TRUE)
-        if (!inherits(pids, "try-error")) {
-          uniq <- unique(unlist(pids))
-          message("   - Worker PIDs (sample): ", paste(head(uniq, 5L), collapse = ", "), if (length(uniq) > 5) " …" else "")
-        }
-        aa_count <- aa_maps$aa_to_count
-        parallel::clusterExport(cl, varlist = c("aa_count"), envir = environment())
-        t_win0 <- proc.time()[[3]]
-        message("   - Dispatching ", length(tasks), " protein tasks across ", length(cl), " workers …")
-        parts <- parallel::parLapply(cl, tasks, function(t) {
-          s_rep <- rep(seq_along(t$starts), lengths(t$valid_mc))
-          MC <- unlist(t$valid_mc)
-          if (length(MC) == 0) return(NULL)
-          st_pos <- t$starts[s_rep]
-          en_pos <- t$stops[s_rep + MC]
-          lc <- mapply(function(a, b) {
-            pep <- substring(t$sequence, a, b)
-            aa <- strsplit(pep, "", fixed = TRUE)[[1]]
-            sum(log1p(as.numeric(aa_count[aa])))
-          }, st_pos, en_pos)
-          data.frame(p = rep.int(t$pi, length(MC)), start = st_pos, stop = en_pos, mc = MC, log_count = lc, stringsAsFactors = FALSE)
-        })
-        parts <- parts[!vapply(parts, is.null, logical(1))]
-        if (length(parts) > 0) windows_flat <- do.call(rbind, parts)
-        t_win1 <- proc.time()[[3]]
-        message(sprintf("   - Precompute finished: %s windows [%.2f s]", format(nrow(windows_flat), big.mark=","), t_win1 - t_win0))
-      }
-    } else {
-      # Serial fallback
-      pidxs <- integer(0); starts_flat <- integer(0); stops_flat <- integer(0); mcs_flat <- integer(0); logc <- numeric(0)
-      for (pi in seq_along(idx)) {
-        e <- idx[[pi]]
-        if (is.null(e) || length(e$valid_mc) == 0) next
-        s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
-        MC <- unlist(e$valid_mc)
-        if (length(MC) == 0) next
-        st_pos <- e$starts[s_rep]
-        en_pos <- e$stops[s_rep + MC]
-        lc <- mapply(function(a, b) windowLogCountDigest(e$sequence, a, b, aa_maps$aa_to_count), st_pos, en_pos)
-        pidxs <- c(pidxs, rep.int(pi, length(MC)))
-        starts_flat <- c(starts_flat, st_pos)
-        stops_flat <- c(stops_flat, en_pos)
-        mcs_flat <- c(mcs_flat, MC)
-        logc <- c(logc, lc)
-      }
-      windows_flat <- data.frame(p = pidxs, start = starts_flat, stop = stops_flat, mc = mcs_flat, log_count = logc, stringsAsFactors = FALSE)
-    }
-  }
-  if (nrow(windows_flat) > 0) {
-    maxl <- max(windows_flat$log_count)
-    window_probs <- exp(windows_flat$log_count - maxl)
-    window_probs <- window_probs / sum(window_probs)
-    total_log_pf <- maxl + log(sum(exp(windows_flat$log_count - maxl)))
-  } else {
-    window_probs <- numeric(0)
-    total_log_pf <- -Inf
-  }
-
   t1 <- proc.time()[[3]]
 
   pep2prot <- list()
@@ -274,9 +232,6 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
   list(
     proteins = idx,
     acc2idx = acc2idx,
-    windows_flat = windows_flat,
-    window_probs = window_probs,
-    total_log_pf = total_log_pf,
     aa_to_types = aa_maps$aa_to_types,
     weights = weights,
     pep2prot = pep2prot,
@@ -376,16 +331,13 @@ fastDigest <- function(proteoform, parameters, searchIndex) {
     e <- searchIndex$proteins[[idx_match[1]]]
   }
 
-  starts_idx <- rep(seq_along(e$starts), lengths(e$valid_mc))
-  MC <- unlist(e$valid_mc)
-  if (length(MC) == 0) return(NULL)
-  stops_idx <- starts_idx + MC
-
+  # Use precomputed window vectors from the index
+  if (is.null(e$win_start) || length(e$win_start) == 0) return(NULL)
   peptides <- data.frame(
-    Peptide = substring(e$sequence, e$starts[starts_idx], e$stops[stops_idx]),
-    Start = e$starts[starts_idx],
-    Stop  = e$stops[stops_idx],
-    MC    = MC,
+    Peptide = substring(e$sequence, e$win_start, e$win_stop),
+    Start = e$win_start,
+    Stop  = e$win_stop,
+    MC    = e$win_mc,
     stringsAsFactors = FALSE
   )
 

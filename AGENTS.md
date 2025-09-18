@@ -20,6 +20,7 @@ GitHub Actions runs `R-CMD-check` on PRs (see `.github/workflows/R-CMD-check.yam
 - R style: 2-space indent, soft wrap at ~100 chars, snake_case for functions and objects (e.g., `set_proteomaker`, `run_sims`).
 - Place new functions in the most relevant numbered module; keep cohesive responsibilities.
 - Make cross-checks to avoid redundancies and to place the new functions correctly.
+- Keep code short and concise avoiding layers of sanitation and checks.
 - Document all exported functions with roxygen2 (`@title`, `@param`, `@return`, `@examples`, `@export`).
 - Avoid side effects on load; write outputs under `Results/` or user-specified paths.
 
@@ -37,3 +38,8 @@ GitHub Actions runs `R-CMD-check` on PRs (see `.github/workflows/R-CMD-check.yam
 ## Security & Configuration Tips
 - Some dependencies install from GitHub (`Remotes`); ensure a GitHub token in CI when needed.
 - Long-running simulations can be resource-intensive; prefer small parameter sets in tests and examples.
+
+## General Behavior
+- Introduce each suggested change with 1-2 short sentences of the rationale.
+- Clearly refer to the part of the code (file and function name) when discussing changes or additions.
+- Go step-wise when implementing larger changes, and test each step thoroughly.

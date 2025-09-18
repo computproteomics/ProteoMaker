@@ -41,18 +41,19 @@ make_parameters <- function(cli) {
     PepMaxLength = cli$maxLen,
     MaxNumMissedCleavages = cli$maxMC,
     # Optional PTM defaults retained for downstream compatibility
-    # PTMTypes = list(c("ph", "ox", "ac", "me", "de")),
-    # ModifiableResidues = list(list(
-    #   ph = c("S", "T", "Y"),
-    #  ox = c("M", "W", "C", "Y"),
-    #   ac = c("K"),
-    #  me = c("K", "R"),
-    #   de = c("D", "E")
-    # ))
-    PTMTypes = list(c("ox")),
+    PTMTypes = list(c("ph", "ox", "ac", "me", "de")),
     ModifiableResidues = list(list(
-      # ox = c("M")
+      ph = c("S", "T", "Y"),
+     ox = c("M", "W", "C", "Y"),
+      ac = c("K"),
+     me = c("K", "R"),
+      de = c("D", "E")
     ))
+    # PTMTypes = list(c("ph","ox")),
+    # ModifiableResidues = list(list(
+    #     ph = c("S", "T", "Y"),
+    #   ox = c("M")
+    # ))
   )
 }
 
@@ -113,7 +114,7 @@ enumerate_valid_windows <- function(starts, stops, pep_min, pep_max, max_mc) {
   list(valid_mc = valid_per_start, n_valid = n_valid)
 }
 
-normalize_IL <- function(peps) sub("I", "L", peps, perl = TRUE)
+normalize_IL <- function(peps) gsub("I", "L", peps, perl = TRUE)
 
 fasta_to_df <- function(path) {
   fa <- try(protr::readFASTA(file = path, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
@@ -138,6 +139,14 @@ filter_proteins <- function(df) {
 
 build_pep2prot_map <- function(peptides, accession, env) {
   if (length(peptides) == 0) return(invisible(NULL))
+  if (!is.character(peptides)) peptides <- as.character(peptides)
+  bad <- which(is.na(peptides) | peptides == "")
+  if (length(bad) > 0) {
+    cat(" + WARNING: encountered ", length(bad), " invalid peptide names (empty/NA) for accession ", accession, "; showing up to 5 examples:\n", sep = "")
+    print(utils::head(peptides[bad], 5))
+    peptides <- peptides[-bad]
+    if (length(peptides) == 0) return(invisible(NULL))
+  }
   up <- unique(peptides)
   for (p in up) {
     if (exists(p, envir = env, inherits = FALSE)) {
@@ -240,55 +249,79 @@ sample_uniform_peptidoform_in_window <- function(seqi, start_pos, stop_pos, aa_t
   )
 }
 
-# Sample N peptidoforms uniformly from the full space without enumerating all combinations materialized
-sample_peptidoforms_from_index <- function(index, parameters, N) {
-  if (is.na(N) || N <= 0) return(NULL)
+sample_peptidoforms <- function(index, parameters, N) {
+  if (is.null(index) || is.null(index$proteins) || N <= 0) return(NULL)
+  # Build PTM assignment map once
   maps <- build_aa_maps(parameters)
-  # Build window table with log counts
-  pidxs <- integer(0); sidxs <- integer(0); mcs <- integer(0)
-  starts <- integer(0); stops <- integer(0); logc <- numeric(0)
-  for (pi in seq_along(index$proteins)) {
-    e <- index$proteins[[pi]]
-    if (is.null(e)) next
-    if (length(e$valid_mc) == 0) next
-    s_rep <- rep(seq_along(e$starts), lengths(e$valid_mc))
-    MC <- unlist(e$valid_mc)
-    if (length(MC) == 0) next
-    st_pos <- e$starts[s_rep]
-    en_pos <- e$stops[s_rep + MC]
-    # compute log counts for each peptide efficiently
-    lc <- mapply(function(a,b) window_log_count(e$sequence, a, b, maps$aa_to_count), st_pos, en_pos)
-    pidxs <- c(pidxs, rep.int(pi, length(MC)))
-    sidxs <- c(sidxs, s_rep)
-    mcs   <- c(mcs, MC)
-    starts<- c(starts, st_pos)
-    stops <- c(stops, en_pos)
-    logc  <- c(logc, lc)
+
+  # Protein weights: pf_total (sum of per-window counts). If all zero (shouldn't), fall back to n_valid
+  pf <- vapply(index$proteins, function(e) if (is.null(e)) 0 else as.numeric(e$pf_total), numeric(1))
+  if (!any(pf > 0)) pf <- vapply(index$proteins, function(e) if (is.null(e)) 0L else e$n_valid, integer(1))
+  total_pf <- sum(pf)
+  if (total_pf <= 0) {
+    message("[subset] No peptidoforms available: total_pf=0; check length/missed-cleavage constraints.")
+    return(NULL)
   }
-  if (length(logc) == 0) return(NULL)
-  # stable probabilities from log counts
-  maxl <- max(logc)
-  probs <- exp(logc - maxl)
-  probs <- probs / sum(probs)
-  # sample indices with replacement to allow N > unique count
-  pick <- sample.int(length(probs), size = N, replace = TRUE, prob = probs)
-  # materialize chosen peptidoforms
-  out <- vector("list", length(pick))
-  for (i in seq_along(pick)) {
-    k <- pick[[i]]
-    e <- index$proteins[[pidxs[[k]]]]
-    sp <- starts[[k]]; ep <- stops[[k]]
-    spf <- sample_uniform_peptidoform_in_window(e$sequence, sp, ep, maps$aa_to_types)
-    out[[i]] <- data.frame(
-      Accession = e$accession,
-      Peptide = spf$Peptide,
-      Start = spf$Start,
-      Stop = spf$Stop,
-      MC = mcs[[k]],
-      stringsAsFactors = FALSE
-    )
-    out[[i]]$PTMPos <- spf$PTMPos
-    out[[i]]$PTMType <- spf$PTMType
+
+  # Draw proteins for each peptidoform
+  prot_indices <- sample.int(length(index$proteins), size = N, replace = TRUE, prob = pf)
+  # Group draws per protein to amortize per-protein work
+  by_prot <- split(seq_along(prot_indices), prot_indices)
+
+  out <- vector("list", N)
+  out_ptr <- 1L
+  for (pi_chr in names(by_prot)) {
+    pi <- as.integer(pi_chr)
+    e <- index$proteins[[pi]]
+    idxs <- by_prot[[pi_chr]]
+    n_draws <- length(idxs)
+    # Derive per-window weights within this protein
+    if (!is.null(e$win_count) && length(e$win_count) > 0 && sum(e$win_count) > 0 && all(is.finite(e$win_count))) {
+      win_probs <- e$win_count / sum(e$win_count)
+      pick_win <- sample.int(length(win_probs), size = n_draws, replace = TRUE, prob = win_probs)
+      for (jj in seq_len(n_draws)) {
+        k <- pick_win[[jj]]
+        sp <- e$win_start[[k]]
+        ep <- e$win_stop[[k]]
+        mc <- e$win_mc[[k]]
+        spf <- sample_uniform_peptidoform_in_window(e$sequence, sp, ep, maps$aa_to_types)
+        row <- data.frame(
+          Accession = e$accession,
+          Peptide = spf$Peptide,
+          Start = spf$Start,
+          Stop = spf$Stop,
+          MC = mc,
+          stringsAsFactors = FALSE
+        )
+        row$PTMPos <- spf$PTMPos
+        row$PTMType <- spf$PTMType
+        out[[out_ptr]] <- row
+        out_ptr <- out_ptr + 1L
+      }
+    } else {
+      # Fallback: uniform windows (e.g., no PTMs case or missing win_count)
+      counts <- lengths(e$valid_mc)
+      if (length(counts) == 0) next
+      for (jj in seq_len(n_draws)) {
+        s <- sample.int(length(counts), 1L, prob = counts)
+        mc <- sample(e$valid_mc[[s]], 1L)
+        sp <- e$starts[s]
+        ep <- e$stops[s + mc]
+        spf <- sample_uniform_peptidoform_in_window(e$sequence, sp, ep, maps$aa_to_types)
+        row <- data.frame(
+          Accession = e$accession,
+          Peptide = spf$Peptide,
+          Start = spf$Start,
+          Stop = spf$Stop,
+          MC = mc,
+          stringsAsFactors = FALSE
+        )
+        row$PTMPos <- spf$PTMPos
+        row$PTMType <- spf$PTMType
+        out[[out_ptr]] <- row
+        out_ptr <- out_ptr + 1L
+      }
+    }
   }
   do.call(rbind, out)
 }
@@ -328,55 +361,186 @@ build_search_index <- function(parameters) {
   if (nrow(df) == 0) stop("No proteins left after filtering")
 
   cre <- enzyme_regex(parameters$Enzyme)
+  maps <- build_aa_maps(parameters)
 
   idx <- vector("list", nrow(df))
   dropped_no_windows <- 0L
   windows_per_protein <- integer(nrow(df))
   pep2prot_env <- new.env(parent = emptyenv())
 
-  for (i in seq_len(nrow(df))) {
-    seqi <- df$Sequence[i]
-    sites <- cleavage_sites(seqi, cre)
-    seg   <- segments_from_sites(seqi, sites)
-    win   <- enumerate_valid_windows(seg$starts, seg$stops,
-                                     parameters$PepMinLength,
-                                     parameters$PepMaxLength,
-                                     parameters$MaxNumMissedCleavages)
+  # Parallelization controls via environment (default serial)
+  cores_env <- suppressWarnings(as.integer(Sys.getenv("PM_CORES", "1")))
+  if (is.na(cores_env) || cores_env < 1) cores_env <- 1L
+  cluster_env <- toupper(Sys.getenv("PM_CLUSTER", "PSOCK"))
 
-    windows_per_protein[i] <- win$n_valid
-    if (win$n_valid == 0L) {
-      idx[[i]] <- NULL
-      dropped_no_windows <- dropped_no_windows + 1L
-      next
-    }
-
-    # Optional PTM positions (kept for downstream consumers)
-    modpos <- list()
-    if (!is.null(parameters$ModifiableResidues) && length(parameters$ModifiableResidues) > 0) {
-      ptms <- parameters$PTMTypes[[1]]
-      for (ptm in ptms) {
-        aa <- parameters$ModifiableResidues[[1]][[ptm]]
-        modpos[[ptm]] <- if (!is.null(aa)) which(strsplit(seqi, "")[[1]] %in% aa) else integer(0)
+  if (cores_env > 1L) {
+    message(" + Precomputing per-protein windows and counts: parallel (", cluster_env, ", cores=", cores_env, ") over ", nrow(df), " proteins …")
+    cl <- parallel::makeCluster(cores_env, type = cluster_env)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    # Export small, read-only objects
+    aa_count <- maps$aa_to_count
+    pep_min <- parameters$PepMinLength
+    pep_max <- parameters$PepMaxLength
+    max_mc  <- parameters$MaxNumMissedCleavages
+    parallel::clusterExport(cl, varlist = c("aa_count", "cre", "pep_min", "pep_max", "max_mc"), envir = environment())
+    # Build tasks
+    tasks <- lapply(seq_len(nrow(df)), function(i) list(acc = df$Accession[i], seq = df$Sequence[i]))
+    parts <- parallel::parLapply(cl, tasks, function(t) {
+      # Per protein worker
+      seqi <- t$seq
+      sites <- stringi::stri_locate_all_regex(seqi, cre)[[1]]
+      cs <- if (is.null(sites) || is.na(sites[1,1])) integer(0) else as.integer(sites[,1])
+      if (length(cs) == 0) {
+        starts <- 1L; stops <- nchar(seqi)
+      } else {
+        starts <- c(1L, cs + 1L)
+        stops  <- c(cs, nchar(seqi))
+      }
+      S <- length(starts)
+      if (S == 0) return(list(drop = TRUE))
+      # Vectorized enumeration of windows using interval searches
+      target_min <- starts + (pep_min - 1L)
+      target_max <- starts + (pep_max - 1L)
+      e_min <- pmax(seq_len(S), findInterval(target_min - 1L, stops) + 1L)
+      e_max <- pmin(seq_len(S) + max_mc, findInterval(target_max, stops))
+      counts <- e_max - e_min + 1L
+      counts[counts < 0L] <- 0L
+      n_valid <- sum(counts)
+      if (n_valid == 0L) return(list(drop = TRUE))
+      # Expand to window vectors
+      s_rep <- rep.int(seq_len(S), counts)
+      end_idx <- rep(e_min, counts) + sequence(counts) - 1L
+      st_pos <- starts[s_rep]
+      en_pos <- stops[end_idx]
+      mc_v <- end_idx - s_rep
+      # Reconstruct valid_mc list (length S) for compatibility
+      valid_mc <- vector("list", S)
+      if (length(mc_v) > 0) {
+        split_list <- split(mc_v, s_rep)
+        idx_names <- as.integer(names(split_list))
+        valid_mc[idx_names] <- split_list
+      }
+      # ai_counts
+      aa_chars <- strsplit(seqi, "", fixed = TRUE)[[1]]
+      map_idx <- match(aa_chars, LETTERS)
+      aic <- as.integer(aa_count[map_idx]); aic[is.na(aic)] <- 0L
+      # per-window counts via log-prefix
+      log_prefix <- c(0, cumsum(log1p(aic)))
+      log_cnt <- log_prefix[en_pos + 1L] - log_prefix[st_pos]
+      cnt_vec <- exp(log_cnt)
+      list(
+        drop = FALSE,
+        accession = t$acc,
+        sequence  = seqi,
+        starts = starts, stops = stops, valid_mc = valid_mc, n_valid = n_valid,
+        ai_counts = aic,
+        win_start = st_pos, win_stop = en_pos, win_mc = as.integer(mc_v), win_count = as.numeric(cnt_vec),
+        pf_total = sum(cnt_vec)
+      )
+    })
+    # Assemble results
+    for (i in seq_along(parts)) {
+      p <- parts[[i]]
+      if (is.null(p) || isTRUE(p$drop)) {
+        idx[[i]] <- NULL
+        dropped_no_windows <- dropped_no_windows + 1L
+        windows_per_protein[i] <- 0L
+        next
+      }
+      windows_per_protein[i] <- p$n_valid
+      idx[[i]] <- list(
+        accession = p$accession,
+        sequence  = p$sequence,
+        starts    = p$starts,
+        stops     = p$stops,
+        valid_mc  = p$valid_mc,
+        n_valid   = p$n_valid,
+        ai_counts = p$ai_counts,
+        pf_total  = p$pf_total,
+        win_start = p$win_start,
+        win_stop  = p$win_stop,
+        win_mc    = p$win_mc,
+        win_count = p$win_count
+      )
+      # Build peptide -> protein map (I->L normalized)
+      if (length(p$win_start) > 0) {
+        pep <- substring(p$sequence, p$win_start, p$win_stop)
+        build_pep2prot_map(normalize_IL(pep), p$accession, pep2prot_env)
       }
     }
+  } else {
+    # Serial path
+    for (i in seq_len(nrow(df))) {
+      seqi <- df$Sequence[i]
+      sites <- cleavage_sites(seqi, cre)
+      seg   <- segments_from_sites(seqi, sites)
+      # Vectorized enumeration
+      S <- length(seg$starts)
+      if (S == 0) {
+        idx[[i]] <- NULL
+        dropped_no_windows <- dropped_no_windows + 1L
+        next
+      }
+      target_min <- seg$starts + (parameters$PepMinLength - 1L)
+      target_max <- seg$starts + (parameters$PepMaxLength - 1L)
+      e_min <- pmax(seq_len(S), findInterval(target_min - 1L, seg$stops) + 1L)
+      e_max <- pmin(seq_len(S) + parameters$MaxNumMissedCleavages, findInterval(target_max, seg$stops))
+      counts <- e_max - e_min + 1L
+      counts[counts < 0L] <- 0L
+      n_valid <- sum(counts)
+      windows_per_protein[i] <- n_valid
+      if (n_valid == 0L) {
+        idx[[i]] <- NULL
+        dropped_no_windows <- dropped_no_windows + 1L
+        next
+      }
 
-    idx[[i]] <- list(
-      accession = df$Accession[i],
-      sequence  = seqi,
-      starts    = seg$starts,
-      stops     = seg$stops,
-      valid_mc  = win$valid_mc,
-      n_valid   = win$n_valid,
-      modpos    = modpos
-    )
+      # Precompute per-position ai counts (#PTM types per residue)
+      aa_chars <- strsplit(seqi, "", fixed = TRUE)[[1]]
+      ai_counts <- as.integer(maps$aa_to_count[aa_chars])
+      # Sum of peptidoform counts across all valid peptide windows in this protein
+      pf_total <- 0
+      win_start <- integer(0)
+      win_stop  <- integer(0)
+      win_mc    <- integer(0)
+      win_count <- numeric(0)
+      # Expand to window vectors
+      s_rep <- rep.int(seq_len(S), counts)
+      end_idx <- rep(e_min, counts) + sequence(counts) - 1L
+      st_pos <- seg$starts[s_rep]
+      en_pos <- seg$stops[end_idx]
+      MC <- end_idx - s_rep
+      # Use log-prefix to avoid overflow, then exponentiate per window
+      ai_counts[is.na(ai_counts)] <- 0L
+      log_prefix <- c(0, cumsum(log1p(ai_counts)))
+      log_cnt <- log_prefix[en_pos + 1L] - log_prefix[st_pos]
+      cnt_vec <- exp(log_cnt)
+      pf_total <- sum(cnt_vec)
+      win_start <- st_pos
+      win_stop  <- en_pos
+      win_mc    <- MC
+      win_count <- as.numeric(cnt_vec)
 
-    # Build peptide -> protein map (I->L normalized)
-    starts_idx <- rep(seq_along(seg$starts), lengths(win$valid_mc))
-    MC <- unlist(win$valid_mc)
-    if (length(MC) > 0) {
-      stops_idx <- starts_idx + MC
-      pep <- substring(seqi, seg$starts[starts_idx], seg$stops[stops_idx])
-      build_pep2prot_map(normalize_IL(pep), df$Accession[i], pep2prot_env)
+      idx[[i]] <- list(
+        accession = df$Accession[i],
+        sequence  = seqi,
+        starts    = seg$starts,
+        stops     = seg$stops,
+        valid_mc  = split(win_mc, s_rep),
+        n_valid   = n_valid,
+        ai_counts = ai_counts,
+        pf_total  = pf_total,
+        win_start = win_start,
+        win_stop  = win_stop,
+        win_mc    = win_mc,
+        win_count = win_count
+      )
+
+      # Build peptide -> protein map (I->L normalized)
+      if (length(win_start) > 0) {
+        pep <- substring(seqi, win_start, win_stop)
+        build_pep2prot_map(normalize_IL(pep), df$Accession[i], pep2prot_env)
+      }
     }
   }
 
@@ -412,6 +576,14 @@ build_search_index <- function(parameters) {
           " -> ", amb_deg[k], " proteins\n", sep = "")
     }
   }
+  # Optional summary of peptidoform totals per protein (sum over windows of prod(1+a_i))
+  if (length(idx) > 0 && !is.null(idx[[1]]$pf_total)) {
+    pf_totals <- vapply(idx, function(x) as.numeric(x$pf_total), numeric(1))
+    cat(" + Peptidoform totals per protein (non-zero windows): min=", round(min(pf_totals),2),
+        " median=", round(stats::median(pf_totals),2),
+        " mean=", round(mean(pf_totals),2),
+        " max=", round(max(pf_totals),2), "\n", sep = "")
+  }
 
   res <- list(
     proteins = idx,
@@ -429,6 +601,11 @@ cli <- parse_args()
 params <- validate_parameters(make_parameters(cli))
 res <- build_search_index(params)
 
+# Report total index build time (explicit)
+if (!is.null(res$build_time_sec)) {
+  cat(sprintf("\n#INDEX BUILD - Done (%.3f sec)\n", as.numeric(res$build_time_sec)))
+}
+
 if (!is.na(cli$outRDS)) {
   saveRDS(res, file = cli$outRDS)
   cat("\nSaved index to:", cli$outRDS, "\n")
@@ -437,7 +614,24 @@ if (!is.na(cli$outRDS)) {
 # Optional: sample a random set of peptidoforms uniformly across the full space
 if (!is.na(cli$subsetN) && cli$subsetN > 0) {
   cat("\n#PEPTIDOFORMS SUBSET - Start\n")
-  subset <- sample_peptidoforms_from_index(res, params, cli$subsetN)
+  # Diagnostics to help debug issues before sampling
+  n_prot <- length(res$proteins)
+  n_valid_vec <- vapply(res$proteins, function(e) if (is.null(e)) 0L else e$n_valid, integer(1))
+  pf_vec <- vapply(res$proteins, function(e) if (is.null(e) || is.null(e$pf_total)) 0 else as.numeric(e$pf_total), numeric(1))
+  invalid_win <- vapply(res$proteins, function(e) {
+    wc <- if (is.null(e)) NULL else e$win_count
+    if (is.null(wc) || length(wc) == 0) return(FALSE)
+    any(!is.finite(wc)) || any(is.na(wc))
+  }, logical(1))
+  ai_sum <- sum(vapply(res$proteins, function(e) if (is.null(e) || is.null(e$ai_counts)) 0L else sum(e$ai_counts, na.rm = TRUE), numeric(1)))
+  cat(sprintf(" + Subset diagnostics: proteins=%d, total_windows=%d, zero_window_proteins=%d\n",
+              n_prot, sum(n_valid_vec), sum(n_valid_vec == 0)))
+  cat(sprintf(" + pf_total: sum=%.0f, zero_pf_total_proteins=%d, invalid_window_counts=%d\n",
+              sum(pf_vec), sum(pf_vec == 0), sum(invalid_win)))
+  cat(sprintf(" + PTM configuration: total sum of a_i across proteome=%d (%s)\n",
+              as.integer(ai_sum), if (ai_sum == 0) "no PTMs (uniform over windows)" else "PTMs present"))
+  t_sub0 <- proc.time()[[3]]
+  subset <- sample_peptidoforms(res, params, cli$subsetN)
   if (is.null(subset)) {
     cat(" + No peptidoforms could be sampled.\n")
   } else {
@@ -452,5 +646,6 @@ if (!is.na(cli$subsetN) && cli$subsetN > 0) {
       cat(" + Saved peptidoform subset to:", cli$subsetOut, "\n")
     }
   }
-  cat("#PEPTIDOFORMS SUBSET - Finish\n")
+  t_sub1 <- proc.time()[[3]]
+  cat(sprintf("#PEPTIDOFORMS SUBSET - Finish (%.3f sec)\n", t_sub1 - t_sub0))
 }
