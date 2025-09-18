@@ -581,17 +581,21 @@ digestGroundTruth <- function(proteoforms, parameters, searchIndex = NULL) {
   # Filter proteoforms whose parent protein has no valid peptide windows in the index (if provided)
   if (!is.null(searchIndex)) {
     acc2idx <- searchIndex$acc2idx
-    valid_mask <- vapply(seq_len(nrow(proteoforms)), function(i) {
-      acc <- as.character(proteoforms$Accession[i])
-      if (length(acc) != 1L || is.na(acc) || !nzchar(acc)) return(FALSE)
-      idx <- acc2idx[[acc]]
-      if (is.null(idx)) return(FALSE)
-      e <- searchIndex$proteins[[idx]]
-      !is.null(e$win_start) && length(e$win_start) > 0
-    }, logical(1))
+    accs <- as.character(proteoforms$Accession)
+    accs[!nzchar(accs)] <- NA_character_
+    idx_vec <- unname(acc2idx[accs])
+    missing <- sum(is.na(idx_vec))
+    valid_mask <- rep(FALSE, length(idx_vec))
+    good <- which(!is.na(idx_vec))
+    if (length(good)) {
+      valid_mask[good] <- vapply(idx_vec[good], function(j) {
+        e <- searchIndex$proteins[[j]]
+        !is.null(e$win_start) && length(e$win_start) > 0
+      }, logical(1))
+    }
     num_discard <- sum(!valid_mask)
     if (num_discard > 0) {
-      message("  - Discarding ", num_discard, " proteoforms without valid peptide windows in index.")
+      message("  - Discarding ", num_discard, " proteoforms without valid peptide windows in index (", missing, " missing accessions).")
       proteoforms <- proteoforms[valid_mask, , drop = FALSE]
     }
     if (nrow(proteoforms) == 0) {
