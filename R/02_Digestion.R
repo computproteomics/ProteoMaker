@@ -433,7 +433,7 @@ buildSearchIndexFromFasta <- function(parameters) {
 #' @importFrom crayon red
 #' @keywords internal
 fastDigest <- function(proteoform, parameters, searchIndex) {
-  acc <- proteoform$Accession
+  acc <- as.character(proteoform$Accession)
   # Find index entry for this accession (index is assumed to be present)
   e <- NULL
   if (!is.null(searchIndex$acc2idx) && !is.null(searchIndex$acc2idx[[acc]])) {
@@ -572,7 +572,7 @@ digestGroundTruth <- function(proteoforms, parameters, searchIndex = NULL) {
   if (!is.null(searchIndex)) {
     acc2idx <- searchIndex$acc2idx
     valid_mask <- vapply(seq_len(nrow(proteoforms)), function(i) {
-      acc <- proteoforms$Accession[i]
+    acc <- as.character(proteoforms$Accession[i])
       idx <- acc2idx[[acc]]
       if (is.null(idx)) return(FALSE)
       e <- searchIndex$proteins[[idx]]
