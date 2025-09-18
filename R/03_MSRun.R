@@ -149,6 +149,16 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     MSRun$WrongID <- FALSE
     if (length(shuffle) > 0) MSRun$WrongID[shuffle] <- TRUE
 
+    # Remove duplicate peptide sequences introduced by wrong-ID substitution
+    if ("Sequence" %in% names(MSRun)) {
+      dups <- duplicated(MSRun$Sequence)
+      if (any(dups)) {
+        removed <- sum(dups)
+        MSRun <- MSRun[!dups, , drop = FALSE]
+        message("  - Removed ", removed, " duplicate peptide sequences after wrong-ID step.")
+      }
+    }
+
     message("  - FDR addition finished.\n")
 
     # False PTM localization for different PTM types.
