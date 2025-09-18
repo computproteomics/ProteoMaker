@@ -434,10 +434,20 @@ buildSearchIndexFromFasta <- function(parameters) {
 #' @keywords internal
 fastDigest <- function(proteoform, parameters, searchIndex) {
   acc <- as.character(proteoform$Accession)
+  if (length(acc) != 1L || is.na(acc) || !nzchar(acc)) {
+    message("[fastDigest] Skipping proteoform with invalid accession: ", acc)
+    return(NULL)
+  }
   # Find index entry for this accession (index is assumed to be present)
   e <- NULL
-  if (!is.null(searchIndex$acc2idx) && !is.null(searchIndex$acc2idx[[acc]])) {
-    e <- searchIndex$proteins[[ searchIndex$acc2idx[[acc]] ]]
+  if (!is.null(searchIndex$acc2idx)) {
+    idx <- searchIndex$acc2idx[[acc]]
+    if (!is.null(idx)) {
+      e <- searchIndex$proteins[[ idx ]]
+    } else {
+      message("[fastDigest] Accession not found in index: ", acc)
+      return(NULL)
+    }
   } else {
     # Fallback linear scan (should be rare)
     idx_match <- which(vapply(searchIndex$proteins, function(x) identical(x$accession, acc), logical(1)))
@@ -572,7 +582,8 @@ digestGroundTruth <- function(proteoforms, parameters, searchIndex = NULL) {
   if (!is.null(searchIndex)) {
     acc2idx <- searchIndex$acc2idx
     valid_mask <- vapply(seq_len(nrow(proteoforms)), function(i) {
-    acc <- as.character(proteoforms$Accession[i])
+      acc <- as.character(proteoforms$Accession[i])
+      if (length(acc) != 1L || is.na(acc) || !nzchar(acc)) return(FALSE)
       idx <- acc2idx[[acc]]
       if (is.null(idx)) return(FALSE)
       e <- searchIndex$proteins[[idx]]
