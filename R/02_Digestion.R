@@ -120,6 +120,7 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
     for (a in names(aa_to_types)) aa_to_count[[a]] <- length(aa_to_types[[a]])
     aa_to_count
   }
+  aa_count <- local_aa_count
 
   if (!is.null(cores) && is.numeric(cores) && cores > 1L && cl_type %in% c("PSOCK","FORK")) {
     cl <- parallel::makeCluster(min(cores, parallel::detectCores()), type = cl_type)
