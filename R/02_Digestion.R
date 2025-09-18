@@ -82,7 +82,120 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
     }
   }
 
-  for (i in seq_len(nrow(proteins))) {
+  # Optional parallelization using parameters$Cores and parameters$ClusterType
+  cores <- tryCatch(parameters$Cores, error = function(e) NULL)
+  cl_type <- toupper(tryCatch(parameters$ClusterType, error = function(e) ""))
+
+  # Build AA count map once for worker export
+  # (mirror of buildAAMapsDigest but only counts are needed here)
+  local_aa_count <- {
+    default_types <- c("ph", "ox", "ac", "me", "de")
+    default_residues <- list(
+      ph = c("S", "T", "Y"),
+      ox = c("M", "W", "C", "Y"),
+      ac = c("K"),
+      me = c("K", "R"),
+      de = c("D", "E")
+    )
+    ptm_types <- parameters$PTMTypes
+    if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) ptm_types <- list(default_types)
+    if (is.list(ptm_types) && length(ptm_types) == 1) ptm_types <- ptm_types[[1]]
+    ptm_types <- ptm_types[!is.na(ptm_types)]
+    modres <- parameters$ModifiableResidues
+    if (is.null(modres) || length(modres) == 0 || all(is.na(modres))) {
+      modres_map <- default_residues
+    } else if (is.list(modres) && length(modres) == 1 && is.list(modres[[1]])) {
+      modres_map <- modres[[1]]
+    } else if (is.list(modres)) {
+      modres_map <- modres
+    } else {
+      modres_map <- default_residues
+    }
+    aa_to_types <- setNames(vector("list", length = 26L), LETTERS)
+    for (ptm in ptm_types) {
+      aa <- modres_map[[ptm]]
+      if (!is.null(aa) && length(aa) > 0) for (a in aa) aa_to_types[[a]] <- unique(c(aa_to_types[[a]], ptm))
+    }
+    aa_to_count <- setNames(integer(26L), LETTERS)
+    for (a in names(aa_to_types)) aa_to_count[[a]] <- length(aa_to_types[[a]])
+    aa_to_count
+  }
+
+  if (!is.null(cores) && is.numeric(cores) && cores > 1L && cl_type %in% c("PSOCK","FORK")) {
+    cl <- parallel::makeCluster(min(cores, parallel::detectCores()), type = cl_type)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    pep_min <- parameters$PepMinLength
+    pep_max <- parameters$PepMaxLength
+    max_mc  <- parameters$MaxNumMissedCleavages
+    parallel::clusterExport(cl, varlist = c("cre","pep_min","pep_max","max_mc","aa_count"), envir = environment())
+    tasks <- lapply(seq_len(nrow(proteins)), function(i) list(acc = proteins$Accession[i], seq = proteins$Sequence[i]))
+    parts <- parallel::parLapply(cl, tasks, function(t) {
+      # Cleavage → segments
+      loc <- stringi::stri_locate_all_regex(t$seq, cre)[[1]]
+      cs <- if (is.null(loc) || is.na(loc[1,1])) integer(0) else as.integer(loc[,1])
+      if (length(cs) == 0) {
+        starts <- 1L; stops <- nchar(t$seq)
+      } else {
+        starts <- c(1L, cs + 1L); stops <- c(cs, nchar(t$seq))
+      }
+      S <- length(starts); if (S == 0) return(NULL)
+      # Vectorized windows
+      target_min <- starts + (pep_min - 1L)
+      target_max <- starts + (pep_max - 1L)
+      e_min <- pmax(seq_len(S), findInterval(target_min - 1L, stops) + 1L)
+      e_max <- pmin(seq_len(S) + max_mc, findInterval(target_max, stops))
+      counts <- e_max - e_min + 1L; counts[counts < 0L] <- 0L
+      n_valid <- sum(counts); if (n_valid == 0L) return(NULL)
+      s_rep <- rep.int(seq_len(S), counts)
+      end_idx <- rep(e_min, counts) + sequence(counts) - 1L
+      st_pos <- starts[s_rep]; en_pos <- stops[end_idx]; mc_v <- end_idx - s_rep
+      # ai_counts and per-window counts
+      aic <- as.integer(aa_count[match(strsplit(t$seq, "", fixed = TRUE)[[1]], LETTERS)])
+      aic[is.na(aic)] <- 0L
+      lp <- c(0, cumsum(log1p(aic)))
+      cnt_vec <- exp(lp[en_pos + 1L] - lp[st_pos])
+      # Reconstruct valid_mc list
+      valid_mc <- vector("list", S)
+      if (length(mc_v) > 0) {
+        split_list <- split(mc_v, s_rep)
+        idx_names <- as.integer(names(split_list))
+        valid_mc[idx_names] <- split_list
+      }
+      list(
+        accession = t$acc,
+        sequence  = t$seq,
+        starts = starts, stops = stops, n_valid = n_valid,
+        ai_counts = aic,
+        win_start = st_pos, win_stop = en_pos, win_mc = as.integer(mc_v), win_count = as.numeric(cnt_vec),
+        pf_total = sum(cnt_vec)
+      )
+    })
+    for (i in seq_along(parts)) {
+      p <- parts[[i]]
+      if (is.null(p)) {
+        idx[[i]] <- NULL; dropped_no_windows <- dropped_no_windows + 1L; windows_per_protein[i] <- 0L; next
+      }
+      windows_per_protein[i] <- p$n_valid
+      idx[[i]] <- list(
+        accession = p$accession,
+        sequence  = p$sequence,
+        starts    = p$starts,
+        stops     = p$stops,
+        valid_mc  = p$valid_mc,
+        n_valid   = p$n_valid,
+        ai_counts = p$ai_counts,
+        pf_total  = p$pf_total,
+        win_start = p$win_start,
+        win_stop  = p$win_stop,
+        win_mc    = p$win_mc,
+        win_count = p$win_count
+      )
+      if (length(p$win_start) > 0) {
+        pep <- substring(p$sequence, p$win_start, p$win_stop)
+        add_map(gsub("I", "L", pep, perl = TRUE), p$accession)
+      }
+    }
+  } else for (i in seq_len(nrow(proteins))) {
     seqi <- proteins$Sequence[i]
     sites <- cleavageSites(seqi, cre)
     seg   <- segmentsFromSites(seqi, sites)
@@ -453,6 +566,27 @@ digestGroundTruth <- function(proteoforms, parameters, searchIndex = NULL) {
     "  - Cleavage will be performed by ", parameters$Enzyme, " with a maximum of ", parameters$MaxNumMissedCleavages,
     " miss-cleavages, to create peptides of length ", parameters$PepMinLength, " to ", parameters$PepMaxLength, " amino acids."
   )
+
+  # Filter proteoforms whose parent protein has no valid peptide windows in the index (if provided)
+  if (!is.null(searchIndex)) {
+    acc2idx <- searchIndex$acc2idx
+    valid_mask <- vapply(seq_len(nrow(proteoforms)), function(i) {
+      acc <- proteoforms$Accession[i]
+      idx <- acc2idx[[acc]]
+      if (is.null(idx)) return(FALSE)
+      e <- searchIndex$proteins[[idx]]
+      !is.null(e$win_start) && length(e$win_start) > 0
+    }, logical(1))
+    num_discard <- sum(!valid_mask)
+    if (num_discard > 0) {
+      message("  - Discarding ", num_discard, " proteoforms without valid peptide windows in index.")
+      proteoforms <- proteoforms[valid_mask, , drop = FALSE]
+    }
+    if (nrow(proteoforms) == 0) {
+      message("  - No proteoforms left to digest after filtering.\n#PROTEOFORM DIGESTION - Finish\n")
+      return(NULL)
+    }
+  }
 
   # Prefer serial digestion unless FORK clusters are used (to avoid copying large index)
   if (!is.null(parameters$Cores) && parameters$Cores > 1 && identical(tolower(parameters$ClusterType), "fork")) {
