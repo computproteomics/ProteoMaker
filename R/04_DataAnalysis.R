@@ -77,6 +77,53 @@ proteinSummarisation <- function(peptable, parameters) {
     other_cols <- colnames(peptable)[!colnames(peptable) %in% QuantColnames]
     message("  - built protein index for faster summarization")
 
+    # Diagnostics: duplicated stripped sequences within each protein group
+    dup_group_info <- list()
+    dup_total_rows <- 0L
+    dup_group_count <- 0L
+    n_groups <- length(prot_ind) - 1L
+    if (n_groups > 0L) {
+      for (gi in seq_len(n_groups)) {
+        start_i <- prot_ind[gi]
+        end_i <- prot_ind[gi + 1L] - 1L
+        if (end_i >= start_i) {
+          seqs <- peptable$Sequence[start_i:end_i]
+          dups <- seqs[duplicated(seqs)]
+          if (length(dups) > 0L) {
+            dup_group_count <- dup_group_count + 1L
+            dup_total_rows <- dup_total_rows + length(dups)
+            u <- unique(dups)
+            ct <- vapply(u, function(s) sum(seqs == s), numeric(1))
+            names(ct) <- u
+            dup_group_info[[names(prot_ind)[gi]]] <- ct
+          }
+        }
+      }
+      if (dup_group_count > 0L) {
+        message("  - Duplicated stripped sequences within protein groups: ", dup_total_rows,
+                " duplicate rows across ", dup_group_count, " groups.")
+        max_groups <- 5L; max_each <- 5L
+        shown <- head(names(dup_group_info), max_groups)
+        for (g in shown) {
+          ct <- dup_group_info[[g]]
+          o <- order(ct, decreasing = TRUE)
+          lbls <- names(ct)[o]
+          cnts <- ct[o]
+          if (length(lbls) > max_each) {
+            lbls <- lbls[1:max_each]
+            cnts <- cnts[1:max_each]
+          }
+          pairs <- paste0(lbls, " (n=", cnts, ")")
+          message("    ", g, ": ", paste(pairs, collapse = "; "))
+        }
+        if (length(dup_group_info) > max_groups) {
+          message("    ... ", length(dup_group_info) - max_groups, " more groups show duplicates.")
+        }
+      } else {
+        message("  - No duplicated stripped sequences within protein groups detected.")
+      }
+    }
+
     # Initiate and fill matrix with proteins
     protmat <- as.data.frame(matrix(ncol = ncol(peptable), nrow = length(prot_ind)))
     rownames(protmat) <- names(prot_ind)
