@@ -4,7 +4,7 @@
 \alias{proteoformDigestion}
 \title{Perform enzymatic digestion on a set of proteoforms}
 \usage{
-proteoformDigestion(proteoform, parameters)
+proteoformDigestion(proteoform, parameters, searchIndex = NULL)
 }
 \arguments{
 \item{proteoform}{A data frame containing proteoform sequences and associated data.}

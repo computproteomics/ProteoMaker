@@ -4,15 +4,7 @@
 \alias{fastDigest}
 \title{Perform enzymatic digestion on a single protein sequence}
 \usage{
-fastDigest(
-  sequence,
-  enzyme = "trypsin",
-  missed = 0,
-  length.max = NA,
-  length.min = NA,
-  mass.max = NA,
-  mass.min = NA
-)
+fastDigest(proteoform, parameters, searchIndex)
 }
 \arguments{
 \item{sequence}{A character string representing the protein sequence to be digested.}

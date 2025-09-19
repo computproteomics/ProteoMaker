@@ -11,3 +11,7 @@
 ^.gitignore
 ^inst/Proteomes/input_Stoechio
 ^tmp/
+^t\.rds$
+^\.Rhistory$
+^tests/testthat/Rplots\.pdf$
+^AGENTS\.md$

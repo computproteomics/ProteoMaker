@@ -4,7 +4,7 @@
 \alias{MSRunSim}
 \title{Simulate MS run analysis}
 \usage{
-MSRunSim(Digested, parameters)
+MSRunSim(Digested, parameters, searchIndex = NULL)
 }
 \arguments{
 \item{Digested}{A data frame containing digested peptides with associated data.}
