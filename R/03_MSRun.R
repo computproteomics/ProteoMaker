@@ -136,6 +136,13 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
                 message("    ", donors$Accession[[ii]], " -> ", ann[[ii]])
               }
             }
+            # Diagnostics: how diverse are donor windows and sequences
+            win_key <- paste(donors$Accession, donors$Start, donors$Stop, donors$MC, sep = ":")
+            n_unique_windows <- length(unique(win_key))
+            n_dupe_windows <- sum(duplicated(win_key))
+            seq_norm <- gsub("[I]", "L", donors$Peptide)
+            n_seq_dupes <- sum(duplicated(seq_norm))
+            message("  - Donor diversity: ", n_unique_windows, " unique windows out of ", length(win_key), "; duplicate windows: ", n_dupe_windows, "; duplicate stripped sequences across donors: ", n_seq_dupes, ".")
             # Keep intensities from MSRun; replace identities to simulate wrong IDs
             # Update sequence (I->L normalized) and PTM annotations; accession as list
             MSRun$Sequence[shuffle] <- gsub("[I]", "L", donors$Peptide)
@@ -350,10 +357,21 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
       pi <- as.integer(pi_chr)
       e <- index$proteins[[pi]]
       req <- length(by_prot[[pi_chr]])
-      wc <- e$win_count
-      if (is.null(wc) || length(wc) == 0 || !any(is.finite(wc))) next
-      probs <- wc / sum(wc)
-      sel <- sample.int(length(wc), size = req, replace = TRUE, prob = probs)
+      # Use log-counts when available to avoid overflow; otherwise fall back safely
+      log_wc <- tryCatch(e$win_log_count, error = function(x) NULL)
+      if (is.null(log_wc)) {
+        wc <- e$win_count
+        if (is.null(wc) || length(wc) == 0 || !any(is.finite(wc))) next
+        # Stabilize by working in log-space
+        log_wc <- log(pmax(wc, .Machine$double.xmin))
+      }
+      # Softmax in log-space for stable probabilities
+      m <- max(log_wc)
+      probs <- exp(log_wc - m)
+      s <- sum(probs)
+      if (!is.finite(s) || s <= 0) next
+      probs <- probs / s
+      sel <- sample.int(length(log_wc), size = req, replace = TRUE, prob = probs)
       for (jj in seq_len(req)) {
         k <- sel[[jj]]
         sp <- e$win_start[[k]]; ep <- e$win_stop[[k]]
