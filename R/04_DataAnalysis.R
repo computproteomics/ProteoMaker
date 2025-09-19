@@ -88,14 +88,18 @@ proteinSummarisation <- function(peptable, parameters) {
         end_i <- prot_ind[gi + 1L] - 1L
         if (end_i >= start_i) {
           seqs <- peptable$Sequence[start_i:end_i]
+          wrongid <- if ("WrongID" %in% names(peptable)) peptable$WrongID[start_i:end_i] else rep(NA, length(seqs))
           dups <- seqs[duplicated(seqs)]
           if (length(dups) > 0L) {
             dup_group_count <- dup_group_count + 1L
             dup_total_rows <- dup_total_rows + length(dups)
             u <- unique(dups)
+            # total counts per duplicated sequence
             ct <- vapply(u, function(s) sum(seqs == s), numeric(1))
-            names(ct) <- u
-            dup_group_info[[names(prot_ind)[gi]]] <- ct
+            # how many of those rows are WrongID
+            wt <- vapply(u, function(s) sum(wrongid[seqs == s], na.rm = TRUE), numeric(1))
+            # store as a small data.frame for later pretty printing
+            dup_group_info[[names(prot_ind)[gi]]] <- data.frame(seq = u, n = as.integer(ct), wrongID = as.integer(wt), stringsAsFactors = FALSE)
           }
         }
       }
@@ -105,16 +109,12 @@ proteinSummarisation <- function(peptable, parameters) {
         max_groups <- 5L; max_each <- 5L
         shown <- head(names(dup_group_info), max_groups)
         for (g in shown) {
-          ct <- dup_group_info[[g]]
-          o <- order(ct, decreasing = TRUE)
-          lbls <- names(ct)[o]
-          cnts <- ct[o]
-          if (length(lbls) > max_each) {
-            lbls <- lbls[1:max_each]
-            cnts <- cnts[1:max_each]
-          }
-          pairs <- paste0(lbls, " (n=", cnts, ")")
-          message("    ", g, ": ", paste(pairs, collapse = "; "))
+          df <- dup_group_info[[g]]
+          o <- order(df$n, decreasing = TRUE)
+          df <- df[o, , drop = FALSE]
+          if (nrow(df) > max_each) df <- df[seq_len(max_each), , drop = FALSE]
+          parts <- paste0(df$seq, " (n=", df$n, ", wrongID=", df$wrongID, ")")
+          message("    ", g, ": ", paste(parts, collapse = "; "))
         }
         if (length(dup_group_info) > max_groups) {
           message("    ... ", length(dup_group_info) - max_groups, " more groups show duplicates.")
