@@ -27,6 +27,10 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     # TODO: what about multiples from different fractions?
 
     message("\n#MS RUN SIMULATION - Start\n")
+    # Require a valid search index; wrong-ID substitution depends on it
+    if (is.null(searchIndex)) {
+      stop("MSRunSim requires a non-NULL searchIndex. Build it with buildSearchIndexFromFasta() and pass it in.")
+    }
     message(" + Noise addition:")
     message("  - The MS noise standard deviation is ", parameters$MSNoise, ".")
 
@@ -107,7 +111,7 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     shuffle <- order(runif(nrow(MSRun)), decreasing = T)[seq_len(parameters$WrongIDs*nrow(MSRun))]
     message(" + Addition of false identification:")
     message("  - FDR selected is ", parameters$WrongIDs*100, "% and corresponds to ", length(shuffle), " peptides.")
-    if (!is.null(searchIndex) && length(shuffle) > 0) {
+    if (length(shuffle) > 0) {
         # Estimate donor windows and peptidoform space only if needed
         non_null <- vapply(searchIndex$proteins, function(x) !is.null(x), logical(1))
         nz_proteins <- sum(non_null)
@@ -124,7 +128,7 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     }
 
     # Build peptidoform donors from the global index if provided
-    if (!is.null(searchIndex) && length(shuffle) > 0) {
+    if (length(shuffle) > 0) {
         donors <- .pm_sample_uniform_peptidoforms(searchIndex, parameters, length(shuffle))
         if (!is.null(donors) && nrow(donors) == length(shuffle)) {
             # Preview a few substituted peptidoforms
