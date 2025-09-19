@@ -154,7 +154,9 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
       aic <- as.integer(aa_count[match(strsplit(t$seq, "", fixed = TRUE)[[1]], LETTERS)])
       aic[is.na(aic)] <- 0L
       lp <- c(0, cumsum(log1p(aic)))
-      cnt_vec <- exp(lp[en_pos + 1L] - lp[st_pos])
+      # Keep log-counts to avoid overflow; linear counts derived via exp
+      log_cnt <- lp[en_pos + 1L] - lp[st_pos]
+      cnt_vec <- exp(log_cnt)
       # Reconstruct valid_mc list
       valid_mc <- vector("list", S)
       if (length(mc_v) > 0) {
@@ -189,7 +191,8 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
         win_start = p$win_start,
         win_stop  = p$win_stop,
         win_mc    = p$win_mc,
-        win_count = p$win_count
+        win_count = p$win_count,
+        win_log_count = log(p$win_count)
       )
       if (length(p$win_start) > 0) {
         pep <- substring(p$sequence, p$win_start, p$win_stop)
@@ -245,6 +248,7 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
     ai_counts <- as.integer(aac_map[match(aa_chars, LETTERS)])
     ai_counts[is.na(ai_counts)] <- 0L
     log_prefix <- c(0, cumsum(log1p(ai_counts)))
+    # Keep both log and linear peptidoform counts
     log_cnt <- log_prefix[win_stop + 1L] - log_prefix[win_start]
     win_count <- as.numeric(exp(log_cnt))
     pf_total <- sum(win_count)
@@ -269,7 +273,8 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
       win_start = win_start,
       win_stop  = win_stop,
       win_mc    = win_mc,
-      win_count = win_count
+      win_count = win_count,
+      win_log_count = log_cnt
     )
 
     # Peptide -> protein map (I->L normalized) from window vectors
