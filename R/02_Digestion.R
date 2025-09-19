@@ -89,27 +89,20 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
   # Build AA count map once for worker export
   # (mirror of buildAAMapsDigest but only counts are needed here)
   local_aa_count <- {
-    default_types <- c("ph", "ox", "ac", "me", "de")
-    default_residues <- list(
-      ph = c("S", "T", "Y"),
-      ox = c("M", "W", "C", "Y"),
-      ac = c("K"),
-      me = c("K", "R"),
-      de = c("D", "E")
-    )
     ptm_types <- parameters$PTMTypes
-    if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) ptm_types <- list(default_types)
+    # Treat missing/NA as no PTMs
+    if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) ptm_types <- character(0)
     if (is.list(ptm_types) && length(ptm_types) == 1) ptm_types <- ptm_types[[1]]
     ptm_types <- ptm_types[!is.na(ptm_types)]
     modres <- parameters$ModifiableResidues
     if (is.null(modres) || length(modres) == 0 || all(is.na(modres))) {
-      modres_map <- default_residues
+      modres_map <- list()
     } else if (is.list(modres) && length(modres) == 1 && is.list(modres[[1]])) {
       modres_map <- modres[[1]]
     } else if (is.list(modres)) {
       modres_map <- modres
     } else {
-      modres_map <- default_residues
+      modres_map <- list()
     }
     aa_to_types <- setNames(vector("list", length = 26L), LETTERS)
     for (ptm in ptm_types) {
@@ -375,6 +368,14 @@ buildSearchIndexFromFasta <- function(parameters) {
   message(" + Enzyme: ", parameters$Enzyme,
           ", len ", parameters$PepMinLength, "-", parameters$PepMaxLength,
           ", maxMC=", parameters$MaxNumMissedCleavages)
+  # Report PTM configuration affecting index peptidoform counts
+  ptm_types_msg <- tryCatch(parameters$PTMTypes, error = function(e) NULL)
+  if (is.list(ptm_types_msg) && length(ptm_types_msg) == 1) ptm_types_msg <- ptm_types_msg[[1]]
+  if (is.null(ptm_types_msg) || length(ptm_types_msg) == 0 || all(is.na(ptm_types_msg))) {
+    message(" + PTM types: none (peptidoform counts per window = 1)")
+  } else {
+    message(" + PTM types: ", paste(ptm_types_msg[!is.na(ptm_types_msg)], collapse = ", "))
+  }
 
   fasta_obj <- try(protr::readFASTA(file = parameters$PathToFasta, legacy.mode = TRUE, seqonly = FALSE), silent = TRUE)
   if (inherits(fasta_obj, "try-error")) stop("Failed to read FASTA: ", parameters$PathToFasta)

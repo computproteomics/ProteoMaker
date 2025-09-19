@@ -33,6 +33,13 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     }
     message(" + Noise addition:")
     message("  - The MS noise standard deviation is ", parameters$MSNoise, ".")
+    # Report PTM sampling configuration for wrong-ID donors
+    cfg <- .pm_get_ptm_config(parameters)
+    if (length(cfg$types) == 0) {
+      message("  - PTM sampling: none (donors are unmodified peptidoforms)")
+    } else {
+      message("  - PTM sampling types: ", paste(cfg$types, collapse = ", "))
+    }
 
     # Introducing random noise to MS analysis due to MS instrument.
     matnoise <- matrix(rnorm(n = nrow(Digested) * length(parameters$QuantColnames), mean = 0, sd = parameters$MSNoise),
@@ -273,25 +280,15 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
 # Internal helpers to sample uniform peptidoforms from a full index
 .pm_get_ptm_config <- function(parameters) {
-  # Defaults if parameters are missing/NA
-  default_types <- c("ph", "ox", "ac", "me", "de")
-  default_residues <- list(
-    ph = c("S", "T", "Y"),
-    ox = c("M", "W", "C", "Y"),
-    ac = c("K"),
-    me = c("K", "R"),
-    de = c("D", "E")
-  )
   ptm_types <- tryCatch(parameters$PTMTypes, error = function(e) NULL)
-  if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) {
-    ptm_types <- list(default_types)
-  }
+  # If not provided or all NA, treat as no PTMs
+  if (is.null(ptm_types) || length(ptm_types) == 0 || all(is.na(ptm_types))) ptm_types <- character(0)
   # Flatten one level if provided as list-of-one
   if (is.list(ptm_types) && length(ptm_types) == 1) ptm_types <- ptm_types[[1]]
   ptm_types <- ptm_types[!is.na(ptm_types)]
   modres <- tryCatch(parameters$ModifiableResidues, error = function(e) NULL)
   if (is.null(modres) || length(modres) == 0 || all(is.na(modres))) {
-    modres_map <- default_residues
+    modres_map <- list()
   } else {
     # If nested list, pick first layer
     if (is.list(modres) && length(modres) == 1 && is.list(modres[[1]])) {
@@ -299,7 +296,7 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     } else if (is.list(modres)) {
       modres_map <- modres
     } else {
-      modres_map <- default_residues
+      modres_map <- list()
     }
   }
   list(types = ptm_types, residues = modres_map)
