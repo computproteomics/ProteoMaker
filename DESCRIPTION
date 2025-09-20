@@ -11,24 +11,17 @@ Description: ProteoMaker is a package designed to simulate proteomics data from 
     install necessary dependencies, load main scripts, and run simulations with configurable parameters.
 Depends: R (>= 4.0.0)
 Imports: 
-    purrr, 
     crayon, 
     parallel, 
     digest, 
     protr, 
-    preprocessCore, 
     matrixStats, 
     extraDistr, 
-    fdrtool, 
-    qvalue, 
-    limma, 
-    moments, 
     Hmisc, 
     gplots, 
     plotly, 
     yaml, 
     SummarizedExperiment, 
-    cleaver,
     stringr, 
     dplyr,
     e1071,
@@ -37,7 +30,6 @@ Imports:
     lattice,
     colorspace,
     S4Vectors,
-    DT,
     PolySTest,
     PeptideRanger,
     tidyr,
@@ -59,7 +51,7 @@ Suggests:
 License: MIT
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 NeedsCompilation: no
 VignetteBuilder: knitr
 Config/testthat/edition: 3

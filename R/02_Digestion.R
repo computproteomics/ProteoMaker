@@ -57,7 +57,6 @@ enumerateValidWindows <- function(starts, stops, pep_min, pep_max, max_mc) {
 #'
 #' @param proteins data.frame with columns Accession and Sequence
 #' @param parameters list with Enzyme, PepMinLength, PepMaxLength, MaxNumMissedCleavages
-#' @param includePep2Prot logical, whether to compute shared peptide map
 #' @return list with proteins, weights, optional pep2prot, params, build_time_sec
 #' @keywords internal
 buildSearchIndexFromSequences <- function(proteins, parameters) {
@@ -116,6 +115,7 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
   aa_count <- local_aa_count
 
   if (!is.null(cores) && is.numeric(cores) && cores > 1L && cl_type %in% c("PSOCK","FORK")) {
+    message(" + Building proteome index in parallel (", cl_type, ") with ", min(cores, parallel::detectCores()), " workers")
     cl <- parallel::makeCluster(min(cores, parallel::detectCores()), type = cl_type)
     on.exit(parallel::stopCluster(cl), add = TRUE)
     pep_min <- parameters$PepMinLength
@@ -286,7 +286,7 @@ buildSearchIndexFromSequences <- function(proteins, parameters) {
     accs <- vapply(idx, function(x) x$accession, character(1))
     acc2idx <- stats::setNames(seq_along(accs), accs)
   }
-  raw_w <- if (length(idx) > 0) vapply(idx, function(x) x$n_valid, integer(1)) else integer(0)
+  raw_w <- if (length(idx) > 0) vapply(idx, function(x) as.numeric(x$n_valid), numeric(1)) else numeric(0)
   weights <- if (length(raw_w) == 0) {
     numeric(0)
   } else if (sum(raw_w) > 0) {
@@ -418,26 +418,18 @@ buildSearchIndexFromFasta <- function(parameters) {
 
 
 
-#' Perform enzymatic digestion on a single protein sequence
+#' Digest a single proteoform using the precomputed index
 #'
-#' This function simulates enzymatic digestion on a single protein sequence, supporting multiple
-#' cleavage rules for enzymes such as trypsin, chymotrypsin, pepsin, lysC, and argC. The function
-#' returns peptides filtered by length and mass, including calculations for charges +1, +2, and +3.
+#' Uses window vectors from the search index for the proteoform accession,
+#' and computes peptide masses (+1, +2, +3). Returns NULL if the accession
+#' is not present or has no valid windows in the index.
 #'
-#' @param sequence A character string representing the protein sequence to be digested.
-#' @param enzyme A character string specifying the enzyme to use for digestion. Default is "trypsin".
-#' @param missed An integer specifying the maximum number of missed cleavages. Default is 0.
-#' @param length.max An integer specifying the maximum peptide length. Default is NA.
-#' @param length.min An integer specifying the minimum peptide length. Default is NA.
-#' @param mass.max A numeric value specifying the maximum peptide mass. Default is NA.
-#' @param mass.min A numeric value specifying the minimum peptide mass. Default is NA.
+#' @param proteoform A one-row data.frame with columns Accession and Sequence.
+#' @param parameters List with digestion parameters; used to resolve defaults.
+#' @param searchIndex Index built by \code{buildSearchIndexFromSequences} or \code{buildSearchIndexFromFasta}.
 #'
-#' @return A data frame with the digested peptides, including their mass/charge (M/Z) ratios for charges +1, +2, and +3.
-#' If no peptides meet the criteria, the function returns \code{NULL}.
+#' @return A data.frame with columns Peptide, Start, Stop, MC, MZ1, MZ2, MZ3; or NULL.
 #'
-#' @importFrom dplyr case_when bind_rows
-#' @importFrom stringi stri_locate_all_regex
-#' @importFrom crayon red
 #' @keywords internal
 fastDigest <- function(proteoform, parameters, searchIndex) {
   acc <- as.character(proteoform$Accession)

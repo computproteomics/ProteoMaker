@@ -2,32 +2,23 @@
 % Please edit documentation in R/02_Digestion.R
 \name{fastDigest}
 \alias{fastDigest}
-\title{Perform enzymatic digestion on a single protein sequence}
+\title{Digest a single proteoform using the precomputed index}
 \usage{
 fastDigest(proteoform, parameters, searchIndex)
 }
 \arguments{
-\item{sequence}{A character string representing the protein sequence to be digested.}
+\item{proteoform}{A one-row data.frame with columns Accession and Sequence.}
 
-\item{enzyme}{A character string specifying the enzyme to use for digestion. Default is "trypsin".}
+\item{parameters}{List with digestion parameters; used to resolve defaults.}
 
-\item{missed}{An integer specifying the maximum number of missed cleavages. Default is 0.}
-
-\item{length.max}{An integer specifying the maximum peptide length. Default is NA.}
-
-\item{length.min}{An integer specifying the minimum peptide length. Default is NA.}
-
-\item{mass.max}{A numeric value specifying the maximum peptide mass. Default is NA.}
-
-\item{mass.min}{A numeric value specifying the minimum peptide mass. Default is NA.}
+\item{searchIndex}{Index built by \code{buildSearchIndexFromSequences} or \code{buildSearchIndexFromFasta}.}
 }
 \value{
-A data frame with the digested peptides, including their mass/charge (M/Z) ratios for charges +1, +2, and +3.
-If no peptides meet the criteria, the function returns \code{NULL}.
+A data.frame with columns Peptide, Start, Stop, MC, MZ1, MZ2, MZ3; or NULL.
 }
 \description{
-This function simulates enzymatic digestion on a single protein sequence, supporting multiple
-cleavage rules for enzymes such as trypsin, chymotrypsin, pepsin, lysC, and argC. The function
-returns peptides filtered by length and mass, including calculations for charges +1, +2, and +3.
+Uses window vectors from the search index for the proteoform accession,
+and computes peptide masses (+1, +2, +3). Returns NULL if the accession
+is not present or has no valid windows in the index.
 }
 \keyword{internal}

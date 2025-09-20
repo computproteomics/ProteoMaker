@@ -191,7 +191,7 @@ proteinSummarisation <- function(peptable, parameters) {
               }
 
             } else {
-                error("No valid method provided!")
+                stop("No valid method provided!")
             }
         }
         return(out)

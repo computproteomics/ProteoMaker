@@ -10,8 +10,6 @@ buildSearchIndexFromSequences(proteins, parameters)
 \item{proteins}{data.frame with columns Accession and Sequence}
 
 \item{parameters}{list with Enzyme, PepMinLength, PepMaxLength, MaxNumMissedCleavages}
-
-\item{includePep2Prot}{logical, whether to compute shared peptide map}
 }
 \value{
 list with proteins, weights, optional pep2prot, params, build_time_sec

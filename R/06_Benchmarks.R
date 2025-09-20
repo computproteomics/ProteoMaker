@@ -297,17 +297,18 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     for (i in 1:length(patterns)) {
         tampl <- amplitudes[[i]]
         diffs[i] <- diffsmod[i] <- 0
-        if (length(na.omit(tampl)) > 0) {
+        pat <- patterns[[i]]
+        if (length(na.omit(tampl)) > 0 && is.matrix(pat) && ncol(pat) > 1) {
             tampl[is.na(tampl)] <- 0
-            tval <- patterns[i][[1]] * tampl
-            tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
+            tval <- pat * tampl
+            tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
             sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]
             tdiff <- (tval - sdata) * (tval - sdata)
             if (!is.na(tdiff)) {
                 sumsquare <- sumsquare + tdiff
                 diffs[i] <- tval
-                if(length(StatsPep$PTMType[i][[1]]) > 0) {
-                    sumsquaremod <- sumsquaremod  + tdiff
+                if (length(StatsPep$PTMType[i][[1]]) > 0) {
+                    sumsquaremod <- sumsquaremod + tdiff
                     diffsmod[i] <- tval
                 }
             }
