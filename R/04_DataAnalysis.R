@@ -77,12 +77,68 @@ proteinSummarisation <- function(peptable, parameters) {
     other_cols <- colnames(peptable)[!colnames(peptable) %in% QuantColnames]
     message("  - built protein index for faster summarization")
 
+    # Diagnostics: duplicated stripped sequences within each protein group
+    dup_group_info <- list()
+    dup_total_rows <- 0L
+    dup_group_count <- 0L
+    n_groups <- length(prot_ind) - 1L
+    if (n_groups > 0L) {
+      for (gi in seq_len(n_groups)) {
+        start_i <- prot_ind[gi]
+        end_i <- prot_ind[gi + 1L] - 1L
+        if (end_i >= start_i) {
+          seqs <- peptable$Sequence[start_i:end_i]
+          wrongid <- if ("WrongID" %in% names(peptable)) peptable$WrongID[start_i:end_i] else rep(NA, length(seqs))
+          dups <- seqs[duplicated(seqs)]
+          if (length(dups) > 0L) {
+            dup_group_count <- dup_group_count + 1L
+            dup_total_rows <- dup_total_rows + length(dups)
+            u <- unique(dups)
+            # total counts per duplicated sequence
+            ct <- vapply(u, function(s) sum(seqs == s), numeric(1))
+            # how many of those rows are WrongID
+            wt <- vapply(u, function(s) sum(wrongid[seqs == s], na.rm = TRUE), numeric(1))
+            # store as a small data.frame for later pretty printing
+            dup_group_info[[names(prot_ind)[gi]]] <- data.frame(seq = u, n = as.integer(ct), wrongID = as.integer(wt), stringsAsFactors = FALSE)
+          }
+        }
+      }
+      if (dup_group_count > 0L) {
+        message("  - Duplicated stripped sequences within protein groups: ", dup_total_rows,
+                " duplicate rows across ", dup_group_count, " groups.")
+        max_groups <- 5L; max_each <- 5L
+        shown <- head(names(dup_group_info), max_groups)
+        for (g in shown) {
+          df <- dup_group_info[[g]]
+          o <- order(df$n, decreasing = TRUE)
+          df <- df[o, , drop = FALSE]
+          if (nrow(df) > max_each) df <- df[seq_len(max_each), , drop = FALSE]
+          parts <- paste0(df$seq, " (n=", df$n, ", wrongID=", df$wrongID, ")")
+          message("    ", g, ": ", paste(parts, collapse = "; "))
+        }
+        if (length(dup_group_info) > max_groups) {
+          message("    ... ", length(dup_group_info) - max_groups, " more groups show duplicates.")
+        }
+      } else {
+        message("  - No duplicated stripped sequences within protein groups detected.")
+      }
+    }
+
     # Initiate and fill matrix with proteins
     protmat <- as.data.frame(matrix(ncol = ncol(peptable), nrow = length(prot_ind)))
     rownames(protmat) <- names(prot_ind)
     colnames(protmat) <- colnames(peptable)
 
     message("  - Initiated protein matrix for ", length(prot_ind), " protein groups")
+    # Diagnostics: potential duplicate first sequences across protein groups
+    if ((length(prot_ind) - 1) > 1 && "Sequence" %in% colnames(peptable)) {
+        first_rows <- prot_ind[1:(length(prot_ind)-1)]
+        first_seq <- peptable$Sequence[first_rows]
+        dup_count <- sum(duplicated(first_seq))
+        if (dup_count > 0) {
+            message("  - Note: ", dup_count, " protein groups share the same first peptide sequence; row names will use group keys to avoid clashes.")
+        }
+    }
     message("  - Summarizing proteins, this can take a while")
 
     # Function to summarize protein groups
@@ -135,7 +191,7 @@ proteinSummarisation <- function(peptable, parameters) {
               }
 
             } else {
-                error("No valid method provided!")
+                stop("No valid method provided!")
             }
         }
         return(out)
@@ -170,6 +226,8 @@ proteinSummarisation <- function(peptable, parameters) {
                 out[QuantColnames] <- tout
                 # add other information
                 out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
+                # ensure unique row name per protein group (use group key)
+                rownames(out) <- names(prot_ind)[i]
             } else {
                 out <- NULL
             }
@@ -186,6 +244,7 @@ proteinSummarisation <- function(peptable, parameters) {
             out[QuantColnames] <- tout
             # add other information
             out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
+            rownames(out) <- names(prot_ind)[i]
             } else {
                 out <- NULL
             }
@@ -193,6 +252,7 @@ proteinSummarisation <- function(peptable, parameters) {
         })
     }
     # join all protein data
+    proteins <- Filter(Negate(is.null), proteins)
     protmat <- do.call(rbind, proteins)
     protmat[protmat == -Inf] <- NA
     protmat <- protmat[rowSums(is.na(protmat[,QuantColnames])) < length(QuantColnames), ]
@@ -203,4 +263,3 @@ proteinSummarisation <- function(peptable, parameters) {
     return(protmat)
 
 }
-

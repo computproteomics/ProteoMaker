@@ -231,16 +231,20 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
         values[values == "NA"] <- NA  # Replace "NA" strings with actual NA values
         as.numeric(values)
     })
+    # pick first available log-ratios column for proteins
+    lr_cols_stats <- grep("^log-ratios", colnames(Stats), value = TRUE)
+    lr_col_stat <- if (length(lr_cols_stats) > 0) lr_cols_stats[1] else NA_character_
     diffs <- vector("numeric",length(patterns))
     sumsquare <- 0
     for (i in 1:length(patterns)) {
         tampl <- na.omit(amplitudes[i][[1]])
         if (length(tampl)> 0) {
             tval <- patterns[i][[1]] * tampl
-            if(length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval) & !is.na(Stats$`log-ratios 2 vs 1`[i]))) {
+            ok_lr <- !is.na(lr_col_stat) && !is.na(Stats[i, lr_col_stat])
+            if(length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval) & ok_lr)) {
                 tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
                 diffs[i] <- tval
-                sumsquare <- sumsquare + (tval - Stats$`log-ratios 2 vs 1`[i]) * (tval - Stats$`log-ratios 2 vs 1`[i])
+                sumsquare <- sumsquare + (tval - Stats[i, lr_col_stat]) * (tval - Stats[i, lr_col_stat])
             } else {
                 diffs[i] <- 0
             }
@@ -293,17 +297,18 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     for (i in 1:length(patterns)) {
         tampl <- amplitudes[[i]]
         diffs[i] <- diffsmod[i] <- 0
-        if (length(na.omit(tampl)) > 0) {
+        pat <- patterns[[i]]
+        if (length(na.omit(tampl)) > 0 && is.matrix(pat) && ncol(pat) > 1) {
             tampl[is.na(tampl)] <- 0
-            tval <- patterns[i][[1]] * tampl
-            tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
+            tval <- pat * tampl
+            tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
             sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]
             tdiff <- (tval - sdata) * (tval - sdata)
             if (!is.na(tdiff)) {
                 sumsquare <- sumsquare + tdiff
                 diffs[i] <- tval
-                if(length(StatsPep$PTMType[i][[1]]) > 0) {
-                    sumsquaremod <- sumsquaremod  + tdiff
+                if (length(StatsPep$PTMType[i][[1]]) > 0) {
+                    sumsquaremod <- sumsquaremod + tdiff
                     diffsmod[i] <- tval
                 }
             }
@@ -366,19 +371,19 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
     # Adjust by protein expression (could be moved to Statistics)
     AdjModPepsWithProt <- ModPepsWithProt
     AdjModPepsWithProt[,Param$QuantColnames] <- AdjModPepsWithProt[,Param$QuantColnames] - Stats[as.character(AdjModPepsWithProt$merged_accs), Param$QuantColnames]
-    StatsAdjModPep <- 0
-    if (nrow(AdjModPepsWithProt) > 200) {
-        message("Warning: less than 200 modified peptides with corresponding unmodified peptides, skipping stats")
+    StatsAdjModPep <- NULL
+    if (nrow(AdjModPepsWithProt) <= 200) {
+        message("Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats")
+    } else {
         StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=T)
 
-        # results on basis of ground truth
+        # results on basis of ground truth (derive statCols from StatsAdjModPep)
+        statColsAdj <- grep("FDR", colnames(StatsAdjModPep), value = TRUE)
         ROC <- list()
-        plot(0:1, 0:1, type="n", main="Adj. modified peptides")
-        for (test in statCols) {
+        # plotting skipped in non-interactive contexts
+        for (test in statColsAdj) {
             testSum <-  calcROC(StatsAdjModPep, test)
             if (nrow(testSum) > 1) {
-                lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
-                lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
                 ROC[[test]] <- testSum
                 at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
                 at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
@@ -390,7 +395,6 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
                 globalBMs$tFDRAdjModPep0.05[[test]] <- testSum[at.05, "tFDR"]
             }
         }
-        legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
         Benchmarks$AdjModPepStat <- ROC
     }
 

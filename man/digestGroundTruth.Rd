@@ -4,7 +4,7 @@
 \alias{digestGroundTruth}
 \title{Perform proteoform digestion on a set of proteoforms with optional parallel computing}
 \usage{
-digestGroundTruth(proteoforms, parameters)
+digestGroundTruth(proteoforms, parameters, searchIndex = NULL)
 }
 \arguments{
 \item{proteoforms}{A data frame containing the proteoform sequences and associated data.}

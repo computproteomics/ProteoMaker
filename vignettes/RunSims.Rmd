@@ -13,23 +13,15 @@ vignette: >
 
 ProteoMaker is a simulation tool for generating synthetic proteomics datasets. This vignette will guide you through the process of setting up and running ProteoMaker simulations, as well as visualizing the results.
 
+```{r, include=FALSE}
+# Do not execute code chunks during vignette builds
+knitr::opts_chunk$set(eval = FALSE)
+```
+
 ## Installation
 
-ProteoMaker requires installation via the `devtools` package. You can install ProteoMaker using the following command:
-
-```{r}
-# Install ProteoMaker
-if (!requireNamespace("devtools", quietly = TRUE)) {
-    install.packages("devtools", repos = "https://cran.r-project.org")
-}
-devtools::install_github("computproteomics/ProteoMaker")
-```
-
-And load the library
-```{r}
-# Load ProteoMaker
-library(ProteoMaker)
-```
+Install ProteoMaker from source or your preferred repository before running the examples.
+This vignette shows example code for running simulations; code execution is disabled during build.
 
 ## Configuration
 
