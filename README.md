@@ -6,10 +6,10 @@ All the parameters that are used to generate the data are described in [man/Para
 
 The pipeline is described in the figure [`ProteoMakerLayout.svg`](inst/img/ProteoMakerLayout) and can be described as follows:
 
-0) General functions to run the simulations: [`00_BachRunFuncs.R`](R/00_BatchRunFuncs.R)
-1) Generation of ground truth data at the proteoform leve:l [`01_GenerateGroundTruth.R`](R/01_GenerateGroundTruth.R).
+0) General functions to run the simulations: [`00_BachRunFuncs.R`](R/00_BatchRunFuncs.R).
+1) Generation of ground truth data at the proteoform level: [`01_GenerateGroundTruth.R`](R/01_GenerateGroundTruth.R).
 2) Digestion of the proteoforms from the ground truth: [`02_Digestion.R`](R/02_Digestion.R).
-3) In silico MS run [`03_MSRun.R`](R/03_MSRun.R).
+3) In silico MS run: [`03_MSRun.R`](R/03_MSRun.R).
 4) Functions for data analysis from the peptide to proteins: [`04_DataAnalysis.R`](R/04_DataAnalysis.R).
 5) Statistical testing: [`05_Statistics.R`](R/05_Statistics.R).
 6) Benchmarking: [`06_Benchmarks.R`](R/06_Benchmarks.R).
@@ -29,7 +29,7 @@ Re-running the full batch with different assessment of the benchmarking metrics 
 
 Important remarks:
 
-- You need to always define _all_ parameters in the beginning of this script
-- Be aware that changing downstream parameters (ground truth, digestion) can immensely increase the number of possible parameter settings
-- Keep always the result files in the respective folder (`resultFilePath`) if you didn't change anything in the pipeline such as any of the methods in the sourced files. This will allow you to run the full batch without re-running the data set generation and analysis.
-- For data set with only few quantified proteins (<100), benchmarking is discarding.
+- Always define _all_ parameters in the beginning of this script.
+- Be aware that changing downstream parameters (ground truth, digestion) can immensely increase the number of possible parameter settings.
+- Always keep the result files in the respective folders (`resultFilePath`) if you didn't change anything in the pipeline, such as any of the methods in the sourced files. This will allow you to run the full batch without re-running the data set generation and analysis.
+- For a data set with <100 quantified proteins, the benchmarking is omitted.
