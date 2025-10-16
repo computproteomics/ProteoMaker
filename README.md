@@ -9,7 +9,7 @@ The pipeline is described in the figure [`ProteoMakerLayout.svg`](inst/img/Prote
 0) General functions to run the simulations: [`00_BatchRunFuncs.R`](R/00_BatchRunFuncs.R)
 1) Generation of ground truth data at the proteoform level [`01_GenerateGroundTruth.R`](R/01_GenerateGroundTruth.R).
 2) Digestion of the proteoforms from the ground truth: [`02_Digestion.R`](R/02_Digestion.R).
-3) In silico MS run [`03_MSRun.R`](R/03_MSRun.R).
+3) In silico MS run: [`03_MSRun.R`](R/03_MSRun.R).
 4) Functions for data analysis from the peptide to proteins: [`04_DataAnalysis.R`](R/04_DataAnalysis.R).
 5) Statistical testing: [`05_Statistics.R`](R/05_Statistics.R).
 6) Benchmarking: [`06_Benchmarks.R`](R/06_Benchmarks.R).
