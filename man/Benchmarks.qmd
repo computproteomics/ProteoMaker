@@ -8,8 +8,6 @@ This document provides a detailed description of the benchmarks used in the Prot
 
 ## List of Benchmarks
 
-The following values and distributions are collected and will be used for comparing the results.
-
 The following values and distributions are collected and used for assessing quantitative and statistical fidelity of the simulation and benchmarking pipeline.
 
 ### Peptide Level
@@ -24,13 +22,13 @@ The following values and distributions are collected and used for assessing quan
 
 -   **Percentage Missingness** (`percMissingPep`, label: **% Missing peptide values**): Percentage of missing values across peptide-level intensities.
 
--   **AUC of ROC Curve for Correct Differentially Regulated Features** (`aucDiffRegProteins.FDR_limma 2 vs 1.AUC`, label: *Peptide AUC (truth vs FDR)*): Area under the ROC curve for identifying true positives based on ground truth, based on Limma test
+-   **AUC of ROC Curve for Correct Differentially Regulated Peptides** (`aucDiffRegPeptides.FDR_limma 2 vs 1.AUC`, label: *Peptide AUC (truth vs limma FDR)*): Area under the ROC curve for identifying truly regulated peptides using the limma-based FDR estimates.
 
 -   **TPR (True Positive Rate)** (`tprPep0.01.FDR_limma 2 vs 1.TPR`, `tprPep0.05.FDR_limma 2 vs 1.TPR`, label: *TPR peptide (FDR \< 0.01/0.05)*): True positive rate at estimated FDR thresholds of 0.01 and 0.05.
 
 -   **True FDR for Estimated FDR** (`tFDRPep0.01.FDR_limma 2 vs 1.tFDR`, `tFDRPep0.05.FDR_limma 2 vs 1.tFDR`, label: *True FDR (peptides)*): Actual (true) FDR at estimated FDR levels of 0.01 and 0.05.
 
--   **Proportion of Cleaved Peptides** (`propMisCleavedPeps`, label: *Miscleavage distribution*): Proportional distribution of miscleavage events.
+-   **Miscleavage Count Distribution** (`propMisCleavedPeps`, label: *Miscleavage distribution*): Vector of proportions for peptides grouped by their number of missed cleavages (e.g., fractions for 0, 1, 2, ... missed cleavages).
 
 -   **Dynamic Range** (`dynRangePep`, label: *Dynamic range (peptides)*): Log2 range of peptide intensities.
 
@@ -46,7 +44,7 @@ The following values and distributions are collected and used for assessing quan
 
 ### Protein Level
 
--   **Number of Quantified Protein Groups** (`numQuantProtGroups`, label: **#Quantified proteins**): Total number of proteins with quantified unmodified peptides.
+-   **Number of Quantified Protein Groups** (`numQuantProtGroups`, label: **#Quantified proteins**): Count of protein groups that passed summarisation (respecting the configured shared/modified peptide settings) and retain at least one quantified value.
 
 -   **Proportion of Quantified Uniquely Identified Proteins** (`propUniqueProts`, label: **% Unique proteins**): Fraction of protein groups with only unique peptides.
 
@@ -56,9 +54,9 @@ The following values and distributions are collected and used for assessing quan
 
 -   **AUC of ROC Curve for Correct Differentially Regulated Features** (`aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC`, label: *Protein AUC (truth vs FDR)*): AUC for identifying differentially regulated proteins, applying PolySTest.
 
--   **TPR (True Positive Rate)** (`tprProt0.01.FDR_PolySTest 2 vs 1.tFDR`, `tprProt0.05.FDR_PolySTest 2 vs 1.tFDR`, label: *TPR protein (FDR \< 0.01/0.05)*): True positive rate for regulated proteins at estimated FDRs 0.01 and 0.05. Estimated with PolySTest.
+-   **TPR (True Positive Rate)** (`tprProt0.01.FDR_PolySTest 2 vs 1.TPR`, `tprProt0.05.FDR_PolySTest 2 vs 1.TPR`, label: *TPR protein (FDR \< 0.01/0.05)*): True positive rate for regulated protein groups at PolySTest-estimated FDR thresholds of 0.01 and 0.05.
 
--   **True FDR for Estimated FDR** (`tFDRProt0.01.FDR_PolySTest 2 vs 1.TPR`, `tFDRProt0.05.FDR_PolySTest 2 vs 1.TPR`, label: *True FDR (proteins)*): Actual FDR for proteins at estimated FDRs 0.01 and 0.05.
+-   **True FDR for Estimated FDR** (`tFDRProt0.01.FDR_PolySTest 2 vs 1.tFDR`, `tFDRProt0.05.FDR_PolySTest 2 vs 1.tFDR`, label: *True FDR (proteins)*): Actual false-discovery rate realised at those PolySTest thresholds.
 
 -   **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCProt`, label: *Fold-change error (proteins)*): Average squared error between simulated and measured log2 fold-changes.
 
@@ -66,9 +64,9 @@ The following values and distributions are collected and used for assessing quan
 
 -   **Mean of Std. Dev. Within Replicates** (`sdWithinRepsProt`, label: *Replicate SD (proteins)*): Within-group variation of regulated proteins.
 
--   **Proportion of Proteins with Miscleaved Peptides** (`propMisCleavedProts`, label: **% Miscleaved proteins**): Vector of fraction of proteins having at least \[0-n\] miscleaved peptides.
+-   **Proportion of Proteins with Miscleaved Peptides** (`propMisCleavedProts`, label: **% Miscleaved proteins**): Fraction of quantified protein groups that contain at least one peptide with a missed cleavage.
 
--   **Proportion of Regulated Proteins with Wrong Identified Peptides** (`propDiffRegWrongIDProt0.01`, `propDiffRegWrongIDProt0.05`, label: **% Wrong-ID (proteins)**): Fraction of regulated proteins with wrongly identified peptides at 0.01 and 0.05 FDR.
+-   **Proportion of Regulated Proteins with Wrong Identified Peptides** (`propDiffRegWrongIDProt0.01.FDR_PolySTest 2 vs 1`, `propDiffRegWrongIDProt0.05.FDR_PolySTest 2 vs 1`, label: **% Wrong-ID (proteins)**): Fraction of regulated proteins with wrongly identified peptides at 0.01 and 0.05 PolySTest FDR thresholds.
 
 -   **Skewness** (`skewnessProts`, label: *Skewness (proteins)*): Asymmetry in distribution of protein intensities.
 
@@ -84,13 +82,13 @@ The following values and distributions are collected and used for assessing quan
 
 -   **Proportion of Modified Peptides with Identical Non-Modified Form** (`propModAndUnmodPep`, label: **% Modified with unmodified match**): Fraction of modified peptides that have a corresponding unmodified form.
 
--   **AUC for Correctly Regulated Modified Peptides** (`aucDiffRegAdjModPep`, label: *AUC (adj. mod. peptides)*): AUC calculated after adjustment for parent protein abundance.
+-   **AUC for Correctly Regulated Modified Peptides** (`aucDiffRegAdjModPep.FDR_limma 2 vs 1.AUC`, label: *AUC (adj. mod. peptides)*): AUC calculated after adjustment for parent protein abundance (reported only when at least 200 modified peptides have matching protein quantification).
 
--   **TPR** (`tprAdjModPep0.01`, `tprAdjModPep0.05`, label: *TPR (adj. mod. peptides)*): True positive rate for regulated modified peptides at estimated FDRs 0.01 and 0.05.
+-   **TPR** (`tprAdjModPep0.01.FDR_limma 2 vs 1.TPR`, `tprAdjModPep0.05.FDR_limma 2 vs 1.TPR`, label: *TPR (adj. mod. peptides)*): True positive rate for regulated modified peptides at estimated FDRs 0.01 and 0.05.
 
--   **True FDR** (`tFDRAdjModPep0.01`, `tFDRAdjModPep0.05`, label: *True FDR (mod. peptides)*): Actual FDR of modified peptide results at FDRs 0.01 and 0.05.
+-   **True FDR** (`tFDRAdjModPep0.01.FDR_limma 2 vs 1.tFDR`, `tFDRAdjModPep0.05.FDR_limma 2 vs 1.tFDR`, label: *True FDR (mod. peptides)*): Actual FDR of modified peptide results at FDRs 0.01 and 0.05.
 
--   **Proportion of Wrongly Regulated Modified Peptides** (`propDiffRegPepWrong0.01`, `propDiffRegPepWrong0.05`, label: **% Wrongly significant (mod. peptides)**): Fraction of modified peptides that are significant but not truly regulated.
+-   **Share of Significant Modified Peptides** (`propDiffRegPepWrong0.01.FDR_PolySTest 2 vs 1`, `propDiffRegPepWrong0.05.FDR_PolySTest 2 vs 1`, label: **% Wrongly significant (mod. peptides)**): Fraction of modified peptides whose FDR values fall below 0.01 or 0.05, respectively.
 
 -   **Proportion of Modified Peptides with Quantified Protein** (`percOverlapModPepProt`, label: **% Mod peptides with protein quant**): Fraction of modified peptides with quantifiable protein background.
 
@@ -105,12 +103,12 @@ The following values and distributions are collected and used for assessing quan
 | Proportion of Unique Modified and Non-Modified Peptides | propUniquePep | \% Unique peptides (prot-specific) | Peptide |
 | Unique Stripped Sequences | uniqueStrippedPep | #Stripped sequences | Peptide |
 | Percentage Missingness | percMissingPep | \% Missing peptide values | Peptide |
-| AUC of ROC (Peptides) | aucDiffRegPeptides.FDR_limma.2.vs.1.AUC | Peptide AUC (truth vs FDR) | Peptide |
-| TPR at FDR \< 0.01 | tprPep0.01.FDR_limma.2.vs.1.TPR | TPR peptide (FDR \< 0.01) | Peptide |
-| TPR at FDR \< 0.05 | tprPep0.05.FDR_limma.2.vs.1.TPR | TPR peptide (FDR \< 0.05) | Peptide |
-| True FDR at 0.01 | tFDRPep0.01.FDR_limma.2.vs.1.tFDR | True FDR (peptides, 0.01) | Peptide |
-| True FDR at 0.05 | tFDRPep0.05.FDR_limma.2.vs.1.tFDR | True FDR (peptides, 0.05) | Peptide |
-| Miscleavage Distribution | propMisCleavedPeps.\[0-n\] | Miscleavage distribution | Peptide |
+| AUC of ROC (Peptides) | aucDiffRegPeptides.FDR_limma 2 vs 1.AUC | Peptide AUC (truth vs limma FDR) | Peptide |
+| TPR at FDR \< 0.01 | tprPep0.01.FDR_limma 2 vs 1.TPR | TPR peptide (FDR \< 0.01) | Peptide |
+| TPR at FDR \< 0.05 | tprPep0.05.FDR_limma 2 vs 1.TPR | TPR peptide (FDR \< 0.05) | Peptide |
+| True FDR at 0.01 | tFDRPep0.01.FDR_limma 2 vs 1.tFDR | True FDR (peptides, 0.01) | Peptide |
+| True FDR at 0.05 | tFDRPep0.05.FDR_limma 2 vs 1.tFDR | True FDR (peptides, 0.05) | Peptide |
+| Miscleavage Distribution | propMisCleavedPeps.{0,1,...} | Miscleavage distribution (per missed-cleavage count) | Peptide |
 | Dynamic Range | dynRangePep | Dynamic range (peptides) | Peptide |
 | Fold-Change Error | meanSquareDiffFCPep | Fold-change error (peptides) | Peptide |
 | Within-Replicate SD | sdWithinRepsPep | Replicate SD (peptides) | Peptide |
@@ -121,16 +119,16 @@ The following values and distributions are collected and used for assessing quan
 | Unique Proteins | propUniqueProts | \% Unique proteins | Protein |
 | Percentage Missingness | percMissingProt | \% Missing protein values | Protein |
 | Mean Peptides per Protein | meanPepPerProt | Peptides per protein | Protein |
-| AUC of ROC (Proteins) | aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC | Protein AUC (truth vs FDR) | Protein |
-| TPR at FDR \< 0.01 | tprProt0.01.FDR_PolySTest.2.vs.1.TPR | TPR protein (FDR \< 0.01) | Protein |
-| TPR at FDR \< 0.05 | tprProt0.05.FDR_PolySTest.2.vs.1.TPR | TPR protein (FDR \< 0.05) | Protein |
-| True FDR at 0.01 | tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR | True FDR (proteins, 0.01) | Protein |
-| True FDR at 0.05 | tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR | True FDR (proteins, 0.05) | Protein |
+| AUC of ROC (Proteins) | aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC | Protein AUC (truth vs FDR) | Protein |
+| TPR at FDR \< 0.01 | tprProt0.01.FDR_PolySTest 2 vs 1.TPR | TPR protein (FDR \< 0.01) | Protein |
+| TPR at FDR \< 0.05 | tprProt0.05.FDR_PolySTest 2 vs 1.TPR | TPR protein (FDR \< 0.05) | Protein |
+| True FDR at 0.01 | tFDRProt0.01.FDR_PolySTest 2 vs 1.tFDR | True FDR (proteins, 0.01) | Protein |
+| True FDR at 0.05 | tFDRProt0.05.FDR_PolySTest 2 vs 1.tFDR | True FDR (proteins, 0.05) | Protein |
 | Fold-Change Error | meanSquareDiffFCProt | Fold-change error (proteins) | Protein |
 | Within-Replicate SD | sdWithinRepsProt | Replicate SD (proteins) | Protein |
 | Miscleaved Proteins | propMisCleavedProts | \% Miscleaved proteins | Protein |
-| Wrong ID Proteins at 0.01 | propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 | \% Wrong-ID (proteins, 0.01) | Protein |
-| Wrong ID Proteins at 0.05 | propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1 | \% Wrong-ID (proteins, 0.05) | Protein |
+| Wrong ID Proteins at 0.01 | propDiffRegWrongIDProt0.01.FDR_PolySTest 2 vs 1 | \% Wrong-ID (proteins, 0.01) | Protein |
+| Wrong ID Proteins at 0.05 | propDiffRegWrongIDProt0.05.FDR_PolySTest 2 vs 1 | \% Wrong-ID (proteins, 0.05) | Protein |
 | Skewness | skewnessProts | Skewness (proteins) | Protein |
 | Kurtosis | kurtosisProts | Kurtosis (proteins) | Protein |
 | Overall SD | sdProts | Overall SD (proteins) | Protein |
@@ -138,12 +136,12 @@ The following values and distributions are collected and used for assessing quan
 | Mean Proteoforms per Protein | meanProteoformsPerProt | Proteoforms per protein | PTM |
 | Number of Modified Peptides | numModPeptides | #Modified peptides | PTM |
 | Modified with Unmodified Match | propModAndUnmodPep | \% Modified with unmodified match | PTM |
-| AUC (Adj. Modified Peptides) | aucDiffRegAdjModPep | AUC (adj. mod. peptides) | PTM |
-| TPR (Adj. Mod Peptides) at 0.01 | tprAdjModPep0.01 | TPR (adj. mod. peptides, 0.01) | PTM |
-| TPR (Adj. Mod Peptides) at 0.05 | tprAdjModPep0.05 | TPR (adj. mod. peptides, 0.05) | PTM |
-| True FDR (Adj. Mod Peptides) at 0.01 | tFDRAdjModPep0.01 | True FDR (mod. peptides, 0.01) | PTM |
-| True FDR (Adj. Mod Peptides) at 0.05 | tFDRAdjModPep0.05 | True FDR (mod. peptides, 0.05) | PTM |
-| Wrongly Significant Mod Peptides (0.01) | propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 | \% Wrongly significant (mod. peptides, 0.01) | PTM |
-| Wrongly Significant Mod Peptides (0.05) | propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 | \% Wrongly significant (mod. peptides, 0.05) | PTM |
+| AUC (Adj. Modified Peptides) | aucDiffRegAdjModPep.FDR_limma 2 vs 1.AUC | AUC (adj. mod. peptides) | PTM |
+| TPR (Adj. Mod Peptides) at 0.01 | tprAdjModPep0.01.FDR_limma 2 vs 1.TPR | TPR (adj. mod. peptides, 0.01) | PTM |
+| TPR (Adj. Mod Peptides) at 0.05 | tprAdjModPep0.05.FDR_limma 2 vs 1.TPR | TPR (adj. mod. peptides, 0.05) | PTM |
+| True FDR (Adj. Mod Peptides) at 0.01 | tFDRAdjModPep0.01.FDR_limma 2 vs 1.tFDR | True FDR (mod. peptides, 0.01) | PTM |
+| True FDR (Adj. Mod Peptides) at 0.05 | tFDRAdjModPep0.05.FDR_limma 2 vs 1.tFDR | True FDR (mod. peptides, 0.05) | PTM |
+| Wrongly Significant Mod Peptides (0.01) | propDiffRegPepWrong0.01.FDR_PolySTest 2 vs 1 | \% Wrongly significant (mod. peptides, 0.01) | PTM |
+| Wrongly Significant Mod Peptides (0.05) | propDiffRegPepWrong0.05.FDR_PolySTest 2 vs 1 | \% Wrongly significant (mod. peptides, 0.05) | PTM |
 | Modified Peptides with Protein Quant | percOverlapModPepProt | \% Mod peptides with protein quant | PTM |
 | Fold-Change Error (Mod Peptides) | meanSquareDiffFCModPep | Fold-change error (mod. peptides) | PTM |
