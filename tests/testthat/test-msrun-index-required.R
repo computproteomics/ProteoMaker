@@ -22,4 +22,3 @@ test_that("MSRunSim requires non-NULL searchIndex", {
     regexp = "requires a non-NULL searchIndex"
   )
 })
-

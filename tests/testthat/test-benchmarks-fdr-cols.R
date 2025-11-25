@@ -2,7 +2,7 @@ test_that("calcBenchmarks handles FDR columns and small adjusted sets", {
   Param <- list(
     NumCond = 2,
     NumReps = 1,
-    QuantColnames = c("C_1_R_1","C_2_R_1")
+    QuantColnames = c("C_1_R_1", "C_2_R_1")
   )
   # Minimal protein stats with one FDR column and a log-ratio
   Stats <- data.frame(
@@ -15,15 +15,15 @@ test_that("calcBenchmarks handles FDR columns and small adjusted sets", {
     num_accs = c("1", "1", "1"),
     WrongID = c("FALSE", "FALSE", "FALSE"),
     Proteoform_ID = c("1", "1", "1"),
-    MC = c("0","0","0"),
+    MC = c("0", "0", "0"),
     C_1_R_1 = c(10, 11, 12),
     C_2_R_1 = c(10.5, 10.9, 12.1),
     stringsAsFactors = FALSE
   )
   # Minimal peptide stats with matching columns
   StatsPep <- data.frame(
-    Sequence = c("PEPA","PEPB","PEPC"),
-    Accession = I(list("P1","P2","P3")),
+    Sequence = c("PEPA", "PEPB", "PEPC"),
+    Accession = I(list("P1", "P2", "P3")),
     MC = I(list(0L, 0L, 0L)),
     PTMPos = I(list(integer(0), integer(0), integer(0))),
     PTMType = I(list(character(0), character(0), character(0))),

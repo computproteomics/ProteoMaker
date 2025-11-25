@@ -25,241 +25,246 @@
 #' @keywords internal
 #'
 proteinSummarisation <- function(peptable, parameters) {
+  method <- parameters$ProtSummarization
 
-    method <- parameters$ProtSummarization
+  minUniquePep <- parameters$MinUniquePep
 
-    minUniquePep <- parameters$MinUniquePep
+  includeModPep <- parameters$IncludeModPep
 
-    includeModPep <- parameters$IncludeModPep
+  sharedPep <- parameters$SharedPep
 
-    sharedPep <- parameters$SharedPep
+  QuantColnames <- parameters$QuantColnames
 
-    QuantColnames <- parameters$QuantColnames
+  if (!includeModPep) {
+    # Remove all modified peptides
+    peptable <- peptable[!sapply(peptable$PTMType, function(x) length(x) > 0), ]
+    message("  - Removed all modified peptides, remaining number of peptides: ", nrow(peptable), "")
+  } else {
+    message("  - Keeping modified peptides")
+  }
+  message("  - Remaining number of peptides: ", nrow(peptable), "")
 
-    if (!includeModPep) {
-        # Remove all modified peptides
-        peptable <- peptable[!sapply(peptable$PTMType, function(x) length(x) > 0), ]
-        message("  - Removed all modified peptides, remaining number of peptides: ", nrow(peptable), "")
-    } else {
-        message("  - Keeping modified peptides")
+  message(" + Protein summarisation")
+
+  message("  - Number of minimum unique peptide per protein: ", minUniquePep, "")
+  message("  - Protein summarisation using the ", method, " approach.")
+
+  # writing new column with unlisted and merged protein names
+  peptable$merged_accs <- sapply(peptable$Accession, function(x) paste(sort(unique(unlist(x))), collapse = ";"))
+  peptable$num_accs <- sapply(peptable$Accession, function(x) length(unique(x)))
+
+  # Sort table according to protein accession, needs to stay in this order!
+  peptable <- peptable[order(peptable$merged_accs), ]
+  message("  - Sorted protein table")
+
+  # Reducing table to relevant columns
+  if (!sharedPep) {
+    peptable <- peptable[peptable$num_accs == 1, ]
+  }
+
+  # Vector with row indices of protein groups
+  all_accs <- peptable$merged_accs
+  prot_ind <- 1
+  names(prot_ind) <- all_accs[1]
+  for (i in 2:nrow(peptable)) {
+    if (all_accs[i - 1] != all_accs[i]) {
+      prot_ind <- c(prot_ind, i)
+      names(prot_ind)[length(prot_ind)] <- all_accs[i]
     }
-    message("  - Remaining number of peptides: ", nrow(peptable), "")
+  }
+  prot_ind <- c(prot_ind, nrow(peptable))
+  other_cols <- colnames(peptable)[!colnames(peptable) %in% QuantColnames]
+  message("  - built protein index for faster summarization")
 
-    message(" + Protein summarisation")
-
-    message("  - Number of minimum unique peptide per protein: ", minUniquePep, "")
-    message("  - Protein summarisation using the ", method, " approach.")
-
-    # writing new column with unlisted and merged protein names
-    peptable$merged_accs <- sapply(peptable$Accession, function(x) paste(unique(unlist(x)), collapse=";"))
-    peptable$num_accs <- sapply(peptable$Accession, function(x) length(unique(x)))
-
-    # Sort table according to protein accession, needs to stay in this order!
-    peptable <- peptable[order(peptable$merged_accs), ]
-    message("  - Sorted protein table")
-
-    # Reducing table to relevant columns
-    if (!sharedPep) {
-      peptable <- peptable[peptable$num_accs == 1, ]
-    }
-
-    # Vector with row indices of protein groups
-    all_accs <- peptable$merged_accs
-    prot_ind <- 1
-    names(prot_ind) <- all_accs[1]
-    for (i in 2:nrow(peptable)) {
-        if (all_accs[i-1] != all_accs[i]) {
-            prot_ind <- c(prot_ind, i)
-            names(prot_ind)[length(prot_ind)] <- all_accs[i]
-        }
-    }
-    prot_ind <- c(prot_ind, nrow(peptable))
-    other_cols <- colnames(peptable)[!colnames(peptable) %in% QuantColnames]
-    message("  - built protein index for faster summarization")
-
-    # Diagnostics: duplicated stripped sequences within each protein group
-    dup_group_info <- list()
-    dup_total_rows <- 0L
-    dup_group_count <- 0L
-    n_groups <- length(prot_ind) - 1L
-    if (n_groups > 0L) {
-      for (gi in seq_len(n_groups)) {
-        start_i <- prot_ind[gi]
-        end_i <- prot_ind[gi + 1L] - 1L
-        if (end_i >= start_i) {
-          seqs <- peptable$Sequence[start_i:end_i]
-          wrongid <- if ("WrongID" %in% names(peptable)) peptable$WrongID[start_i:end_i] else rep(NA, length(seqs))
-          dups <- seqs[duplicated(seqs)]
-          if (length(dups) > 0L) {
-            dup_group_count <- dup_group_count + 1L
-            dup_total_rows <- dup_total_rows + length(dups)
-            u <- unique(dups)
-            # total counts per duplicated sequence
-            ct <- vapply(u, function(s) sum(seqs == s), numeric(1))
-            # how many of those rows are WrongID
-            wt <- vapply(u, function(s) sum(wrongid[seqs == s], na.rm = TRUE), numeric(1))
-            # store as a small data.frame for later pretty printing
-            dup_group_info[[names(prot_ind)[gi]]] <- data.frame(seq = u, n = as.integer(ct), wrongID = as.integer(wt), stringsAsFactors = FALSE)
-          }
+  # Diagnostics: duplicated stripped sequences within each protein group
+  dup_group_info <- list()
+  dup_total_rows <- 0L
+  dup_group_count <- 0L
+  n_groups <- length(prot_ind) - 1L
+  if (n_groups > 0L) {
+    for (gi in seq_len(n_groups)) {
+      start_i <- prot_ind[gi]
+      end_i <- prot_ind[gi + 1L] - 1L
+      if (end_i >= start_i) {
+        seqs <- peptable$Sequence[start_i:end_i]
+        wrongid <- if ("WrongID" %in% names(peptable)) peptable$WrongID[start_i:end_i] else rep(NA, length(seqs))
+        dups <- seqs[duplicated(seqs)]
+        if (length(dups) > 0L) {
+          dup_group_count <- dup_group_count + 1L
+          dup_total_rows <- dup_total_rows + length(dups)
+          u <- unique(dups)
+          # total counts per duplicated sequence
+          ct <- vapply(u, function(s) sum(seqs == s), numeric(1))
+          # how many of those rows are WrongID
+          wt <- vapply(u, function(s) sum(wrongid[seqs == s], na.rm = TRUE), numeric(1))
+          # store as a small data.frame for later pretty printing
+          dup_group_info[[names(prot_ind)[gi]]] <- data.frame(seq = u, n = as.integer(ct), wrongID = as.integer(wt), stringsAsFactors = FALSE)
         }
       }
-      if (dup_group_count > 0L) {
-        message("  - Duplicated stripped sequences within protein groups: ", dup_total_rows,
-                " duplicate rows across ", dup_group_count, " groups.")
-        max_groups <- 5L; max_each <- 5L
-        shown <- head(names(dup_group_info), max_groups)
-        for (g in shown) {
-          df <- dup_group_info[[g]]
-          o <- order(df$n, decreasing = TRUE)
-          df <- df[o, , drop = FALSE]
-          if (nrow(df) > max_each) df <- df[seq_len(max_each), , drop = FALSE]
-          parts <- paste0(df$seq, " (n=", df$n, ", wrongID=", df$wrongID, ")")
-          message("    ", g, ": ", paste(parts, collapse = "; "))
+    }
+    if (dup_group_count > 0L) {
+      message(
+        "  - Duplicated stripped sequences within protein groups: ", dup_total_rows,
+        " duplicate rows across ", dup_group_count, " groups."
+      )
+      max_groups <- 5L
+      max_each <- 5L
+      shown <- head(names(dup_group_info), max_groups)
+      for (g in shown) {
+        df <- dup_group_info[[g]]
+        o <- order(df$n, decreasing = TRUE)
+        df <- df[o, , drop = FALSE]
+        if (nrow(df) > max_each) df <- df[seq_len(max_each), , drop = FALSE]
+        parts <- paste0(df$seq, " (n=", df$n, ", wrongID=", df$wrongID, ")")
+        message("    ", g, ": ", paste(parts, collapse = "; "))
+      }
+      if (length(dup_group_info) > max_groups) {
+        message("    ... ", length(dup_group_info) - max_groups, " more groups show duplicates.")
+      }
+    } else {
+      message("  - No duplicated stripped sequences within protein groups detected.")
+    }
+  }
+
+  # Initiate and fill matrix with proteins
+  protmat <- as.data.frame(matrix(ncol = ncol(peptable), nrow = length(prot_ind)))
+  rownames(protmat) <- names(prot_ind)
+  colnames(protmat) <- colnames(peptable)
+
+  message("  - Initiated protein matrix for ", length(prot_ind), " protein groups")
+  # Diagnostics: potential duplicate first sequences across protein groups
+  if ((length(prot_ind) - 1) > 1 && "Sequence" %in% colnames(peptable)) {
+    first_rows <- prot_ind[1:(length(prot_ind) - 1)]
+    first_seq <- peptable$Sequence[first_rows]
+    dup_count <- sum(duplicated(first_seq))
+    if (dup_count > 0) {
+      message("  - Note: ", dup_count, " protein groups share the same first peptide sequence; row names will use group keys to avoid clashes.")
+    }
+  }
+  message("  - Summarizing proteins, this can take a while")
+
+  # Function to summarize protein groups
+  summarizeProtein <- function(tmp) {
+    out <- NULL
+    if (nrow(tmp) >= minUniquePep) {
+      tmp <- as.matrix(tmp)
+      if (method == "sum.top3") {
+        tmp <- tmp[order(rowSums(tmp), decreasing = T), , drop = F]
+        if (nrow(tmp) >= 3) {
+          out <- log2(colSums(2^tmp[1:3, ], na.rm = T))
+        } else {
+          out <- log2(colSums(2^tmp, na.rm = T))
         }
-        if (length(dup_group_info) > max_groups) {
-          message("    ... ", length(dup_group_info) - max_groups, " more groups show duplicates.")
+      } else if (method == "median") {
+        out <- apply(tmp, 2, median, na.rm = T)
+      } else if (method == "mean") {
+        out <- apply(tmp, 2, mean, na.rm = T)
+      } else if (method == "sum") {
+        out <- log2(colSums(2^tmp, na.rm = T))
+      } else if (method == "medpolish") {
+        summed <- NULL
+        if (nrow(tmp) <= 3) {
+          summed <- tmp - median(summed, na.rm = TRUE)
+        } else {
+          summed <- medpolish(tmp, na.rm = T, trace.iter = F)$col
+        }
+        if (length(summed) > 0) {
+          out <- summed
+        }
+      } else if (method == "rlm") {
+        if (nrow(tmp) > 1) {
+          tmp <- as.data.frame(tmp)
+          tmp$peptide <- rownames(tmp)
+          long_df <- pivot_longer(tmp,
+            cols = -peptide,
+            names_to = "sample",
+            values_to = "intensity"
+          )
+          fit <- rlm(intensity ~ peptide + sample, data = long_df, na.action = na.omit)
+          coefs <- coef(fit)
+          sample_coefs <- coefs[grep("^sample", names(coefs))]
+
+          # Include intercept (baseline)
+          baseline <- coefs["(Intercept)"]
+          sample_names <- gsub("^sample", "", names(sample_coefs))
+
+          # Set full abundance vector
+          out <- setNames(baseline + sample_coefs, sample_names)
+        } else {
+          out <- tmp[1, QuantColnames]
         }
       } else {
-        message("  - No duplicated stripped sequences within protein groups detected.")
+        stop("No valid method provided!")
       }
     }
+    return(out)
+  }
 
-    # Initiate and fill matrix with proteins
-    protmat <- as.data.frame(matrix(ncol = ncol(peptable), nrow = length(prot_ind)))
-    rownames(protmat) <- names(prot_ind)
-    colnames(protmat) <- colnames(peptable)
+  if (!is.null(parameters$Cores)) {
+    cores <- parameters$Cores
 
-    message("  - Initiated protein matrix for ", length(prot_ind), " protein groups")
-    # Diagnostics: potential duplicate first sequences across protein groups
-    if ((length(prot_ind) - 1) > 1 && "Sequence" %in% colnames(peptable)) {
-        first_rows <- prot_ind[1:(length(prot_ind)-1)]
-        first_seq <- peptable$Sequence[first_rows]
-        dup_count <- sum(duplicated(first_seq))
-        if (dup_count > 0) {
-            message("  - Note: ", dup_count, " protein groups share the same first peptide sequence; row names will use group keys to avoid clashes.")
-        }
+    if (parallel::detectCores() <= parameters$Cores) {
+      cores <- parallel::detectCores() - 1
     }
-    message("  - Summarizing proteins, this can take a while")
 
-    # Function to summarize protein groups
-    summarizeProtein <- function(tmp) {
+    cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
+    parallel::setDefaultCluster(cluster)
+    parallel::clusterExport(cluster, c(
+      "peptable", "summarizeProtein", "minUniquePep",
+      "prot_ind", "other_cols", "QuantColnames"
+    ),
+    envir = environment()
+    )
+    # load required packages on all workers
+    parallel::clusterEvalQ(cluster, {
+      library(MASS)
+      # Add others if needed
+      library(dplyr)
+      library(tidyr)
+      # etc.
+    })
+    proteins <- parallel::parLapply(cluster, 1:(length(prot_ind) - 1), function(i) {
+      tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i + 1] - 1), ])
+      rownames(tmp) <- tmp$Sequence
+      out <- tmp[1, ]
+      tout <- summarizeProtein(tmp[, QuantColnames, drop = F])
+      if (!is.null(tout)) {
+        out[QuantColnames] <- tout
+        # add other information
+        out[other_cols] <- sapply(tmp[, other_cols], function(x) paste(unlist(x), collapse = ";"))
+        # ensure unique row name per protein group (use group key)
+        rownames(out) <- names(prot_ind)[i]
+      } else {
         out <- NULL
-        if (nrow(tmp) >= minUniquePep) {
-            tmp <- as.matrix(tmp)
-            if (method == "sum.top3") {
-                tmp <- tmp[order(rowSums(tmp), decreasing = T),, drop =F ]
-                if (nrow(tmp) >= 3) {
-                    out <- log2(colSums(2^tmp[1:3,], na.rm = T))
-                } else {
-                    out <- log2(colSums(2^tmp, na.rm = T))
-                }
-            } else if (method == "median") {
-                    out <- apply(tmp, 2, median, na.rm = T)
-            } else if (method == "mean") {
-              out <- apply(tmp, 2, mean, na.rm = T)
-            } else if (method == "sum") {
-                out <- log2(colSums(2^tmp, na.rm = T))
-            } else if (method == "medpolish"){
-                summed <- NULL
-                if (nrow(tmp) <= 3) {
-                    summed <- tmp - median(summed, na.rm=TRUE)
-                } else {
-                    summed <- medpolish(tmp, na.rm=T, trace.iter=F)$col
-                }
-                if (length(summed) > 0)
-                    out <- summed
-            } else if (method == "rlm") {
-              if (nrow(tmp) > 1) {
-              tmp <- as.data.frame(tmp)
-              tmp$peptide <- rownames(tmp)
-              long_df <- pivot_longer(tmp,
-                                      cols = -peptide,
-                                      names_to = "sample",
-                                      values_to = "intensity")
-              fit <- rlm(intensity ~ peptide + sample, data = long_df, na.action = na.omit)
-              coefs <- coef(fit)
-              sample_coefs <- coefs[grep("^sample", names(coefs))]
+      }
+      return(out)
+    })
+    parallel::stopCluster(cluster)
+  } else {
+    proteins <- lapply(1:(length(prot_ind) - 1), function(i) {
+      tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i + 1] - 1), ])
+      rownames(tmp) <- tmp$Sequence
+      out <- tmp[1, ]
+      tout <- summarizeProtein(tmp[, QuantColnames, drop = F])
+      if (!is.null(tout)) {
+        out[QuantColnames] <- tout
+        # add other information
+        out[other_cols] <- sapply(tmp[, other_cols], function(x) paste(unlist(x), collapse = ";"))
+        rownames(out) <- names(prot_ind)[i]
+      } else {
+        out <- NULL
+      }
+      return(out)
+    })
+  }
+  # join all protein data
+  proteins <- Filter(Negate(is.null), proteins)
+  protmat <- do.call(rbind, proteins)
+  protmat[protmat == -Inf] <- NA
+  protmat <- protmat[rowSums(is.na(protmat[, QuantColnames])) < length(QuantColnames), ]
 
-              # Include intercept (baseline)
-              baseline <- coefs["(Intercept)"]
-              sample_names <- gsub("^sample", "", names(sample_coefs))
+  cat("  - Finished summarizing into ", nrow(protmat), " proteins")
+  #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i])
 
-              # Set full abundance vector
-              out <- setNames(baseline + sample_coefs, sample_names)
-              } else {
-                out <- tmp[1, QuantColnames]
-              }
-
-            } else {
-                stop("No valid method provided!")
-            }
-        }
-        return(out)
-    }
-
-    if (!is.null(parameters$Cores)) {
-        cores <- parameters$Cores
-
-        if (parallel::detectCores() <= parameters$Cores) {
-            cores <- parallel::detectCores() - 1
-        }
-
-        cluster <- parallel::makeCluster(cores, type = parameters$ClusterType)
-        parallel::setDefaultCluster(cluster)
-        parallel::clusterExport(cluster, c("peptable","summarizeProtein","minUniquePep",
-                                           "prot_ind","other_cols","QuantColnames"),
-                                envir = environment())
-        # load required packages on all workers
-        parallel::clusterEvalQ(cluster, {
-          library(MASS)
-          # Add others if needed
-          library(dplyr)
-          library(tidyr)
-          # etc.
-        })
-        proteins <- parallel::parLapply(cluster, 1:(length(prot_ind)-1), function(i) {
-            tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
-            rownames(tmp) <- tmp$Sequence
-            out <- tmp[1,]
-            tout <- summarizeProtein(tmp[,QuantColnames,drop=F])
-            if (!is.null(tout)) {
-                out[QuantColnames] <- tout
-                # add other information
-                out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
-                # ensure unique row name per protein group (use group key)
-                rownames(out) <- names(prot_ind)[i]
-            } else {
-                out <- NULL
-            }
-            return(out)
-        })
-        parallel::stopCluster(cluster)
-    } else {
-        proteins <- lapply(1:(length(prot_ind)-1), function(i) {
-            tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i+1]-1),])
-            rownames(tmp) <- tmp$Sequence
-            out <- tmp[1,]
-            tout <- summarizeProtein(tmp[,QuantColnames,drop=F])
-            if (!is.null(tout)) {
-            out[QuantColnames] <- tout
-            # add other information
-            out[other_cols] <- sapply(tmp[,other_cols], function(x) paste(unlist(x), collapse=";"))
-            rownames(out) <- names(prot_ind)[i]
-            } else {
-                out <- NULL
-            }
-            return(out)
-        })
-    }
-    # join all protein data
-    proteins <- Filter(Negate(is.null), proteins)
-    protmat <- do.call(rbind, proteins)
-    protmat[protmat == -Inf] <- NA
-    protmat <- protmat[rowSums(is.na(protmat[,QuantColnames])) < length(QuantColnames), ]
-
-    cat ("  - Finished summarizing into ", nrow(protmat) ," proteins")
-    #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i])
-
-    return(protmat)
-
+  return(protmat)
 }

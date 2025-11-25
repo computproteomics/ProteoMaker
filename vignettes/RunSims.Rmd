@@ -36,18 +36,18 @@ In this case, the results will be written in the temporary folder. In case you w
 # Configure the paths and settings
 proteomaker_config <- set_proteomaker(
   # Default path to the Proteomes folder in the ProteoMaker package
-  fastaFilePath =  system.file("Proteomes", package = "ProteoMaker"),
+  fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
   # Default path to the temporary directory
   resultFilePath = paste0(tempdir(), "/SimulatedDataSets"),
-  # Increase to the number of cores you want to use.                                                                     
+  # Increase to the number of cores you want to use.
   # Large numbers can lead to considerably higher RAM usage
-  cores = 1, 
+  cores = 1,
   # Should work on all operation systems. If you have problems, try "FORK" instead
   clusterType = "PSOCK",
   # Run statistical tests on the simulated data to compare ground truth with simulated values
   runStatTests = TRUE,
   # Calculate all benchmarks for the simulated data
-  calcAllBenchmarks = TRUE               
+  calcAllBenchmarks = TRUE
 )
 ```
 
@@ -88,7 +88,6 @@ Param$paramGroundTruth$NumReps <- c(3:5)
 # Param$paramDigest$PepMaxLength <- 30
 # Param$paramMSRun$PercDetectedPep <- seq(0.1, 0.5, 0.1)
 # Param$paramDataAnalysis$MinUniquePep <- 100
-
 ```
 
 ## Running Simulations
@@ -98,7 +97,6 @@ Run the simulations using the defined parameters and configuration. This step ge
 ```{r}
 # Run the simulations
 allBs <- run_sims(Param, proteomaker_config)
-
 ```
 
 ## Retrieving Results
@@ -108,7 +106,6 @@ Get the results of an individual simulation. This allows you to inspect the para
 ```{r}
 # Retrieve results}
 res <- get_simulation(allBs[[1]]$Param, proteomaker_config)
-
 ```
 
 ## Retrieving Benchmarks
@@ -119,7 +116,6 @@ Create a matrix of benchmarks from all simulations and save it as a CSV file. Th
 # Generate the benchmark matrix
 benchmarks <- matrix_benchmarks(allBs, proteomaker_config)
 write.csv(benchmarks, file = paste0(proteomaker_config$resultFilePath, "/allBenchmarks.csv"))
-
 ```
 
 ## Visualizing Results
@@ -132,5 +128,4 @@ another for the parameters.
 ```{r fig.height = 8, fig.weight = 6}
 # visualize the benchmarks and parameters of the second simulation
 visualize_benchmarks(benchmarks, ref_par = "NumReps")
-
 ```

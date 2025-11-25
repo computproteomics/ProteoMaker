@@ -9,13 +9,14 @@ if (is.null(def_params) || length(def_params) == 0) {
   stop("The params object is empty or invalid.")
 }
 
-proteomaker_config <- set_proteomaker(fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
-                                resultFilePath = "SimulatedDataSets",
-                                cores = 4, clusterType = "PSOCK",
-                                runStatTests = F,
-                                calcAllBenchmarks = T
+proteomaker_config <- set_proteomaker(fastaFilePath = system.file("Proteomes",
+                                                                  package = "ProteoMaker"),
+  resultFilePath = "SimulatedDataSets",
+  cores = 4, clusterType = "PSOCK",
+  runStatTests = FALSE,
+  calcAllBenchmarks = TRUE
 )
 
 
 print("Loaded parameter defaults")
-options(shiny.maxRequestSize=1*1024^3)
+options(shiny.maxRequestSize = 1 * 1024^3)

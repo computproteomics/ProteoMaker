@@ -11,9 +11,11 @@ suppressPackageStartupMessages({
 
 args <- commandArgs(trailingOnly = TRUE)
 
-yaml_path <- if (length(args) >= 1) args[[1]] else system.file("config", "parameters.yaml", package = "ProteoMaker")
+yaml_path <- if (length(args) >= 1) args[[1]] else
+  system.file("config", "parameters.yaml", package = "ProteoMaker")
 out_rds   <- if (length(args) >= 2) args[[2]] else NA_character_
-fasta_base <- if (length(args) >= 3) args[[3]] else system.file("Proteomes", package = "ProteoMaker")
+fasta_base <- if (length(args) >= 3) args[[3]] else
+  system.file("Proteomes", package = "ProteoMaker")
 
 if (!file.exists(yaml_path)) {
   stop("Parameter YAML not found: ", yaml_path)
@@ -37,7 +39,8 @@ flatten_params <- function(cats) {
 
 idx_param <- flatten_params(param_categories)
 
-if (!"PathToFasta" %in% names(idx_param) || is.na(idx_param$PathToFasta) || !nzchar(idx_param$PathToFasta)) {
+if (!"PathToFasta" %in% names(idx_param) || is.na(idx_param$PathToFasta) ||
+      !nzchar(idx_param$PathToFasta)) {
   stop("PathToFasta is not defined in the provided parameters.")
 }
 

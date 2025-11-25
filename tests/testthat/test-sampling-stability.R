@@ -10,7 +10,7 @@ test_that("Donor sampling stable under extreme/absent log counts", {
     PepMaxLength = 12,
     MaxNumMissedCleavages = 1,
     PTMTypes = list(c("ph", "ox")),
-    ModifiableResidues = list(list(ph = c("S","T","Y"), ox = c("M")))
+    ModifiableResidues = list(list(ph = c("S", "T", "Y"), ox = c("M")))
   )
   idx <- ProteoMaker:::buildSearchIndexFromSequences(proteins, params)
   e1 <- idx$proteins[[1]]
@@ -29,4 +29,3 @@ test_that("Donor sampling stable under extreme/absent log counts", {
   expect_s3_class(donors2, "data.frame")
   expect_equal(nrow(donors2), min(7, L))
 })
-

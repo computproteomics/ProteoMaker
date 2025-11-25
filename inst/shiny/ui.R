@@ -1,4 +1,3 @@
-# Install required libraries
 library(shiny)
 library(shinyWidgets)
 library(bslib)
@@ -48,7 +47,8 @@ create_param_ui <- function(param_name, param_info) {
     #   class = "alert alert-info",
     #   paste("PTM list: ", paste(param_info$default, collapse = ", "))
     # )
-    #ui_element <- selectInput(param_name, label = description, choices = param_info$choices, multiple = TRUE, selected = default_val)
+    # ui_element <- selectInput(param_name, label = description, choices = param_info$choices, multiple = TRUE,
+    # selected = default_val)
     ui_element <- NULL
   } else if (class == "string") {
     # Select input
@@ -132,7 +132,7 @@ ui <- page_sidebar(
   sidebar = sidebar(
     # title in bold
     layout_column_wrap(
-      width = 1/2,
+      width = 1 / 2,
       h5("Parameter Groups"),
       actionButton(
         inputId = "help_button",
@@ -143,7 +143,7 @@ ui <- page_sidebar(
       )
     ),
     layout_column_wrap(
-      width = 1/2,
+      width = 1 / 2,
       # Upload button to provide parameters through yaml file
       fileInput("yaml_file", "Upload YAML File"),
       # Download button to download parameters as yaml file
@@ -151,27 +151,28 @@ ui <- page_sidebar(
     ),
     # Capsible Panels for each group
     do.call(accordion, c(
-      id =" Parameter groups",
+      id = " Parameter groups",
       # Question mark button to open documentation in a new tab
       open = "Experimental Design",
       lapply(unique(sapply(def_params, function(x) x$group)),
              function(x) {
-               accordion_panel(title=x, style="info",
+               accordion_panel(title = x, style = "info",
                                create_param_panels(x, def_params)
                )  # Adjust padding and margin to control spacing
              })
     )),
-    width=600
+    width = 600
   ),
   card(
     h3("Run Simulation"),
     layout_column_wrap(
-      width = 1/3,
+      width = 1 / 3,
       # Title for simulation section
       # Button to start simulation
       actionButton("start_sim", "Start Simulation"),
       checkboxInput("run_stat", "Run statistical tests on results", value = FALSE),
-      tags$audio(src = "ProteoMaker Dreams.mp3", type = "audio/mp3", controls = NA, style = "width: 150px; height: 30px;"),#, autoplay = NA),
+      tags$audio(src = "ProteoMaker Dreams.mp3", type = "audio/mp3", controls = NA,
+                 style = "width: 150px; height: 30px;"), #, autoplay = NA),
       checkboxInput("overwrite", "Overwrite existing files", value = FALSE),
       checkboxInput("run_benchmarks", "Calculate benchmarking metrics", value = FALSE),
       textOutput("parameters_valid"),

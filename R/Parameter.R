@@ -17,30 +17,28 @@
 #' @importFrom yaml yaml.load_file
 #' @keywords internal
 param_table <- function() {
+  yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
 
-    yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
+  # Read the YAML file
+  params <- yaml::yaml.load_file(yaml_file)$params
 
-    # Read the YAML file
-    params <- yaml::yaml.load_file(yaml_file)$params
-
-    # Convert NA values from strings to real NA
-    for (l in names(params)) {
-      params[[l]]$class <- params[[l]]$choices <- NULL
-        for (k in names(params[[l]])) {
-            if (params[[l]][[k]] == "NA") {
-                params[[l]][[k]] <- NA
-            }
-        }
+  # Convert NA values from strings to real NA
+  for (l in names(params)) {
+    params[[l]]$class <- params[[l]]$choices <- NULL
+    for (k in names(params[[l]])) {
+      if (params[[l]][[k]] == "NA") {
+        params[[l]][[k]] <- NA
+      }
     }
+  }
 
-    # Convert the list to a data frames
-    params_table <- do.call(rbind, lapply(params, function(x) as.data.frame(t(x), stringsAsFactors = FALSE)))
+  # Convert the list to a data frames
+  params_table <- do.call(rbind, lapply(params, function(x) as.data.frame(t(x), stringsAsFactors = FALSE)))
 
-    # Name the columns
-    colnames(params_table) <- c("Category", "Group", "Explanation", "MinValue", "MaxValue", "DefaultValue")
+  # Name the columns
+  colnames(params_table) <- c("Category", "Group", "Explanation", "MinValue", "MaxValue", "DefaultValue")
 
 
-    # Ensure MinValue and MaxValue are numeric
-    params_table
+  # Ensure MinValue and MaxValue are numeric
+  params_table
 }
-

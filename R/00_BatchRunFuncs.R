@@ -43,16 +43,20 @@ NULL
 #'
 #' @examples
 #' config <- set_proteomaker()
-#' config <- set_proteomaker(fastaFilePath = "CustomProteomes",
-#' resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
+#' config <- set_proteomaker(
+#'   fastaFilePath = "CustomProteomes",
+#'   resultFilePath = "Results", cores = 4, clusterType = "PSOCK"
+#' )
 set_proteomaker <- function(fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
                             resultFilePath = "SimulatedDatasets",
                             cores = 2, clusterType = "PSOCK",
                             runStatTests = TRUE, calcAllBenchmarks = TRUE) {
   dir.create(resultFilePath, showWarnings = FALSE)
-  return(list(fastaFilePath = fastaFilePath, resultFilePath = resultFilePath,
-              cores = cores, clusterType = clusterType,
-              runStatTests = runStatTests, calcAllBenchmarks = calcAllBenchmarks))
+  return(list(
+    fastaFilePath = fastaFilePath, resultFilePath = resultFilePath,
+    cores = cores, clusterType = clusterType,
+    runStatTests = runStatTests, calcAllBenchmarks = calcAllBenchmarks
+  ))
 }
 
 
@@ -84,7 +88,7 @@ set_proteomaker <- function(fastaFilePath = system.file("Proteomes", package = "
 #' # Read YAML file from inst folder
 #' yaml_path <- system.file("config", "params.yaml", package = "ProteoMaker")
 #' params <- def_param(yaml_path)
-def_param <- function(yaml_file=NULL) {
+def_param <- function(yaml_file = NULL) {
   if (is.null(yaml_file)) {
     yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
   }
@@ -143,7 +147,6 @@ def_param <- function(yaml_file=NULL) {
 }
 
 
-
 #' Generate all combinations of parameter sets
 #'
 #' This function takes a list of parameter vectors and generates all possible
@@ -165,15 +168,14 @@ def_param <- function(yaml_file=NULL) {
 #' params$paramGroundTruth$NumReps <- c(2, 4, 6)
 #' combinations <- generate_combinations(params)
 generate_combinations <- function(params) {
-  combinations <- expand.grid(params, stringsAsFactors = F)
+  combinations <- expand.grid(params, stringsAsFactors = FALSE)
   # seems to be the only way to get to a list of lists
   out_comb <- list()
-  for (i in 1:nrow(combinations)) {
+  for (i in seq_len(nrow(combinations))) {
     out_comb[[i]] <- combinations[i, ]
   }
   out_comb
 }
-
 
 
 #' Run all simulations for given parameters and configurations
@@ -202,7 +204,6 @@ generate_combinations <- function(params) {
 #' config <- set_proteomaker()
 #' results <- run_sims(params, config)
 run_sims <- function(Parameters, Config, overwrite = FALSE) {
-
   # Ensuring ProteoMaker version in parameters (for hashing)
   Parameters$paramGroundTruth$ProteoMakerVersion <- packageVersion("ProteoMaker")
 
@@ -225,11 +226,10 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
   listall <- generate_combinations(all_params)
   totalbench <- length(listall)
   message("Total number of simulations to run: ", totalbench)
-  benchcounter <- 0
 
   # Gather always benchmarking data
   allBs <- list()
-  for (hh in 1:length(listtogroundtruth)) {
+  for (hh in seq_len(length(listtogroundtruth))) {
     ## Running ground thruth generations
     # check whether file with correct parameters exists
     tParam <- listtogroundtruth[[hh]]
@@ -260,11 +260,15 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
       tParam <- c(gtParam, listtoproteoformab[[ii]])
       # hash code to represent parameter configuration
       md5 <- digest::digest(tParam, algo = "md5")
-      tParam <- c(tParam,
-                  list(QuantColnames = paste0("C_",
-                                              rep(1:tParam$NumCond, each = tParam$NumReps),
-                                              "_R_",
-                                              rep(1:tParam$NumReps, tParam$NumCond))))
+      tParam <- c(
+        tParam,
+        list(QuantColnames = paste0(
+          "C_",
+          rep(1:tParam$NumCond, each = tParam$NumReps),
+          "_R_",
+          rep(1:tParam$NumReps, tParam$NumCond)
+        ))
+      )
       filename <- paste0(Config$resultFilePath, "/outputProteoformAb_", md5, ".RData")
       if (!overwrite & file.exists(filename)) {
         load(filename)
@@ -296,13 +300,21 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
           peptable <- digestGroundTruth(
             proteoforms = proteoformAb,
             parameters = c(
-              Param, list(Cores = Config$cores,
-                          ClusterType = Config$clusterType)),
-            searchIndex = SearchIndex)
-          peptable <- digestionProductSummarization(peptides = peptable,
-                                                    parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType)))
-          BeforeMS <- filterDigestedProt(DigestedProt = peptable,
-                                         parameters = Param)
+              Param, list(
+                Cores = Config$cores,
+                ClusterType = Config$clusterType
+              )
+            ),
+            searchIndex = SearchIndex
+          )
+          peptable <- digestionProductSummarization(
+            peptides = peptable,
+            parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType))
+          )
+          BeforeMS <- filterDigestedProt(
+            DigestedProt = peptable,
+            parameters = Param
+          )
           save(Param, BeforeMS, file = filename)
         }
         dgParam <- Param
@@ -323,10 +335,15 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
             for (i in which(sapply(BeforeMS, length) > 0)) {
               AfterMSRun[[length(AfterMSRun) + 1]] <- MSRunSim(
                 Digested = BeforeMS[[i]],
-                parameters = c(Param,
-                               list(Cores = Config$cores,
-                                    ClusterType = Config$clusterType)),
-                searchIndex = SearchIndex)
+                parameters = c(
+                  Param,
+                  list(
+                    Cores = Config$cores,
+                    ClusterType = Config$clusterType
+                  )
+                ),
+                searchIndex = SearchIndex
+              )
             }
             names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
             save(Param, AfterMSRun, file = filename)
@@ -346,8 +363,10 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
             } else if (Config$runStatTests) {
               # counter
               Param <- tParam
-              Prots <- proteinSummarisation(peptable = AfterMSRun$NonEnriched,
-                                            parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType)))
+              Prots <- proteinSummarisation(
+                peptable = AfterMSRun$NonEnriched,
+                parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType))
+              )
               # Don't accept anything below 100 proteins
               if (nrow(Prots) > 99) {
                 # Filter for having at least 1 actual value per protein group and peptide
@@ -358,7 +377,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
                 Stats <- runPolySTest(Prots, Param, refCond = 1, onlyLIMMA = F, cores = Config$cores)
                 # much faster with only LIMMA tests
                 StatsPep <- runPolySTest(allPeps, Param, refCond = 1, onlyLIMMA = T, cores = Config$cores)
-                #Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+                # Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
                 save(Param, Stats, StatsPep, Benchmarks, file = filename)
               } else {
                 message("Too few proteins or no statistical tests requested.
@@ -384,7 +403,6 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
   return(allBs)
   message("###### Finished data set generation")
 }
-
 
 
 #' Retrieve intermediate outputs for a simulation
@@ -415,9 +433,8 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
 #' Param <- def_param()
 #' Param$paramGroundTruth$NumReps <- 5
 #' benchmarks <- run_sims(Param, config)
-#' result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
-get_simulation <- function(Param, Config, stage="DataAnalysis") {
-
+#' result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
+get_simulation <- function(Param, Config, stage = "DataAnalysis") {
   # Check for valid stage name
   if (!(stage %in% c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"))) {
     stop("Invalid stage name. Please provide a valid stage name.")
@@ -430,7 +447,7 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
   param_names <- param_names[1:max(which(param_names$Group == paste0("param", stage))), ]
   # max of which is the last element of the vector
   max_pname <- max(which(names(Param) %in% rownames(param_names)))
-  tParam  <- Param[1:max_pname]
+  tParam <- Param[1:max_pname]
   # print(tParam)
 
   # check whether file with correct parameters exists
@@ -455,7 +472,6 @@ get_simulation <- function(Param, Config, stage="DataAnalysis") {
 
     # Return the list of objects
     return(objects_list)
-
   } else {
     message("No simulation found with these parameters.")
   }
@@ -503,7 +519,7 @@ gather_all_sims <- function(Config, stage = "DataAnalysis") {
     # Get the parameter and benchmark objects
     param <- get("Param")
 
-    if(exists("Benchmarks")) {
+    if (exists("Benchmarks")) {
       benchmarks <- get("Benchmarks")
 
       # Create a list of the objects
@@ -664,7 +680,7 @@ visualize_benchmarks <- function(benchmatrix,
   )
 
   # maximal ranges of each parameters for alternative visualization
-  ranges <-  lapply(titles, function(x) c(0, NA))
+  ranges <- lapply(titles, function(x) c(0, NA))
   names(ranges) <- names(titles)
   ranges[["propUniquePep"]] <-
     ranges[["aucDiffRegPeptides.FDR_limma.2.vs.1.AUC"]] <-
@@ -767,7 +783,7 @@ visualize_benchmarks <- function(benchmatrix,
   params <- titles_params[ref_par]
 
   # Setting benchmarking metrics to be plotted
-  if(length(benchmarks) == 0) {
+  if (length(benchmarks) == 0) {
     titles <- titles[1:12]
   } else if (is.character(benchmarks)) {
     # Check if the provided benchmarks are valid
@@ -778,7 +794,7 @@ visualize_benchmarks <- function(benchmatrix,
       }
     }
     titles <- titles[benchmarks]
-  } else  if (is.numeric(benchmarks)) {
+  } else if (is.numeric(benchmarks)) {
     # check for range of indices
     if (max(benchmarks) > length(titles)) {
       stop(paste("Too many benchmarks selected. Please select a maximum of", length(titles)))
@@ -787,7 +803,7 @@ visualize_benchmarks <- function(benchmatrix,
 
     # check whether in benchmatrix
     if (length(titles) > 0) {
-      for(i in names(titles)) {
+      for (i in names(titles)) {
         if (!(i %in% names(benchmatrix))) {
           warning(paste("Benchmark name", i, "is not available as benchmark. Will be removed"))
           titles <- titles[-which(names(titles) == i)]
@@ -804,8 +820,10 @@ visualize_benchmarks <- function(benchmatrix,
   n_plots <- length(titles)
   # Always 4x34 to ensure sizes
   plotmfrow <- c(4, 4)
-  par(mfrow=plotmfrow, cex.main=0.9, cex.lab = 0.75, cex.axis = 0.7,
-      mgp = c(1.5, 0.3, 0), mar=c(3, 3, 1.5, 1.5), xpd = TRUE, font.main = 2)
+  par(
+    mfrow = plotmfrow, cex.main = 0.9, cex.lab = 0.75, cex.axis = 0.7,
+    mgp = c(1.5, 0.3, 0), mar = c(3, 3, 1.5, 1.5), xpd = TRUE, font.main = 2
+  )
 
   # Generate a dark qualitative color palette
   if (!is.null(cols)) {
@@ -821,14 +839,14 @@ visualize_benchmarks <- function(benchmatrix,
       # change to full range if set
       myrange <- range(benchmatrix[, i], na.rm = TRUE)
       if (fullrange) {
-        if(!is.na(ranges[[i]][1])) {
+        if (!is.na(ranges[[i]][1])) {
           myrange[1] <- ranges[[i]][1]
         }
-        if(!is.na(ranges[[i]][2])) {
+        if (!is.na(ranges[[i]][2])) {
           myrange[2] <- ranges[[i]][2]
         }
       }
-      if (all(is.finite(range(benchmatrix[, i], na.rm=T)))) {
+      if (all(is.finite(range(benchmatrix[, i], na.rm = T)))) {
         x <- benchmatrix[, ref_par]
         y <- benchmatrix[, i]
         uiw <- NA
@@ -850,35 +868,40 @@ visualize_benchmarks <- function(benchmatrix,
           }))
           x <- unique(benchmatrix[, ref_par])
         }
-        xf <- factor(x, levels = unique(x))   # preserve order
+        xf <- factor(x, levels = unique(x)) # preserve order
         if (any(is.character(x))) {
-          x  <- as.numeric(xf)
+          x <- as.numeric(xf)
         }
 
-        gplots::plotCI(x ,y ,
-               uiw = uiw,
-               gap = 0,
-               xaxt = "n",
-               sfrac = 0.02,
-               xlab = params, ylab = i,
-               pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
-               ylim = myrange)
+        gplots::plotCI(x, y,
+          uiw = uiw,
+          gap = 0,
+          xaxt = "n",
+          sfrac = 0.02,
+          xlab = params, ylab = i,
+          pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
+          ylim = myrange
+        )
         if (errorbar) {
-        axis(1, at = x, labels = levels(xf), las = 1)
+          axis(1, at = x, labels = levels(xf), las = 1)
         } else {
           axis(1, at = x, labels = x, las = 1)
         }
         abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
         abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
 
-        title(main = paste0(titles[i]),
-              col.main = col, font.main = 2)
+        title(
+          main = paste0(titles[i]),
+          col.main = col, font.main = 2
+        )
       } else {
-        plot(benchmatrix[, ref_par], rep(0, length(benchmatrix[, i])), type = "n",
-             xlab = params, ylab = i,
-             main = paste0(titles[i]),
-             col.main = col, font.main = 2,
-             myrange)
+        plot(benchmatrix[, ref_par], rep(0, length(benchmatrix[, i])),
+          type = "n",
+          xlab = params, ylab = i,
+          main = paste0(titles[i]),
+          col.main = col, font.main = 2,
+          myrange
+        )
       }
     } else {
       # colormaps showing the benchmarks in a 2-dim plot as colors
@@ -886,7 +909,6 @@ visualize_benchmarks <- function(benchmatrix,
       # and plot it
 
       if (length(ref_par) == 2) {
-
         x_vals <- sort(unique(benchmatrix[, ref_par[1]]))
         y_vals <- sort(unique(benchmatrix[, ref_par[2]]))
 
@@ -902,21 +924,25 @@ visualize_benchmarks <- function(benchmatrix,
         n_colors <- 100
         col_ramp <- colorRampPalette(c("white", col))
         image_colors <- col_ramp(n_colors)
-        zlim <- range(z_mat, na.rm=T)
+        zlim <- range(z_mat, na.rm = T)
 
-        if(any(!is.finite(zlim))) {
+        if (any(!is.finite(zlim))) {
           zlim <- c(0, 0)
         }
 
         # Plot image
-        image(x = x_vals, y = y_vals, z = z_mat,
-              col = image_colors, zlim = zlim,
-              xlab = params[1], ylab = params[2], axes = TRUE)
+        image(
+          x = x_vals, y = y_vals, z = z_mat,
+          col = image_colors, zlim = zlim,
+          xlab = params[1], ylab = params[2], axes = TRUE
+        )
 
 
         # Colorized title
-        title(main = paste0(titles[i]),
-              col.main = col, font.main = 2)
+        title(
+          main = paste0(titles[i]),
+          col.main = col, font.main = 2
+        )
 
         # Expand singleton axes to avoid collapsed plots
         if (length(x_vals) == 1) {
@@ -928,38 +954,43 @@ visualize_benchmarks <- function(benchmatrix,
 
 
         # Add colorbar along right side
-        bar_x <- max(x_vals, na.rm=T) -  diff(range(x_vals, na.rm=T)) * 0.5
-        bar_w <- diff(range(x_vals, na.rm=T)) * 0.03
+        bar_x <- max(x_vals, na.rm = T) - diff(range(x_vals, na.rm = T)) * 0.5
+        bar_w <- diff(range(x_vals, na.rm = T)) * 0.03
         rect_x <- c(bar_x, bar_x + bar_w)
 
         # Color bar segments
         color_steps <- length(image_colors)
-        bar_y_vals <- seq(min(y_vals, na.rm=T), max(y_vals, na.rm=T), length.out = color_steps + 1)
+        bar_y_vals <- seq(min(y_vals, na.rm = T), max(y_vals, na.rm = T), length.out = color_steps + 1)
 
         for (k in 1:color_steps) {
-          rect(rect_x[1], bar_y_vals[k], rect_x[2], bar_y_vals[k+1],
-               col = image_colors[k], border = NA)
+          rect(rect_x[1], bar_y_vals[k], rect_x[2], bar_y_vals[k + 1],
+            col = image_colors[k], border = NA
+          )
         }
         # rectangle around all rectangles with white border
-        rect(rect_x[1], min(y_vals, na.rm=T), rect_x[2], max(y_vals, na.rm=T),
-             col = NA, border = "#333333", lwd = 0.5)
+        rect(rect_x[1], min(y_vals, na.rm = T), rect_x[2], max(y_vals, na.rm = T),
+          col = NA, border = "#333333", lwd = 0.5
+        )
 
         # Add legend labels on the colorbar
         legend_labels <- pretty(zlim, n = 3)
-        if (diff(range(zlim, na.rm=T)) > 0) {
-          legend_pos <- approx(zlim, range(bar_y_vals, na.rm=T), xout = legend_labels)$y
-          text(x = rect_x[2] + 0.02 * diff(range(x_vals, na.rm=T)),
-               y = legend_pos,
-               labels = round(legend_labels, 2),
-               cex = 0.6, adj = 0)
+        if (diff(range(zlim, na.rm = T)) > 0) {
+          legend_pos <- approx(zlim, range(bar_y_vals, na.rm = T), xout = legend_labels)$y
+          text(
+            x = rect_x[2] + 0.02 * diff(range(x_vals, na.rm = T)),
+            y = legend_pos,
+            labels = round(legend_labels, 2),
+            cex = 0.6, adj = 0
+          )
         }
       }
     }
   }
   # Reset plotting layout
-  par(mfrow = c(1, 1), cex.main = 1.2, cex.lab = 1, cex.axis = 1, xpd = FALSE,
-      font.main = 1)
-
+  par(
+    mfrow = c(1, 1), cex.main = 1.2, cex.lab = 1, cex.axis = 1, xpd = FALSE,
+    font.main = 1
+  )
 }
 
 
@@ -1072,8 +1103,6 @@ render_benchmark_table <- function(benchmatrix,
 }
 
 
-
-
 #' Visualize benchmarks for a specific simulation
 #'
 #' This function creates visualizations of the benchmark results for a specific
@@ -1119,15 +1148,16 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
       to_del <- c(to_del, i)
     }
   }
-  if(length(to_del) > 0)
+  if (length(to_del) > 0) {
     BenchMatrix <- BenchMatrix[, -to_del]
+  }
   BenchMatrix[is.na(BenchMatrix)] <- 0
   # remove column QuantColnames if it exists
   if ("QuantColnames" %in% colnames(BenchMatrix)) {
     BenchMatrix <- BenchMatrix[, -which(colnames(BenchMatrix) == "QuantColnames")]
   }
   tBenchMatrix <- BenchMatrix
-  nr <- 2# nrow(BenchMatrix)
+  nr <- 2 # nrow(BenchMatrix)
   # convert characters to factors
   if (is.null(ncol(BenchMatrix))) {
     message("No benchmarks available for this simulation.")
@@ -1153,8 +1183,9 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
   # Create plots
   plots <- list()
   sim <- current_row
-  if (is.numeric(sim))
+  if (is.numeric(sim)) {
     sim <- rownames(BenchMatrix)[sim]
+  }
   dat <- tBenchMatrix[sim, ]
   dat <- sapply(dat, function(x) {
     if (is.numeric(x)) {
@@ -1166,26 +1197,27 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
     x
   })
   dat2 <- BenchMatrix[sim, ]
-  dat2 <- sapply(dat2, function(x) {    if (is.numeric(x)) {
-    x <- round(x, 2)
-  }
+  dat2 <- sapply(dat2, function(x) {
+    if (is.numeric(x)) {
+      x <- round(x, 2)
+    }
     x
   })
   plot <- plotly::plot_ly(
     x = names(dat),
     y = as.numeric(dat),
-    type = 'bar',
+    type = "bar",
     marker = list(
       color = color_palette[as.numeric(dat) * 99 + 1]
     ),
     text = as.character(dat2),
-    textposition = 'auto',
-    hoverinfo = 'text'
+    textposition = "auto",
+    hoverinfo = "text"
   ) %>%
     plotly::layout(
       title = paste("hash:", sim),
-      yaxis = list(title = 'Normalized values', range = c(0, 1), tickfont = list(size = 18/nr), titlefont = list(size = 20/nr)),
-      xaxis = list(title = '', tickangle = -45, tickfont = list(size = 16/nr)),
+      yaxis = list(title = "Normalized values", range = c(0, 1), tickfont = list(size = 18 / nr), titlefont = list(size = 20 / nr)),
+      xaxis = list(title = "", tickangle = -45, tickfont = list(size = 16 / nr)),
       margin = list(t = 100, b = 100, l = 100, r = 100),
       showlegend = FALSE
     )
@@ -1193,10 +1225,11 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
 
 
   # Combine all plots into a subplot
-  subplot(param_plot, plot, nrows = 2, shareX = TRUE, shareY = TRUE,
-          margin = 0.01, titleX = TRUE, titleY = TRUE) %>%
+  subplot(param_plot, plot,
+    nrows = 2, shareX = TRUE, shareY = TRUE,
+    margin = 0.01, titleX = TRUE, titleY = TRUE
+  ) %>%
     plotly::layout(showlegend = FALSE)
-
 }
 
 #' Plot parameters for a specific simulation
@@ -1223,23 +1256,23 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
 #' plot_params(benchmarks, current_row = 1)
 #' }
 plot_params <- function(BenchMatrix, current_row = 1) {
-
   # get parameter names
   param_t <- param_table()
   param_names <- rownames(param_t)
 
-  #filter out every NA or NULL parameters
+  # filter out every NA or NULL parameters
   to_remove <- c()
   for (i in which(colnames(BenchMatrix) %in% param_names)) {
     val <- as.numeric(BenchMatrix[, i])
-    if (!(length(val) ==0)) {
+    if (!(length(val) == 0)) {
       if (all(is.na(val))) {
         to_remove <- append(to_remove, i)
       }
     }
   }
-  if (length(to_remove) > 0)
+  if (length(to_remove) > 0) {
     BenchMatrix <- BenchMatrix[, -to_remove]
+  }
   val[is.na(val)] <- 0
   param_names <- param_names[param_names %in% colnames(BenchMatrix)]
   param_t <- param_t[param_names, ]
@@ -1274,24 +1307,25 @@ plot_params <- function(BenchMatrix, current_row = 1) {
     y_domain <- c(1 - (row_index - vspacing_factor) / nrows, 1 - ((row_index - 1 + vspacing_factor) / nrows))
     # Scale to row position
     # x_domain <- x_domain/2 + 0.5
-    y_domain <- y_domain/2 + 0.5
-    #y_domain <- y_domain/(nrow(BenchMatrix)*1.1) + (current_row-1)*1.05 / nrow(BenchMatrix)
+    y_domain <- y_domain / 2 + 0.5
+    # y_domain <- y_domain/(nrow(BenchMatrix)*1.1) + (current_row-1)*1.05 / nrow(BenchMatrix)
     fig1 <- plot_ly(
       domain = list(x = x_domain, y = y_domain),
       value = val,
-      title = list(text = param_names[i], align="center", font = list(size = 10/nr)),
+      title = list(text = param_names[i], align = "center", font = list(size = 10 / nr)),
       type = "indicator",
       mode = "gauge",
       gauge = list(
         shape = "bullet",
-        axis = list(range = list(curr_par$MinValue, curr_par$MaxValue),
-                    tickmode = "auto",
-                    ticks = "inside",  # Position ticks inside
-                    tickfont = list(size = 10/nr, color = "black")  # Adjust tickfont size and color for better visibility
+        axis = list(
+          range = list(curr_par$MinValue, curr_par$MaxValue),
+          tickmode = "auto",
+          ticks = "inside", # Position ticks inside
+          tickfont = list(size = 10 / nr, color = "black") # Adjust tickfont size and color for better visibility
         ),
         bar = list(
           color = colorpanel(100, "#33CC33", "#999966", "#CC3333")[(val - curr_par$MinValue) / (curr_par$MaxValue - curr_par$MinValue) * 100 + 1],
-          thickness = 0.8  # Adjust this value to make the gauge bar thicker
+          thickness = 0.8 # Adjust this value to make the gauge bar thicker
         )
       )
     )

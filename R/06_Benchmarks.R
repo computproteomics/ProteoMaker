@@ -17,41 +17,41 @@
 #'
 #'
 #' @keywords internal
-calcROC <- function(Stats, columnName, groundtruthColumn="min1Reg") {
-    FPs <- TPs <- 0
-    FNs <- sum(Stats$min1Reg)
-    TNs <- nrow(Stats) - FNs
-    ROC <- NULL
-    FDR <- NULL
-    AUC <- 0
-    oldFDR <- -1
-    oldFPR <- 0
-    for (i in order(Stats[,columnName])) {
-        if(Stats[i, groundtruthColumn]) {
-            TPs <- TPs + 1
-            FNs <- FNs -1
-        } else {
-            FPs <- FPs + 1
-            TNs <- TNs - 1
-        }
-        currFDR <- Stats[i, columnName]
-        if (is.na(currFDR)) currFDR <- 1
-        if (currFDR != oldFDR) {
-            ROC <- rbind(ROC, c(FPs/(FPs+TNs), TPs/(TPs+FNs)))
-            FDR <- rbind(FDR, c(currFDR, FPs/(FPs + TPs)))
-            AUC <- AUC + (FPs/(FPs+TNs) - oldFPR) *  TPs/(TPs+FNs)
-        } else {
-            ROC[nrow(ROC), ] <- c(FPs/(FPs+TNs), TPs/(TPs+FNs))
-            FDR[nrow(FDR), ] <- c(currFDR, FPs/(FPs + TPs))
-            AUC <- AUC + (FPs/(FPs+TNs) - oldFPR) *  TPs/(TPs+FNs)
-        }
-
-        oldFDR <- currFDR
-        oldFPR <- FPs/(FPs+TNs)
+calcROC <- function(Stats, columnName, groundtruthColumn = "min1Reg") {
+  FPs <- TPs <- 0
+  FNs <- sum(Stats$min1Reg)
+  TNs <- nrow(Stats) - FNs
+  ROC <- NULL
+  FDR <- NULL
+  AUC <- 0
+  oldFDR <- -1
+  oldFPR <- 0
+  for (i in order(Stats[, columnName])) {
+    if (Stats[i, groundtruthColumn]) {
+      TPs <- TPs + 1
+      FNs <- FNs - 1
+    } else {
+      FPs <- FPs + 1
+      TNs <- TNs - 1
     }
-    colnames(ROC) <- c("FPR", "TPR")
-    colnames(FDR) <- c("FDR", "tFDR")
-    cbind(ROC, FDR, AUC)
+    currFDR <- Stats[i, columnName]
+    if (is.na(currFDR)) currFDR <- 1
+    if (currFDR != oldFDR) {
+      ROC <- rbind(ROC, c(FPs / (FPs + TNs), TPs / (TPs + FNs)))
+      FDR <- rbind(FDR, c(currFDR, FPs / (FPs + TPs)))
+      AUC <- AUC + (FPs / (FPs + TNs) - oldFPR) * TPs / (TPs + FNs)
+    } else {
+      ROC[nrow(ROC), ] <- c(FPs / (FPs + TNs), TPs / (TPs + FNs))
+      FDR[nrow(FDR), ] <- c(currFDR, FPs / (FPs + TPs))
+      AUC <- AUC + (FPs / (FPs + TNs) - oldFPR) * TPs / (TPs + FNs)
+    }
+
+    oldFDR <- currFDR
+    oldFPR <- FPs / (FPs + TNs)
+  }
+  colnames(ROC) <- c("FPR", "TPR")
+  colnames(FDR) <- c("FDR", "tFDR")
+  cbind(ROC, FDR, AUC)
 }
 
 #' Calculate Benchmarks for Simulated Data
@@ -124,290 +124,296 @@ calcROC <- function(Stats, columnName, groundtruthColumn="min1Reg") {
 #' @importFrom matrixStats rowSds
 #'
 #' @keywords internal
-calcBenchmarks <- function(Stats, StatsPep, Param)  {
+calcBenchmarks <- function(Stats, StatsPep, Param) {
+  message("\n#### Calculating benchmarks ###")
 
-    message("\n#### Calculating benchmarks ###")
+  Benchmarks <- NULL
 
-    Benchmarks <- NULL
-
-    # global means 1 number per metric
-    globalBMs <- list(
-        # Peptide level
-        numPeptides=0, numProteins=0, dynRangePep=0, propUniquePep=0, uniqueStrippedPep=0, percMissingPep=0,
-        aucDiffRegPeptides=list(), tprPep0.01=list(), tprPep0.05=list(), tFDRPep0.01=list(), tFDRPep0.05=list(),
-        propMisCleavedPeps=list(),meanSquareDiffFCPep=0, sdWithinRepsPep=0, skewnessPeps=0, kurtosisPeps=0, sdPeps=0,
-        # Protein level
-        numQuantProtGroups=0, dynRangeProt=0, propUniqueProts=0, percMissingProt=0, meanPepPerProt=0, aucDiffRegProteins=list(),
-        tFDRProt0.01=list(), tFDRProt0.05=list(), tprProt0.01=list(), tprProt0.05=list(), meanSquareDiffFCProt=0, sdWithinRepsProt=0,
-        propMisCleavedProts=0,
-        propDiffRegWrongIDProt0.01=list(),propDiffRegWrongIDProt0.05=list(),skewnessProts=0, kurtosisProts=0, sdProts=0,
-        # PTM level
-        numProteoforms=0, numModPeptides=0, meanProteoformsPerProt=0, propModAndUnmodPep=0, aucDiffRegAdjModPep=list(),
-        tFDRAdjModPep0.01=list(), tFDRAdjModPep0.05=list(), tprAdjModPep0.01=list(), tprAdjModPep0.05=list(),
-        propDiffRegPepWrong0.01=list(),propDiffRegPepWrong0.05=list(), percOverlapModPepProt=0, meanSquareDiffFCModPep=0)
-
-
-    #### Calculating peptide numbers
-    globalBMs["numPeptides"] <- nrow(StatsPep)
-    globalBMs["numProteins"] <- length(unique(unlist(StatsPep$Accession)))
-    globalBMs["propUniquePep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) == 1)) / nrow(StatsPep)
-    # Obsolete as 1-propUniquePep
-    #TODO:globalBMs["propSharedPep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) > 1)) / nrow(StatsPep)
-    globalBMs["uniqueStrippedPep"] <- length(unique(StatsPep$Sequence))
-    globalBMs["percMissingPep"] <- sum(is.na(unlist(StatsPep[,Param$QuantColnames]))) / length(unlist(StatsPep[,Param$QuantColnames])) * 100
-    ## Dynamic range (max - min intensity log2 scale)
-    globalBMs$dynRangePep <- diff(range(StatsPep[,Param$QuantColnames], na.rm=T))
+  # global means 1 number per metric
+  globalBMs <- list(
+    # Peptide level
+    numPeptides = 0, numProteins = 0, dynRangePep = 0, propUniquePep = 0, uniqueStrippedPep = 0, percMissingPep = 0,
+    aucDiffRegPeptides = list(), tprPep0.01 = list(), tprPep0.05 = list(), tFDRPep0.01 = list(), tFDRPep0.05 = list(),
+    propMisCleavedPeps = list(), meanSquareDiffFCPep = 0, sdWithinRepsPep = 0, skewnessPeps = 0, kurtosisPeps = 0, sdPeps = 0,
+    # Protein level
+    numQuantProtGroups = 0, dynRangeProt = 0, propUniqueProts = 0, percMissingProt = 0, meanPepPerProt = 0, aucDiffRegProteins = list(),
+    tFDRProt0.01 = list(), tFDRProt0.05 = list(), tprProt0.01 = list(), tprProt0.05 = list(), meanSquareDiffFCProt = 0, sdWithinRepsProt = 0,
+    propMisCleavedProts = 0,
+    propDiffRegWrongIDProt0.01 = list(), propDiffRegWrongIDProt0.05 = list(), skewnessProts = 0, kurtosisProts = 0, sdProts = 0,
+    # PTM level
+    numProteoforms = 0, numModPeptides = 0, meanProteoformsPerProt = 0, propModAndUnmodPep = 0, aucDiffRegAdjModPep = list(),
+    tFDRAdjModPep0.01 = list(), tFDRAdjModPep0.05 = list(), tprAdjModPep0.01 = list(), tprAdjModPep0.05 = list(),
+    propDiffRegPepWrong0.01 = list(), propDiffRegPepWrong0.05 = list(), percOverlapModPepProt = 0, meanSquareDiffFCModPep = 0
+  )
 
 
-    # Which tests are there?
-    statCols <- grep("FDR",colnames(StatsPep), value=T)
+  #### Calculating peptide numbers
+  globalBMs["numPeptides"] <- nrow(StatsPep)
+  globalBMs["numProteins"] <- length(unique(unlist(StatsPep$Accession)))
+  globalBMs["propUniquePep"] <- sum(sapply(StatsPep$Accession, function(x) length(x) == 1)) / nrow(StatsPep)
+  # Obsolete as 1-propUniquePep
+  # TODO:globalBMs["propSharedPep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) > 1)) / nrow(StatsPep)
+  globalBMs["uniqueStrippedPep"] <- length(unique(StatsPep$Sequence))
+  globalBMs["percMissingPep"] <- sum(is.na(unlist(StatsPep[, Param$QuantColnames]))) / length(unlist(StatsPep[, Param$QuantColnames])) * 100
+  ## Dynamic range (max - min intensity log2 scale)
+  globalBMs$dynRangePep <- diff(range(StatsPep[, Param$QuantColnames], na.rm = T))
 
-    # results on basis of ground truth
-    ROC <- list()
-    # plot(0:1, 0:1, type="n", main="Peptides")
-    for (test in statCols) {
-        testSum <-  calcROC(StatsPep, test)
-        if (nrow(testSum) > 1) {
-            # lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
-            # lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
-            ROC[[test]] <- testSum
-            at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
-            at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
 
-            globalBMs$aucDiffRegPeptides[[test]] <- testSum[1,"AUC"]
-            globalBMs$tprPep0.01[[test]] <- testSum[at.01, "TPR"]
-            globalBMs$tprPep0.05[[test]] <- testSum[at.05, "TPR"]
-            globalBMs$tFDRPep0.01[[test]] <- testSum[at.01, "tFDR"]
-            globalBMs$tFDRPep0.05[[test]] <- testSum[at.05, "tFDR"]
-        }
+  # Which tests are there?
+  statCols <- grep("FDR", colnames(StatsPep), value = T)
+
+  # results on basis of ground truth
+  ROC <- list()
+  # plot(0:1, 0:1, type="n", main="Peptides")
+  for (test in statCols) {
+    testSum <- calcROC(StatsPep, test)
+    if (nrow(testSum) > 1) {
+      # lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
+      # lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
+      ROC[[test]] <- testSum
+      at.01 <- which.min(abs(testSum[, "FDR"] - 0.01))
+      at.05 <- which.min(abs(testSum[, "FDR"] - 0.05))
+
+      globalBMs$aucDiffRegPeptides[[test]] <- testSum[1, "AUC"]
+      globalBMs$tprPep0.01[[test]] <- testSum[at.01, "TPR"]
+      globalBMs$tprPep0.05[[test]] <- testSum[at.05, "TPR"]
+      globalBMs$tFDRPep0.01[[test]] <- testSum[at.01, "tFDR"]
+      globalBMs$tFDRPep0.05[[test]] <- testSum[at.05, "tFDR"]
     }
-    # legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
-    Benchmarks$PepStat <- ROC
+  }
+  # legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
+  Benchmarks$PepStat <- ROC
 
-    # miscleavages
-    globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
+  # miscleavages
+  globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
 
-    #### Calculating protein numbers
-    globalBMs["numQuantProtGroups"] <- nrow(Stats)
-    globalBMs["propUniqueProts"] <- sum(unlist(sapply(stringr::str_split(Stats$num_accs,";"),
-                                                      function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
-    globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[,Param$QuantColnames])))  / length(Param$QuantColnames) / nrow(Stats) * 100
-    pepDistr <- sapply(stringr::str_split(Stats$Sequence,";"), function(x) length(unique(x)))
-    # barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
-    globalBMs["meanPepPerProt"] <-  mean(pepDistr)
-    globalBMs$dynRangeProt <- diff(range(Stats[,Param$QuantColnames], na.rm=T))
+  #### Calculating protein numbers
+  globalBMs["numQuantProtGroups"] <- nrow(Stats)
+  globalBMs["propUniqueProts"] <- sum(unlist(sapply(
+    stringr::str_split(Stats$num_accs, ";"),
+    function(x) unique(as.numeric(unlist(x))) == 1
+  ))) / nrow(Stats)
+  globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[, Param$QuantColnames]))) / length(Param$QuantColnames) / nrow(Stats) * 100
+  pepDistr <- sapply(stringr::str_split(Stats$Sequence, ";"), function(x) length(unique(x)))
+  # barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
+  globalBMs["meanPepPerProt"] <- mean(pepDistr)
+  globalBMs$dynRangeProt <- diff(range(Stats[, Param$QuantColnames], na.rm = T))
 
-    # Which tests are there?
-    statCols <- grep("FDR",colnames(Stats), value=T)
+  # Which tests are there?
+  statCols <- grep("FDR", colnames(Stats), value = T)
 
-    # results on basis of ground truth
-    ROC <- list()
-    # plot(0:1, 0:1, type="n", main="Proteins", xlim=c(0,1), ylim=c(0,1))
-    for (test in statCols) {
-        testSum <-  calcROC(Stats, test)
-        if (nrow(testSum) > 1) {
-            # lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
-            # lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
-            ROC[[test]] <- testSum
-            at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
-            at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
+  # results on basis of ground truth
+  ROC <- list()
+  # plot(0:1, 0:1, type="n", main="Proteins", xlim=c(0,1), ylim=c(0,1))
+  for (test in statCols) {
+    testSum <- calcROC(Stats, test)
+    if (nrow(testSum) > 1) {
+      # lines(testSum[,1], testSum[,2], type="s", col=which(test==statCols))
+      # lines(testSum[,3], testSum[,4], type="l", col=which(test==statCols),lty=3)
+      ROC[[test]] <- testSum
+      at.01 <- which.min(abs(testSum[, "FDR"] - 0.01))
+      at.05 <- which.min(abs(testSum[, "FDR"] - 0.05))
 
-            globalBMs$aucDiffRegProteins[[test]] <- testSum[1,"AUC"]
-            globalBMs$tprProt0.01[[test]] <- testSum[at.01, "TPR"]
-            globalBMs$tprProt0.05[[test]] <- testSum[at.05, "TPR"]
-            globalBMs$tFDRProt0.01[[test]] <- testSum[at.01, "tFDR"]
-            globalBMs$tFDRProt0.05[[test]] <- testSum[at.05, "tFDR"]
-        }
+      globalBMs$aucDiffRegProteins[[test]] <- testSum[1, "AUC"]
+      globalBMs$tprProt0.01[[test]] <- testSum[at.01, "TPR"]
+      globalBMs$tprProt0.05[[test]] <- testSum[at.05, "TPR"]
+      globalBMs$tFDRProt0.01[[test]] <- testSum[at.01, "tFDR"]
+      globalBMs$tFDRProt0.05[[test]] <- testSum[at.05, "tFDR"]
     }
+  }
 
-    # legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
-    Benchmarks$ProtStat <- ROC
+  # legend("bottomright", lwd=1, col=1:length(statCols), legend = statCols, cex=0.6)
+  Benchmarks$ProtStat <- ROC
 
-    ## Calculating differences between actual and "measured" fold-changes (proteins)
-    patterns <- lapply(Stats$Regulation_Pattern, function(x)  matrix(as.numeric(unlist(stringr::str_split(x, ";"))), byrow=T, ncol = Param$NumCond))
+  ## Calculating differences between actual and "measured" fold-changes (proteins)
+  patterns <- lapply(Stats$Regulation_Pattern, function(x) matrix(as.numeric(unlist(stringr::str_split(x, ";"))), byrow = T, ncol = Param$NumCond))
 
-    amplitudes <- lapply(Stats$Regulation_Amplitude, function(x) {
-        values <- unlist(stringr::str_split(x, ";"))
-        values[values == "NA"] <- NA  # Replace "NA" strings with actual NA values
-        as.numeric(values)
-    })
-    # pick first available log-ratios column for proteins
-    lr_cols_stats <- grep("^log-ratios", colnames(Stats), value = TRUE)
-    lr_col_stat <- if (length(lr_cols_stats) > 0) lr_cols_stats[1] else NA_character_
-    diffs <- vector("numeric",length(patterns))
-    sumsquare <- 0
-    for (i in 1:length(patterns)) {
-        tampl <- na.omit(amplitudes[i][[1]])
-        if (length(tampl)> 0) {
-            tval <- patterns[i][[1]] * tampl
-            ok_lr <- !is.na(lr_col_stat) && !is.na(Stats[i, lr_col_stat])
-            if(length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval) & ok_lr)) {
-                tval <- colMeans(tval[,2:ncol(tval), drop=F] - tval[,1], na.rm=T)
-                diffs[i] <- tval
-                sumsquare <- sumsquare + (tval - Stats[i, lr_col_stat]) * (tval - Stats[i, lr_col_stat])
-            } else {
-                diffs[i] <- 0
-            }
-        } else {
-            diffs[i] <- 0
-        }
-    }
-    # plot(0, xlim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), ylim=range(Stats$`log-ratios 2 vs 1`, na.rm=T),
-    #     type="n", xlab="Ground truth", ylab="Measured ratios")
-    # points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
-    # abline(0,1)
-    globalBMs["meanSquareDiffFCProt"] <- sumsquare / sum(diffs != 0, na.rm=T)
-
-    # Calculating mean of peptide sds within replicates (only peptides with regulations)
-    sds <- 0
-    for (c in 1:Param$NumCond) {
-        tquants <- as.matrix(StatsPep[StatsPep$min1Reg, Param$QuantColnames][,(c-1)*Param$NumReps+(1:Param$NumReps)])
-        if (nrow(tquants) > 0) {
-            tsds <- matrixStats::rowSds(tquants, na.rm=T)
-            sds <- sds + sum(tsds, na.rm=T) / length(na.omit(tsds))
-        }
-
-    }
-    sds <- sds  / Param$NumCond
-
-    globalBMs["sdWithinRepsPep"] <- sds
-
-    sds <- 0
-    for (c in 1:Param$NumCond) {
-        tquants <- as.matrix(Stats[Stats$allReg, Param$QuantColnames][,(c-1)*Param$NumReps+(1:Param$NumReps)])
-        if (nrow(tquants) > 0) {
-            tsds <- matrixStats::rowSds(tquants, na.rm=T)
-            sds <- sds + sum(tsds, na.rm=T) / length(na.omit(tsds))
-        }
-    }
-    sds <- sds  / Param$NumCond
-    globalBMs["sdWithinRepsProt"] <- sds
-
-
-    ## Calculating differences between actual and "measured" fold-changes (peptides)
-    patterns <- lapply(StatsPep$Regulation_Pattern, function(x) gsub("NULL", "0", x))
-    patterns <- lapply(patterns, function(x)  (do.call("rbind",lapply(unlist(stringr::str_split(x, ";")), function(y) eval(parse(text=y))))))
-    amplitudes <- lapply(StatsPep$Regulation_Amplitude, function(x) {
-        values <- unlist(stringr::str_split(x, ";"))
-        values[values == "NA"] <- NA  # Replace "NA" strings with actual NA values
-        as.numeric(values)
-    })
-    diffs <- diffsmod <- vector("numeric",length(patterns))
-    sumsquare <- sumsquaremod <- 0
-    for (i in 1:length(patterns)) {
-        tampl <- amplitudes[[i]]
-        diffs[i] <- diffsmod[i] <- 0
-        pat <- patterns[[i]]
-        if (length(na.omit(tampl)) > 0 && is.matrix(pat) && ncol(pat) > 1) {
-            tampl[is.na(tampl)] <- 0
-            tval <- pat * tampl
-            tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
-            sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]
-            tdiff <- (tval - sdata) * (tval - sdata)
-            if (!is.na(tdiff)) {
-                sumsquare <- sumsquare + tdiff
-                diffs[i] <- tval
-                if (length(StatsPep$PTMType[i][[1]]) > 0) {
-                    sumsquaremod <- sumsquaremod + tdiff
-                    diffsmod[i] <- tval
-                }
-            }
-        }
-    }
-    # plot(0, xlim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), ylim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
-    # points(diffs, StatsPep$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
-    # abline(0,1)
-    globalBMs["meanSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
-    globalBMs["meanSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
-
-    # Counting miscleavages
-    if (sum(!is.na(Stats$MC)) > 0)
-        globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0) / nrow(Stats)
-
-    # statistics with respect to wrong identifications
-    wrong_ids <- sapply(Stats$WrongID, function(x) sum(as.logical(unlist(strsplit(x, ";")))))
-    for (test in statCols) {
-        globalBMs$propDiffRegWrongIDProt0.01[[test]] <- sum(Stats[,test] < 0.01 & wrong_ids > 0, na.rm=T) / sum(Stats[,test] < 0.01, na.rm=T)
-        globalBMs$propDiffRegWrongIDProt0.05[[test]] <- sum(Stats[,test] < 0.05 & wrong_ids > 0, na.rm=T) / sum(Stats[,test] < 0.05, na.rm=T)
-    }
-
-    # checking properties of distribution
-    globalBMs$skewnessProts <- e1071::skewness(unlist(Stats[,Param$QuantColnames]), na.rm=T)
-    globalBMs$kurtosisProts <- e1071::kurtosis(unlist(Stats[,Param$QuantColnames]), na.rm=T)
-    globalBMs$sdProts <- sd(unlist(Stats[,Param$QuantColnames]), na.rm=T)
-    globalBMs$skewnessPeps <- e1071::skewness(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
-    globalBMs$kurtosisPeps <- e1071::kurtosis(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
-    globalBMs$sdPeps <- sd(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
-
-    ###### metrics on PTM level
-    # number of proteoforms per protein group and in total, not all identifiable
-    ProteoformDistr <- sapply(Stats$Proteoform_ID, function(x) length(unique(as.numeric(unlist(strsplit(x, ";"))))))
-    # barplot(table(ProteoformDistr), 100)
-    globalBMs$numProteoforms <- sum(ProteoformDistr)
-    globalBMs$meanProteoformsPerProt <- mean(ProteoformDistr)
-
-    globalBMs$numModPeptides <- sum(StatsPep$PTMType != "NULL")
-    ModPeps <- StatsPep[StatsPep$PTMType != "NULL",]
-    # Proportion of modified peptides with identical non-modified peptide
-    pepgroups <- by(StatsPep[,c("Sequence", "Accession", "PTMType", "PTMPos")], StatsPep$Sequence, function(x) x )
-    pepgroups <- lapply(pepgroups, function(x) {x[x=="NULL"] <- NA; x})
-    modpepgroups <- sapply(pepgroups, function(x) {sum(as.numeric(unlist(x[,"PTMPos"])),na.rm=T) > 0})
-    modpepgroups <- pepgroups[modpepgroups]
-    if (length(modpepgroups) > 0) {
-        modunmodgroups <- sapply(modpepgroups, function(x) sum(is.na(x[,"PTMPos"])) > 0)
-        if (length(modunmodgroups) > 0) {
-            modunmodgroups <- modpepgroups[modunmodgroups]
-            if (length(modunmodgroups) > 0) {
-                globalBMs$propModAndUnmodPep <- sum(sapply(modunmodgroups, function(x) nrow(x)-1)) / globalBMs$numModPeptides
-            }
-        }
-    }
-
-    # modified peptides and their proteins
-    ModPeps <- cbind(ModPeps, merged_accs=sapply(ModPeps$Accession, function(x) paste(unlist(x),collapse=";")))
-    ModPepsWithProt <- ModPeps[ModPeps$merged_accs  %in% rownames(Stats), ]
-    globalBMs$percOverlapModPepProt <- nrow(ModPepsWithProt) / nrow(ModPeps) * 100
-
-    # Adjust by protein expression (could be moved to Statistics)
-    AdjModPepsWithProt <- ModPepsWithProt
-    AdjModPepsWithProt[,Param$QuantColnames] <- AdjModPepsWithProt[,Param$QuantColnames] - Stats[as.character(AdjModPepsWithProt$merged_accs), Param$QuantColnames]
-    StatsAdjModPep <- NULL
-    if (nrow(AdjModPepsWithProt) <= 200) {
-        message("Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats")
+  amplitudes <- lapply(Stats$Regulation_Amplitude, function(x) {
+    values <- unlist(stringr::str_split(x, ";"))
+    values[values == "NA"] <- NA # Replace "NA" strings with actual NA values
+    as.numeric(values)
+  })
+  # pick first available log-ratios column for proteins
+  lr_cols_stats <- grep("^log-ratios", colnames(Stats), value = TRUE)
+  lr_col_stat <- if (length(lr_cols_stats) > 0) lr_cols_stats[1] else NA_character_
+  diffs <- vector("numeric", length(patterns))
+  sumsquare <- 0
+  for (i in 1:length(patterns)) {
+    tampl <- na.omit(amplitudes[i][[1]])
+    if (length(tampl) > 0) {
+      tval <- patterns[i][[1]] * tampl
+      ok_lr <- !is.na(lr_col_stat) && !is.na(Stats[i, lr_col_stat])
+      if (length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval) & ok_lr)) {
+        tval <- colMeans(tval[, 2:ncol(tval), drop = F] - tval[, 1], na.rm = T)
+        diffs[i] <- tval
+        sumsquare <- sumsquare + (tval - Stats[i, lr_col_stat]) * (tval - Stats[i, lr_col_stat])
+      } else {
+        diffs[i] <- 0
+      }
     } else {
-        StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond=1, onlyLIMMA=T)
+      diffs[i] <- 0
+    }
+  }
+  # plot(0, xlim=range(Stats$`log-ratios 2 vs 1`, na.rm=T), ylim=range(Stats$`log-ratios 2 vs 1`, na.rm=T),
+  #     type="n", xlab="Ground truth", ylab="Measured ratios")
+  # points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
+  # abline(0,1)
+  globalBMs["meanSquareDiffFCProt"] <- sumsquare / sum(diffs != 0, na.rm = T)
 
-        # results on basis of ground truth (derive statCols from StatsAdjModPep)
-        statColsAdj <- grep("FDR", colnames(StatsAdjModPep), value = TRUE)
-        ROC <- list()
-        # plotting skipped in non-interactive contexts
-        for (test in statColsAdj) {
-            testSum <-  calcROC(StatsAdjModPep, test)
-            if (nrow(testSum) > 1) {
-                ROC[[test]] <- testSum
-                at.01 <- which.min(abs(testSum[,"FDR"] - 0.01))
-                at.05 <- which.min(abs(testSum[,"FDR"] - 0.05))
+  # Calculating mean of peptide sds within replicates (only peptides with regulations)
+  sds <- 0
+  for (c in 1:Param$NumCond) {
+    tquants <- as.matrix(StatsPep[StatsPep$min1Reg, Param$QuantColnames][, (c - 1) * Param$NumReps + (1:Param$NumReps)])
+    if (nrow(tquants) > 0) {
+      tsds <- matrixStats::rowSds(tquants, na.rm = T)
+      sds <- sds + sum(tsds, na.rm = T) / length(na.omit(tsds))
+    }
+  }
+  sds <- sds / Param$NumCond
 
-                globalBMs$aucDiffRegAdjModPep[[test]] <- testSum[1,"AUC"]
-                globalBMs$tprAdjModPep0.01[[test]] <- testSum[at.01, "TPR"]
-                globalBMs$tprAdjModPep0.05[[test]] <- testSum[at.05, "TPR"]
-                globalBMs$tFDRAdjModPep0.01[[test]] <- testSum[at.01, "tFDR"]
-                globalBMs$tFDRAdjModPep0.05[[test]] <- testSum[at.05, "tFDR"]
-            }
+  globalBMs["sdWithinRepsPep"] <- sds
+
+  sds <- 0
+  for (c in 1:Param$NumCond) {
+    tquants <- as.matrix(Stats[Stats$allReg, Param$QuantColnames][, (c - 1) * Param$NumReps + (1:Param$NumReps)])
+    if (nrow(tquants) > 0) {
+      tsds <- matrixStats::rowSds(tquants, na.rm = T)
+      sds <- sds + sum(tsds, na.rm = T) / length(na.omit(tsds))
+    }
+  }
+  sds <- sds / Param$NumCond
+  globalBMs["sdWithinRepsProt"] <- sds
+
+
+  ## Calculating differences between actual and "measured" fold-changes (peptides)
+  patterns <- lapply(StatsPep$Regulation_Pattern, function(x) gsub("NULL", "0", x))
+  patterns <- lapply(patterns, function(x) (do.call("rbind", lapply(unlist(stringr::str_split(x, ";")), function(y) eval(parse(text = y))))))
+  amplitudes <- lapply(StatsPep$Regulation_Amplitude, function(x) {
+    values <- unlist(stringr::str_split(x, ";"))
+    values[values == "NA"] <- NA # Replace "NA" strings with actual NA values
+    as.numeric(values)
+  })
+  diffs <- diffsmod <- vector("numeric", length(patterns))
+  sumsquare <- sumsquaremod <- 0
+  for (i in 1:length(patterns)) {
+    tampl <- amplitudes[[i]]
+    diffs[i] <- diffsmod[i] <- 0
+    pat <- patterns[[i]]
+    if (length(na.omit(tampl)) > 0 && is.matrix(pat) && ncol(pat) > 1) {
+      tampl[is.na(tampl)] <- 0
+      tval <- pat * tampl
+      tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
+      sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]
+      tdiff <- (tval - sdata) * (tval - sdata)
+      if (!is.na(tdiff)) {
+        sumsquare <- sumsquare + tdiff
+        diffs[i] <- tval
+        if (length(StatsPep$PTMType[i][[1]]) > 0) {
+          sumsquaremod <- sumsquaremod + tdiff
+          diffsmod[i] <- tval
         }
-        Benchmarks$AdjModPepStat <- ROC
+      }
     }
+  }
+  # plot(0, xlim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), ylim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
+  # points(diffs, StatsPep$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
+  # abline(0,1)
+  globalBMs["meanSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
+  globalBMs["meanSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
 
-    # Back to original modified peptides, counting the wrong differential regulations
-    for (test in statCols) {
-        globalBMs$propDiffRegPepWrong0.01[[test]] <- sum(ModPeps[[test]] < 0.01, na.rm=T) / nrow(ModPeps)
-        globalBMs$propDiffRegPepWrong0.05[[test]] <- sum(ModPeps[[test]] < 0.05, na.rm=T) / nrow(ModPeps)
+  # Counting miscleavages
+  if (sum(!is.na(Stats$MC)) > 0) {
+    globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0) / nrow(Stats)
+  }
+
+  # statistics with respect to wrong identifications
+  wrong_ids <- sapply(Stats$WrongID, function(x) sum(as.logical(unlist(strsplit(x, ";")))))
+  for (test in statCols) {
+    globalBMs$propDiffRegWrongIDProt0.01[[test]] <- sum(Stats[, test] < 0.01 & wrong_ids > 0, na.rm = T) / sum(Stats[, test] < 0.01, na.rm = T)
+    globalBMs$propDiffRegWrongIDProt0.05[[test]] <- sum(Stats[, test] < 0.05 & wrong_ids > 0, na.rm = T) / sum(Stats[, test] < 0.05, na.rm = T)
+  }
+
+  # checking properties of distribution
+  globalBMs$skewnessProts <- e1071::skewness(unlist(Stats[, Param$QuantColnames]), na.rm = T)
+  globalBMs$kurtosisProts <- e1071::kurtosis(unlist(Stats[, Param$QuantColnames]), na.rm = T)
+  globalBMs$sdProts <- sd(unlist(Stats[, Param$QuantColnames]), na.rm = T)
+  globalBMs$skewnessPeps <- e1071::skewness(unlist(StatsPep[, Param$QuantColnames]), na.rm = T)
+  globalBMs$kurtosisPeps <- e1071::kurtosis(unlist(StatsPep[, Param$QuantColnames]), na.rm = T)
+  globalBMs$sdPeps <- sd(unlist(StatsPep[, Param$QuantColnames]), na.rm = T)
+
+  ###### metrics on PTM level
+  # number of proteoforms per protein group and in total, not all identifiable
+  ProteoformDistr <- sapply(Stats$Proteoform_ID, function(x) length(unique(as.numeric(unlist(strsplit(x, ";"))))))
+  # barplot(table(ProteoformDistr), 100)
+  globalBMs$numProteoforms <- sum(ProteoformDistr)
+  globalBMs$meanProteoformsPerProt <- mean(ProteoformDistr)
+
+  globalBMs$numModPeptides <- sum(StatsPep$PTMType != "NULL")
+  ModPeps <- StatsPep[StatsPep$PTMType != "NULL", ]
+  # Proportion of modified peptides with identical non-modified peptide
+  pepgroups <- by(StatsPep[, c("Sequence", "Accession", "PTMType", "PTMPos")], StatsPep$Sequence, function(x) x)
+  pepgroups <- lapply(pepgroups, function(x) {
+    x[x == "NULL"] <- NA
+    x
+  })
+  modpepgroups <- sapply(pepgroups, function(x) {
+    sum(as.numeric(unlist(x[, "PTMPos"])), na.rm = T) > 0
+  })
+  modpepgroups <- pepgroups[modpepgroups]
+  if (length(modpepgroups) > 0) {
+    modunmodgroups <- sapply(modpepgroups, function(x) sum(is.na(x[, "PTMPos"])) > 0)
+    if (length(modunmodgroups) > 0) {
+      modunmodgroups <- modpepgroups[modunmodgroups]
+      if (length(modunmodgroups) > 0) {
+        globalBMs$propModAndUnmodPep <- sum(sapply(modunmodgroups, function(x) nrow(x) - 1)) / globalBMs$numModPeptides
+      }
     }
+  }
+
+  # modified peptides and their proteins
+  ModPeps <- cbind(ModPeps, merged_accs = sapply(ModPeps$Accession, function(x) paste(unlist(x), collapse = ";")))
+  ModPepsWithProt <- ModPeps[ModPeps$merged_accs %in% rownames(Stats), ]
+  globalBMs$percOverlapModPepProt <- nrow(ModPepsWithProt) / nrow(ModPeps) * 100
+
+  # Adjust by protein expression (could be moved to Statistics)
+  AdjModPepsWithProt <- ModPepsWithProt
+  AdjModPepsWithProt[, Param$QuantColnames] <- AdjModPepsWithProt[, Param$QuantColnames] - Stats[as.character(AdjModPepsWithProt$merged_accs), Param$QuantColnames]
+  StatsAdjModPep <- NULL
+  if (nrow(AdjModPepsWithProt) <= 200) {
+    message("Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats")
+  } else {
+    StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond = 1, onlyLIMMA = T)
+
+    # results on basis of ground truth (derive statCols from StatsAdjModPep)
+    statColsAdj <- grep("FDR", colnames(StatsAdjModPep), value = TRUE)
+    ROC <- list()
+    # plotting skipped in non-interactive contexts
+    for (test in statColsAdj) {
+      testSum <- calcROC(StatsAdjModPep, test)
+      if (nrow(testSum) > 1) {
+        ROC[[test]] <- testSum
+        at.01 <- which.min(abs(testSum[, "FDR"] - 0.01))
+        at.05 <- which.min(abs(testSum[, "FDR"] - 0.05))
+
+        globalBMs$aucDiffRegAdjModPep[[test]] <- testSum[1, "AUC"]
+        globalBMs$tprAdjModPep0.01[[test]] <- testSum[at.01, "TPR"]
+        globalBMs$tprAdjModPep0.05[[test]] <- testSum[at.05, "TPR"]
+        globalBMs$tFDRAdjModPep0.01[[test]] <- testSum[at.01, "tFDR"]
+        globalBMs$tFDRAdjModPep0.05[[test]] <- testSum[at.05, "tFDR"]
+      }
+    }
+    Benchmarks$AdjModPepStat <- ROC
+  }
+
+  # Back to original modified peptides, counting the wrong differential regulations
+  for (test in statCols) {
+    globalBMs$propDiffRegPepWrong0.01[[test]] <- sum(ModPeps[[test]] < 0.01, na.rm = T) / nrow(ModPeps)
+    globalBMs$propDiffRegPepWrong0.05[[test]] <- sum(ModPeps[[test]] < 0.05, na.rm = T) / nrow(ModPeps)
+  }
 
 
-    Benchmarks$globalBMs <- globalBMs
-    return(Benchmarks)
-
+  Benchmarks$globalBMs <- globalBMs
+  return(Benchmarks)
 }
 
 
@@ -456,86 +462,91 @@ calcBenchmarks <- function(Stats, StatsPep, Param)  {
 #' @importFrom matrixStats rowSds
 #'
 #' @keywords internal
-calcBasicBenchmarks <- function(Stats, StatsPep, Param)  {
+calcBasicBenchmarks <- function(Stats, StatsPep, Param) {
+  Benchmarks <- NULL
 
-    Benchmarks <- NULL
-
-    # global means 1 number per metric
-    globalBMs <- list(
-        # Peptide level
-        numPeptides=0, numProteins=0, dynRangePep=0, propUniquePep=0, uniqueStrippedPep=0, percMissingPep=0,
-        propMisCleavedPeps=list(),skewnessPeps=0, kurtosisPeps=0, sdPeps=0,
-        # Protein level
-        numQuantProtGroups=0, dynRangeProt=0, propUniqueProts=0, percMissingProt=0, meanPepPerProt=0,
-        propMisCleavedProts=0, skewnessProts=0,kurtosisProts=0, sdProts=0,
-        # PTM level
-        numProteoforms=0, numModPeptides=0, meanProteoformsPerProt=0, propModAndUnmodPep=0, percOverlapModPepProt=0)
-
-
-    #### Calculating peptide numbers
-    globalBMs["numPeptides"] <- nrow(StatsPep)
-    globalBMs["numProteins"] <- length(unique(unlist(StatsPep$Accession)))
-    globalBMs["propUniquePep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) == 1)) / nrow(StatsPep)
-    # Obsolete as 1-propUniquePep
-    #TODO:globalBMs["propSharedPep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) > 1)) / nrow(StatsPep)
-    globalBMs["uniqueStrippedPep"] <- length(unique(StatsPep$Sequence))
-    globalBMs["percMissingPep"] <- sum(is.na(unlist(StatsPep[,Param$QuantColnames]))) / length(unlist(StatsPep[,Param$QuantColnames])) * 100
-    globalBMs$dynRangePep <- diff(range(StatsPep[,Param$QuantColnames], na.rm=T))
+  # global means 1 number per metric
+  globalBMs <- list(
+    # Peptide level
+    numPeptides = 0, numProteins = 0, dynRangePep = 0, propUniquePep = 0, uniqueStrippedPep = 0, percMissingPep = 0,
+    propMisCleavedPeps = list(), skewnessPeps = 0, kurtosisPeps = 0, sdPeps = 0,
+    # Protein level
+    numQuantProtGroups = 0, dynRangeProt = 0, propUniqueProts = 0, percMissingProt = 0, meanPepPerProt = 0,
+    propMisCleavedProts = 0, skewnessProts = 0, kurtosisProts = 0, sdProts = 0,
+    # PTM level
+    numProteoforms = 0, numModPeptides = 0, meanProteoformsPerProt = 0, propModAndUnmodPep = 0, percOverlapModPepProt = 0
+  )
 
 
-    # miscleavages
-    globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
-
-    #### Calculating protein numbers
-    globalBMs["numQuantProtGroups"] <- nrow(Stats)
-
-    globalBMs["propUniqueProts"] <- sum(unlist(sapply(stringr::str_split(Stats$num_accs,";"), function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
-    globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[,Param$QuantColnames])))  / length(Param$QuantColnames) / nrow(Stats) * 100
-    pepDistr <- sapply(stringr::str_split(Stats$Sequence,";"), function(x) length(unique(x)))
-    barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
-    globalBMs["meanPepPerProt"] <-  mean(pepDistr)
-    globalBMs$dynRangeProt <- diff(range(Stats[,Param$QuantColnames], na.rm=T))
+  #### Calculating peptide numbers
+  globalBMs["numPeptides"] <- nrow(StatsPep)
+  globalBMs["numProteins"] <- length(unique(unlist(StatsPep$Accession)))
+  globalBMs["propUniquePep"] <- sum(sapply(StatsPep$Accession, function(x) length(x) == 1)) / nrow(StatsPep)
+  # Obsolete as 1-propUniquePep
+  # TODO:globalBMs["propSharedPep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) > 1)) / nrow(StatsPep)
+  globalBMs["uniqueStrippedPep"] <- length(unique(StatsPep$Sequence))
+  globalBMs["percMissingPep"] <- sum(is.na(unlist(StatsPep[, Param$QuantColnames]))) / length(unlist(StatsPep[, Param$QuantColnames])) * 100
+  globalBMs$dynRangePep <- diff(range(StatsPep[, Param$QuantColnames], na.rm = T))
 
 
-    # Counting miscleavages
-    if (sum(!is.na(Stats$MC)) > 0)
-        globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0, na.rm=T) / nrow(Stats)
+  # miscleavages
+  globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
+
+  #### Calculating protein numbers
+  globalBMs["numQuantProtGroups"] <- nrow(Stats)
+
+  globalBMs["propUniqueProts"] <- sum(unlist(sapply(stringr::str_split(Stats$num_accs, ";"), function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
+  globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[, Param$QuantColnames]))) / length(Param$QuantColnames) / nrow(Stats) * 100
+  pepDistr <- sapply(stringr::str_split(Stats$Sequence, ";"), function(x) length(unique(x)))
+  barplot(table(pepDistr), ylab = "Frequency", xlab = "Peptides per protein")
+  globalBMs["meanPepPerProt"] <- mean(pepDistr)
+  globalBMs$dynRangeProt <- diff(range(Stats[, Param$QuantColnames], na.rm = T))
 
 
-    # checking quantitative values for assymetric distribution: skewness
-    globalBMs$skewnessProts <- e1071::skewness(unlist(Stats[,Param$QuantColnames]), na.rm=T)
-    globalBMs$kurtosisProts <- e1071::kurtosis(unlist(Stats[,Param$QuantColnames]), na.rm=T)
-    globalBMs$sdProts <- sd(unlist(Stats[,Param$QuantColnames]), na.rm=T)
-    globalBMs$skewnessPeps <- e1071::skewness(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
-    globalBMs$kurtosisPeps <- e1071::kurtosis(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
-    globalBMs$sdPeps <- sd(unlist(StatsPep[,Param$QuantColnames]), na.rm=T)
+  # Counting miscleavages
+  if (sum(!is.na(Stats$MC)) > 0) {
+    globalBMs["propMisCleavedProts"] <- sum(sapply(Stats$MC, function(x) sum(as.numeric(unlist(strsplit(x, ";"))))) > 0, na.rm = T) / nrow(Stats)
+  }
 
-    ###### metrics on PTM level
 
-    globalBMs$numModPeptides <- sum(StatsPep$PTMType != "NULL")
-    ModPeps <- StatsPep[StatsPep$PTMType != "NULL",]
-    # Proportion of modified peptides with identical non-modifiedpeptide
-    pepgroups <- by(StatsPep[,c("Sequence", "Accession", "PTMType", "PTMPos")], StatsPep$Sequence, function(x) x )
-    pepgroups <- lapply(pepgroups, function(x) {x[x=="NULL"] <- NA; x})
-    modpepgroups <- sapply(pepgroups, function(x) {sum(as.numeric(unlist(x[,"PTMPos"])),na.rm=T) > 0})
-    modpepgroups <- pepgroups[modpepgroups]
-    if (length(modpepgroups) > 0) {
-        modunmodgroups <- sapply(modpepgroups, function(x) sum(is.na(x[,"PTMPos"])) > 0)
-        if (length(modunmodgroups) > 0) {
-            modunmodgroups <- modpepgroups[modunmodgroups]
-            globalBMs$propModAndUnmodPep <- sum(sapply(modunmodgroups, function(x) nrow(x)-1)) / globalBMs$numModPeptides
-        }
+  # checking quantitative values for assymetric distribution: skewness
+  globalBMs$skewnessProts <- e1071::skewness(unlist(Stats[, Param$QuantColnames]), na.rm = T)
+  globalBMs$kurtosisProts <- e1071::kurtosis(unlist(Stats[, Param$QuantColnames]), na.rm = T)
+  globalBMs$sdProts <- sd(unlist(Stats[, Param$QuantColnames]), na.rm = T)
+  globalBMs$skewnessPeps <- e1071::skewness(unlist(StatsPep[, Param$QuantColnames]), na.rm = T)
+  globalBMs$kurtosisPeps <- e1071::kurtosis(unlist(StatsPep[, Param$QuantColnames]), na.rm = T)
+  globalBMs$sdPeps <- sd(unlist(StatsPep[, Param$QuantColnames]), na.rm = T)
+
+  ###### metrics on PTM level
+
+  globalBMs$numModPeptides <- sum(StatsPep$PTMType != "NULL")
+  ModPeps <- StatsPep[StatsPep$PTMType != "NULL", ]
+  # Proportion of modified peptides with identical non-modifiedpeptide
+  pepgroups <- by(StatsPep[, c("Sequence", "Accession", "PTMType", "PTMPos")], StatsPep$Sequence, function(x) x)
+  pepgroups <- lapply(pepgroups, function(x) {
+    x[x == "NULL"] <- NA
+    x
+  })
+  modpepgroups <- sapply(pepgroups, function(x) {
+    sum(as.numeric(unlist(x[, "PTMPos"])), na.rm = T) > 0
+  })
+  modpepgroups <- pepgroups[modpepgroups]
+  if (length(modpepgroups) > 0) {
+    modunmodgroups <- sapply(modpepgroups, function(x) sum(is.na(x[, "PTMPos"])) > 0)
+    if (length(modunmodgroups) > 0) {
+      modunmodgroups <- modpepgroups[modunmodgroups]
+      globalBMs$propModAndUnmodPep <- sum(sapply(modunmodgroups, function(x) nrow(x) - 1)) / globalBMs$numModPeptides
     }
+  }
 
-    # modified peptides and their proteins
-    ModPeps <- cbind(ModPeps, merged_accs=sapply(ModPeps$Accession, function(x) paste(unlist(x),collapse=";")))
-    ModPepsWithProt <- ModPeps[ModPeps$merged_accs  %in% rownames(Stats), ]
-    globalBMs$percOverlapModPepProt <- nrow(ModPepsWithProt) / nrow(ModPeps) * 100
+  # modified peptides and their proteins
+  ModPeps <- cbind(ModPeps, merged_accs = sapply(ModPeps$Accession, function(x) paste(unlist(x), collapse = ";")))
+  ModPepsWithProt <- ModPeps[ModPeps$merged_accs %in% rownames(Stats), ]
+  globalBMs$percOverlapModPepProt <- nrow(ModPepsWithProt) / nrow(ModPeps) * 100
 
 
-    Benchmarks$globalBMs <- globalBMs
-    return(Benchmarks)
-
+  Benchmarks$globalBMs <- globalBMs
+  return(Benchmarks)
 }
 
 #' Read and Process MaxQuant Data
@@ -557,48 +568,48 @@ calcBasicBenchmarks <- function(Stats, StatsPep, Param)  {
 #' @importFrom stringr str_extract
 #'
 #' @keywords internal
-readMaxQuant <- function(allPeps, Prots, Param=NULL) {
-    allPeps$Accession <- sapply(allPeps$Proteins, function(x) strsplit(as.character(x), ";"))
-    allPeps$MC <- allPeps$Missed.cleavages
-    allPeps$PTMType <- as.character(allPeps$Modifications)
-    allPeps$PTMType[allPeps$PTMType == "Unmodified"] <- "NULL"
-    # did not find corresponding field
-    allPeps$PTMPos <- NA
-    allPeps$PTMPos[allPeps$PTMType != "NULL"] <- 1
+readMaxQuant <- function(allPeps, Prots, Param = NULL) {
+  allPeps$Accession <- sapply(allPeps$Proteins, function(x) strsplit(as.character(x), ";"))
+  allPeps$MC <- allPeps$Missed.cleavages
+  allPeps$PTMType <- as.character(allPeps$Modifications)
+  allPeps$PTMType[allPeps$PTMType == "Unmodified"] <- "NULL"
+  # did not find corresponding field
+  allPeps$PTMPos <- NA
+  allPeps$PTMPos[allPeps$PTMType != "NULL"] <- 1
 
-    # remove entries with missing protein name (should be reverse)
-    allPeps <- allPeps[allPeps$Proteins != "",]
+  # remove entries with missing protein name (should be reverse)
+  allPeps <- allPeps[allPeps$Proteins != "", ]
 
-    Param$QuantColnames <- grep("Intensity\\.", names(allPeps), value=T)
+  Param$QuantColnames <- grep("Intensity\\.", names(allPeps), value = T)
 
-    # TODO: check whether LFQ results are available
-    #protCols <- grepl("LFQ.intensity", names(Prots))
-    #names(Prots)[protCols] <- Param$QuantColnames
-    Prots$Accession <- Prots$Sequence <- Prots$Protein.IDs
-    Prots$num_accs <- Prots$Proteins
+  # TODO: check whether LFQ results are available
+  # protCols <- grepl("LFQ.intensity", names(Prots))
+  # names(Prots)[protCols] <- Param$QuantColnames
+  Prots$Accession <- Prots$Sequence <- Prots$Protein.IDs
+  Prots$num_accs <- Prots$Proteins
 
-    # filter for rows with no quantifications
-    tquant <- allPeps[,Param$QuantColnames]
-    tquant[tquant == 0] <- NA
-    allPeps[, Param$QuantColnames] <- log2(tquant)
-    allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    tquant <- Prots[,Param$QuantColnames]
-    allPeps$Sequence <- as.character(allPeps$Sequence)
-    tquant[tquant == 0] <- NA
-    Prots[, Param$QuantColnames] <- log2(tquant)
-    Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    rownames(Prots) <- Prots$Accession
-    # add column with miscleavages
-    Prots$MC <- NA
-    if (!is.null(allPeps$MC)) {
-        mergedMCs <- unlist(by(allPeps$Missed.cleavages, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
-        Prots[names(mergedMCs), "MC"] <- mergedMCs
-    } else {
-        allPeps$MC <- as.character(0)
-        Prots$MC <- as.character(0)
-    }
+  # filter for rows with no quantifications
+  tquant <- allPeps[, Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[, Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$Sequence)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- log2(tquant)
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+    mergedMCs <- unlist(by(allPeps$Missed.cleavages, as.character(allPeps$Proteins), function(x) paste(x, collapse = ";")))
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
 
-    return(list(Param=Param, allPeps=allPeps, Prots=Prots))
+  return(list(Param = Param, allPeps = allPeps, Prots = Prots))
 }
 
 #' Read and Process Proline Data
@@ -621,78 +632,79 @@ readMaxQuant <- function(allPeps, Prots, Param=NULL) {
 #' @importFrom stringr str_extract
 #'
 #' @keywords internal
-readProline <- function(psms, allPeps, Prots, Param=NULL) {
-    # merge subsets and samesets
-    allPeps <- as.data.frame(allPeps)
-    Prots <- as.data.frame(Prots)
-    allPeps$Accession <-  apply(allPeps, 1, function(x) (gsub(" ","",unlist(c(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
-    allPeps$Accession <- sapply(allPeps$Accession, na.omit)
-    allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse=";")
-    Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",c(unlist(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
-    Prots$Accession <- sapply(Prots$Accession, function(x) paste(na.omit(x), collapse=";"))
-    Prots$Sequence <- Prots$Accession
+readProline <- function(psms, allPeps, Prots, Param = NULL) {
+  # merge subsets and samesets
+  allPeps <- as.data.frame(allPeps)
+  Prots <- as.data.frame(Prots)
+  allPeps$Accession <- apply(allPeps, 1, function(x) (gsub(" ", "", unlist(c(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
+  allPeps$Accession <- sapply(allPeps$Accession, na.omit)
+  allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse = ";")
+  Prots$Accession <- apply(Prots, 1, function(x) (gsub(" ", "", c(unlist(strsplit(x["samesets_accessions"], ";"), strsplit(x["subsets_accessions"], ";"))))))
+  Prots$Accession <- sapply(Prots$Accession, function(x) paste(na.omit(x), collapse = ";"))
+  Prots$Sequence <- Prots$Accession
 
 
-    # getting miscleavages from psm table
-    mcs <- unique(cbind(psms$sequence, psms$missed_cleavages))
-    rownames(mcs) <- mcs[,1]
-    allPeps$MC <- mcs[allPeps$sequence , 2]
-    allPeps$Sequence <- allPeps$sequence
+  # getting miscleavages from psm table
+  mcs <- unique(cbind(psms$sequence, psms$missed_cleavages))
+  rownames(mcs) <- mcs[, 1]
+  allPeps$MC <- mcs[allPeps$sequence, 2]
+  allPeps$Sequence <- allPeps$sequence
 
-    #' Remove the carba. in Proline output:
-    seqProline <- gsub("Carbamidomethyl \\(.+?\\)", "", allPeps$modifications)
-    seqProline[is.na(seqProline)] <- ""
-    allPeps$Modifications <- gsub("; $", "", seqProline)
+  #' Remove the carba. in Proline output:
+  seqProline <- gsub("Carbamidomethyl \\(.+?\\)", "", allPeps$modifications)
+  seqProline[is.na(seqProline)] <- ""
+  allPeps$Modifications <- gsub("; $", "", seqProline)
 
-    allPeps$Retention.time <- allPeps$master_elution_time
-    allPeps$MS.MS.Count <- allPeps[,grep("psm_count_",names(allPeps), value=T)]
+  allPeps$Retention.time <- allPeps$master_elution_time
+  allPeps$MS.MS.Count <- allPeps[, grep("psm_count_", names(allPeps), value = T)]
 
-    # getting PTMs and removing carbamidomethylation
-    ptms <- strsplit(as.character(allPeps$modifications), ";")
-    ptms <- lapply(ptms, function(x) {x[grepl("Carbamidomethyl", x)] <- NA; if(length(na.omit(unique(x))) == 0) {
-        NA
+  # getting PTMs and removing carbamidomethylation
+  ptms <- strsplit(as.character(allPeps$modifications), ";")
+  ptms <- lapply(ptms, function(x) {
+    x[grepl("Carbamidomethyl", x)] <- NA
+    if (length(na.omit(unique(x))) == 0) {
+      NA
     } else {
-        na.omit(unique(x))
+      na.omit(unique(x))
     }
-    })
-    ptms[is.na(ptms)] <- "NULL"
+  })
+  ptms[is.na(ptms)] <- "NULL"
 
 
-    ptm_pos <- lapply(ptms, function(x) stringr::str_extract(stringr::str_extract(x, "\\(.*\\)"), "([0-9]+)|([-])"))
-    ptm_pos <- sapply(ptm_pos, paste, collapse=";")
-    ptm_pos[ptm_pos == "NA"] <- NA
-    allPeps$PTMPos <-  ptm_pos
-    ptms <- sapply(ptms, paste, collapse=";")
-    allPeps$PTMType <- ptms
+  ptm_pos <- lapply(ptms, function(x) stringr::str_extract(stringr::str_extract(x, "\\(.*\\)"), "([0-9]+)|([-])"))
+  ptm_pos <- sapply(ptm_pos, paste, collapse = ";")
+  ptm_pos[ptm_pos == "NA"] <- NA
+  allPeps$PTMPos <- ptm_pos
+  ptms <- sapply(ptms, paste, collapse = ";")
+  allPeps$PTMType <- ptms
 
-    Param$QuantColnames <- grep("^abundance_", names(allPeps), value=T)
-    Prots$num_accs <- rowSums(cbind(Prots$`#sameset_protein_matches`, Prots$`#subset_protein_matches`))
-    tquant <- allPeps[,Param$QuantColnames]
-    tquant[tquant == 0] <- NA
-    allPeps[, Param$QuantColnames] <- log2(tquant)
-    allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    tquant <- Prots[,Param$QuantColnames]
-    allPeps$Sequence <- as.character(allPeps$Sequence)
-    tquant[tquant == 0] <- NA
-    Prots[, Param$QuantColnames] <- log2(tquant)
-    # filter for rows with no quantifications
-    Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    rownames(Prots) <- Prots$Accession
+  Param$QuantColnames <- grep("^abundance_", names(allPeps), value = T)
+  Prots$num_accs <- rowSums(cbind(Prots$`#sameset_protein_matches`, Prots$`#subset_protein_matches`))
+  tquant <- allPeps[, Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[, Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$Sequence)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- log2(tquant)
+  # filter for rows with no quantifications
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
 
-    # add column with miscleavages
-    Prots$MC <- NA
-    if (!is.null(allPeps$MC)) {
-        mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
-        # take only protein groups found in Prots
-        mergedMCs <- mergedMCs[intersect(rownames(Prots),names(mergedMCs))]
-        Prots[names(mergedMCs), "MC"] <- mergedMCs
-    } else {
-        allPeps$MC <- as.character(0)
-        Prots$MC <- as.character(0)
-    }
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+    mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x, collapse = ";")))
+    # take only protein groups found in Prots
+    mergedMCs <- mergedMCs[intersect(rownames(Prots), names(mergedMCs))]
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
 
-    return(list(Param=Param, allPeps=allPeps, Prots=Prots))
-
+  return(list(Param = Param, allPeps = allPeps, Prots = Prots))
 }
 
 #' Read and Process Wombat Data
@@ -714,75 +726,77 @@ readProline <- function(psms, allPeps, Prots, Param=NULL) {
 #' @importFrom stringr str_extract
 #'
 #' @keywords internal
-readWombat <- function(allPeps, Prots, Param=NULL) {
-    # merge subsets and samesets
-    allPeps <- as.data.frame(allPeps)
-    Prots <- as.data.frame(Prots)
-    allPeps$Accession <-  apply(allPeps, 1, function(x) (gsub(" ","",unlist(c(strsplit(x["protein_group"], ";"), strsplit(x["protein_group"], ";"))))))
-    allPeps$Accession <- sapply(allPeps$Accession, na.omit)
-    allPeps$Accession <- sapply(allPeps$Accession, function(x) unlist(gsub("sp\\|","",x)))
-    allPeps$Accession <- sapply(allPeps$Accession, function(x) gsub("\\|.*$","",x))
-    allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse=";")
+readWombat <- function(allPeps, Prots, Param = NULL) {
+  # merge subsets and samesets
+  allPeps <- as.data.frame(allPeps)
+  Prots <- as.data.frame(Prots)
+  allPeps$Accession <- apply(allPeps, 1, function(x) (gsub(" ", "", unlist(c(strsplit(x["protein_group"], ";"), strsplit(x["protein_group"], ";"))))))
+  allPeps$Accession <- sapply(allPeps$Accession, na.omit)
+  allPeps$Accession <- sapply(allPeps$Accession, function(x) unlist(gsub("sp\\|", "", x)))
+  allPeps$Accession <- sapply(allPeps$Accession, function(x) gsub("\\|.*$", "", x))
+  allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse = ";")
 
-    Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",c(unlist(strsplit(x["protein_group"], ";"),                                                                        strsplit(x["protein_group"], ";"))))))
-    Prots$Accession <- sapply(Prots$Accession, na.omit)
-    Prots$Accession <- sapply(Prots$Accession, function(x) unlist(gsub("sp\\|","",x)))
-    Prots$Accession <- sapply(Prots$Accession, function(x) gsub("\\|.*$","",x))
-    Prots$Proteins <- sapply(Prots$Accession, paste, collapse=";")
-    Prots$Sequence <- Prots$Accession
+  Prots$Accession <- apply(Prots, 1, function(x) (gsub(" ", "", c(unlist(strsplit(x["protein_group"], ";"), strsplit(x["protein_group"], ";"))))))
+  Prots$Accession <- sapply(Prots$Accession, na.omit)
+  Prots$Accession <- sapply(Prots$Accession, function(x) unlist(gsub("sp\\|", "", x)))
+  Prots$Accession <- sapply(Prots$Accession, function(x) gsub("\\|.*$", "", x))
+  Prots$Proteins <- sapply(Prots$Accession, paste, collapse = ";")
+  Prots$Sequence <- Prots$Accession
 
-    allPeps$MC <- NA
+  allPeps$MC <- NA
 
-    #' Remove the carba. in Proline output:
-    seqProline <- gsub("Carbamidomethyl \\(.+?\\)", "", allPeps$modifications)
-    seqProline[is.na(seqProline)] <- ""
-    if (length(seqProline) > 0)
-        allPeps$Modifications <- gsub("; $", "", seqProline)
+  #' Remove the carba. in Proline output:
+  seqProline <- gsub("Carbamidomethyl \\(.+?\\)", "", allPeps$modifications)
+  seqProline[is.na(seqProline)] <- ""
+  if (length(seqProline) > 0) {
+    allPeps$Modifications <- gsub("; $", "", seqProline)
+  }
 
-    allPeps$Retention.time <- NA
-    allPeps$MS.MS.Count <- allPeps[,grep("number_of_psms",names(allPeps), value=T)]
+  allPeps$Retention.time <- NA
+  allPeps$MS.MS.Count <- allPeps[, grep("number_of_psms", names(allPeps), value = T)]
 
-    # getting PTMs and removing carbamidomethylation (kind of discarded)
-    ptms <- unique(unlist(stringr::str_extract_all(as.character(allPeps$modified_peptide), "[\\[({].*?[\\])}]")))
-    ptms <- lapply(ptms, function(x) {x[grepl("Carbamidomethyl", x)] <- NA; if(length(na.omit(unique(x))) == 0) {
-        NA
+  # getting PTMs and removing carbamidomethylation (kind of discarded)
+  ptms <- unique(unlist(stringr::str_extract_all(as.character(allPeps$modified_peptide), "[\\[({].*?[\\])}]")))
+  ptms <- lapply(ptms, function(x) {
+    x[grepl("Carbamidomethyl", x)] <- NA
+    if (length(na.omit(unique(x))) == 0) {
+      NA
     } else {
-        na.omit(unique(x))
+      na.omit(unique(x))
     }
-    })
-    ptms[is.na(ptms)] <- "NULL"
+  })
+  ptms[is.na(ptms)] <- "NULL"
 
-    Param$QuantColnames <- grep("^abundance_", names(allPeps), value=T)
-    Prots$num_accs <- str_count(Prots$Accession, ";") + 1
-    tquant <- allPeps[,Param$QuantColnames]
-    tquant[tquant == 0] <- NA
-    allPeps[, Param$QuantColnames] <- log2(tquant)
-    allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    tquant <- Prots[,Param$QuantColnames]
-    allPeps$Sequence <- as.character(allPeps$modified_peptide)
-    tquant[tquant == 0] <- NA
-    Prots[, Param$QuantColnames] <- tquant
-    # filter for rows with no quantifications
-    Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    rownames(Prots) <- Prots$Accession
+  Param$QuantColnames <- grep("^abundance_", names(allPeps), value = T)
+  Prots$num_accs <- str_count(Prots$Accession, ";") + 1
+  tquant <- allPeps[, Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[, Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$modified_peptide)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- tquant
+  # filter for rows with no quantifications
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
 
-    # add column with miscleavages
-    Prots$MC <- NA
-    if (!is.null(allPeps$MC)) {
-        mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
-        # take only protein groups found in Prots
-        mergedMCs <- mergedMCs[intersect(rownames(Prots),names(mergedMCs))]
-        Prots[names(mergedMCs), "MC"] <- mergedMCs
-    } else {
-        allPeps$MC <- as.character(0)
-        Prots$MC <- as.character(0)
-    }
-    allPeps$PTMType <- NA
-    allPeps$PTMPos <- NA
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+    mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x, collapse = ";")))
+    # take only protein groups found in Prots
+    mergedMCs <- mergedMCs[intersect(rownames(Prots), names(mergedMCs))]
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
+  allPeps$PTMType <- NA
+  allPeps$PTMPos <- NA
 
 
-    return(list(Param=Param, allPeps=allPeps, Prots=Prots))
-
+  return(list(Param = Param, allPeps = allPeps, Prots = Prots))
 }
 
 #' Read and Process FlashLFQ Data
@@ -805,60 +819,59 @@ readWombat <- function(allPeps, Prots, Param=NULL) {
 #' @importFrom stringr str_extract
 #'
 #' @keywords internal
-readFlashLFQ <- function(psms, allPeps, Prots, Param=NULL) {
-    # merge subsets and samesets
-    allPeps <- as.data.frame(allPeps)
-    Prots <- as.data.frame(Prots)
-    allPeps$Accession <-  apply(allPeps, 1, function(x) (gsub(" ","",unlist(strsplit(unlist(x["Protein.Groups"]), ",")))))
-    allPeps$Accession <- sapply(allPeps$Accession, na.omit)
-    allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse=";")
-    Prots$Accession <-  apply(Prots, 1, function(x) (gsub(" ","",unlist(strsplit(unlist(x["Protein.Groups"]), ",")))))
-    Prots$Accession <- sapply(Prots$Accession, function(x) paste(na.omit(x), collapse=";"))
-    Prots$Sequence <- Prots$Accession
+readFlashLFQ <- function(psms, allPeps, Prots, Param = NULL) {
+  # merge subsets and samesets
+  allPeps <- as.data.frame(allPeps)
+  Prots <- as.data.frame(Prots)
+  allPeps$Accession <- apply(allPeps, 1, function(x) (gsub(" ", "", unlist(strsplit(unlist(x["Protein.Groups"]), ",")))))
+  allPeps$Accession <- sapply(allPeps$Accession, na.omit)
+  allPeps$Proteins <- sapply(allPeps$Accession, paste, collapse = ";")
+  Prots$Accession <- apply(Prots, 1, function(x) (gsub(" ", "", unlist(strsplit(unlist(x["Protein.Groups"]), ",")))))
+  Prots$Accession <- sapply(Prots$Accession, function(x) paste(na.omit(x), collapse = ";"))
+  Prots$Sequence <- Prots$Accession
 
 
-    # getting miscleavages from psm table -> not available
-    allPeps$MC <- NA
+  # getting miscleavages from psm table -> not available
+  allPeps$MC <- NA
 
-    #' Remove the carba. in flashLFQ output:
-    allPeps$Sequence <- gsub("<cmm>", "", allPeps$Sequence)
-    allPeps$Modifications <- NA
+  #' Remove the carba. in flashLFQ output:
+  allPeps$Sequence <- gsub("<cmm>", "", allPeps$Sequence)
+  allPeps$Modifications <- NA
 
-    allPeps$Retention.time <- NA
-    psms$Retention.time <- psms$Peak.RT.Apex
-    allPeps$MS.MS.Count <- NA
+  allPeps$Retention.time <- NA
+  psms$Retention.time <- psms$Peak.RT.Apex
+  allPeps$MS.MS.Count <- NA
 
-    # temporary fix for flashLFQ output
-    #ptms[is.na(ptms)] <- "NULL"
+  # temporary fix for flashLFQ output
+  # ptms[is.na(ptms)] <- "NULL"
 
-    Param$QuantColnames <- grep("^Intensity_", names(allPeps), value=T)
-    Prots$num_accs <- str_count(Prots$Accession, ";") + 1
-    tquant <- allPeps[,Param$QuantColnames]
-    tquant[tquant == 0] <- NA
-    allPeps[, Param$QuantColnames] <- log2(tquant)
-    allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    tquant <- Prots[,Param$QuantColnames]
-    allPeps$Sequence <- as.character(allPeps$Sequence)
-    tquant[tquant == 0] <- NA
-    Prots[, Param$QuantColnames] <- log2(tquant)
-    # filter for rows with no quantifications
-    Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames,drop=F])) < length(Param$QuantColnames), ]
-    rownames(Prots) <- Prots$Accession
+  Param$QuantColnames <- grep("^Intensity_", names(allPeps), value = T)
+  Prots$num_accs <- str_count(Prots$Accession, ";") + 1
+  tquant <- allPeps[, Param$QuantColnames]
+  tquant[tquant == 0] <- NA
+  allPeps[, Param$QuantColnames] <- log2(tquant)
+  allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  tquant <- Prots[, Param$QuantColnames]
+  allPeps$Sequence <- as.character(allPeps$Sequence)
+  tquant[tquant == 0] <- NA
+  Prots[, Param$QuantColnames] <- log2(tquant)
+  # filter for rows with no quantifications
+  Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames, drop = F])) < length(Param$QuantColnames), ]
+  rownames(Prots) <- Prots$Accession
 
-    # add column with miscleavages
-    Prots$MC <- NA
-    if (!is.null(allPeps$MC)) {
-        mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x,collapse=";")))
-        # take only protein groups found in Prots
-        mergedMCs <- mergedMCs[intersect(rownames(Prots),names(mergedMCs))]
-        Prots[names(mergedMCs), "MC"] <- mergedMCs
-    } else {
-        allPeps$MC <- as.character(0)
-        Prots$MC <- as.character(0)
-    }
-    allPeps$PTMType <- NA
-    allPeps$PTMPos <- NA
+  # add column with miscleavages
+  Prots$MC <- NA
+  if (!is.null(allPeps$MC)) {
+    mergedMCs <- unlist(by(allPeps$MC, as.character(allPeps$Proteins), function(x) paste(x, collapse = ";")))
+    # take only protein groups found in Prots
+    mergedMCs <- mergedMCs[intersect(rownames(Prots), names(mergedMCs))]
+    Prots[names(mergedMCs), "MC"] <- mergedMCs
+  } else {
+    allPeps$MC <- as.character(0)
+    Prots$MC <- as.character(0)
+  }
+  allPeps$PTMType <- NA
+  allPeps$PTMPos <- NA
 
-    return(list(Param=Param, allPeps=allPeps, Prots=Prots))
-
+  return(list(Param = Param, allPeps = allPeps, Prots = Prots))
 }
