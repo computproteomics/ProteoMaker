@@ -722,13 +722,22 @@ addProteoformAbundance <- function(proteoforms, parameters) {
   }
 
   message(" + Add quan. distribution: Relative -> absolute")
-  vec <- rnorm(n = nrow(proteoforms), mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
-  for (name in parameters$QuantColnames) {
-    proteoforms[name] <- proteoforms[name] + vec
+  # Distribute a protein-level abundance draw across its proteoforms
+  prot_index <- split(seq_len(nrow(proteoforms)), proteoforms$Accession)
+  abs_vec <- numeric(nrow(proteoforms))
+  for (indices in prot_index) {
+    total_abundance <- rnorm(n = 1, mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
+    weights <- runif(n = length(indices))
+    weights <- weights / sum(weights)
+    contribution <- total_abundance * weights
+    for (name in parameters$QuantColnames) {
+      proteoforms[indices, name] <- proteoforms[indices, name] + contribution
+    }
+    abs_vec[indices] <- contribution
   }
   if (parameters$ThreshNAQuantileProt > 0) {
     # Remove Values below the threshold set in the Parameters file
-    thresh <- quantile(x = vec, probs = parameters$ThreshNAQuantileProt)
+    thresh <- quantile(x = abs_vec, probs = parameters$ThreshNAQuantileProt)
     proteoforms[, parameters$QuantColnames][proteoforms[, parameters$QuantColnames] < thresh] <- NA
   }
 

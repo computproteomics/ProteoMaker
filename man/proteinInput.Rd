@@ -10,20 +10,27 @@ proteinInput(parameters)
 \item{parameters}{A list containing the following elements:
 \describe{
   \item{PathToFasta}{A character string specifying the path to the FASTA file containing protein sequences.}
-  \item{PathToProteinList}{A character string specifying the path to the text file containing a list of selected protein accessions. If `NA`, a fraction of proteins will be selected randomly for modification.}
-  \item{FracModProt}{A numeric value between 0 and 1 indicating the fraction of proteins to be modified. Only applicable if `PathToProteinList` is `NA`.}
-  \item{ModifiableResidues}{A list of characters indicating the residues that can be modified in the protein sequences.}
+  \item{PathToProteinList}{A character string specifying the path to the text file containing a list of selected
+  protein accessions. If `NA`, a fraction of proteins will be selected randomly for modification.}
+  \item{FracModProt}{A numeric value between 0 and 1 indicating the fraction of proteins to be modified.
+  Only applicable if `PathToProteinList` is `NA`.}
+  \item{ModifiableResidues}{A list of characters indicating the residues that can be modified in the
+  protein sequences.}
 }}
 }
 \value{
 A list with two elements:
 \describe{
-  \item{to.Modify}{A data frame containing the protein sequences selected for modification, along with their corresponding metadata. If no proteins are selected for modification, this will be `NULL`.}
-  \item{to.be.Unmodified}{A data frame containing the protein sequences that remain unmodified, along with their corresponding metadata. If no proteins remain unmodified, this will be `NULL`.}
+  \item{to.Modify}{A data frame containing the protein sequences selected for modification, along with their
+  corresponding metadata. If no proteins are selected for modification, this will be `NULL`.}
+  \item{to.be.Unmodified}{A data frame containing the protein sequences that remain unmodified, along
+  with their corresponding metadata. If no proteins remain unmodified, this will be `NULL`.}
 }
 }
 \description{
-This function imports a single protein sequence FASTA file and optionally a text file containing selected protein accessions. It processes the protein sequences by filtering out invalid entries, separating them into modified and unmodified sets, and validating the input files.
+This function imports a single protein sequence FASTA file and optionally a text file containing selected
+protein accessions. It processes the protein sequences by filtering out invalid entries, separating them into
+modified and unmodified sets, and validating the input files.
 }
 \details{
 The function performs the following steps:
@@ -31,9 +38,11 @@ The function performs the following steps:
   \item Imports and validates the FASTA file.
   \item Filters out protein sequences containing unusual amino acids.
   \item Removes duplicate protein accessions.
-  \item Fractionates the protein set into modified and unmodified fractions, based on either a specified percentage or a list of selected protein accessions.
+  \item Fractionates the protein set into modified and unmodified fractions, based on either a specified
+  percentage or a list of selected protein accessions.
   \item If the protein set is too small to be fractionated, it returns only an unmodified set.
-  \item If the input files are corrupted or the protein set is empty after filtering, it returns `NULL` for both modified and unmodified sets.
+  \item If the input files are corrupted or the protein set is empty after filtering, it returns `NULL` for
+  both modified and unmodified sets.
 }
 }
 \keyword{internal}

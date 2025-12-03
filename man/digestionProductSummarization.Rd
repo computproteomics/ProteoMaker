@@ -14,21 +14,33 @@ digestionProductSummarization(peptides, parameters)
 \value{
 A data frame containing the summarized peptides, with the following structure:
 \describe{
-  \item{Sequence}{A character vector containing the unique peptide sequence after isoleucine substitution to leucine.}
-  \item{Peptide}{A list of character vectors containing the peptides that are grouped based on Sequence, prior to isoleucine substitution.}
-  \item{Start}{A list of integer vectors containing the starting positions of the peptides in the Peptide vectors on the protein sequence.}
-  \item{Stop}{A list of integer vectors containing the ending positions of the peptides in the Peptide vectors on the protein sequence.}
-  \item{MC}{A list of integer vectors containing the number of missed cleavages (MC) for the peptides in the Peptide vectors.}
+  \item{Sequence}{A character vector containing the unique peptide sequence after isoleucine substitution to
+  leucine.}
+  \item{Peptide}{A list of character vectors containing the peptides that are grouped based on Sequence, prior to
+  isoleucine substitution.}
+  \item{Start}{A list of integer vectors containing the starting positions of the peptides in the Peptide vectors on
+  the protein sequence.}
+  \item{Stop}{A list of integer vectors containing the ending positions of the peptides in the Peptide vectors on
+  the protein sequence.}
+  \item{MC}{A list of integer vectors containing the number of missed cleavages (MC) for the peptides in the Peptide
+  vectors.}
   \item{MZ1}{A numeric vector representing the peptide mass for charge +1.}
   \item{MZ2}{A numeric vector representing the peptide mass for charge +2.}
   \item{MZ3}{A numeric vector representing the peptide mass for charge +3.}
-  \item{Accession}{A list of character vectors containing the parental protein Accession of the peptides in the Peptide vectors.}
-  \item{Proteoform_ID}{A list of integer vectors containing the unique proteoform identifiers of the Accession vectors.}
-  \item{PTMPos}{A list of integer vectors containing the positions of the modifications on the peptides in the Peptide vectors.}
-  \item{PTMType}{A list of character vectors containing the modification types of the modifications in the PTMPos vectors.}
-  \item{Regulation_Amplitude}{A list of numeric vectors containing the regulation amplitudes of the proteoforms in the Accession vectors.}
-  \item{Regulation_Pattern}{A list of numeric vectors containing the regulation patterns of the proteoforms in the Accession vectors.}
-  \item{Quantitative Columns}{Numeric columns containing the abundances of the peptide group for each QuantColname. These columns are dynamically named based on the provided QuantColnames parameter.}
+  \item{Accession}{A list of character vectors containing the parental protein Accession of the peptides in the
+  Peptide vectors.}
+  \item{Proteoform_ID}{A list of integer vectors containing the unique proteoform identifiers of the Accession
+  vectors.}
+  \item{PTMPos}{A list of integer vectors containing the positions of the modifications on the peptides in the
+  Peptide vectors.}
+  \item{PTMType}{A list of character vectors containing the modification types of the modifications in the PTMPos
+  vectors.}
+  \item{Regulation_Amplitude}{A list of numeric vectors containing the regulation amplitudes of the proteoforms in
+  the Accession vectors.}
+  \item{Regulation_Pattern}{A list of numeric vectors containing the regulation patterns of the proteoforms in the
+  Accession vectors.}
+  \item{Quantitative Columns}{Numeric columns containing the abundances of the peptide group for each QuantColname.
+  These columns are dynamically named based on the provided QuantColnames parameter.}
 }
 }
 \description{

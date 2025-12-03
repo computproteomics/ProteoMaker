@@ -16,7 +16,8 @@ modify_seq(seq, pars)
  \item \code{PTMTypesDistr}: A numeric vector representing the background frequencies for each PTM type.
  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
  for each modifiable residue within each PTM type.
- \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson distribution,
+ \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson
+ distribution,
  which determines the number of modifications per sequence.
  }
 

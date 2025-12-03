@@ -72,9 +72,9 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$UserInputFoldChanges_RegulationFC*: Optional override for the fold change applied to those user-specified proteoforms (default `0`, i.e. disabled).
 
-*Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values.
+*Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.
 
-*Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation.
+*Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.
 
 *Param\$ThreshNAQuantileProt*: The quantile threshold for removing quantitative values when *AbsoluteQuanMean* is not equal to `NA`. Set to `0.01`. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.
 

@@ -170,7 +170,7 @@ params:
   AbsoluteQuanMean:
     group: "Proteoform Quantities"
     type: "paramProteoformAb"
-    description: "Mean for absolute quantification."
+    description: "Mean for absolute quantification (proteins)."
     min: 0
     max: 100
     class: "numeric"
@@ -178,7 +178,7 @@ params:
   AbsoluteQuanSD:
     group: "Proteoform Quantities"
     type: "paramProteoformAb"
-    description: "Standard deviation for absolute quantification."
+    description: "Standard deviation for absolute quantification (proteins)."
     min: 0
     max: 10
     class: "numeric"

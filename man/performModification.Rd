@@ -7,27 +7,35 @@
 performModification(to.Modify, parameters)
 }
 \arguments{
-\item{to.Modify}{A data frame containing the protein sequences that have been selected for modification. This is typically the output from the `proteinInput` function.}
+\item{to.Modify}{A data frame containing the protein sequences that have been selected for modification.
+This is typically the output from the `proteinInput` function.}
 
 \item{parameters}{A list containing the following elements:
 \describe{
   \item{PTMTypes}{A character vector specifying the types of post-translational modifications (PTMs) to be applied.}
   \item{PTMTypesDistr}{A numeric vector specifying the background frequency distribution of each PTM type.}
-  \item{ModifiableResidues}{A list of character vectors specifying the residues that can be modified for each PTM type.}
-  \item{ModifiableResiduesDistr}{A list of numeric vectors specifying the background frequency distribution of each residue type for modification.}
+  \item{ModifiableResidues}{A list of character vectors specifying the residues that can be modified
+  for each PTM type.}
+  \item{ModifiableResiduesDistr}{A list of numeric vectors specifying the background frequency distribution of
+  each residue type for modification.}
   \item{PropModPerProt}{A numeric value indicating the proportion of proteoforms to generate per protein sequence.}
-  \item{RemoveNonModFormFrac}{A numeric value indicating the fraction of modified sequences that should retain their unmodified counterparts.}
+  \item{RemoveNonModFormFrac}{A numeric value indicating the fraction of modified sequences that should retain
+  their unmodified counterparts.}
 }}
 }
 \value{
 A list with two elements:
 \describe{
-  \item{mod.proteoforms}{A data frame containing the modified proteoforms, including details of the modification positions and types.}
-  \item{unmod.proteoforms}{A data frame containing the unmodified counterparts of the selected protein sequences, if any. If no sequences are retained unmodified, this will be `NULL`.}
+  \item{mod.proteoforms}{A data frame containing the modified proteoforms, including details of the modification
+  positions and types.}
+  \item{unmod.proteoforms}{A data frame containing the unmodified counterparts of the selected protein sequences,
+  if any. If no sequences are retained unmodified, this will be `NULL`.}
 }
 }
 \description{
-This function performs modifications on a fraction of protein sequences selected by the `proteinInput` function. It generates proteoforms based on the provided parameters, applies modifications, and optionally retains some sequences in their unmodified form.
+This function performs modifications on a fraction of protein sequences selected by the `proteinInput` function.
+It generates proteoforms based on the provided parameters, applies modifications, and optionally retains some
+sequences in their unmodified form.
 }
 \details{
 The function performs the following steps:
@@ -35,7 +43,8 @@ The function performs the following steps:
   \item Selects a proportion of the input sequences to generate multiple proteoforms per sequence.
   \item Applies the specified modifications to the selected proteoforms.
 \item Summarizes the types and residues of modifications applied to each proteoform.
-  \item Optionally retains a fraction of the input sequences in their unmodified form, based on the specified parameters.
+  \item Optionally retains a fraction of the input sequences in their unmodified form, based on the specified
+  parameters.
 }
 }
 \keyword{internal}

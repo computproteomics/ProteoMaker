@@ -49,6 +49,8 @@ directories and returns a list of configuration settings.
 }
 \examples{
 config <- set_proteomaker()
-config <- set_proteomaker(fastaFilePath = "CustomProteomes",
-resultFilePath = "Results", cores = 4, clusterType = "PSOCK")
+config <- set_proteomaker(
+  fastaFilePath = "CustomProteomes",
+  resultFilePath = "Results", cores = 4, clusterType = "PSOCK"
+)
 }

@@ -33,5 +33,5 @@ config <- set_proteomaker(resultFilePath = tempdir())
 Param <- def_param()
 Param$paramGroundTruth$NumReps <- 5
 benchmarks <- run_sims(Param, config)
-result <- get_simulation(benchmarks[[1]]$Param, config, stage="MSRun")
+result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
 }

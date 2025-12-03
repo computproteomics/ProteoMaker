@@ -7,7 +7,8 @@
 samplePreparation(parameters)
 }
 \arguments{
-\item{parameters}{A list of parameters required for sample preparation, including paths to input files and modification details.}
+\item{parameters}{A list of parameters required for sample preparation, including paths to input files and
+modification details.}
 }
 \value{
 A data frame containing all proteoforms generated, including:
@@ -19,7 +20,8 @@ A data frame containing all proteoforms generated, including:
 }
 \description{
 This function generates a set of proteoforms by using the `proteinInput` and `performModification` functions.
-It returns a data frame that includes unmodified proteins, modified proteoforms, and modifiable but unmodified proteins.
+It returns a data frame that includes unmodified proteins, modified proteoforms, and modifiable but unmodified
+proteins.
 }
 \details{
 The function performs the following steps:

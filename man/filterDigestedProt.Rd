@@ -15,8 +15,11 @@ EnrichmentNoise, and QuantColnames.}
 \value{
 A list with two elements:
 \describe{
-  \item{NonEnriched}{A data frame containing the non-enriched peptide fraction, which includes both modified and non-modified peptides.}
-  \item{Enriched}{A data frame containing the enriched peptide fraction, where modified peptides have been enriched based on the EnrichmentEfficiency, and noise has been added to simulate the enrichment process. If no modified peptides are present, this will be \code{NULL}.}
+  \item{NonEnriched}{A data frame containing the non-enriched peptide fraction, which includes both modified and
+   non-modified peptides.}
+  \item{Enriched}{A data frame containing the enriched peptide fraction, where modified peptides have been enriched
+  based on the EnrichmentEfficiency, and noise has been added to simulate the enrichment process. If no modified
+  peptides are present, this will be \code{NULL}.}
 }
 }
 \description{
