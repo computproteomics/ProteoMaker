@@ -735,9 +735,9 @@ addProteoformAbundance <- function(proteoforms, parameters) {
     }
     abs_vec[indices] <- contribution
   }
-  if (parameters$ThreshNAQuantileProt > 0) {
+  if (parameters$ThreshRemoveProteoforms > 0) {
     # Remove Values below the threshold set in the Parameters file
-    thresh <- quantile(x = abs_vec, probs = parameters$ThreshNAQuantileProt)
+    thresh <- parameters$ThreshRemoveProteoforms
     proteoforms[, parameters$QuantColnames][proteoforms[, parameters$QuantColnames] < thresh] <- NA
   }
 

@@ -118,7 +118,7 @@ ul.task-list li input[type="checkbox"] {
 <p><em>Param$UserInputFoldChanges_RegulationFC</em>: Optional override for the fold change applied to those user-specified proteoforms (default <code>0</code>, i.e.&nbsp;disabled).</p>
 <p><em>Param$AbsoluteQuanMean</em>: The mean value for absolute quantitation. Set to <code>30.5</code>. This parameter sets the baseline for absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.</p>
 <p><em>Param$AbsoluteQuanSD</em>: The standard deviation for absolute quantitation. Set to <code>3.6</code>. This parameter models the variability in absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.</p>
-<p><em>Param$ThreshNAQuantileProt</em>: The quantile threshold for removing quantitative values when <em>AbsoluteQuanMean</em> is not equal to <code>NA</code>. Set to <code>0.01</code>. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.</p>
+<p><em>Param$</em>ThreshRemoveProteoforms: The threshold for absolute quantification values to remove quantitative values when <em>AbsoluteQuanMean</em> is not equal to <code>NA</code>. Set to <code>0.0</code>. This parameter ensures that low-abundant proteoforms are cut off.</p>
 </section>
 </section>
 <section id="enzymatic-digestion-parameters" class="level2">

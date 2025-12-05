@@ -4,7 +4,6 @@ format: html
 editor: visual
 ---
 
-
 This document provides a detailed description of the parameters used in the ProteoMaker pipeline. ProteoMaker is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit [ProteoMaker on GitHub](https://github.com/computproteomics/ProteoMaker).
 
 ## Global Parameters
@@ -14,8 +13,6 @@ This document provides a detailed description of the parameters used in the Prot
 *Param\$Cores*: The number of CPU cores to use for parallel computing. Set to `1`. Using multiple cores can significantly speed up the computation.
 
 *Param\$ClusterType*: The type of cluster to use for parallel computing. Currently set to `PSOCK`. The cluster type determines how parallel processing is managed.
-
-### 
 
 ## Experimental Design
 
@@ -41,19 +38,19 @@ This document provides a detailed description of the parameters used in the Prot
 
 ### Proteoform IDs Generation
 
-*Param\$PercExpressedProt:* The percentage of proteins from the fasta file selected for the ground truth generation. The selection is random and should simulate that not all proteins in a cell are actually expressed. The default value is s1.
+*Param\$PercExpressedProt*: The fraction (0-1) of proteins from the FASTA used to seed the ground-truth proteome. The selection is random to mimic that not every protein is expressed; default is `1` (all proteins retained).
 
 *Param\$FracModProt*: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to `0.0`, indicating no proteins will be modified.
 
-*Param\$PropModPerProt*: The proportion of modifiable proteins sampled for modifications. A value of `2` means twice as many proteoforms as the selected proteins will be generated. This ensures diversity in the generated proteoforms.
+*Param\$PropModPerProt*: Multiplier for generating additional modified proteoforms per selected protein. Values `>= 2` create extra modified copies (e.g., `2` doubles the number of proteoforms); defaults to `0`, which keeps only the initial modified set.
 
-*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph"). The mods name is mandatory.
+*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph")`. The mods name is mandatory.
 
-*Param\$PTMTypesDistr*: The distribution of PTM types. Default set to `1`, indicating 100% of the given (one) PTM type. This controls the relative frequency of each PTM type. Always provide as named list, e.g. `list(ph=0.5)`
+*Param\$PTMTypesDistr*: Relative frequency for each PTM type supplied as a named list (values should sum to 1). Defaults to `NA`, so the simulator uses equal weights unless specified.
 
-*Param\$PTMTypesMass*: The mass shifts associated with the PTM types. This can be `79.9663` for phosphorylation or multiple value in a list such as `list(c(79.9663, 42.0106))` . Accurate mass shifts determine the mz values of the peptides. Use named list.
+*Param\$PTMTypesMass*: Mass shifts associated with each PTM type (provide as a named list, e.g. `list(ph = 79.9663)`). Defaults to `NA` and must be set when PTMs are enabled.
 
-*Param\$PTMMultipleLambda*: The lambda parameter for the Poisson distribution of multiply modified proteins. Set to `0.5`, scaled to the number of possible PTM sites. This parameter models the frequency of multiple modifications on the same protein.
+*Param\$PTMMultipleLambda*: Lambda for the Poisson distribution controlling multiply modified proteoforms (scaled by the number of modifiable sites). Defaults to `0`, so no additional multiply modified species are added unless requested.
 
 *Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually we use `list(ph = c("S", "T", "Y"))`
 
@@ -63,21 +60,23 @@ This document provides a detailed description of the parameters used in the Prot
 
 ### Proteoform Abundance Generation
 
-*Param\$QuantColnames*: The column names for quantitative values, structured as `C_<condition>_R_<replicate>`for a clear and organized structure for the quantitative data.
+*Param\$QuantColnames*: Vector of column names that hold quantitative values, typically formatted as `C_<condition>_R_<replicate>` to keep conditions and replicates explicit.
 
-*Param\$QuantNoise*: The general noise level for all quantitative values, given as the standard deviation of a normal distribution. Default set to `0.0`. This parameter simulates technical and biological variations in the quantitative data.
+*Param\$QuantNoise*: Standard deviation of the log2 noise added to every quantitative value. Default `0.5` to reflect technical and biological variability.
 
-*Param\$DiffRegFrac*: The fraction of differentially regulated proteoforms. Default set to `0.0`. This parameter allows for the simulation of differential regulation, mimicking biological variability.
+*Param\$DiffRegFrac*: Fraction of proteoforms marked as differentially regulated. Default `0.3`.
 
-*Param\$DiffRegMax*: The maximum amplitude of difference for differentially regulated proteins on a log2 scale. Set to `3`. This parameter defines the range of fold changes for differentially regulated proteins.
+*Param\$DiffRegMax*: Maximum absolute log2 fold change applied to regulated proteoforms. Default `1`.
 
-*Param\$UserInputFoldChanges*: User-defined fold changes for regulated proteoforms. Set to `NULL`. This allows for custom input of fold changes if specific regulation patterns are desired. This superseeds random selection. Note that this feature has not been tested extensively.
+*Param\$UserInputFoldChanges_NumRegProteoforms*: Optional override for the number of regulated proteoforms (default `0`, meaning use the fraction above).
 
-*Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values.
+*Param\$UserInputFoldChanges_RegulationFC*: Optional override for the fold change applied to those user-specified proteoforms (default `0`, i.e. disabled).
 
-*Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation.
+*Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.
 
-*Param\$ThreshNAQuantileProt*: The quantile threshold for removing quantitative values when *AbsoluteQuanMean* is not equal to `NA`. Set to `0.01`. This parameter ensures that a certain proportion of low-abundant proteoforms are cut off.
+*Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.
+
+*Param\$*ThreshRemoveProteoforms: The threshold for absolute quantification values to remove quantitative values when *AbsoluteQuanMean* is not equal to `NA`. Set to `0.0`. This parameter ensures that low-abundant proteoforms are cut off.
 
 ## Enzymatic Digestion Parameters
 
@@ -87,11 +86,11 @@ This document provides a detailed description of the parameters used in the Prot
 
 ### Proportion of Peptides with Missed Cleavages
 
-*Param\$PropMissedCleavages*: The additional proportion of peptides that have missed cleavages. Set to `1`. Missed cleavages occur when the enzyme does not cleave at all possible sites, which can affect peptide identification.
+*Param\$PropMissedCleavages*: Additional fraction of peptides simulated with missed cleavages. Default `0.01`.
 
 ### Maximum Number of Missed Cleavages
 
-*Param\$MaxNumMissedCleavages*: The maximum number of missed cleavages per peptide. Set to `6`. This parameter defines the upper limit of missed cleavages allowed in the simulation.
+*Param\$MaxNumMissedCleavages*: Maximum number of missed cleavages allowed per peptide. Default `2`.
 
 ### Peptide Length Filter
 
@@ -134,21 +133,21 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 ### Detectability filter
 
-*Param\$PercDetectability:* Removing the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB). Default value is 0.25
+*Param\$PercDetectability*: Keeps the top fraction of peptides by the PeptideRanger detectability model (e.g., `0.25` retains the most detectable 25%). Default value is `0.25`.
 
 <!--*Param\$PercDetectedPep*: The percentage of peptides detected during the MS run. Set to `0.3`. This parameter #models the efficiency of peptide detection by the MS instrument.-->
 
 ### Detected Values
 
-*Param\$PercDetectedVal*: The percentage of detected values in each replicate or condition. Set to `0.3`. This parameter affects the completeness of the quantitative data.
+*Param\$PercDetectedVal*: Fraction of intensities retained per replicate/condition (missing values are introduced for the remainder). Default `0.5`.
 
 ### Intensity-Dependence Weight
 
-*Param\$WeightDetectVal*: The weight for intensity dependence of non-detection, with a maximum of `40`. Currently set to `10`. This parameter models the likelihood of detection based on peptide intensity.
+*Param\$WeightDetectVal*: Controls how strongly intensity influences the missing-value mechanism (higher values bias removal toward low-intensity peptides). Ranges 0-50; default `1`.
 
 ### MS Noise
 
-*Param\$MSNoise*: The noise level added by the MS instrument. Set to `0.5`. This parameter simulates the inherent noise in MS measurements.
+*Param\$MSNoise*: Adds Gaussian noise to intensities to mimic instrument variability. Default `0.25` (log2 scale).
 
 ## MS Search Parameters
 
@@ -158,7 +157,7 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 ### Wrong Localizations
 
-*Param\$WrongLocalizations*: The percentage of wrong localizations in the MS search. Set to `0.01`. This parameter reflects the frequency of incorrect localization of PTM sites within identified peptides. Wrongly localized residues will be marked in the output (column `isMisLocated`).
+*Param\$WrongLocalizations*: Fraction of identifications with incorrect PTM site assignment. Default `0` (no mis-localisations); non-zero values flag affected peptides via the `isMisLocated` column.
 
 ## Filtering MS Search Results
 
@@ -170,11 +169,19 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 ### Summarization Method
 
-*Param\$ProtSummarization*: The method for protein summarization. Currently set to `medpolish`. This parameter determines how peptide-level data is aggregated to the protein level.
+*Param\$ProtSummarization*: Method used to aggregate peptide intensities into protein groups. Choices are `sum.top3`, `medpolish`, `median`, `mean`, `sum`, and `rlm`; default is `medpolish`. The `sum`-based methods operate on the anti-log (intensity) scale before log2 transformation.
+
+### Shared Peptides
+
+*Param\$SharedPep*: Boolean whether to include shared peptides in the summarization. Set to `FALSE`. This parameter allows for the inclusion of peptides that are shared between multiple proteins, which can affect quantitation and identification.
 
 ### Minimum Number of Unique Peptides
 
 *Param\$MinUniquePep*: The minimum number of unique peptides required for summarization. Set to `1`. This parameter ensures that proteins are summarized only if they have sufficient peptide evidence.
+
+### Include Modified Peptides
+
+*Param\$IncludeModPep*: Boolean controlling whether modified peptides contribute to protein summarisation. Defaults to `FALSE`; set to `TRUE` to keep PTM-bearing peptides when aggregating.
 
 ## Statistical Testing of Peptides and Proteins
 
