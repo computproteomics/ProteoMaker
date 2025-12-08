@@ -727,9 +727,9 @@ addProteoformAbundance <- function(proteoforms, parameters) {
   abs_vec <- numeric(nrow(proteoforms))
   for (indices in prot_index) {
     total_abundance <- rnorm(n = 1, mean = parameters$AbsoluteQuanMean, sd = parameters$AbsoluteQuanSD)
-    weights <- runif(n = length(indices))
+    weights <- rexp(n = length(indices))
     weights <- weights / sum(weights)
-    contribution <- total_abundance * weights
+    contribution <- log2(2^total_abundance * weights)
     for (name in parameters$QuantColnames) {
       proteoforms[indices, name] <- proteoforms[indices, name] + contribution
     }
