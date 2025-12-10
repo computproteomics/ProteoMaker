@@ -348,8 +348,10 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   globalBMs$numProteoforms <- sum(ProteoformDistr)
   globalBMs$meanProteoformsPerProt <- mean(ProteoformDistr)
 
-  globalBMs$numModPeptides <- sum(StatsPep$PTMType != "NULL")
-  ModPeps <- StatsPep[StatsPep$PTMType != "NULL", ]
+  # Consider peptides modified only when PTMType list is non-empty
+  has_ptm <- lengths(StatsPep$PTMType) > 0
+  globalBMs$numModPeptides <- sum(has_ptm)
+  ModPeps <- StatsPep[has_ptm, ]
   # Proportion of modified peptides with identical non-modified peptide
   pepgroups <- by(StatsPep[, c("Sequence", "Accession", "PTMType", "PTMPos")], StatsPep$Sequence, function(x) x)
   pepgroups <- lapply(pepgroups, function(x) {
@@ -519,8 +521,9 @@ calcBasicBenchmarks <- function(Stats, StatsPep, Param) {
 
   ###### metrics on PTM level
 
-  globalBMs$numModPeptides <- sum(StatsPep$PTMType != "NULL")
-  ModPeps <- StatsPep[StatsPep$PTMType != "NULL", ]
+  has_ptm <- lengths(StatsPep$PTMType) > 0
+  globalBMs$numModPeptides <- sum(has_ptm)
+  ModPeps <- StatsPep[has_ptm, ]
   # Proportion of modified peptides with identical non-modifiedpeptide
   pepgroups <- by(StatsPep[, c("Sequence", "Accession", "PTMType", "PTMPos")], StatsPep$Sequence, function(x) x)
   pepgroups <- lapply(pepgroups, function(x) {
