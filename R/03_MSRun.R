@@ -172,13 +172,18 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
   MSRun$WrongID <- FALSE
   if (length(shuffle) > 0) MSRun$WrongID[shuffle] <- TRUE
 
-  # Remove duplicate peptide sequences introduced by wrong-ID substitution
+  # Remove duplicate peptidoforms introduced by wrong-ID substitution
   if ("Sequence" %in% names(MSRun)) {
-    dups <- duplicated(MSRun$Sequence)
+    if ("PTMType" %in% names(MSRun) && "PTMPos" %in% names(MSRun)) {
+      pep_id <- as.character(mapply(list, MSRun$PTMType, MSRun$PTMPos, SIMPLIFY = FALSE))
+      dups <- duplicated(paste(MSRun$Sequence, pep_id, sep = "|"))
+    } else {
+      dups <- duplicated(MSRun$Sequence)
+    }
     if (any(dups)) {
       removed <- sum(dups)
       MSRun <- MSRun[!dups, , drop = FALSE]
-      message("  - Removed ", removed, " duplicate peptide sequences after wrong-ID step.")
+      message("  - Removed ", removed, " duplicate peptidoforms after wrong-ID step.")
     }
   }
 
@@ -243,7 +248,14 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
             tPTMvec <- curr_pep$PTMPos[[1]]
             tPTMvec[sapply(SubPTMpos[1:length(newPos)], function(x) which(tPTMvec == x))] <- newPos
+            tType <- curr_pep$PTMType[[1]]
+            if (length(tPTMvec) > 0) {
+              ord <- order(tPTMvec, tType)
+              tPTMvec <- tPTMvec[ord]
+              tType <- tType[ord]
+            }
             curr_pep$PTMPos <- list(tPTMvec)
+            curr_pep$PTMType <- list(tType)
             curr_pep$IsMisLocated <- T
             MSRun[ind, ] <- curr_pep
           }
@@ -265,6 +277,19 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
     if (length(which) > 0) {
       MSRun <- MSRun[NAs <= parameters$MaxNAPerPep, ]
+    }
+  }
+
+  # Add peptidoform string for unique identification in outputs
+  if ("Sequence" %in% names(MSRun) && "PTMPos" %in% names(MSRun) && "PTMType" %in% names(MSRun)) {
+    MSRun$Peptidoform <- mapply(.pm_annotate_peptidoform, MSRun$Sequence, MSRun$PTMPos, MSRun$PTMType,
+      SIMPLIFY = TRUE
+    )
+    pf_dups <- duplicated(MSRun$Peptidoform)
+    if (any(pf_dups)) {
+      removed <- sum(pf_dups)
+      MSRun <- MSRun[!pf_dups, , drop = FALSE]
+      message("  - Removed ", removed, " duplicate peptidoforms after annotation.")
     }
   }
 

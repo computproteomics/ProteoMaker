@@ -11,23 +11,19 @@ RUN R -e "install.packages(c('BiocManager','remotes','devtools'), repos='http://
 RUN R -e 'BiocManager::install(c("preprocessCore","qvalue","limma","SummarizedExperiment","cleaver", "S4Vectors"))'
 
 #RUN R -e 'install.packages("devtools");options(timeout=10000);devtools::install_github("rr-2/PeptideRanger")'
+# Trying to avoid the download limit of GitHub
 RUN --mount=type=secret,id=github_pat \
       if [ -f /run/secrets/github_pat ]; then \
         export GITHUB_PAT="$(cat /run/secrets/github_pat)"; \
       fi; \
-      R -q -e "remotes::install_github(c('rr-2/PeptideRanger', 'computproteomics/polystest'))"
+      R -q -e "remotes::install_github(c('rr-2/PeptideRanger', 'computproteomicst/polystest', 'computproteomics/ProteoMaker'))"
 #RUN R -e 'devtools::install_github("computproteomics/polystest")'
 
 # libraries for the shiny app
 RUN R -e 'install.packages(c("rmarkdown","shinyWidgets","shinyBS","bslib","shinyalert","shinyjs","DT"))'
 
 # Install ProteoMaker
-RUN --mount=type=secret,id=github_pat \
-      if [ -f /run/secrets/github_pat ]; then \
-        export GITHUB_PAT="$(cat /run/secrets/github_pat)"; \
-      fi; \
-      R -q -e "remotes::install_github(c('computproteomics/ProteoMaker'))"
-# RUN R -e 'install.packages("devtools");devtools::install_github("computproteomics/ProteoMaker")'
+#RUN R -e 'install.packages("devtools");devtools::install_github("computproteomics/ProteoMaker")'
 
 RUN rm -rf /srv/shiny-server
 RUN mkdir /srv/shiny-server

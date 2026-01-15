@@ -459,6 +459,11 @@ modify_seq <- function(seq, pars) {
   names(nummod.per.ptm) <- ptms
   Types <- unlist(lapply(ptms, function(x) rep(x, sum(unlist(nummod.per.ptm[[x]])))))
   Positions <- unlist(lapply(ptms, function(x) unlist(out[[x]]$modified)))
+  if (length(Positions) > 0) {
+    ord <- order(Positions, Types)
+    Positions <- Positions[ord]
+    Types <- Types[ord]
+  }
   return(list(Positions = Positions, Types = Types, Count = nummod.per.ptm))
 }
 

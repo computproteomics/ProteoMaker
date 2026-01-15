@@ -62,6 +62,8 @@ proteinSummarisation <- function(peptable, parameters) {
     peptable <- peptable[peptable$num_accs == 1, ]
   }
 
+  pep_key <- if ("Peptidoform" %in% names(peptable)) peptable$Peptidoform else peptable$Sequence
+
   # Vector with row indices of protein groups
   all_accs <- peptable$merged_accs
   prot_ind <- 1
@@ -86,7 +88,7 @@ proteinSummarisation <- function(peptable, parameters) {
       start_i <- prot_ind[gi]
       end_i <- prot_ind[gi + 1L] - 1L
       if (end_i >= start_i) {
-        seqs <- peptable$Sequence[start_i:end_i]
+        seqs <- pep_key[start_i:end_i]
         wrongid <- if ("WrongID" %in% names(peptable)) peptable$WrongID[start_i:end_i] else rep(NA, length(seqs))
         dups <- seqs[duplicated(seqs)]
         if (length(dups) > 0L) {
@@ -133,9 +135,9 @@ proteinSummarisation <- function(peptable, parameters) {
 
   message("  - Initiated protein matrix for ", length(prot_ind), " protein groups")
   # Diagnostics: potential duplicate first sequences across protein groups
-  if ((length(prot_ind) - 1) > 1 && "Sequence" %in% colnames(peptable)) {
+  if ((length(prot_ind) - 1) > 1 && length(pep_key) > 0) {
     first_rows <- prot_ind[1:(length(prot_ind) - 1)]
-    first_seq <- peptable$Sequence[first_rows]
+    first_seq <- pep_key[first_rows]
     dup_count <- sum(duplicated(first_seq))
     if (dup_count > 0) {
       message("  - Note: ", dup_count, " protein groups share the same first peptide sequence; row names will use group keys to avoid clashes.")
@@ -225,7 +227,8 @@ proteinSummarisation <- function(peptable, parameters) {
     })
     proteins <- parallel::parLapply(cluster, 1:(length(prot_ind) - 1), function(i) {
       tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i + 1] - 1), ])
-      rownames(tmp) <- tmp$Sequence
+      key <- if ("Peptidoform" %in% names(tmp)) tmp$Peptidoform else tmp$Sequence
+      rownames(tmp) <- make.unique(key)
       out <- tmp[1, ]
       tout <- summarizeProtein(tmp[, QuantColnames, drop = F])
       if (!is.null(tout)) {
@@ -243,7 +246,8 @@ proteinSummarisation <- function(peptable, parameters) {
   } else {
     proteins <- lapply(1:(length(prot_ind) - 1), function(i) {
       tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i + 1] - 1), ])
-      rownames(tmp) <- tmp$Sequence
+      key <- if ("Peptidoform" %in% names(tmp)) tmp$Peptidoform else tmp$Sequence
+      rownames(tmp) <- make.unique(key)
       out <- tmp[1, ]
       tout <- summarizeProtein(tmp[, QuantColnames, drop = F])
       if (!is.null(tout)) {
