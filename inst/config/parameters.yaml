@@ -58,9 +58,9 @@ params:
   PropModPerProt:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Factor for generating more that many modified proteoforms per selected protein."
+    description: "Factor for generating multiple modified proteoforms per selected protein."
     min: 0
-    max: 5
+    max: 500
     class: "numeric"
     default: 0
   PTMMultipleLambda:
@@ -68,7 +68,7 @@ params:
     type: "paramGroundTruth"
     description: "Poisson parameter for multiply modified proteins, scaled to the number of possible PTM sites."
     min: 0
-    max: 5
+    max: 10
     class: "numeric"
     default: 0
   RemoveNonModFormFrac:
