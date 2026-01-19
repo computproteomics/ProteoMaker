@@ -1,8 +1,9 @@
-FROM rocker/shiny:4.4.2
+FROM rocker/shiny:4.5.2
 LABEL maintainer="Veit Schwaemmle <veits@bmb.sdu.dk>"
 LABEL description="Docker image of VSClust implementation on top of shiny-server. The number of to-be-installed R packages requires patience when building this image."
 
-RUN apt-get update && apt-get install -y r-cran-rjava  && apt-get clean
+#RUN apt-get update && apt-get install -y r-cran-rjava  && apt-get clean
+RUN apt-get update  && apt-get clean
 RUN apt-get install -y libglpk-dev && apt-get clean
 
 RUN R -e "install.packages(c('BiocManager','remotes','devtools'), repos='http://cran.us.r-project.org'); \
