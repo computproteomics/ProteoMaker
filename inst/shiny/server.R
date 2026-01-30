@@ -646,6 +646,10 @@ server <- function(input, output, session) {
         # Save each simulation result as a CSV file
         for (i in stages_all) {
           ttable <- get_simulation(sim_results()[[1]]$Param, Config = proteomaker_config, stage = i)
+          if (is.null(ttable)) {
+            message(paste0(" ---- Skipping ", i, ": no simulation output found ----"))
+            next
+          }
 
           ttable <- ttable[names(ttable) != "Param"]
           if (i == "DataAnalysis" & length(ttable) > 1) {
@@ -697,4 +701,3 @@ server <- function(input, output, session) {
   options(shiny.maxRequestSize=1*1024^3)
 
 }
-
