@@ -199,7 +199,7 @@ ggplot(data = tabMC[tabMC$SpeciesName == "human",], aes(x = factor(LeastAbundant
   theme_bw() +
   ylab("Number of peptide\nbefore MS") +
   scale_fill_manual(values = col_mc) +
-  labs(title = "facets = PropMissedCleavages", subtitle = "only peptides from 7 to 30 aa long")
+  labs(title = "facets = PropMissedCleavages", subtitle = "only peptidoforms from 7 to 30 aa long")
 
 ## Peptides:
 
@@ -213,7 +213,7 @@ data <- reshape2::melt(tab[,c(col_param,
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
 #   labs(title = "Peptide count",
 #        fill = "Fasta ID") +
-#   ylab("Number of peptides") +
+#   ylab("Number of peptidoforms") +
 #   xlab("")
 # print(g)
 
@@ -228,7 +228,7 @@ for (sp in unique(tab$PathToFasta)) {
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
 #   labs(title = "Peptide count",
 #        fill = "Fasta ID") +
-#   ylab("Number of peptides") +
+#   ylab("Number of peptidoforms") +
 #   xlab("")
 # print(g)
 
@@ -335,11 +335,11 @@ for (iter in seq_along(refgroup)) {
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     labs(title = tit,
          fill = "Fasta ID") +
-    ylab("Number of peptides") +
+    ylab("Number of peptidoforms") +
     xlab("")
   print(g)
   
-  ## Proteins/proteoforms:
+  ## Protein groups/proteoforms:
   
   data <- reshape2::melt(tab[tab$OutputNumber %in% paramID,c(col_param, 
                                                              which(grepl("NumberUniqueProt", names(tab))))], 
@@ -355,7 +355,7 @@ for (iter in seq_along(refgroup)) {
     labs(title = tit,
          subtitle = "Numbers (1,2) are the minimum number of unique peptide",
          fill = "Fasta ID") +
-    ylab("Number of proteins/proteoforms") +
+    ylab("Number of protein groups/proteoforms") +
     xlab("")
   print(g)
   
@@ -386,7 +386,7 @@ for (iter in seq_along(refgroup)) {
     theme_bw() +
     labs(title = tit, subtitle = "facets are species (i.e. Fasta files)",
          fill = "num. MC") +
-    ylab("Number of peptides") +
+    ylab("Number of peptidoforms") +
     xlab("MS signal")
   print(g)
   dev.off()

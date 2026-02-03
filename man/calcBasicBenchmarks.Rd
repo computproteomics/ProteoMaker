@@ -16,36 +16,40 @@ calcBasicBenchmarks(Stats, StatsPep, Param)
 \value{
 A list containing the following elements:
 \describe{
-  \item{globalBMs}{A list of global benchmarks calculated at various levels (peptide, protein, PTM). This includes metrics such as the number of peptides and proteins, dynamic range, missing data percentages, and distribution characteristics. The structure of this list includes:}
+  \item{globalBMs}{A list of global benchmarks calculated at various levels (peptidoform, protein group, proteoform). This includes metrics such as the number of peptidoforms and protein groups, dynamic range, missing data percentages, and distribution characteristics. The structure of this list includes:}
   \describe{
-    \item{numPeptides}{Number of peptides analyzed.}
-    \item{numProteins}{Number of proteins analyzed.}
-    \item{dynRangePep}{Dynamic range at the peptide level.}
-    \item{propUniquePep}{Proportion of unique peptides.}
-    \item{uniqueStrippedPep}{Number of unique peptides after stripping modifications.}
-    \item{percMissingPep}{Percentage of missing values at the peptide level.}
-    \item{propMisCleavedPeps}{Proportion of miscleaved peptides.}
+    \item{numPeptides}{Number of peptidoforms analyzed.}
+    \item{numProteins}{Number of distinct protein accessions represented by peptidoforms.}
+    \item{dynRangePep}{Dynamic range at the peptidoform level.}
+    \item{propUniquePep}{Proportion of peptidoforms mapping to a single protein accession.}
+    \item{uniqueStrippedPep}{Number of unique peptide sequences (PTM-stripped).}
+    \item{percMissingPep}{Percentage of missing values at the peptidoform level.}
+    \item{propMisCleavedPeps}{Proportion of miscleaved peptidoforms.}
     \item{skewnessPeps}{Skewness of peptide intensities.}
     \item{kurtosisPeps}{Kurtosis of peptide intensities.}
     \item{sdPeps}{Standard deviation of peptide intensities.}
     \item{numQuantProtGroups}{Number of quantified protein groups.}
-    \item{dynRangeProt}{Dynamic range at the protein level.}
-    \item{propUniqueProts}{Proportion of unique proteins.}
-    \item{percMissingProt}{Percentage of missing values at the protein level.}
-    \item{meanPepPerProt}{Mean number of peptides per protein.}
-    \item{propMisCleavedProts}{Proportion of miscleaved proteins.}
+    \item{dynRangeProt}{Dynamic range at the protein-group level.}
+    \item{propUniqueProts}{Proportion of single-protein groups.}
+    \item{percMissingProt}{Percentage of missing values at the protein-group level.}
+    \item{meanPepPerProt}{Mean number of peptide sequences per protein group.}
+    \item{propMisCleavedProts}{Proportion of miscleaved protein groups.}
     \item{skewnessProts}{Skewness of protein intensities.}
     \item{kurtosisProts}{Kurtosis of protein intensities.}
     \item{sdProts}{Standard deviation of protein intensities.}
     \item{numProteoforms}{Number of proteoforms identified.}
-    \item{numModPeptides}{Number of modified peptides identified.}
-    \item{meanProteoformsPerProt}{Mean number of proteoforms per protein.}
-    \item{propModAndUnmodPep}{Proportion of modified peptides with an unmodified counterpart.}
-    \item{percOverlapModPepProt}{Percentage of overlap between modified peptides and their proteins.}
+    \item{numModPeptides}{Number of modified peptidoforms identified.}
+    \item{meanProteoformsPerProt}{Mean number of proteoforms per protein group.}
+    \item{propModAndUnmodPep}{Proportion of modified peptidoforms with an unmodified counterpart.}
+    \item{percOverlapModPepProt}{Percentage of overlap between modified peptidoforms and their protein groups.}
   }
 }
 }
 \description{
-This internal function calculates basic benchmarks for experimental data, focusing on metrics such as the number of peptides and proteins, dynamic range, proportion of unique peptides and proteins, missing data percentages, and measures of distribution such as skewness and kurtosis. This function does not require ground truth data and is useful for summarizing the general characteristics of a dataset.
+This internal function calculates basic benchmarks for experimental data, focusing on
+metrics such as the number of peptidoforms and protein groups, dynamic range, proportion
+of unique peptidoforms and single-protein groups, missing data percentages, and measures
+of distribution such as skewness and kurtosis. This function does not require ground truth
+data and is useful for summarizing the general characteristics of a dataset.
 }
 \keyword{internal}

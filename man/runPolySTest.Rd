@@ -7,7 +7,9 @@
 runPolySTest(fullData, Param, refCond, onlyLIMMA = F, cores = 1)
 }
 \arguments{
-\item{fullData}{A data frame containing quantitative data, with rows representing features (e.g., proteins or peptides) and columns representing samples. The data frame should also include metadata columns such as `Regulation_Amplitude` and `Regulation_Pattern`.}
+\item{fullData}{A data frame containing quantitative data, with rows representing features
+(e.g., protein groups or peptidoforms) and columns representing samples. The data frame
+should also include metadata columns such as `Regulation_Amplitude` and `Regulation_Pattern`.}
 
 \item{Param}{A list of parameters, including:
 \describe{

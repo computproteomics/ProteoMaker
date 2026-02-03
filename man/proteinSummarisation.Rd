@@ -2,12 +2,13 @@
 % Please edit documentation in R/04_DataAnalysis.R
 \name{proteinSummarisation}
 \alias{proteinSummarisation}
-\title{Summarize Protein Abundance from Peptide-Level Data}
+\title{Summarize Protein-Group Abundance from Peptidoform-Level Data}
 \usage{
 proteinSummarisation(peptable, parameters)
 }
 \arguments{
-\item{peptable}{A data frame containing peptide-level data, including accession numbers, sequence, PTM types, and quantification columns.}
+\item{peptable}{A data frame containing peptidoform-level data, including accession numbers,
+sequence, PTM types, and quantification columns.}
 
 \item{parameters}{A list of parameters, including:
 \describe{
@@ -19,9 +20,14 @@ proteinSummarisation(peptable, parameters)
 }}
 }
 \value{
-A data frame containing summarized protein-level data, where each row represents a protein, and the columns include protein information and summarized quantification data.
+A data frame containing summarized protein-group data, where each row represents a
+protein group, and the columns include protein-group information and summarized quantification data.
 }
 \description{
-This function summarizes protein abundance from peptide-level data. It removes modified peptides, groups peptides by their parent proteins, and applies a summarization method (e.g., sum of top 3, median polish) to estimate protein abundance. The function supports parallel processing to speed up the summarization process.
+This function summarizes protein-group abundance from peptidoform-level data.
+It optionally removes modified peptidoforms, groups peptidoforms by their
+parent protein groups, and applies a summarization method (e.g., sum of top 3,
+median polish) to estimate protein-group abundance. The function supports
+parallel processing to speed up the summarization process.
 }
 \keyword{internal}

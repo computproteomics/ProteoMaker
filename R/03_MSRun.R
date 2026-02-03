@@ -7,12 +7,12 @@
 #'
 #' This function simulates MS run analysis, which includes:
 #' - Adding random noise to each sample due to MS instrument.
-#' - Removing a specific proportion of peptides due to detection limitations.
+#' - Removing a specific proportion of peptidoforms due to detection limitations.
 #' - Removing a percentage of non-missing intensities based on probability weights depending on intensity values.
 #' - Introducing peptide identification false discovery rate.
 #' - Adding PTMs false localization rate for multiple PTM types.
-#' - Filtering out peptides based on a maximum number of missing values threshold.
-#' @param Digested A data frame containing digested peptides with associated data.
+#' - Filtering out peptidoforms based on a maximum number of missing values threshold.
+#' @param Digested A data frame containing digested peptidoforms with associated data.
 #' @param parameters A list containing various parameters for the MS run simulation.
 #'
 #' @return A data frame similar to `Digested` but with modifications introduced by the MS run simulation.
@@ -49,41 +49,41 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
 
   message("  - Noise added to all samples!\n")
   message(" + Detection limits:")
-  message("  - Keeping ", parameters$PercDetectability * 100, "% peptides with high detectability score
+  message("  - Keeping ", parameters$PercDetectability * 100, "% peptidoforms with high detectability score
           (PeptideRanger).")
 
-  # Sample a percentage of random peptides to be removed.
+  # Sample a percentage of random peptidoforms to be removed.
   if (parameters$PercDetectability < 1) {
     # get score threshold for lower percentage
     RFThreshold <- quantile(Digested$Detectability, 1 - parameters$PercDetectability)
     remove <- Digested$Detectability <= RFThreshold
     MSRun <- Digested[!remove, ]
-    message("  - A total of ", sum(remove), " peptides is removed with predicted detectability lower than ",
+    message("  - A total of ", sum(remove), " peptidoforms is removed with predicted detectability lower than ",
             RFThreshold, ".\n")
   } else {
     MSRun <- Digested
-    message("  - No peptides were removed.\n")
+    message("  - No peptidoforms were removed.\n")
   }
 
-  #  message("  - The percentage of remaining peptides is", parameters$PercDetectedPep*100, "%.")
+  #  message("  - The percentage of remaining peptidoforms is", parameters$PercDetectedPep*100, "%.")
 
-  # # Sample a percentage of random peptides to be removed.
+  # # Sample a percentage of random peptidoforms to be removed.
   # if(parameters$PercDetectedPep != 1) {
   #
   #   remove <- sample(1:nrow(Digested), size = (1-parameters$PercDetectedPep)*nrow(Digested))
   #   MSRun <- Digested[-remove, ]
-  #   message("  - A total of", (1-parameters$PercDetectedPep)*nrow(Digested), "peptides is removed.\n")
+  #   message("  - A total of", (1-parameters$PercDetectedPep)*nrow(Digested), "peptidoforms is removed.\n")
   #
   # } else {
   #
   #   MSRun <- Digested
-  #   message("  - No peptides were removed.\n")
+  #   message("  - No peptidoforms were removed.\n")
   #
   # }
 
   # Sample a random percentage of intensities to be removed.
   allVals <- as.vector(unlist(MSRun[, parameters$QuantColnames]))
-  message(" + Removing peptide intensities:")
+  message(" + Removing peptidoform intensities:")
   message("  - The percentage of remaining intensities is ", parameters$PercDetectedVal * 100,
           "% and the probabilities of selection depends on intensity values by ", parameters$WeightDetectVal, ".")
   myprob <- (rank(-allVals) / length(allVals))^parameters$WeightDetectVal
@@ -93,7 +93,7 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
   myprob[is.na(allVals)] <- 0
 
   if (parameters$WeightDetectVal == 0) {
-    message(crayon::red("WARNING: missing values at peptide level (due to in silico MS detection)
+    message(crayon::red("WARNING: missing values at peptidoform level (due to in silico MS detection)
                         are determined at random."))
     message(crayon::red("         Change the parameter \'WeightDetectVal\' to a value > 0 to add weight to
                         lowest intensities."))
@@ -115,10 +115,10 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     message("  - No intensities were removed.\n")
   }
   MSRun[, parameters$QuantColnames] <- matrix(allVals, ncol = length(parameters$QuantColnames))
-  # Shuffle the intensities of randomly selected peptides, to express the wrong identification.
+  # Shuffle the intensities of randomly selected peptidoforms, to express the wrong identification.
   shuffle <- order(runif(nrow(MSRun)), decreasing = T)[seq_len(parameters$WrongIDs * nrow(MSRun))]
   message(" + Addition of false identification:")
-  message("  - FDR selected is ", parameters$WrongIDs * 100, "% and corresponds to ", length(shuffle), " peptides.")
+  message("  - FDR selected is ", parameters$WrongIDs * 100, "% and corresponds to ", length(shuffle), " peptidoforms.")
   if (length(shuffle) > 0) {
     # Estimate donor windows and peptidoform space only if needed
     non_null <- vapply(searchIndex$proteins, function(x) !is.null(x), logical(1))
@@ -208,13 +208,13 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
       # Positions in original table where modified peptide can get mislocated PTM.
       CanMisLoc <- sum(ModifiableCount > ModCount)
 
-      # Number of modified peptides where we change localization.
+      # Number of modified peptidoforms where we change localization.
       NumForMisLoc <- round(parameters$WrongLocalizations * CanMisLoc)
 
-      # Mislocate PTMs for the modified peptides of NumForMisloc.
+      # Mislocate PTMs for the modified peptidoforms of NumForMisloc.
       if (NumForMisLoc > 0) {
         message("  - For ", parameters$PTMTypes[mod], " modification type, ", NumForMisLoc,
-                " modified peptides are selected for PTM re-location.")
+                " modified peptidoforms are selected for PTM re-location.")
 
         for (ind in sample(isModified[ModifiableCount > ModCount], NumForMisLoc)) {
           curr_pep <- MSRun[ind, ]
@@ -272,7 +272,7 @@ MSRunSim <- function(Digested, parameters, searchIndex = NULL) {
     NAs <- apply(MSRun[, parameters$QuantColnames], 1, function(x) sum(is.na(x)))
     Which <- which(NAs <= parameters$MaxNAPerPep)
 
-    message("  - A total of ", length(which), " peptides have removed, which have missing intensities in more than ",
+  message("  - A total of ", length(which), " peptidoforms have removed, which have missing intensities in more than ",
             parameters$MaxNAPerPep, " samples.\n")
 
     if (length(which) > 0) {

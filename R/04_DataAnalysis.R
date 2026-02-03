@@ -2,11 +2,16 @@
 #               Data analysis of the outputs of the peptide quan.              #
 ################################################################################
 
-#' Summarize Protein Abundance from Peptide-Level Data
+#' Summarize Protein-Group Abundance from Peptidoform-Level Data
 #'
-#' This function summarizes protein abundance from peptide-level data. It removes modified peptides, groups peptides by their parent proteins, and applies a summarization method (e.g., sum of top 3, median polish) to estimate protein abundance. The function supports parallel processing to speed up the summarization process.
+#' This function summarizes protein-group abundance from peptidoform-level data.
+#' It optionally removes modified peptidoforms, groups peptidoforms by their
+#' parent protein groups, and applies a summarization method (e.g., sum of top 3,
+#' median polish) to estimate protein-group abundance. The function supports
+#' parallel processing to speed up the summarization process.
 #'
-#' @param peptable A data frame containing peptide-level data, including accession numbers, sequence, PTM types, and quantification columns.
+#' @param peptable A data frame containing peptidoform-level data, including accession numbers,
+#' sequence, PTM types, and quantification columns.
 #' @param parameters A list of parameters, including:
 #' \describe{
 #'   \item{ProtSummarization}{The method used for protein summarization, e.g., "sum.top3" or "medpolish".}
@@ -16,7 +21,8 @@
 #'   \item{ClusterType}{The type of cluster to use for parallel processing (e.g., "FORK", "PSOCK").}
 #' }
 #'
-#' @return A data frame containing summarized protein-level data, where each row represents a protein, and the columns include protein information and summarized quantification data.
+#' @return A data frame containing summarized protein-group data, where each row represents a
+#' protein group, and the columns include protein-group information and summarized quantification data.
 #'
 #' @importFrom parallel detectCores makeCluster setDefaultCluster clusterExport parLapply stopCluster
 #' @importFrom tidyr pivot_longer
@@ -36,18 +42,18 @@ proteinSummarisation <- function(peptable, parameters) {
   QuantColnames <- parameters$QuantColnames
 
   if (!includeModPep) {
-    # Remove all modified peptides
+    # Remove all modified peptidoforms
     peptable <- peptable[!sapply(peptable$PTMType, function(x) length(x) > 0), ]
-    message("  - Removed all modified peptides, remaining number of peptides: ", nrow(peptable), "")
+    message("  - Removed all modified peptidoforms, remaining number of peptidoforms: ", nrow(peptable), "")
   } else {
-    message("  - Keeping modified peptides")
+    message("  - Keeping modified peptidoforms")
   }
-  message("  - Remaining number of peptides: ", nrow(peptable), "")
+  message("  - Remaining number of peptidoforms: ", nrow(peptable), "")
 
   message(" + Protein summarisation")
 
-  message("  - Number of minimum unique peptide per protein: ", minUniquePep, "")
-  message("  - Protein summarisation using the ", method, " approach.")
+  message("  - Minimum unique peptidoforms per protein group: ", minUniquePep, "")
+  message("  - Protein-group summarisation using the ", method, " approach.")
 
   # writing new column with unlisted and merged protein names
   peptable$merged_accs <- sapply(peptable$Accession, function(x) paste(sort(unique(unlist(x))), collapse = ";"))
@@ -143,7 +149,7 @@ proteinSummarisation <- function(peptable, parameters) {
       message("  - Note: ", dup_count, " protein groups share the same first peptide sequence; row names will use group keys to avoid clashes.")
     }
   }
-  message("  - Summarizing proteins, this can take a while")
+  message("  - Summarizing protein groups, this can take a while")
 
   # Function to summarize protein groups
   summarizeProtein <- function(tmp) {
@@ -267,7 +273,7 @@ proteinSummarisation <- function(peptable, parameters) {
   protmat[protmat == -Inf] <- NA
   protmat <- protmat[rowSums(is.na(protmat[, QuantColnames])) < length(QuantColnames), ]
 
-  cat("  - Finished summarizing into ", nrow(protmat), " proteins")
+  cat("  - Finished summarizing into ", nrow(protmat), " protein groups")
   #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i])
 
   return(protmat)

@@ -56,7 +56,14 @@ calcROC <- function(Stats, columnName, groundtruthColumn = "min1Reg") {
 
 #' Calculate Benchmarks for Simulated Data
 #'
-#' This internal function calculates a variety of benchmarks for simulated data at the peptide, protein, and PTM levels. These benchmarks include metrics such as the number of peptides and proteins, dynamic range, true positive rates, false discovery rates, and differences between ground truth and measured fold changes. The results are organized into a comprehensive list, which can be used to evaluate the performance of different simulation scenarios.
+#' This internal function calculates a variety of benchmarks for simulated data at the
+#' peptidoform, protein-group, and proteoform levels. Peptidoform-level metrics are
+#' computed from the full peptide table (modified + unmodified), while protein-level
+#' metrics refer to protein groups after inference/summarisation.
+#' These benchmarks include metrics such as the number of peptidoforms and protein groups,
+#' dynamic range, true positive rates, false discovery rates, and differences between ground
+#' truth and measured fold changes. The results are organized into a comprehensive list,
+#' which can be used to evaluate the performance of different simulation scenarios.
 #'
 #' @param Stats A data frame containing protein-level statistics, typically generated during a simulation.
 #' @param StatsPep A data frame containing peptide-level statistics, typically generated during a simulation.
@@ -64,58 +71,58 @@ calcROC <- function(Stats, columnName, groundtruthColumn = "min1Reg") {
 #'
 #' @return A list containing the following elements:
 #' \describe{
-#'   \item{globalBMs}{A list of global benchmarks calculated at various levels (peptide, protein, PTM). This includes metrics such as the number of peptides and proteins, dynamic range, true positive rates (TPR), false discovery rates (FDR), and differences between ground truth and measured fold changes. The structure of this list includes:}
+#'   \item{globalBMs}{A list of global benchmarks calculated at various levels (peptidoform, protein group, proteoform). This includes metrics such as the number of peptidoforms and protein groups, dynamic range, true positive rates (TPR), false discovery rates (FDR), and differences between ground truth and measured fold changes. The structure of this list includes:}
 #'   \describe{
-#'     \item{numPeptides}{Number of peptides analyzed.}
-#'     \item{numProteins}{Number of proteins analyzed.}
-#'     \item{dynRangePep}{Dynamic range at the peptide level.}
-#'     \item{propUniquePep}{Proportion of unique peptides.}
-#'     \item{uniqueStrippedPep}{Number of unique peptides after stripping modifications.}
-#'     \item{percMissingPep}{Percentage of missing values at the peptide level.}
-#'     \item{aucDiffRegPeptides}{Area under the curve (AUC) for differentially regulated peptides.}
-#'     \item{tprPep0.01}{True positive rate at FDR < 0.01 for peptides.}
-#'     \item{tprPep0.05}{True positive rate at FDR < 0.05 for peptides.}
-#'     \item{tFDRPep0.01}{True FDR at 0.01 threshold for peptides.}
-#'     \item{tFDRPep0.05}{True FDR at 0.05 threshold for peptides.}
-#'     \item{propMisCleavedPeps}{Proportion of miscleaved peptides.}
-#'     \item{meanSquareDiffFCPep}{Mean of squared differences in fold changes for peptides.}
-#'     \item{sdWithinRepsPep}{Standard deviation within replicates for peptides.}
+#'     \item{numPeptides}{Number of peptidoforms analyzed.}
+#'     \item{numProteins}{Number of distinct protein accessions represented by peptidoforms.}
+#'     \item{dynRangePep}{Dynamic range at the peptidoform level.}
+#'     \item{propUniquePep}{Proportion of peptidoforms mapping to a single protein accession.}
+#'     \item{uniqueStrippedPep}{Number of unique peptide sequences (PTM-stripped).}
+#'     \item{percMissingPep}{Percentage of missing values at the peptidoform level.}
+#'     \item{aucDiffRegPeptides}{Area under the curve (AUC) for differentially regulated peptidoforms.}
+#'     \item{tprPep0.01}{True positive rate at FDR < 0.01 for peptidoforms.}
+#'     \item{tprPep0.05}{True positive rate at FDR < 0.05 for peptidoforms.}
+#'     \item{tFDRPep0.01}{True FDR at 0.01 threshold for peptidoforms.}
+#'     \item{tFDRPep0.05}{True FDR at 0.05 threshold for peptidoforms.}
+#'     \item{propMisCleavedPeps}{Proportion of miscleaved peptidoforms.}
+#'     \item{meanSquareDiffFCPep}{Mean of squared differences in fold changes for peptidoforms.}
+#'     \item{sdWithinRepsPep}{Standard deviation within replicates for peptidoforms.}
 #'     \item{skewnessPeps}{Skewness of peptide intensities.}
 #'     \item{kurtosisPeps}{Kurtosis of peptide intensities.}
 #'     \item{sdPeps}{Standard deviation of peptide intensities.}
 #'     \item{numQuantProtGroups}{Number of quantified protein groups.}
-#'     \item{dynRangeProt}{Dynamic range at the protein level.}
-#'     \item{propUniqueProts}{Proportion of unique proteins.}
-#'     \item{percMissingProt}{Percentage of missing values at the protein level.}
-#'     \item{meanPepPerProt}{Mean number of peptides per protein.}
-#'     \item{aucDiffRegProteins}{Area under the curve (AUC) for differentially regulated proteins.}
-#'     \item{tFDRProt0.01}{True FDR at 0.01 threshold for proteins.}
-#'     \item{tFDRProt0.05}{True FDR at 0.05 threshold for proteins.}
-#'     \item{tprProt0.01}{True positive rate at FDR < 0.01 for proteins.}
-#'     \item{tprProt0.05}{True positive rate at FDR < 0.05 for proteins.}
-#'     \item{meanSquareDiffFCProt}{Mean of squared differences in fold changes for proteins.}
-#'     \item{sdWithinRepsProt}{Standard deviation within replicates for proteins.}
-#'     \item{propMisCleavedProts}{Proportion of miscleaved proteins.}
+#'     \item{dynRangeProt}{Dynamic range at the protein-group level.}
+#'     \item{propUniqueProts}{Proportion of single-protein groups.}
+#'     \item{percMissingProt}{Percentage of missing values at the protein-group level.}
+#'     \item{meanPepPerProt}{Mean number of peptide sequences per protein group.}
+#'     \item{aucDiffRegProteins}{Area under the curve (AUC) for differentially regulated protein groups.}
+#'     \item{tFDRProt0.01}{True FDR at 0.01 threshold for protein groups.}
+#'     \item{tFDRProt0.05}{True FDR at 0.05 threshold for protein groups.}
+#'     \item{tprProt0.01}{True positive rate at FDR < 0.01 for protein groups.}
+#'     \item{tprProt0.05}{True positive rate at FDR < 0.05 for protein groups.}
+#'     \item{meanSquareDiffFCProt}{Mean of squared differences in fold changes for protein groups.}
+#'     \item{sdWithinRepsProt}{Standard deviation within replicates for protein groups.}
+#'     \item{propMisCleavedProts}{Proportion of miscleaved protein groups.}
 #'     \item{skewnessProts}{Skewness of protein intensities.}
 #'     \item{kurtosisProts}{Kurtosis of protein intensities.}
 #'     \item{sdProts}{Standard deviation of protein intensities.}
 #'     \item{numProteoforms}{Number of proteoforms identified.}
-#'     \item{numModPeptides}{Number of modified peptides identified.}
-#'     \item{meanProteoformsPerProt}{Mean number of proteoforms per protein.}
-#'     \item{propModAndUnmodPep}{Proportion of modified peptides with an unmodified counterpart.}
-#'     \item{aucDiffRegAdjModPep}{Area under the curve (AUC) for adjusted differentially regulated modified peptides.}
-#'     \item{tFDRAdjModPep0.01}{True FDR at 0.01 threshold for adjusted modified peptides.}
-#'     \item{tFDRAdjModPep0.05}{True FDR at 0.05 threshold for adjusted modified peptides.}
-#'     \item{tprAdjModPep0.01}{True positive rate at FDR < 0.01 for adjusted modified peptides.}
-#'     \item{tprAdjModPep0.05}{True positive rate at FDR < 0.05 for adjusted modified peptides.}
-#'     \item{propDiffRegPepWrong0.01}{Proportion of differentially regulated peptides at FDR < 0.01 with wrong identifications.}
-#'     \item{propDiffRegPepWrong0.05}{Proportion of differentially regulated peptides at FDR < 0.05 with wrong identifications.}
-#'     \item{percOverlapModPepProt}{Percentage of overlap between modified peptides and their proteins.}
-#'     \item{meanSquareDiffFCModPep}{Mean of squared differences in fold changes for modified peptides.}
+#'     \item{numModPeptides}{Number of modified peptidoforms identified.}
+#'     \item{meanProteoformsPerProt}{Mean number of proteoforms per protein group.}
+#'     \item{propModAndUnmodPep}{Proportion of modified peptidoforms with an unmodified counterpart.}
+#'     \item{aucDiffRegAdjModPep}{Area under the curve (AUC) for adjusted differentially regulated modified peptidoforms.}
+#'     \item{tFDRAdjModPep0.01}{True FDR at 0.01 threshold for adjusted modified peptidoforms.}
+#'     \item{tFDRAdjModPep0.05}{True FDR at 0.05 threshold for adjusted modified peptidoforms.}
+#'     \item{tprAdjModPep0.01}{True positive rate at FDR < 0.01 for adjusted modified peptidoforms.}
+#'     \item{tprAdjModPep0.05}{True positive rate at FDR < 0.05 for adjusted modified peptidoforms.}
+#'     \item{propDiffRegPepWrong0.01}{Proportion of differentially regulated modified peptidoforms at FDR < 0.01 with wrong identifications.}
+#'     \item{propDiffRegPepWrong0.05}{Proportion of differentially regulated modified peptidoforms at FDR < 0.05 with wrong identifications.}
+#'     \item{percOverlapModPepProt}{Percentage of overlap between modified peptidoforms and their protein groups.}
+#'     \item{meanSquareDiffFCModPep}{Mean of squared differences in fold changes for modified peptidoforms.}
 #'   }
-#'   \item{PepStat}{A list containing ROC curves and statistics for peptides.}
-#'   \item{ProtStat}{A list containing ROC curves and statistics for proteins.}
-#'   \item{AdjModPepStat}{A list containing ROC curves and statistics for adjusted modified peptides, if applicable.}
+#'   \item{PepStat}{A list containing ROC curves and statistics for peptidoforms.}
+#'   \item{ProtStat}{A list containing ROC curves and statistics for protein groups.}
+#'   \item{AdjModPepStat}{A list containing ROC curves and statistics for adjusted modified peptidoforms, if applicable.}
 #' }
 #'
 #' @importFrom dplyr bind_cols
@@ -149,10 +156,13 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
 
   #### Calculating peptide numbers
   globalBMs["numPeptides"] <- nrow(StatsPep)
+  # Distinct protein accessions represented by all peptidoforms (independent of protein inference settings).
   globalBMs["numProteins"] <- length(unique(unlist(StatsPep$Accession)))
+  # Fraction of peptidoforms mapping to exactly one protein accession.
   globalBMs["propUniquePep"] <- sum(sapply(StatsPep$Accession, function(x) length(x) == 1)) / nrow(StatsPep)
   # Obsolete as 1-propUniquePep
   # TODO:globalBMs["propSharedPep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) > 1)) / nrow(StatsPep)
+  # Unique peptide sequences (canonical, PTM-stripped).
   globalBMs["uniqueStrippedPep"] <- length(unique(StatsPep$Sequence))
   globalBMs["percMissingPep"] <- sum(is.na(unlist(StatsPep[, Param$QuantColnames]))) / length(unlist(StatsPep[, Param$QuantColnames])) * 100
   ## Dynamic range (max - min intensity log2 scale)
@@ -188,12 +198,15 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
 
   #### Calculating protein numbers
+  # Protein groups after inference/summarization.
   globalBMs["numQuantProtGroups"] <- nrow(Stats)
+  # Fraction of protein groups with a single accession.
   globalBMs["propUniqueProts"] <- sum(unlist(sapply(
     stringr::str_split(Stats$num_accs, ";"),
     function(x) unique(as.numeric(unlist(x))) == 1
   ))) / nrow(Stats)
   globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[, Param$QuantColnames]))) / length(Param$QuantColnames) / nrow(Stats) * 100
+  # Peptide sequences per protein group (sequence-level, PTM-stripped).
   pepDistr <- sapply(stringr::str_split(Stats$Sequence, ";"), function(x) length(unique(x)))
   # barplot(table(pepDistr), ylab="Frequency", xlab="Peptides per protein")
   globalBMs["meanPepPerProt"] <- mean(pepDistr)
@@ -421,7 +434,11 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
 
 #' Calculate Basic Benchmarks for Experimental Data
 #'
-#' This internal function calculates basic benchmarks for experimental data, focusing on metrics such as the number of peptides and proteins, dynamic range, proportion of unique peptides and proteins, missing data percentages, and measures of distribution such as skewness and kurtosis. This function does not require ground truth data and is useful for summarizing the general characteristics of a dataset.
+#' This internal function calculates basic benchmarks for experimental data, focusing on
+#' metrics such as the number of peptidoforms and protein groups, dynamic range, proportion
+#' of unique peptidoforms and single-protein groups, missing data percentages, and measures
+#' of distribution such as skewness and kurtosis. This function does not require ground truth
+#' data and is useful for summarizing the general characteristics of a dataset.
 #'
 #' @param Stats A data frame containing protein-level statistics from the experimental data.
 #' @param StatsPep A data frame containing peptide-level statistics from the experimental data.
@@ -429,32 +446,32 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
 #'
 #' @return A list containing the following elements:
 #' \describe{
-#'   \item{globalBMs}{A list of global benchmarks calculated at various levels (peptide, protein, PTM). This includes metrics such as the number of peptides and proteins, dynamic range, missing data percentages, and distribution characteristics. The structure of this list includes:}
+#'   \item{globalBMs}{A list of global benchmarks calculated at various levels (peptidoform, protein group, proteoform). This includes metrics such as the number of peptidoforms and protein groups, dynamic range, missing data percentages, and distribution characteristics. The structure of this list includes:}
 #'   \describe{
-#'     \item{numPeptides}{Number of peptides analyzed.}
-#'     \item{numProteins}{Number of proteins analyzed.}
-#'     \item{dynRangePep}{Dynamic range at the peptide level.}
-#'     \item{propUniquePep}{Proportion of unique peptides.}
-#'     \item{uniqueStrippedPep}{Number of unique peptides after stripping modifications.}
-#'     \item{percMissingPep}{Percentage of missing values at the peptide level.}
-#'     \item{propMisCleavedPeps}{Proportion of miscleaved peptides.}
+#'     \item{numPeptides}{Number of peptidoforms analyzed.}
+#'     \item{numProteins}{Number of distinct protein accessions represented by peptidoforms.}
+#'     \item{dynRangePep}{Dynamic range at the peptidoform level.}
+#'     \item{propUniquePep}{Proportion of peptidoforms mapping to a single protein accession.}
+#'     \item{uniqueStrippedPep}{Number of unique peptide sequences (PTM-stripped).}
+#'     \item{percMissingPep}{Percentage of missing values at the peptidoform level.}
+#'     \item{propMisCleavedPeps}{Proportion of miscleaved peptidoforms.}
 #'     \item{skewnessPeps}{Skewness of peptide intensities.}
 #'     \item{kurtosisPeps}{Kurtosis of peptide intensities.}
 #'     \item{sdPeps}{Standard deviation of peptide intensities.}
 #'     \item{numQuantProtGroups}{Number of quantified protein groups.}
-#'     \item{dynRangeProt}{Dynamic range at the protein level.}
-#'     \item{propUniqueProts}{Proportion of unique proteins.}
-#'     \item{percMissingProt}{Percentage of missing values at the protein level.}
-#'     \item{meanPepPerProt}{Mean number of peptides per protein.}
-#'     \item{propMisCleavedProts}{Proportion of miscleaved proteins.}
+#'     \item{dynRangeProt}{Dynamic range at the protein-group level.}
+#'     \item{propUniqueProts}{Proportion of single-protein groups.}
+#'     \item{percMissingProt}{Percentage of missing values at the protein-group level.}
+#'     \item{meanPepPerProt}{Mean number of peptide sequences per protein group.}
+#'     \item{propMisCleavedProts}{Proportion of miscleaved protein groups.}
 #'     \item{skewnessProts}{Skewness of protein intensities.}
 #'     \item{kurtosisProts}{Kurtosis of protein intensities.}
 #'     \item{sdProts}{Standard deviation of protein intensities.}
 #'     \item{numProteoforms}{Number of proteoforms identified.}
-#'     \item{numModPeptides}{Number of modified peptides identified.}
-#'     \item{meanProteoformsPerProt}{Mean number of proteoforms per protein.}
-#'     \item{propModAndUnmodPep}{Proportion of modified peptides with an unmodified counterpart.}
-#'     \item{percOverlapModPepProt}{Percentage of overlap between modified peptides and their proteins.}
+#'     \item{numModPeptides}{Number of modified peptidoforms identified.}
+#'     \item{meanProteoformsPerProt}{Mean number of proteoforms per protein group.}
+#'     \item{propModAndUnmodPep}{Proportion of modified peptidoforms with an unmodified counterpart.}
+#'     \item{percOverlapModPepProt}{Percentage of overlap between modified peptidoforms and their protein groups.}
 #'   }
 #' }
 #'
@@ -482,10 +499,13 @@ calcBasicBenchmarks <- function(Stats, StatsPep, Param) {
 
   #### Calculating peptide numbers
   globalBMs["numPeptides"] <- nrow(StatsPep)
+  # Distinct protein accessions represented by all peptidoforms (independent of protein inference settings).
   globalBMs["numProteins"] <- length(unique(unlist(StatsPep$Accession)))
+  # Fraction of peptidoforms mapping to exactly one protein accession.
   globalBMs["propUniquePep"] <- sum(sapply(StatsPep$Accession, function(x) length(x) == 1)) / nrow(StatsPep)
   # Obsolete as 1-propUniquePep
   # TODO:globalBMs["propSharedPep"] <-  sum(sapply(StatsPep$Accession, function(x) length(x) > 1)) / nrow(StatsPep)
+  # Unique peptide sequences (canonical, PTM-stripped).
   globalBMs["uniqueStrippedPep"] <- length(unique(StatsPep$Sequence))
   globalBMs["percMissingPep"] <- sum(is.na(unlist(StatsPep[, Param$QuantColnames]))) / length(unlist(StatsPep[, Param$QuantColnames])) * 100
   globalBMs$dynRangePep <- diff(range(StatsPep[, Param$QuantColnames], na.rm = T))
@@ -495,10 +515,13 @@ calcBasicBenchmarks <- function(Stats, StatsPep, Param) {
   globalBMs["propMisCleavedPeps"] <- list(table(sapply(StatsPep$MC, function(x) x[1])) / nrow(StatsPep))
 
   #### Calculating protein numbers
+  # Protein groups after inference/summarization.
   globalBMs["numQuantProtGroups"] <- nrow(Stats)
 
+  # Fraction of protein groups with a single accession.
   globalBMs["propUniqueProts"] <- sum(unlist(sapply(stringr::str_split(Stats$num_accs, ";"), function(x) unique(as.numeric(unlist(x))) == 1))) / nrow(Stats)
   globalBMs["percMissingProt"] <- sum(is.na(as.vector(Stats[, Param$QuantColnames]))) / length(Param$QuantColnames) / nrow(Stats) * 100
+  # Peptide sequences per protein group (sequence-level, PTM-stripped).
   pepDistr <- sapply(stringr::str_split(Stats$Sequence, ";"), function(x) length(unique(x)))
   barplot(table(pepDistr), ylab = "Frequency", xlab = "Peptides per protein")
   globalBMs["meanPepPerProt"] <- mean(pepDistr)

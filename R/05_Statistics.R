@@ -2,7 +2,9 @@
 #'
 #' This function runs a set of statistical tests on quantitative data using the `PolySTest` package. The function handles paired and unpaired tests, reorganizes the data according to experimental conditions, and returns a comprehensive table with log ratios, p-values, and FDR values for the comparisons. It allows the user to specify the number of cores for parallel computation and to limit the tests to only the `limma` method if desired.
 #'
-#' @param fullData A data frame containing quantitative data, with rows representing features (e.g., proteins or peptides) and columns representing samples. The data frame should also include metadata columns such as `Regulation_Amplitude` and `Regulation_Pattern`.
+#' @param fullData A data frame containing quantitative data, with rows representing features
+#' (e.g., protein groups or peptidoforms) and columns representing samples. The data frame
+#' should also include metadata columns such as `Regulation_Amplitude` and `Regulation_Pattern`.
 #' @param Param A list of parameters, including:
 #' \describe{
 #'   \item{QuantColnames}{The names of the columns containing the quantitative data to be analyzed.}

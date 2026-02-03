@@ -7,7 +7,7 @@
 MSRunSim(Digested, parameters, searchIndex = NULL)
 }
 \arguments{
-\item{Digested}{A data frame containing digested peptides with associated data.}
+\item{Digested}{A data frame containing digested peptidoforms with associated data.}
 
 \item{parameters}{A list containing various parameters for the MS run simulation.}
 }
@@ -17,10 +17,10 @@ A data frame similar to `Digested` but with modifications introduced by the MS r
 \description{
 This function simulates MS run analysis, which includes:
 - Adding random noise to each sample due to MS instrument.
-- Removing a specific proportion of peptides due to detection limitations.
+- Removing a specific proportion of peptidoforms due to detection limitations.
 - Removing a percentage of non-missing intensities based on probability weights depending on intensity values.
 - Introducing peptide identification false discovery rate.
 - Adding PTMs false localization rate for multiple PTM types.
-- Filtering out peptides based on a maximum number of missing values threshold.
+- Filtering out peptidoforms based on a maximum number of missing values threshold.
 }
 \keyword{internal}
