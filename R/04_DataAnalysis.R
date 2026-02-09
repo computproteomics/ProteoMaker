@@ -172,7 +172,7 @@ proteinSummarisation <- function(peptable, parameters) {
       } else if (method == "medpolish") {
         summed <- NULL
         if (nrow(tmp) <= 3) {
-          summed <- tmp - median(summed, na.rm = TRUE)
+          summed <- apply(tmp, 2, median, na.rm = TRUE)
         } else {
           summed <- medpolish(tmp, na.rm = T, trace.iter = F)$col
         }
