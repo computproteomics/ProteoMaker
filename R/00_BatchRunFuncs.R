@@ -506,10 +506,27 @@ get_stage_hashes <- function(Param, stages = c("GroundTruth", "ProteoformAb", "D
 
   param_names <- param_table()
 
+  # Accept both nested (def_param) and flat (run_sims) parameter lists
+  if (all(c("paramGroundTruth", "paramProteoformAb", "paramDigest", "paramMSRun", "paramDataAnalysis") %in% names(Param))) {
+    param_flat <- c(
+      Param$paramGroundTruth,
+      Param$paramProteoformAb,
+      Param$paramDigest,
+      Param$paramMSRun,
+      Param$paramDataAnalysis
+    )
+  } else {
+    param_flat <- Param
+  }
+
   hashes <- vapply(stages, function(stage) {
     stage_names <- param_names[1:max(which(param_names$Group == paste0("param", stage))), ]
-    max_pname <- max(which(names(Param) %in% rownames(stage_names)))
-    tParam <- Param[1:max_pname]
+    stage_order <- rownames(stage_names)
+    stage_order <- stage_order[stage_order %in% names(param_flat)]
+    if (length(stage_order) == 0) {
+      stop("No parameters found for stage: ", stage)
+    }
+    tParam <- param_flat[stage_order]
     digest::digest(as.list(tParam), algo = "md5")
   }, character(1))
 
