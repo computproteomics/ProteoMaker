@@ -6,7 +6,7 @@ test_that("gather_all_sims returns correct structure", {
   Param$paramGroundTruth$NumReps <- 5
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
-  proteomaker_config <- set_proteomaker(resultFilePath = tempdir())
+  proteomaker_config <- test_proteomaker_config(resultFilePath = tempdir())
   benchmarks <- run_sims(Param, proteomaker_config)
 
   sims <- gather_all_sims(proteomaker_config)
@@ -23,7 +23,7 @@ test_that("gather_all_sims handles empty directories", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
   # Mock configuration with a different temp directory (empty)
-  proteomaker_config <- set_proteomaker(resultFilePath = tempdir())
+  proteomaker_config <- test_proteomaker_config(resultFilePath = tempdir())
 
   # Run the function on an empty directory
   all_results_empty <- gather_all_sims(proteomaker_config, stage = "DataAnalysis")

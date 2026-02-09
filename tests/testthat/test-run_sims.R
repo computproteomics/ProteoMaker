@@ -4,7 +4,7 @@ test_that("run_sims completes without errors for minimal input", {
   params <- def_param()
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
-  config <- set_proteomaker(resultFilePath = tempdir())
+  config <- test_proteomaker_config(resultFilePath = tempdir())
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
   params$paramDigest$DigestionEnzyme <- "Trypsin"
@@ -26,7 +26,7 @@ test_that("run_sims creates expected result files", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
 
-  config <- set_proteomaker(resultFilePath = tempdir())
+  config <- test_proteomaker_config(resultFilePath = tempdir())
 
   results <- run_sims(params, config)
 

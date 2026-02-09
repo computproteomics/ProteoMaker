@@ -1,7 +1,7 @@
 library(testthat)
 
 test_that("get_simulation returns NULL if the file does not exist", {
-  config <- set_proteomaker(resultFilePath = tempdir())
+  config <- test_proteomaker_config(resultFilePath = tempdir())
   param <- list(NumReps = 2, NumCond = 3)
 
   result <- get_simulation(param, config, stage = "MSRun")
@@ -11,7 +11,7 @@ test_that("get_simulation returns NULL if the file does not exist", {
 test_that("get_simulation returns the correct loaded data", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
-  config <- set_proteomaker(resultFilePath = tempdir())
+  config <- test_proteomaker_config(resultFilePath = tempdir())
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- c(3)
   benchmarks <- run_sims(Param, config)
@@ -37,7 +37,7 @@ test_that("get_simulation returns the correct loaded data, no stats", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
 
-  config <- set_proteomaker(resultFilePath = tempdir(), runStatTests = FALSE)
+  config <- test_proteomaker_config(resultFilePath = tempdir(), runStatTests = FALSE)
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- 5
   benchmarks <- run_sims(Param, config)
@@ -62,7 +62,7 @@ test_that("get_simulation returns the correct loaded data, no benchmarks", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
 
-  config <- set_proteomaker(resultFilePath = tempdir(), calcAllBenchmarks = FALSE)
+  config <- test_proteomaker_config(resultFilePath = tempdir(), calcAllBenchmarks = FALSE)
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- 5
   benchmarks <- run_sims(Param, config)
@@ -89,7 +89,7 @@ test_that("get_simulation returns the correct loaded data, no stats, not benchma
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
 
-  config <- set_proteomaker(resultFilePath = tempdir(), calcAllBenchmarks = FALSE, runStatTests = FALSE)
+  config <- test_proteomaker_config(resultFilePath = tempdir(), calcAllBenchmarks = FALSE, runStatTests = FALSE)
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- 5
   benchmarks <- run_sims(Param, config)
@@ -112,7 +112,7 @@ test_that("get_simulation returns the correct loaded data, no stats, not benchma
 
 
 test_that("get_simulation handles invalid stage name", {
-  config <- set_proteomaker(resultFilePath = tempdir())
+  config <- test_proteomaker_config(resultFilePath = tempdir())
   param <- list(NumReps = 2, NumCond = 3)
 
   expect_error(get_simulation(param, config, stage = "InvalidStage"), "Invalid stage name")
