@@ -188,6 +188,7 @@ proteinSummarisation <- function(peptable, parameters) {
             names_to = "sample",
             values_to = "intensity"
           )
+          long_df$sample <- factor(long_df$sample, levels = QuantColnames)
           fit <- rlm(intensity ~ peptide + sample, data = long_df, na.action = na.omit)
           coefs <- coef(fit)
           sample_coefs <- coefs[grep("^sample", names(coefs))]
@@ -196,8 +197,11 @@ proteinSummarisation <- function(peptable, parameters) {
           baseline <- coefs["(Intercept)"]
           sample_names <- gsub("^sample", "", names(sample_coefs))
 
-          # Set full abundance vector
-          out <- setNames(baseline + sample_coefs, sample_names)
+          # Set full abundance vector (include baseline sample)
+          out <- setNames(rep(NA_real_, length(QuantColnames)), QuantColnames)
+          baseline_sample <- levels(long_df$sample)[1]
+          out[baseline_sample] <- baseline
+          out[sample_names] <- baseline + sample_coefs
         } else {
           out <- tmp[1, QuantColnames]
         }
