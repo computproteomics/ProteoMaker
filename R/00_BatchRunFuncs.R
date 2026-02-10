@@ -656,6 +656,9 @@ matrix_benchmarks <- function(allBs, Config) {
 #' @param errorbar A logical value indicating whether to show mean +/- standard
 #' deviations in the
 #' visualization. Default is \code{FALSE}. This parameter is not applied to the color maps.
+#' @param compare_par A character vector specifying the names of an additional parameter for subsetting and then
+#' comparison of the benchmark values. This parameter is only applied when `ref_par` contains one parameter.
+#' If defulat `NULL`, the full set will be shown.
 #'
 #' @return A bar plot or a colored map visualizing the specified benchmarks against the
 #' reference parameters.
@@ -676,7 +679,8 @@ visualize_benchmarks <- function(benchmatrix,
                                  ref_par = "WrongIDs",
                                  fullrange = FALSE,
                                  cols = NULL,
-                                 errorbar = FALSE) {
+                                 errorbar = FALSE,
+                                 compare_par = NULL) {
   # Require at least one row in benchmatrix
   if (nrow(benchmatrix) < 1) {
     stop("No data available for visualization.")
@@ -813,6 +817,7 @@ visualize_benchmarks <- function(benchmatrix,
     MaxNAPerPep = "Max NAs per peptide",
     ProtSummarization = "Protein summarization method",
     MinUniquePep = "Min unique peptides per protein",
+    IncludeModPep = "Include modified peptidoforms in protein quantification",
     StatPaired = "Paired testing enabled"
   )
 
@@ -834,9 +839,16 @@ visualize_benchmarks <- function(benchmatrix,
   for (i in ref_par) {
     if (!(i %in% names(titles_params))) {
       stop(paste("Parameter name", i, "is not correct."))
+    }  }
+  params <- titles_params[ref_par]
+
+  # Check whether compare_par is valid
+  if (!is.null(compare_par)) {
+    compare_par <- make.names(compare_par)
+    if (!(compare_par %in% names(titles_params))) {
+      stop(paste("Compare parameter name", compare_par, "is not correct."))
     }
   }
-  params <- titles_params[ref_par]
 
   # Setting benchmarking metrics to be plotted
   if (length(benchmarks) == 0) {
@@ -904,60 +916,131 @@ visualize_benchmarks <- function(benchmatrix,
       }
       if (all(is.finite(range(benchmatrix[, i], na.rm = T)))) {
         x <- benchmatrix[, ref_par]
-        y <- benchmatrix[, i]
+        # If compare_par is provided, subset the data to the specified value of compare_par and add it to the title
+        compare_values <- y <- NULL
+        x_offset <- 0
+        if (!is.null(compare_par)) {
+          if (!(compare_par %in% colnames(benchmatrix))) {
+            stop(paste("Compare parameter", compare_par, "not found in benchmark matrix."))
+          }
+          compare_values <- unique(benchmatrix[, compare_par])
+          compare_len <- length(compare_values)
+          sel <- benchmatrix[, compare_par] == compare_values[1]
+          y <- benchmatrix[sel, i]
+          x <- benchmatrix[sel, ref_par]
+          x_offset <- diff(range(benchmatrix[, ref_par], na.rm = T)) *
+            (seq_len(compare_len) - compare_len/2) / compare_len * 0.02
+        } else {
+          y <- benchmatrix[, i]
+        }
         uiw <- NA
         if (errorbar) {
           # Calculate upper and lower error bounds if errorbar is TRUE
-          uiw <- unlist(by(benchmatrix[, i], benchmatrix[, ref_par], function(x) {
+          uiw <- unlist(by(y, x, function(x) {
             if (length(x) > 1) {
               return(sd(x, na.rm = TRUE))
             } else {
               return(NA)
             }
           }))
-          y <- unlist(by(benchmatrix[, i], benchmatrix[, ref_par], function(x) {
+          y <- unlist(by(y, x, function(x) {
             if (length(x) > 1) {
               return(mean(x, na.rm = TRUE))
             } else {
               return(NA)
             }
           }))
-          x <- unique(benchmatrix[, ref_par])
+          x <- unique(x)
         }
         xf <- factor(x, levels = unique(x)) # preserve order
         if (any(is.character(x))) {
           x <- as.numeric(xf)
         }
 
-        gplots::plotCI(x, y,
-          uiw = uiw,
-          gap = 0,
-          xaxt = "n",
-          sfrac = 0.02,
-          xlab = params, ylab = i,
-          pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
-          ylim = myrange
+        gplots::plotCI(x + x_offset[1], y,
+                       uiw = uiw,
+                       gap = 0,
+                       xaxt = "n",
+                       sfrac = 0.02,
+                       xlab = params, ylab = i,
+                       pch = pch.use, col = col, cex = 1.5, cex.lab = 1, cex.axis = 1,
+                       ylim = myrange
         )
         if (errorbar) {
           axis(1, at = x, labels = levels(xf), las = 1)
         } else {
           axis(1, at = x, labels = x, las = 1)
         }
-        abline(h = pretty(benchmatrix[, i]), col = "gray90", lty = "dotted")
-        abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
+        abline(h = pretty(y), col = "gray90", lty = "dotted")
+        abline(v = pretty(x), col = "gray90", lty = "dotted")
 
         title(
           main = paste0(titles[i]),
           col.main = col, font.main = 2
         )
       } else {
-        plot(benchmatrix[, ref_par], rep(0, length(benchmatrix[, i])),
-          type = "n",
-          xlab = params, ylab = i,
-          main = paste0(titles[i]),
-          col.main = col, font.main = 2,
-          myrange
+        plot(x + x_offset[1], rep(0, length(y)),
+             type = "n",
+             xlab = params, ylab = i,
+             main = paste0(titles[i]),
+             col.main = col, font.main = 2,
+             myrange
         )
+      }
+      # When comparing (compare_param is not NULL), create separate plots for each value of compare_par, before
+      # add a legend to the plot
+      if (!is.null(compare_par)) {
+        lty_vals <- seq_len(length(compare_values))
+        if (identical(i, names(titles)[1])) {
+          legend("topright", legend = compare_values, title = compare_par,
+                 col = col, lty = lty_vals, cex = 0.8)
+        }
+        for (j in seq_len(length(compare_values))) {
+          sel <- benchmatrix[, compare_par] == compare_values[j]
+          y <- benchmatrix[sel, i]
+          x <- benchmatrix[sel, ref_par]
+          uiw <- NA
+          if (errorbar) {
+            # Calculate upper and lower error bounds if errorbar is TRUE
+            uiw <- unlist(by(y, x, function(x) {
+              if (length(x) > 1) {
+                return(sd(x, na.rm = TRUE))
+              } else {
+                return(NA)
+              }
+            }))
+            y <- unlist(by(y, x, function(x) {
+              if (length(x) > 1) {
+                return(mean(x, na.rm = TRUE))
+              } else {
+                return(NA)
+              }
+            }))
+            x <- unique(x)
+          }
+          xf <- factor(x, levels = unique(x)) # preserve order
+          if (any(is.character(x))) {
+            x <- as.numeric(xf)
+          }
+
+          gplots::plotCI(x + x_offset[j], y,
+                         uiw = uiw,
+                         gap = 0,
+                         xaxt = "n",
+                         add = TRUE,
+                         sfrac = 0.02,
+                         pch = pch.use, col = col, lty = lty_vals[j],
+                         cex = 1.5, cex.lab = 1, cex.axis = 1,
+                         ylim = myrange
+          )
+          if (errorbar) {
+            axis(1, at = x, labels = levels(xf), las = 1)
+          } else {
+            axis(1, at = x, labels = x, las = 1)
+          }
+          abline(h = pretty(y), col = "gray90", lty = "dotted")
+          # abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
+        }
       }
     } else {
       # colormaps showing the benchmarks in a 2-dim plot as colors
@@ -1020,12 +1103,12 @@ visualize_benchmarks <- function(benchmatrix,
 
         for (k in 1:color_steps) {
           rect(rect_x[1], bar_y_vals[k], rect_x[2], bar_y_vals[k + 1],
-            col = image_colors[k], border = NA
+               col = image_colors[k], border = NA
           )
         }
         # rectangle around all rectangles with white border
         rect(rect_x[1], min(y_vals, na.rm = T), rect_x[2], max(y_vals, na.rm = T),
-          col = NA, border = "#333333", lwd = 0.5
+             col = NA, border = "#333333", lwd = 0.5
         )
 
         # Add legend labels on the colorbar
@@ -1282,8 +1365,8 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
 
   # Combine all plots into a subplot
   subplot(param_plot, plot,
-    nrows = 2, shareX = TRUE, shareY = TRUE,
-    margin = 0.01, titleX = TRUE, titleY = TRUE
+          nrows = 2, shareX = TRUE, shareY = TRUE,
+          margin = 0.01, titleX = TRUE, titleY = TRUE
   ) %>%
     plotly::layout(showlegend = FALSE)
 }
