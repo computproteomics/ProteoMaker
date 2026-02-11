@@ -689,137 +689,9 @@ visualize_benchmarks <- function(benchmatrix,
   ref_par <- make.names(ref_par)
   colnames(benchmatrix) <- make.names(colnames(benchmatrix))
 
-  titles <- c(
-    numPeptides = "I: #Total peptidoforms (mod+unmod)",
-    numProteins = "II: #Protein accessions (all peptidoforms)",
-    propUniquePep = "III: Fraction unique peptidoforms (single protein)",
-    uniqueStrippedPep = "IV: #Unique peptide sequences",
-    percMissingPep = "V: % Missing peptidoform values",
-    aucDiffRegPeptides.FDR_limma.2.vs.1.AUC = "VI: Peptidoform AUC (truth vs FDR)",
-    tprPep0.01.FDR_limma.2.vs.1.TPR = "VII: TPR peptidoforms (FDR < 0.01)",
-    tprPep0.05.FDR_limma.2.vs.1.TPR = "VIII: TPR peptidoforms (FDR < 0.05)",
-    tFDRPep0.01.FDR_limma.2.vs.1.tFDR = "IX: True FDR (peptidoforms, 0.01)",
-    tFDRPep0.05.FDR_limma.2.vs.1.tFDR = "X: True FDR (peptidoforms, 0.05)",
-    propMisCleavedPeps.0 = "XI: No miscleavage fraction",
-    dynRangePep = "XII: Dynamic range (peptidoforms)",
-    meanSquareDiffFCPep = "XIII: Fold-change error (peptidoforms)",
-    sdWithinRepsPep = "XIV: Replicate SD (regulated peptidoforms)",
-    skewnessPeps = "XV: Skewness (peptidoforms)",
-    kurtosisPeps = "XVI: Kurtosis (peptidoforms)",
-    sdPeps = "XVII: Overall SD (peptidoforms)",
-    numQuantProtGroups = "XVIII: #Quantified protein groups",
-    propUniqueProts = "XIX: Fraction single-protein groups",
-    percMissingProt = "XX: Fraction missing protein-group values",
-    meanPepPerProt = "XXI: Peptide sequences per protein group",
-    aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC = "XXII: Protein-group AUC (truth vs FDR)",
-    tprProt0.01.FDR_PolySTest.2.vs.1.TPR = "XXIII: TPR protein groups (FDR < 0.01)",
-    tprProt0.05.FDR_PolySTest.2.vs.1.TPR = "XXIV: TPR protein groups (FDR < 0.05)",
-    tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR = "XXV: True FDR (protein groups, 0.01)",
-    tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR = "XXVI: True FDR (protein groups, 0.05)",
-    meanSquareDiffFCProt = "XXVII: Fold-change error (protein groups)",
-    sdWithinRepsProt = "XXVIII: Replicate SD (regulated protein groups)",
-    propMisCleavedProts = "XXIX: Fraction miscleaved protein groups",
-    propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 = "XXX: Fraction wrong-ID (protein groups, 0.01)",
-    propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1 = "XXXI: Fraction wrong-ID (protein groups, 0.05)",
-    skewnessProts = "XXXII: Skewness (protein groups)",
-    kurtosisProts = "XXXIII: Kurtosis (protein groups)",
-    sdProts = "XXXIV: Overall SD (protein groups)",
-    numProteoforms = "XXXV: #Proteoforms",
-    meanProteoformsPerProt = "XXXVI: Proteoforms per protein",
-    numModPeptides = "XXXVII: #Modified peptidoforms",
-    propModAndUnmodPep = "XXXVIII: Fraction modified with unmodified match",
-    aucDiffRegAdjModPep = "XXXIX: AUC (adj. mod. peptidoforms)",
-    tprAdjModPep0.01 = "XL: TPR (adj. mod. peptidoforms, 0.01)",
-    tprAdjModPep0.05 = "XLI: TPR (adj. mod. peptidoforms, 0.05)",
-    tFDRAdjModPep0.01 = "XLII: True FDR (mod. peptidoforms, 0.01)",
-    tFDRAdjModPep0.05 = "XLIII: True FDR (mod. peptidoforms, 0.05)",
-    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "XLIV: Fraction wrongly significant (mod. peptidoforms, 0.01)",
-    propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 = "XLV: Fraction wrongly significant (mod. peptidoforms, 0.05)",
-    percOverlapModPepProt = "XLVI: Fraction mod peptidoforms with protein quant",
-    meanSquareDiffFCModPep = "XLVII: Fold-change error (mod. peptidoforms)"
-  )
-
-  # maximal ranges of each parameters for alternative visualization
-  ranges <- lapply(titles, function(x) c(0, NA))
-  names(ranges) <- names(titles)
-  ranges[["propUniquePep"]] <-
-    ranges[["aucDiffRegPeptides.FDR_limma.2.vs.1.AUC"]] <-
-    ranges[["tprPep0.01.FDR_limma.2.vs.1.TPR"]] <-
-    ranges[["tprPep0.05.FDR_limma.2.vs.1.TPR"]] <-
-    ranges[["tFDRPep0.01.FDR_limma.2.vs.1.tFDR"]] <-
-    ranges[["tFDRPep0.05.FDR_limma.2.vs.1.tFDR"]] <-
-    ranges[["propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propUniqueProts"]] <-
-    ranges[["aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC"]] <-
-    ranges[["tprProt0.01.FDR_PolySTest.2.vs.1.TPR"]] <-
-    ranges[["tprProt0.05.FDR_PolySTest.2.vs.1.TPR"]] <-
-    ranges[["tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR"]] <-
-    ranges[["tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR"]] <-
-    ranges[["propMisCleavedPeps.0"]] <-
-    ranges[["propMisCleavedProts"]] <-
-    ranges[["propModAndUnmodPep"]] <-
-    ranges[["propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1"]] <-
-    ranges[["propMisCleavedPeps.0"]] <- c(0, 1)
-  ranges[["percMissingPep"]] <- c(0, 100)
-  ranges[["skewnessPeps"]] <-
-    ranges[["kurtosisPeps"]] <-
-    ranges[["skewnessProts"]] <-
-    ranges[["kurtosisProts"]] <- c(NA, NA)
-
-
-  titles_params <- c(
-    NumCond = "Number of conditions",
-    NumReps = "Number of replicates",
-    PathToFasta = "Path to FASTA file",
-    PathToProteinList = "Path to protein list (optional)",
-    PercExpressedProt = "Fraction of expressed proteins",
-    FracModProt = "Fraction of proteins to be modified",
-    PropModPerProt = "Max #Modifications per protein",
-    PTMMultipleLambda = "Poisson lambda for multiple PTMs",
-    RemoveNonModFormFrac = "Fraction without non-modified form",
-    PTMTypes = "PTM types",
-    PTMTypesDistr = "PTM type distribution",
-    PTMTypesMass = "PTM mass shifts",
-    ModifiableResidues = "Modifiable residues",
-    ModifiableResiduesDistr = "Modifiable residue distribution",
-    QuantNoise = "Quantification noise (SD)",
-    DiffRegFrac = "Fraction of differentially regulated",
-    DiffRegMax = "Max fold-change (log2)",
-    UserInputFoldChanges_NumRegProteoforms = "#User-specified regulated proteoforms",
-    UserInputFoldChanges_RegulationFC = "User-defined fold change",
-    AbsoluteQuanMean = "Mean absolute quantity",
-    AbsoluteQuanSD = "SD of absolute quantity",
-    ThreshRemoveProteoforms = "Proteoform removal threshold",
-    Enzyme = "Digestion enzyme",
-    PropMissedCleavages = "Proportion with missed cleavages",
-    MaxNumMissedCleavages = "Max missed cleavages",
-    PepMinLength = "Min peptide length",
-    PepMaxLength = "Max peptide length",
-    LeastAbundantLoss = "Fraction of least abundant removed",
-    EnrichPTM = "Enriched PTM type",
-    EnrichmentLoss = "Enrichment loss",
-    EnrichmentEfficiency = "Enrichment efficiency",
-    EnrichmentQuantDiff = "Quant difference due to enrichment",
-    EnrichmentNoise = "Enrichment noise",
-    ModificationLoss = "Loss of modified peptides",
-    PercDetectability = "Fraction of peptides detected (model)",
-    PercDetectedVal = "Fraction of detected intensities",
-    WeightDetectVal = "Intensity-dependence of detection",
-    MSNoise = "Instrumental noise",
-    WrongIDs = "Wrong identification rate",
-    WrongLocalizations = "Wrong localization rate",
-    MaxNAPerPep = "Max NAs per peptide",
-    ProtSummarization = "Protein summarization method",
-    MinUniquePep = "Min unique peptides per protein",
-    IncludeModPep = "Include modified peptidoforms in protein quantification",
-    StatPaired = "Paired testing enabled"
-  )
+  titles <- get_bmtitles()
+  ranges <- set_bmranges(titles)
+  titles_params <- get_paramtitles()
 
   # Setting fixed color code
   dark_colors <- colorspace::qualitative_hcl(n = length(titles), palette = "Dark 3")
@@ -884,15 +756,13 @@ visualize_benchmarks <- function(benchmatrix,
   benchmarks <- names(titles)
   dark_colors <- dark_colors[benchmarks]
   pch.vals <- pch.vals[benchmarks]
-
   n_plots <- length(titles)
   # Always 4x34 to ensure sizes
   plotmfrow <- c(4, 4)
   par(
     mfrow = plotmfrow, cex.main = 0.9, cex.lab = 0.75, cex.axis = 0.7,
-    mgp = c(1.5, 0.3, 0), mar = c(3, 3, 1.5, 1.5), xpd = TRUE, font.main = 2
+    mgp = c(1.5, 0.3, 0), mar = c(3, 3, 1.5, 1.5), xpd = FALSE, font.main = 2
   )
-
   # Generate a dark qualitative color palette
   if (!is.null(cols)) {
     dark_colors <- rep(cols, length.out = n_plots)
@@ -902,6 +772,9 @@ visualize_benchmarks <- function(benchmatrix,
   for (i in names(titles)) {
     col <- dark_colors[i]
     pch.use <- pch.vals[i]
+
+    means_vec <- NULL
+
     # Single plots when having one parameter
     if (length(ref_par) == 1) {
       # change to full range if set
@@ -916,6 +789,8 @@ visualize_benchmarks <- function(benchmatrix,
       }
       if (all(is.finite(range(benchmatrix[, i], na.rm = T)))) {
         x <- benchmatrix[, ref_par]
+        xf <- factor(x, levels = unique(x)) # preserve order
+        names(xf) <- x
         # If compare_par is provided, subset the data to the specified value of compare_par and add it to the title
         compare_values <- y <- NULL
         x_offset <- 0
@@ -930,6 +805,7 @@ visualize_benchmarks <- function(benchmatrix,
           x <- benchmatrix[sel, ref_par]
           x_offset <- diff(range(benchmatrix[, ref_par], na.rm = T)) *
             (seq_len(compare_len) - compare_len/2) / compare_len * 0.02
+          # collect all means to later connect them
         } else {
           y <- benchmatrix[, i]
         }
@@ -950,11 +826,12 @@ visualize_benchmarks <- function(benchmatrix,
               return(NA)
             }
           }))
+          means_vec <- y
           x <- unique(x)
+          names(means_vec) <- x
         }
-        xf <- factor(x, levels = unique(x)) # preserve order
         if (any(is.character(x))) {
-          x <- as.numeric(xf)
+          x <- xf[x]
         }
 
         gplots::plotCI(x + x_offset[1], y,
@@ -971,8 +848,6 @@ visualize_benchmarks <- function(benchmatrix,
         } else {
           axis(1, at = x, labels = x, las = 1)
         }
-        abline(h = pretty(y), col = "gray90", lty = "dotted")
-        abline(v = pretty(x), col = "gray90", lty = "dotted")
 
         title(
           main = paste0(titles[i]),
@@ -995,51 +870,51 @@ visualize_benchmarks <- function(benchmatrix,
           legend("topright", legend = compare_values, title = compare_par,
                  col = col, lty = lty_vals, cex = 0.8)
         }
-        for (j in seq_len(length(compare_values))) {
-          sel <- benchmatrix[, compare_par] == compare_values[j]
-          y <- benchmatrix[sel, i]
-          x <- benchmatrix[sel, ref_par]
-          uiw <- NA
-          if (errorbar) {
-            # Calculate upper and lower error bounds if errorbar is TRUE
-            uiw <- unlist(by(y, x, function(x) {
-              if (length(x) > 1) {
-                return(sd(x, na.rm = TRUE))
-              } else {
-                return(NA)
+        if (length(compare_values) > 1) {
+          for (j in 2:(length(compare_values))) {
+            sel <- benchmatrix[, compare_par] == compare_values[j]
+            y <- benchmatrix[sel, i]
+            x <- benchmatrix[sel, ref_par]
+            uiw <- NA
+            if (errorbar) {
+              # Calculate upper and lower error bounds if errorbar is TRUE
+              uiw <- unlist(by(y, x, function(x) {
+                if (length(x) > 1) {
+                  return(sd(x, na.rm = TRUE))
+                } else {
+                  return(NA)
+                }
+              }))
+              y <- unlist(by(y, x, function(x) {
+                if (length(x) > 1) {
+                  return(mean(x, na.rm = TRUE))
+                } else {
+                  return(NA)
+                }
+              }))
+              x <- unique(x)
+              # plotting lines between pairs of compare_par values for each x value
+              for(k in x) {
+                lines(x[k] + x_offset[c(j-1,j)], c(means_vec[x[k]], y[k]), col = 1)
               }
-            }))
-            y <- unlist(by(y, x, function(x) {
-              if (length(x) > 1) {
-                return(mean(x, na.rm = TRUE))
-              } else {
-                return(NA)
-              }
-            }))
-            x <- unique(x)
-          }
-          xf <- factor(x, levels = unique(x)) # preserve order
-          if (any(is.character(x))) {
-            x <- as.numeric(xf)
-          }
+              means_vec <- y
+              names(means_vec) <- x
 
-          gplots::plotCI(x + x_offset[j], y,
-                         uiw = uiw,
-                         gap = 0,
-                         xaxt = "n",
-                         add = TRUE,
-                         sfrac = 0.02,
-                         pch = pch.use, col = col, lty = lty_vals[j],
-                         cex = 1.5, cex.lab = 1, cex.axis = 1,
-                         ylim = myrange
-          )
-          if (errorbar) {
-            axis(1, at = x, labels = levels(xf), las = 1)
-          } else {
-            axis(1, at = x, labels = x, las = 1)
+            }
+            if (any(is.character(x))) {
+              x <- xf[x]
+            }
+            gplots::plotCI(x + x_offset[j], y,
+                           uiw = uiw,
+                           gap = 0,
+                           xaxt = "n",
+                           add = TRUE,
+                           sfrac = 0.02,
+                           pch = pch.use, col = col, lty = lty_vals[j],
+                           cex = 1.5, cex.lab = 1, cex.axis = 1,
+                           ylim = myrange
+            )
           }
-          abline(h = pretty(y), col = "gray90", lty = "dotted")
-          # abline(v = pretty(benchmatrix[, ref_par]), col = "gray90", lty = "dotted")
         }
       }
     } else {
@@ -1151,55 +1026,7 @@ render_benchmark_table <- function(benchmatrix,
   colnames(benchmatrix) <- make.names(colnames(benchmatrix))
 
   # Define human-readable titles
-  titles <- c(
-    numPeptides = "I: #Total peptidoforms (mod+unmod)",
-    numProteins = "II: #Protein accessions (all peptidoforms)",
-    propUniquePep = "III: Fraction unique peptidoforms (single protein)",
-    uniqueStrippedPep = "IV: #Unique peptide sequences",
-    percMissingPep = "V: % Missing peptidoform values",
-    aucDiffRegPeptides.FDR_limma.2.vs.1.AUC = "VI: Peptidoform AUC (truth vs FDR)",
-    tprPep0.01.FDR_limma.2.vs.1.TPR = "VII: TPR peptidoforms (FDR < 0.01)",
-    tprPep0.05.FDR_limma.2.vs.1.TPR = "VIII: TPR peptidoforms (FDR < 0.05)",
-    tFDRPep0.01.FDR_limma.2.vs.1.tFDR = "IX: True FDR (peptidoforms, 0.01)",
-    tFDRPep0.05.FDR_limma.2.vs.1.tFDR = "X: True FDR (peptidoforms, 0.05)",
-    propMisCleavedPeps.0 = "XI: No miscleavage fraction",
-    dynRangePep = "XII: Dynamic range (peptidoforms)",
-    meanSquareDiffFCPep = "XIII: Fold-change error (peptidoforms)",
-    sdWithinRepsPep = "XIV: Replicate SD (regulated peptidoforms)",
-    skewnessPeps = "XV: Skewness (peptidoforms)",
-    kurtosisPeps = "XVI: Kurtosis (peptidoforms)",
-    sdPeps = "XVII: Overall SD (peptidoforms)",
-    numQuantProtGroups = "XVIII: #Quantified protein groups",
-    propUniqueProts = "XIX: Fraction single-protein groups",
-    percMissingProt = "XX: Fraction missing protein-group values",
-    meanPepPerProt = "XXI: Peptide sequences per protein group",
-    aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC = "XXII: Protein-group AUC (truth vs FDR)",
-    tprProt0.01.FDR_PolySTest.2.vs.1.TPR = "XXIII: TPR protein groups (FDR < 0.01)",
-    tprProt0.05.FDR_PolySTest.2.vs.1.TPR = "XXIV: TPR protein groups (FDR < 0.05)",
-    tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR = "XXV: True FDR (protein groups, 0.01)",
-    tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR = "XXVI: True FDR (protein groups, 0.05)",
-    meanSquareDiffFCProt = "XXVII: Fold-change error (protein groups)",
-    sdWithinRepsProt = "XXVIII: Replicate SD (regulated protein groups)",
-    propMisCleavedProts = "XXIX: Fraction miscleaved protein groups",
-    propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 = "XXX: Fraction wrong-ID (protein groups, 0.01)",
-    propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1 = "XXXI: Fraction wrong-ID (protein groups, 0.05)",
-    skewnessProts = "XXXII: Skewness (protein groups)",
-    kurtosisProts = "XXXIII: Kurtosis (protein groups)",
-    sdProts = "XXXIV: Overall SD (protein groups)",
-    numProteoforms = "XXXV: #Proteoforms",
-    meanProteoformsPerProt = "XXXVI: Proteoforms per protein",
-    numModPeptides = "XXXVII: #Modified peptidoforms",
-    propModAndUnmodPep = "XXXVIII: Fraction modified with unmodified match",
-    aucDiffRegAdjModPep = "XXXIX: AUC (adj. mod. peptidoforms)",
-    tprAdjModPep0.01 = "XL: TPR (adj. mod. peptidoforms, 0.01)",
-    tprAdjModPep0.05 = "XLI: TPR (adj. mod. peptidoforms, 0.05)",
-    tFDRAdjModPep0.01 = "XLII: True FDR (mod. peptidoforms, 0.01)",
-    tFDRAdjModPep0.05 = "XLIII: True FDR (mod. peptidoforms, 0.05)",
-    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "XLIV: Fraction wrongly significant (mod. peptidoforms, 0.01)",
-    propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 = "XLV: Fraction wrongly significant (mod. peptidoforms, 0.05)",
-    percOverlapModPepProt = "XLVI: Fraction mod peptidoforms with protein quant",
-    meanSquareDiffFCModPep = "XLVII: Fold-change error (mod. peptidoforms)"
-  )
+  titles <- get_bmtitles()
 
   # Select benchmarks
   if (is.null(benchmarks)) {
@@ -1472,4 +1299,150 @@ plot_params <- function(BenchMatrix, current_row = 1) {
   }
   # Combine all meter plots
   subplot(meters, nrows = nrows, margin = 0.01)
+}
+
+
+
+#' Function to get human-readable titles for the different parameters
+#'
+get_bmtitles <- function () {
+  titles <- c(
+    numPeptides = "I: #Total peptidoforms (mod+unmod)",
+    numProteins = "II: #Protein accessions (all peptidoforms)",
+    propUniquePep = "III: Fraction unique peptidoforms (single protein)",
+    uniqueStrippedPep = "IV: #Unique peptide sequences",
+    percMissingPep = "V: % Missing peptidoform values",
+    aucDiffRegPeptides.FDR_limma.2.vs.1.AUC = "VI: Peptidoform AUC (truth vs FDR)",
+    tprPep0.01.FDR_limma.2.vs.1.TPR = "VII: TPR peptidoforms (FDR < 0.01)",
+    tprPep0.05.FDR_limma.2.vs.1.TPR = "VIII: TPR peptidoforms (FDR < 0.05)",
+    tFDRPep0.01.FDR_limma.2.vs.1.tFDR = "IX: True FDR (peptidoforms, 0.01)",
+    tFDRPep0.05.FDR_limma.2.vs.1.tFDR = "X: True FDR (peptidoforms, 0.05)",
+    propMisCleavedPeps.0 = "XI: No miscleavage fraction",
+    dynRangePep = "XII: Dynamic range (peptidoforms)",
+    meanSquareDiffFCPep = "XIII: Fold-change error (peptidoforms)",
+    sdWithinRepsPep = "XIV: Replicate SD (regulated peptidoforms)",
+    skewnessPeps = "XV: Skewness (peptidoforms)",
+    kurtosisPeps = "XVI: Kurtosis (peptidoforms)",
+    sdPeps = "XVII: Overall SD (peptidoforms)",
+    numQuantProtGroups = "XVIII: #Quantified protein groups",
+    propUniqueProts = "XIX: Fraction single-protein groups",
+    percMissingProt = "XX: Fraction missing protein-group values",
+    meanPepPerProt = "XXI: Peptide sequences per protein group",
+    aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC = "XXII: Protein-group AUC (truth vs FDR)",
+    tprProt0.01.FDR_PolySTest.2.vs.1.TPR = "XXIII: TPR protein groups (FDR < 0.01)",
+    tprProt0.05.FDR_PolySTest.2.vs.1.TPR = "XXIV: TPR protein groups (FDR < 0.05)",
+    tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR = "XXV: True FDR (protein groups, 0.01)",
+    tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR = "XXVI: True FDR (protein groups, 0.05)",
+    meanSquareDiffFCProt = "XXVII: Fold-change error (protein groups)",
+    sdWithinRepsProt = "XXVIII: Replicate SD (regulated protein groups)",
+    propMisCleavedProts = "XXIX: Fraction miscleaved protein groups",
+    propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1 = "XXX: Fraction wrong-ID (protein groups, 0.01)",
+    propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1 = "XXXI: Fraction wrong-ID (protein groups, 0.05)",
+    skewnessProts = "XXXII: Skewness (protein groups)",
+    kurtosisProts = "XXXIII: Kurtosis (protein groups)",
+    sdProts = "XXXIV: Overall SD (protein groups)",
+    numProteoforms = "XXXV: #Proteoforms",
+    meanProteoformsPerProt = "XXXVI: Proteoforms per protein",
+    numModPeptides = "XXXVII: #Modified peptidoforms",
+    propModAndUnmodPep = "XXXVIII: Fraction modified with unmodified match",
+    aucDiffRegAdjModPep = "XXXIX: AUC (adj. mod. peptidoforms)",
+    tprAdjModPep0.01 = "XL: TPR (adj. mod. peptidoforms, 0.01)",
+    tprAdjModPep0.05 = "XLI: TPR (adj. mod. peptidoforms, 0.05)",
+    tFDRAdjModPep0.01 = "XLII: True FDR (mod. peptidoforms, 0.01)",
+    tFDRAdjModPep0.05 = "XLIII: True FDR (mod. peptidoforms, 0.05)",
+    propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1 = "XLIV: Fraction wrongly significant (mod. peptidoforms, 0.01)",
+    propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1 = "XLV: Fraction wrongly significant (mod. peptidoforms, 0.05)",
+    percOverlapModPepProt = "XLVI: Fraction mod peptidoforms with protein quant",
+    meanSquareDiffFCModPep = "XLVII: Fold-change error (mod. peptidoforms)"
+  )
+  titles
+}
+
+#' setting maximal ranges for benchmarking metrics
+set_bmranges <- function(titles) {
+  ranges <- lapply(titles, function(x) c(0, NA))
+  names(ranges) <- names(titles)
+  ranges[["propUniquePep"]] <-
+    ranges[["aucDiffRegPeptides.FDR_limma.2.vs.1.AUC"]] <-
+    ranges[["tprPep0.01.FDR_limma.2.vs.1.TPR"]] <-
+    ranges[["tprPep0.05.FDR_limma.2.vs.1.TPR"]] <-
+    ranges[["tFDRPep0.01.FDR_limma.2.vs.1.tFDR"]] <-
+    ranges[["tFDRPep0.05.FDR_limma.2.vs.1.tFDR"]] <-
+    ranges[["propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propUniqueProts"]] <-
+    ranges[["aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC"]] <-
+    ranges[["tprProt0.01.FDR_PolySTest.2.vs.1.TPR"]] <-
+    ranges[["tprProt0.05.FDR_PolySTest.2.vs.1.TPR"]] <-
+    ranges[["tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR"]] <-
+    ranges[["tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR"]] <-
+    ranges[["propMisCleavedPeps.0"]] <-
+    ranges[["propMisCleavedProts"]] <-
+    ranges[["propModAndUnmodPep"]] <-
+    ranges[["propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1"]] <-
+    ranges[["propMisCleavedPeps.0"]] <- c(0, 1)
+  ranges[["percMissingPep"]] <- c(0, 100)
+  ranges[["skewnessPeps"]] <-
+    ranges[["kurtosisPeps"]] <-
+    ranges[["skewnessProts"]] <-
+    ranges[["kurtosisProts"]] <- c(NA, NA)
+
+  ranges
+}
+
+get_paramtitles <- function() {
+  titles_params <- c(
+    NumCond = "Number of conditions",
+    NumReps = "Number of replicates",
+    PathToFasta = "Path to FASTA file",
+    PathToProteinList = "Path to protein list (optional)",
+    PercExpressedProt = "Fraction of expressed proteins",
+    FracModProt = "Fraction of proteins to be modified",
+    PropModPerProt = "Max #Modifications per protein",
+    PTMMultipleLambda = "Poisson lambda for multiple PTMs",
+    RemoveNonModFormFrac = "Fraction without non-modified form",
+    PTMTypes = "PTM types",
+    PTMTypesDistr = "PTM type distribution",
+    PTMTypesMass = "PTM mass shifts",
+    ModifiableResidues = "Modifiable residues",
+    ModifiableResiduesDistr = "Modifiable residue distribution",
+    QuantNoise = "Quantification noise (SD)",
+    DiffRegFrac = "Fraction of differentially regulated",
+    DiffRegMax = "Max fold-change (log2)",
+    UserInputFoldChanges_NumRegProteoforms = "#User-specified regulated proteoforms",
+    UserInputFoldChanges_RegulationFC = "User-defined fold change",
+    AbsoluteQuanMean = "Mean absolute quantity",
+    AbsoluteQuanSD = "SD of absolute quantity",
+    ThreshRemoveProteoforms = "Proteoform removal threshold",
+    Enzyme = "Digestion enzyme",
+    PropMissedCleavages = "Proportion with missed cleavages",
+    MaxNumMissedCleavages = "Max missed cleavages",
+    PepMinLength = "Min peptide length",
+    PepMaxLength = "Max peptide length",
+    LeastAbundantLoss = "Fraction of least abundant removed",
+    EnrichPTM = "Enriched PTM type",
+    EnrichmentLoss = "Enrichment loss",
+    EnrichmentEfficiency = "Enrichment efficiency",
+    EnrichmentQuantDiff = "Quant difference due to enrichment",
+    EnrichmentNoise = "Enrichment noise",
+    ModificationLoss = "Loss of modified peptides",
+    PercDetectability = "Fraction of peptides detected (model)",
+    PercDetectedVal = "Fraction of detected intensities",
+    WeightDetectVal = "Intensity-dependence of detection",
+    MSNoise = "Instrumental noise",
+    WrongIDs = "Wrong identification rate",
+    WrongLocalizations = "Wrong localization rate",
+    MaxNAPerPep = "Max NAs per peptide",
+    ProtSummarization = "Protein summarization method",
+    MinUniquePep = "Min unique peptides per protein",
+    IncludeModPep = "Include modified peptidoforms in protein quantification",
+    SharedPep = "Include shared peptides in protein inference",
+    StatPaired = "Paired testing enabled"
+  )
+  titles_params
 }
