@@ -799,6 +799,11 @@ visualize_benchmarks <- function(benchmatrix,
             stop(paste("Compare parameter", compare_par, "not found in benchmark matrix."))
           }
           compare_values <- unique(benchmatrix[, compare_par])
+          if (is.numeric(compare_values)) {
+            compare_values <- sort(compare_values)
+          } else {
+            compare_values <- sort(as.character(compare_values))
+          }
           compare_len <- length(compare_values)
           sel <- benchmatrix[, compare_par] == compare_values[1]
           y <- benchmatrix[sel, i]
@@ -854,13 +859,13 @@ visualize_benchmarks <- function(benchmatrix,
           col.main = col, font.main = 2
         )
       } else {
-        plot(x + x_offset[1], rep(0, length(y)),
-             type = "n",
-             xlab = params, ylab = i,
-             main = paste0(titles[i]),
-             col.main = col, font.main = 2,
-             myrange
+        plot.new()
+        plot.window(xlim = c(0, 1), ylim = c(0, 1))
+        title(
+          main = paste0(titles[i]),
+          col.main = col, font.main = 2
         )
+        next
       }
       # When comparing (compare_param is not NULL), create separate plots for each value of compare_par, before
       # add a legend to the plot
