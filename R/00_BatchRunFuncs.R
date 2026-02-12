@@ -804,7 +804,7 @@ visualize_benchmarks <- function(benchmatrix,
           y <- benchmatrix[sel, i]
           x <- benchmatrix[sel, ref_par]
           x_offset <- diff(range(benchmatrix[, ref_par], na.rm = T)) *
-            (seq_len(compare_len) - compare_len/2) / compare_len * 0.02
+            (seq_len(compare_len) - compare_len/2) / compare_len / length(unique(x)) * 0.5
           # collect all means to later connect them
         } else {
           y <- benchmatrix[, i]
@@ -893,9 +893,10 @@ visualize_benchmarks <- function(benchmatrix,
                 }
               }))
               x <- unique(x)
+              names(y) <- x
               # plotting lines between pairs of compare_par values for each x value
               for(k in x) {
-                lines(x[k] + x_offset[c(j-1,j)], c(means_vec[x[k]], y[k]), col = 1)
+                lines(k + x_offset[c(j-1,j)], c(means_vec[as.character(k)], y[as.character(k)]), col = 1)
               }
               means_vec <- y
               names(means_vec) <- x
