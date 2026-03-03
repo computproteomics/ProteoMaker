@@ -148,8 +148,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
     propMisCleavedProts = 0,
     propDiffRegWrongIDProt0.01 = list(), propDiffRegWrongIDProt0.05 = list(), skewnessProts = 0, kurtosisProts = 0, sdProts = 0,
     # PTM level
-    numProteoforms = 0, numModPeptides = 0, meanProteoformsPerProt = 0, propModAndUnmodPep = 0, aucDiffRegAdjModPep = list(),
-    tFDRAdjModPep0.01 = list(), tFDRAdjModPep0.05 = list(), tprAdjModPep0.01 = list(), tprAdjModPep0.05 = list(),
+    numProteoforms = 0, numModPeptides = 0, meanProteoformsPerProt = 0, propModAndUnmodPep = 0, aucDiffRegAdjModPep = NA_real_,
+    tFDRAdjModPep0.01 = NA_real_, tFDRAdjModPep0.05 = NA_real_, tprAdjModPep0.01 = NA_real_, tprAdjModPep0.05 = NA_real_,
     propDiffRegPepWrong0.01 = list(), propDiffRegPepWrong0.05 = list(), percOverlapModPepProt = 0, meanSquareDiffFCModPep = 0
   )
 
@@ -399,22 +399,22 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   } else {
     StatsAdjModPep <- runPolySTest(AdjModPepsWithProt, Param, refCond = 1, onlyLIMMA = T)
 
-    # results on basis of ground truth (derive statCols from StatsAdjModPep)
+    # results on basis of ground truth (limma-only for speed)
     statColsAdj <- grep("FDR", colnames(StatsAdjModPep), value = TRUE)
     ROC <- list()
-    # plotting skipped in non-interactive contexts
-    for (test in statColsAdj) {
+    if (length(statColsAdj) > 0) {
+      test <- statColsAdj[1]
       testSum <- calcROC(StatsAdjModPep, test)
       if (nrow(testSum) > 1) {
         ROC[[test]] <- testSum
         at.01 <- which.min(abs(testSum[, "FDR"] - 0.01))
         at.05 <- which.min(abs(testSum[, "FDR"] - 0.05))
 
-        globalBMs$aucDiffRegAdjModPep[[test]] <- testSum[1, "AUC"]
-        globalBMs$tprAdjModPep0.01[[test]] <- testSum[at.01, "TPR"]
-        globalBMs$tprAdjModPep0.05[[test]] <- testSum[at.05, "TPR"]
-        globalBMs$tFDRAdjModPep0.01[[test]] <- testSum[at.01, "tFDR"]
-        globalBMs$tFDRAdjModPep0.05[[test]] <- testSum[at.05, "tFDR"]
+        globalBMs$aucDiffRegAdjModPep <- testSum[1, "AUC"]
+        globalBMs$tprAdjModPep0.01 <- testSum[at.01, "TPR"]
+        globalBMs$tprAdjModPep0.05 <- testSum[at.05, "TPR"]
+        globalBMs$tFDRAdjModPep0.01 <- testSum[at.01, "tFDR"]
+        globalBMs$tFDRAdjModPep0.05 <- testSum[at.05, "tFDR"]
       }
     }
     Benchmarks$AdjModPepStat <- ROC
