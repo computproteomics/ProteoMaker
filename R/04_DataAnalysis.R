@@ -239,7 +239,7 @@ proteinSummarisation <- function(peptable, parameters) {
       tmp <- as.data.frame(peptable[prot_ind[i]:(prot_ind[i + 1] - 1), ])
       key <- if ("Peptidoform" %in% names(tmp)) tmp$Peptidoform else tmp$Sequence
       rownames(tmp) <- make.unique(key)
-      out <- tmp[1, ]
+      out <- tmp[1, , drop=F]
       tout <- summarizeProtein(tmp[, QuantColnames, drop = F])
       if (!is.null(tout)) {
         out[QuantColnames] <- tout

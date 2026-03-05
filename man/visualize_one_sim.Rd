@@ -24,6 +24,6 @@ simulation. It uses various plotting methods to display the normalized values
 of benchmarks and parameters, aiding in the analysis of simulation outcomes.
 }
 \examples{
-benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker()), set_proteomaker())
+benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker(cores = NULL)), set_proteomaker(cores = NULL))
 visualize_one_sim(benchmarks, current_row = 1)
 }

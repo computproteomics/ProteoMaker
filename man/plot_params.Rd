@@ -25,7 +25,7 @@ setup.
 }
 \examples{
 \dontrun{
-benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker()), set_proteomaker())
+benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker(cores = NULL)), set_proteomaker(cores = NULL))
 plot_params(benchmarks, current_row = 1)
 }
 }

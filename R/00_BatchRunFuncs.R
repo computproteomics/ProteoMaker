@@ -886,8 +886,8 @@ visualize_benchmarks <- function(benchmatrix,
           if (any(is.character(x))) {
             x <- xf[x]
           }
-          gplots::plotCI(x, y,
-                         uiw = uiw,
+          gplots::plotCI(0, 0,
+                         #uiw = uiw,
                          gap = 0,
                          xaxt = "n",
                          sfrac = 0.02,

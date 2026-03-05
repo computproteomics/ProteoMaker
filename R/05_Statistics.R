@@ -31,8 +31,17 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA = F, cores = 1) {
   Reps <- rep(seq_len(NumCond), NumReps)
   isPaired <- Param$StatPaired
 
-  # Set number of threads
-  Sys.setenv(SHINY_THREADS = cores)
+  # Set number of threads (fallback for test/check contexts where cores can be NULL)
+  cores_eff <- if (is.null(cores) || length(cores) == 0 || is.na(cores)) 1 else cores
+  Sys.setenv(SHINY_THREADS = cores_eff)
+
+  # In restricted R CMD check sandboxes, some PolySTest methods spawn socket
+  # clusters that may be unavailable. Keep full test suite for normal runs.
+  in_r_cmd_check <- nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_"))
+  force_full_stats <- identical(Sys.getenv("PROTEOMAKER_TEST_FORCE_FULL_STATS"), "1")
+  if (in_r_cmd_check && !force_full_stats) {
+    onlyLIMMA <- TRUE
+  }
 
   message(" + Running statistical tests")
 

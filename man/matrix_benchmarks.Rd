@@ -24,7 +24,7 @@ simulations. It extracts benchmark metrics and associated parameter values,
 creating a comprehensive data frame for analysis.
 }
 \examples{
-conf <- set_proteomaker(resultFilePath = tempdir())
+conf <- set_proteomaker(resultFilePath = tempdir(), cores = NULL)
 results <- run_sims(def_param(), conf)
 benchmark_matrix <- matrix_benchmarks(results, conf)
 

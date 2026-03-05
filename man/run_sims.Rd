@@ -29,6 +29,6 @@ saved to the output directory specified in \code{def_param}.
 }
 \examples{
 params <- def_param()
-config <- set_proteomaker()
+config <- set_proteomaker(cores = NULL)
 results <- run_sims(params, config)
 }
