@@ -1,0 +1,131 @@
+* using log directory ‘/home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck’
+* using R version 4.5.2 (2025-10-31)
+* using platform: x86_64-pc-linux-gnu
+* R was compiled by
+    gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+    GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+* running under: Ubuntu 25.10
+* using session charset: UTF-8
+* checking for file ‘./DESCRIPTION’ ... OK
+* checking extension type ... Package
+* this is package ‘ProteoMaker’ version ‘0.6.21’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... NOTE
+Found the following hidden files and directories:
+  .Rhistory
+  .gitignore
+  .lintr
+  ..Rcheck
+  .Rproj.user
+  .git
+  .github
+  .vscode
+These were most likely included in error. See section ‘Package
+structure’ in the ‘Writing R Extensions’ manual.
+* checking for portable file names ... WARNING
+Found the following files with non-portable file names:
+  inst/shiny/www/PhosFake Dreams.mp3
+  inst/shiny/www/ProteoMaker Dreams.mp3
+These are not fully portable file names.
+See section ‘Package structure’ in the ‘Writing R Extensions’ manual.
+Found the following non-portable file paths:
+  ProteoMaker/.Rproj.user/shared/notebooks/9FA51843-OmicsQNordicConf2025/1/FDBA59EEca6a37e3/chunks.json
+  ProteoMaker/.Rproj.user/shared/notebooks/AE4EDA77-QuantTools_PhD_Course_Aalborg2024/1/FDBA59EEca6a37e3/chunks.json
+  ProteoMaker/.Rproj.user/shared/notebooks/E4E81EA1-QuantTools_Training_Fortaleza_2025/1/FDBA59EE9f989a17/chunks.json
+  ProteoMaker/.Rproj.user/shared/notebooks/E4E81EA1-QuantTools_Training_Fortaleza_2025/1/FDBA59EEca6a37e3/chunks.json
+  ProteoMaker/inst/shiny/SimulatedDataSets/uniprotkb_homo_sapiens_AND_reviewed_tru_2024_08_12_canonical.fasta_450779f1.fasta
+  ProteoMaker/.Rproj.user/shared/notebooks/AE4EDA77-QuantTools_PhD_Course_Aalborg2024/1/FDBA59EEca6a37e3
+  ProteoMaker/.Rproj.user/shared/notebooks/E4E81EA1-QuantTools_Training_Fortaleza_2025/1/FDBA59EE9f989a17
+  ProteoMaker/.Rproj.user/shared/notebooks/E4E81EA1-QuantTools_Training_Fortaleza_2025/1/FDBA59EEca6a37e3
+
+Tarballs are only required to store paths of up to 100 bytes and cannot
+store those of more than 256 bytes, with restrictions including to 100
+bytes for the final component.
+See section ‘Package structure’ in the ‘Writing R Extensions’ manual.
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘ProteoMaker’ can be installed ... OK
+* checking installed package size ... INFO
+  installed size is 585.5Mb
+  sub-directories of 1Mb or more:
+    ExperimentalBenchmarks   24.3Mb
+    Proteomes                33.2Mb
+    img                       4.5Mb
+    shiny                   522.9Mb
+* checking package directory ... OK
+* checking DESCRIPTION meta-information ... NOTE
+License components which are templates and need '+ file LICENSE':
+  MIT
+Checking should be performed on sources prepared by ‘R CMD build’.
+* checking top-level files ... NOTE
+File
+  LICENSE
+is not mentioned in the DESCRIPTION file.
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... WARNING
+Found the following directory with the name of a check directory:
+  ./..Rcheck
+Most likely, these were included erroneously.
+* checking code files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking dependencies in R code ... OK
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+addProteoformAbundance: no visible global function definition for
+  ‘rexp’
+visualize_benchmarks: no visible global function definition for
+  ‘polygon’
+visualize_benchmarks: no visible global function definition for
+  ‘segments’
+visualize_benchmarks: no visible global function definition for
+  ‘points’
+visualize_benchmarks: no visible global function definition for
+  ‘plot.new’
+visualize_benchmarks: no visible global function definition for
+  ‘plot.window’
+Undefined global functions or variables:
+  plot.new plot.window points polygon rexp segments
+Consider adding
+  importFrom("graphics", "plot.new", "plot.window", "points", "polygon",
+             "segments")
+  importFrom("stats", "rexp")
+to your NAMESPACE file.
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... OK
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking LazyData ... INFO
+  'LazyData' is specified without a 'data' directory
+* checking files in ‘vignettes’ ... WARNING
+Files in the 'vignettes' directory but no files in 'inst/doc':
+  ‘RunSims.Rmd’
+* checking examples ... OK
+* checking for unstated dependencies in ‘tests’ ... OK
+* checking tests ... OK
+  Running ‘testthat.R’
+* checking for unstated dependencies in vignettes ... OK
+* checking package vignettes ... WARNING
+Directory 'inst/doc' does not exist.
+Package vignette without corresponding single PDF/HTML:
+  ‘RunSims.Rmd’
+* checking re-building of vignette outputs ... OK
+* checking PDF version of manual ... OK
+* DONE
+Status: 4 WARNINGs, 4 NOTEs

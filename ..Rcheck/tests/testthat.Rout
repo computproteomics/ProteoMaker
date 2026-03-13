@@ -1,0 +1,2005 @@
+
+R version 4.5.2 (2025-10-31) -- "[Not] Part in a Rumble"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> # This file is part of the standard setup for testthat.
+> # It is recommended that you do not modify it.
+> #
+> # Where should you do additional test configuration?
+> # Learn more about the roles of various files in:
+> # * https://r-pkgs.org/testing-design.html#sec-tests-files-overview
+> # * https://testthat.r-lib.org/articles/special-files.html
+> 
+> library(testthat)
+> library(ProteoMaker)
+> 
+> test_check("ProteoMaker")
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 1 (344 bytes)
+.  test_param = integer 1= 42
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 0 (48 bytes)
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 0 (48 bytes)
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 1 (344 bytes)
+.  another_param = double 1= 3.14
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 0 (48 bytes)
+--------------------
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 1 (344 bytes)
+.  test_param = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 0 (48 bytes)
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 0 (48 bytes)
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 1 (344 bytes)
+.  another_param = double 1= 3.14
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 0 (48 bytes)
+--------------------
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.331 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 6330 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P07251 -> RSVHEPVQTGLK
+    P53867 -> FVPIARAPDGPSPLSLNLLVR
+    P50273 -> VYSQPLAQMVTSPLFK
+    P03875 -> QCHIKTHKNK
+    P22516 -> KIAILESPTGTGKTLSLICATMTWLR
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1266
+  - Remaining number of peptidoforms: 1266
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 182 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  181  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     1|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |    10|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+No simulation found with these parameters.
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.312 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 3798 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P53951 -> NEHVNSTIVGELKPSLGYMNMSYDRLK
+    P46682 -> EMLLQAIHFLSILDQTLFLPYTKK
+    P38845 -> DVILTGTFDDWRGTLPLVK
+    P38929 -> ESVQQCQRAGVTVR
+    Q12348 -> LPRVSNQSNEDTFLPSYMKFSNK
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1266
+  - Remaining number of peptidoforms: 1266
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 183 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  182  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.317 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 6330 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    Q03201 -> VLELLDSPDFK
+    Q12468 -> FKPSQEPEFHALSQSSLLKTK
+    Q00776 -> YITQSGDDYTIRLT
+    P53104 -> EKFNECLEK
+    P38929 -> VFEENCSSSLR
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 1 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+No simulation found with these parameters.
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.311 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 6330 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P50089 -> KDSSSSSTNDHQFK
+    P53951 -> GALLYIHLSNKLNALSK
+    P29589 -> YAAASDFTKAKR
+    Q12309 -> LVNSFAHWEAAQQEYERSSALYQIAIEK
+    Q03818 -> LNDELISGTIENNVLQQKLSDLK
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1266
+  - Remaining number of peptidoforms: 1266
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 182 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  181  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.289 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 6330 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P53244 -> LQYETSIPSRAVPIGSTTPVKIK
+    P18544 -> RLREIQAK
+    P25641 -> NVTEPWNETEPEDFGWDGDGIR
+    P32178 -> AEVYGVDPTNESGERR
+    Q06032 -> SDNHLPPRSSNTVLGSSK
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 1 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+No simulation found with these parameters.
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.395 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643109720670742.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 6330 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    Q06628 -> QEIVMER
+    Q06628 -> ITPVWTKFGLLRVSVSYR
+    P40512 -> ICMESLFLEPSWSSSAAVIMRCK
+    P27351 -> TAIYALLDLDEIDHERVLGLSSILHDIVK
+    Q08347 -> ECQPSTLKANLEVAKELPFSDR
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 2 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1264
+  - Remaining number of peptidoforms: 1264
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 181 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  180  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     2|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+
+#MS RUN SIMULATION - Start
+
+  - Keeping modified peptidoforms
+  - Remaining number of peptidoforms: 6
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the sum.top3 approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 3 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  2  protein groups  - Keeping modified peptidoforms
+  - Remaining number of peptidoforms: 6
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the median approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 3 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  2  protein groups  - Keeping modified peptidoforms
+  - Remaining number of peptidoforms: 6
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the mean approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 3 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  2  protein groups  - Keeping modified peptidoforms
+  - Remaining number of peptidoforms: 6
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the sum approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 3 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  2  protein groups  - Keeping modified peptidoforms
+  - Remaining number of peptidoforms: 6
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 3 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  2  protein groups  - Keeping modified peptidoforms
+  - Remaining number of peptidoforms: 8
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 3 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  2  protein groups  - Keeping modified peptidoforms
+  - Remaining number of peptidoforms: 4
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the rlm approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 3 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  2  protein groups--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.358 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5064 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3798 peptidoforms is removed with predicted detectability lower than 0.643109935489245.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 2532 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    Q12309 -> ELSKNVQWK
+    P19414 -> DLKRAIDLNK
+    P19414 -> DMPILIKAVGKTTTDHISMAGPWLK
+    Q04413 -> YFGNKLWRPTPR
+    P30283 -> DIASSKTHLDSLILKYK
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 1 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1265
+  - Remaining number of peptidoforms: 1265
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 182 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  175  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.281 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 2532 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P29465 -> HTNDIEDWSNNIQTK
+    P87275 -> LISRAIKVR
+    P38147 -> FIHVPTCKKMGLSDK
+    P38013 -> LISENKK
+    Q12675 -> NKSGRIDINR
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 1 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1265
+  - Remaining number of peptidoforms: 1265
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 182 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  178  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.308 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 3798 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P26370 -> ISTLMFFQLTLLKIDK
+    P39986 -> TGFETSQGSLVRVMIYSAER
+    P19414 -> RPIVRGLATVSNLTR
+    Q04930 -> NSYKYSREENTNEVEEK
+    P32839 -> RMLPSVILDSGIKEGILDDVYDFMK
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 1 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1265
+  - Remaining number of peptidoforms: 1265
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 182 protein groups
+  - Summarizing protein groups, this can take a while
+  - Finished summarizing into  180  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+[ FAIL 0 | WARN 118 | SKIP 1 | PASS 129 ]
+
+══ Skipped tests (1) ═══════════════════════════════════════════════════════════
+• empty test (1): 'test-visualize_benchmarks.R:3:1'
+
+[ FAIL 0 | WARN 118 | SKIP 1 | PASS 129 ]
+> 
+> proc.time()
+   user  system elapsed 
+ 61.000   0.830  61.899 

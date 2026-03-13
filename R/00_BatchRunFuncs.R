@@ -284,11 +284,20 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
       for (jj in 1:length(listtodigestion)) {
         Param <- "none"
         BeforeMS <- NULL
+        SearchIndex <- NULL
         tParam <- c(pfParam, listtodigestion[[jj]])
         md5 <- digest::digest(tParam, algo = "md5")
         filename <- paste0(Config$resultFilePath, "/outputDigest_", md5, ".RData")
         if (!overwrite & file.exists(filename)) {
           load(filename)
+          # Backward compatibility: older digest files may not contain SearchIndex.
+          if (!exists("SearchIndex") || is.null(SearchIndex)) {
+            idxParam <- Param
+            idxParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
+            idxParam$Cores <- Config$cores
+            idxParam$ClusterType <- Config$clusterType
+            SearchIndex <- buildSearchIndexFromFasta(parameters = idxParam)
+          }
         } else {
           Param <- tParam
           # Build full FASTA search index for later reuse (per digestion parameter set)
@@ -315,7 +324,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
             DigestedProt = peptable,
             parameters = Param
           )
-          save(Param, BeforeMS, file = filename)
+          save(Param, BeforeMS, SearchIndex, file = filename)
         }
         dgParam <- Param
         gc()

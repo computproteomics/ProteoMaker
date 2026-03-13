@@ -1,0 +1,1266 @@
+
+R version 4.5.2 (2025-10-31) -- "[Not] Part in a Rumble"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> pkgname <- "ProteoMaker"
+> source(file.path(R.home("share"), "R", "examples-header.R"))
+> options(warn = 1)
+> library('ProteoMaker')
+> 
+> base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
+> base::assign(".old_wd", base::getwd(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("def_param")
+> ### * def_param
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: def_param
+> ### Title: Generate default parameters or read from yaml file
+> ### Aliases: def_param
+> 
+> ### ** Examples
+> 
+> # Read YAML file from inst folder
+> yaml_path <- system.file("config", "params.yaml", package = "ProteoMaker")
+> params <- def_param(yaml_path)
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 0 (48 bytes)
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 0 (48 bytes)
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 0 (48 bytes)
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 0 (48 bytes)
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 0 (48 bytes)
+--------------------
+> 
+> 
+> 
+> cleanEx()
+> nameEx("gather_all_sims")
+> ### * gather_all_sims
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: gather_all_sims
+> ### Title: Gather parameters and benchmarks from all available runs
+> ### Aliases: gather_all_sims
+> 
+> ### ** Examples
+> 
+> config <- set_proteomaker(resultFilePath = tempdir())
+> all_results <- gather_all_sims(config)
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("generate_combinations")
+> ### * generate_combinations
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: generate_combinations
+> ### Title: Generate all combinations of parameter sets
+> ### Aliases: generate_combinations
+> 
+> ### ** Examples
+> 
+> params <- def_param()
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+> params$paramGroundTruth$NumReps <- c(2, 4, 6)
+> combinations <- generate_combinations(params)
+> 
+> 
+> 
+> cleanEx()
+> nameEx("get_simulation")
+> ### * get_simulation
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: get_simulation
+> ### Title: Retrieve intermediate outputs for a simulation
+> ### Aliases: get_simulation
+> 
+> ### ** Examples
+> 
+> config <- set_proteomaker(resultFilePath = tempdir(), cores = NULL)
+> Param <- def_param()
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+> Param$paramGroundTruth$NumReps <- 5
+> benchmarks <- run_sims(Param, config)
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.330 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 6330 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    Q12292 -> AQNQVLQSSEVEGK
+    P06787 -> HVLTSIGEKLTDAEVDDMLR
+    P53104 -> TDHTQAVDKK
+    Q06321 -> SLISTYYTYLNR
+    P47134 -> SGDNSSNITAIPKEEQR
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1266
+  - Remaining number of peptidoforms: 1266
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 183 protein groups
+  - Summarizing protein groups, this can take a while
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+  - Finished summarizing into  182  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+> result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
+> 
+> 
+> 
+> cleanEx()
+> nameEx("get_stage_hashes")
+> ### * get_stage_hashes
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: get_stage_hashes
+> ### Title: Retrieve hashes for intermediate simulation stages
+> ### Aliases: get_stage_hashes
+> 
+> ### ** Examples
+> 
+> Param <- def_param()
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+> hashes <- get_stage_hashes(Param)
+> hashes["MSRun"]
+                             MSRun 
+"fb3dd2c8ed9e63649765c00d019dcca8" 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("matrix_benchmarks")
+> ### * matrix_benchmarks
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: matrix_benchmarks
+> ### Title: Create a matrix of benchmarks from simulation results
+> ### Aliases: matrix_benchmarks
+> 
+> ### ** Examples
+> 
+> conf <- set_proteomaker(resultFilePath = tempdir(), cores = NULL)
+> results <- run_sims(def_param(), conf)
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.322 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 3798 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P53934 -> EIYNLRVKK
+    P53934 -> NCLNSRLVPFLK
+    P36000 -> VLDILLELLERQDTIKDDCCISLCDLLR
+    P36000 -> QCTLLLTELK
+    Q04930 -> SLYPLSDDINTPESLSSCSSSVSSR
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 1 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1265
+  - Remaining number of peptidoforms: 1265
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 183 protein groups
+  - Summarizing protein groups, this can take a while
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+  - Finished summarizing into  180  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+> benchmark_matrix <- matrix_benchmarks(results, conf)
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("plot_params")
+> ### * plot_params
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: plot_params
+> ### Title: Plot parameters for a specific simulation
+> ### Aliases: plot_params
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker(cores = NULL)), set_proteomaker(cores = NULL))
+> ##D plot_params(benchmarks, current_row = 1)
+> ## End(Not run)
+> 
+> 
+> 
+> cleanEx()
+> nameEx("run_sims")
+> ### * run_sims
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: run_sims
+> ### Title: Run all simulations for given parameters and configurations
+> ### Aliases: run_sims
+> 
+> ### ** Examples
+> 
+> params <- def_param()
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+> config <- set_proteomaker(cores = NULL)
+> results <- run_sims(params, config)
+Total number of simulations to run: 1
+#SAMPLE PREPARATION - Start
+
+ + Importing data:
+  - File /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta imported, containing 195 protein sequences.
+  - A total of 0 protein sequences have been removed due to unusual amino acids (B,J,O,U,X,Z) composition.
+  - A total of 0 duplicated protein accessions have been removed.
+  - Total number of remaining protein sequences: 195
+
+ + Creating modified and unmodified fractions:
+  - A total of 195 sequences are unmodifiable.
+  - The protein set cannot be fractionated, too low number of proteins or too low FracModProt %.
+  - Modified fraction: 0 proteins.
+  - Unmodified fraction: 195 proteins.
+
+#SAMPLE PREPARATION - Finish
+
+ + Add quan. distribution: Relative -> absolute
+
+#PROTEOME INDEX - Start
+
+ + FASTA: /home/veit/devel/Bioinformatics/EuBIC/ProteoMaker/..Rcheck/ProteoMaker/Proteomes/fasta_example.fasta
+ + Enzyme: trypsin, len 7-30, maxMC=2
+ + PTM types: none (peptidoform counts per window = 1)
+ + Proteins after filtering: 195
+ + Indexed proteins: 195
+ + Dropped (no windows): 0
+ + Total valid windows: 19449
+ + Windows/protein (nz) min/med/mean/max: 2/88/99.74/516
+ + Shared peptides (>=2 proteins): 182
+ + Time: 0.311 sec
+#PROTEOME INDEX - Finish
+
+
+#PROTEOFORM DIGESTION - Start
+
+ + Digestion input:
+  - A total number of 195 proteoforms, is proceed for proteolytic digestion.
+  - Unmodified fraction contains 195 proteoforms and modified fraction 0 proteoforms.
+  - Cleavage will be performed by trypsin with a maximum of 2 miss-cleavages, to create peptides of length 7 to 30 amino acids.
+  - All proteoforms are digested successfully!
+ + Digestion output:
+  - A total number of 5121 peptides is generated.
+  - Unmodified fraction contains 5121 peptides and modified fraction 0 peptides.
+  - The amount of peptides with 0, 1, 2 miss-cleavages is 4871, 246, 4 respectively.
+
+#PROTEOFORM DIGESTION - Finish
+
+#PEPTIDE SUMMARIZATION - Start
+
+ + Summarization input:
+  - A total number of 5121 peptides is proceed for summarization.
+  - Unique peptide IDs are generated.
+  - Isoleucine substitution to leucine is done.
+  - Peptide groups are generated.
+  - Peptide groups summarization is done.
+  - Remove 0% of the least abundant peptides, which corresponds to 0 peptides.
+  - Calculating/predicting peptide detectability for later filtering with PeptideRanger.
+ + Summarization output:
+  - A total number of 5065 summarized peptides is generated.
+
+#PEPTIDE SUMMARIZATION - Finish
+
+
+#ENRICHMENT SIMULATION - Start
+
+ + Modification loss
+  - Remove 0 modified peptides in non-enriched fraction according to parameter ModificationLoss (0)
+
+#ENRICHMENT SIMULATION - Finish
+
+
+#MS RUN SIMULATION - Start
+
+ + Noise addition:
+  - The MS noise standard deviation is 0.25.
+  - PTM sampling: none (donors are unmodified peptidoforms)
+  - Noise added to all samples!
+
+ + Detection limits:
+  - Keeping 25% peptidoforms with high detectability score
+          (PeptideRanger).
+  - A total of 3799 peptidoforms is removed with predicted detectability lower than 0.643008652631606.
+
+ + Removing peptidoform intensities:
+  - The percentage of remaining intensities is 50% and the probabilities of selection depends on intensity values by 1.
+  - A total of 3798 intensities is removed.
+
+ + Addition of false identification:
+  - FDR selected is 1% and corresponds to 12 peptidoforms.
+  - Donor windows (non-zero): 19449 across 195 proteins.
+  - Donor pool size (approx): 1.94 x 10^4 peptidoforms.
+  - Examples of substituted peptidoforms (Accession -> Peptidoform):
+    P53934 -> EIYNLRVKK
+    P53934 -> NCLNSRLVPFLK
+    P36000 -> VLDILLELLERQDTIKDDCCISLCDLLR
+    P36000 -> QCTLLLTELK
+    Q04930 -> SLYPLSDDINTPESLSSCSSSVSSR
+  - Donor diversity: 12 unique windows out of 12; duplicate windows: 0; duplicate stripped sequences across donors: 0.
+  - FDR addition finished.
+
+  - PTM re-location finished.
+
+  - Removed 1 duplicate peptidoforms after annotation.
+#MS RUN SIMULATION - Finish
+
+  - Removed all modified peptidoforms, remaining number of peptidoforms: 1265
+  - Remaining number of peptidoforms: 1265
+ + Protein summarisation
+  - Minimum unique peptidoforms per protein group: 1
+  - Protein-group summarisation using the medpolish approach.
+  - Sorted protein table
+  - built protein index for faster summarization
+  - No duplicated stripped sequences within protein groups detected.
+  - Initiated protein matrix for 183 protein groups
+  - Summarizing protein groups, this can take a while
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+Warning in medpolish(tmp, na.rm = T, trace.iter = F) :
+  medpolish() did not converge in 10 iterations
+  - Finished summarizing into  180  protein groups + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+ + Running statistical tests
+|Condition A |Condition B |
+|:-----------|:-----------|
+|Condition 1 |Condition 2 |
+Running limma test
+limma completed
+================================================================================
+tests completed
+------- Summary of Results --------
+Number of differentially regulated features with FDR < 0.01:
+|                           | limma|
+|:--------------------------|-----:|
+|Condition 2_vs_Condition 1 |     0|
+
+#### Calculating benchmarks ###
+Warning: <= 200 modified peptides with corresponding unmodified peptides; skipping PTM-adjusted stats
+> 
+> 
+> 
+> cleanEx()
+> nameEx("set_proteomaker")
+> ### * set_proteomaker
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: set_proteomaker
+> ### Title: Set paths and general configuration for ProteoMaker
+> ### Aliases: set_proteomaker
+> 
+> ### ** Examples
+> 
+> config <- set_proteomaker()
+> config <- set_proteomaker(
++   fastaFilePath = "CustomProteomes",
++   resultFilePath = "Results", cores = 4, clusterType = "PSOCK"
++ )
+> 
+> 
+> 
+> cleanEx()
+> nameEx("visualize_benchmarks")
+> ### * visualize_benchmarks
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: visualize_benchmarks
+> ### Title: Visualize benchmarks vs 1 or two parameters
+> ### Aliases: visualize_benchmarks
+> 
+> ### ** Examples
+> 
+> conf <- set_proteomaker(resultFilePath = tempdir(), cores = NULL)
+> results <- run_sims(def_param(), conf)
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+> benchmark_matrix <- matrix_benchmarks(results, conf)
+> visualize_benchmarks(benchmark_matrix, ref_par = "NumReps")
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("visualize_one_sim")
+> ### * visualize_one_sim
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: visualize_one_sim
+> ### Title: Visualize benchmarks for a specific simulation
+> ### Aliases: visualize_one_sim
+> 
+> ### ** Examples
+> 
+> benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker(cores = NULL)), set_proteomaker(cores = NULL))
+--------------------
+Ground truth generation parameters:
+ Param$paramGroundTruth = list 15 (2496 bytes)
+.  ProteoMakerVersion = character 1= dev 
+.  NumCond = integer 1= 2
+.  NumReps = integer 1= 3
+.  PathToFasta = character 1= fasta_example.fasta 
+.  PathToProteinList = logical 1= NA
+.  PercExpressedProt = integer 1= 1
+.  FracModProt = integer 1= 0
+.  PropModPerProt = integer 1= 0
+.  PTMMultipleLambda = integer 1= 0
+.  RemoveNonModFormFrac = integer 1= 0
+.  PTMTypes = logical 1= NA
+.  PTMTypesDistr = logical 1= NA
+.  PTMTypesMass = logical 1= NA
+.  ModifiableResidues = logical 1= NA
+.  ModifiableResiduesDistr = logical 1= NA
+--------------------
+Proteoform abundance parameters:
+ Param$paramProteoformAb = list 8 (1392 bytes)
+.  QuantNoise = double 1= 0.5
+.  DiffRegFrac = double 1= 0.3
+.  DiffRegMax = integer 1= 1
+.  UserInputFoldChanges_NumRegProteoforms = integer 1= 0
+.  UserInputFoldChanges_RegulationFC = integer 1= 0
+.  AbsoluteQuanMean = double 1= 30.5
+.  AbsoluteQuanSD = double 1= 3.6
+.  ThreshRemoveProteoforms = double 1= 0
+--------------------
+Digestion parameters:
+ Param$paramDigest = list 12 (2048 bytes)
+.  Enzyme = character 1= trypsin 
+.  PropMissedCleavages = double 1= 0.01
+.  MaxNumMissedCleavages = integer 1= 2
+.  PepMinLength = integer 1= 7
+.  PepMaxLength = integer 1= 30
+.  LeastAbundantLoss = integer 1= 0
+.  EnrichPTM = logical 1= NA
+.  EnrichmentLoss = double 1= 0.2
+.  EnrichmentEfficiency = integer 1= 1
+.  EnrichmentQuantDiff = double 1= 0
+.  EnrichmentNoise = double 1= 0.2
+.  ModificationLoss = double 1= 0
+--------------------
+MSRun parameters:
+ Param$paramMSRun = list 7 (1200 bytes)
+.  PercDetectability = double 1= 0.25
+.  PercDetectedVal = double 1= 0.5
+.  WeightDetectVal = integer 1= 1
+.  MSNoise = double 1= 0.25
+.  WrongIDs = double 1= 0.01
+.  WrongLocalizations = integer 1= 0
+.  MaxNAPerPep = integer 1= 100
+--------------------
+Data analysis parameters:
+ Param$paramDataAnalysis = list 5 (984 bytes)
+.  SharedPep = logical 1= FALSE
+.  ProtSummarization = character 1= medpolish 
+.  MinUniquePep = integer 1= 1
+.  IncludeModPep = logical 1= FALSE
+.  StatPaired = logical 1= FALSE
+--------------------
+Total number of simulations to run: 1
+> visualize_one_sim(benchmarks, current_row = 1)
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning in plot_params(param_values, sim) : NAs introduced by coercion
+Warning: 'layout' objects don't have these attributes: 'NA'
+Valid attributes include:
+'_deprecated', 'activeshape', 'annotations', 'autosize', 'autotypenumbers', 'calendar', 'clickmode', 'coloraxis', 'colorscale', 'colorway', 'computed', 'datarevision', 'dragmode', 'editrevision', 'editType', 'font', 'geo', 'grid', 'height', 'hidesources', 'hoverdistance', 'hoverlabel', 'hovermode', 'images', 'legend', 'mapbox', 'margin', 'meta', 'metasrc', 'modebar', 'newshape', 'paper_bgcolor', 'plot_bgcolor', 'polar', 'scene', 'selectdirection', 'selectionrevision', 'separators', 'shapes', 'showlegend', 'sliders', 'smith', 'spikedistance', 'template', 'ternary', 'title', 'transition', 'uirevision', 'uniformtext', 'updatemenus', 'width', 'xaxis', 'yaxis', 'barmode', 'bargap', 'mapType'
+
+Warning: Can't display both discrete & non-discrete data on same axis
+Warning: 'layout' objects don't have these attributes: 'NA'
+Valid attributes include:
+'_deprecated', 'activeshape', 'annotations', 'autosize', 'autotypenumbers', 'calendar', 'clickmode', 'coloraxis', 'colorscale', 'colorway', 'computed', 'datarevision', 'dragmode', 'editrevision', 'editType', 'font', 'geo', 'grid', 'height', 'hidesources', 'hoverdistance', 'hoverlabel', 'hovermode', 'images', 'legend', 'mapbox', 'margin', 'meta', 'metasrc', 'modebar', 'newshape', 'paper_bgcolor', 'plot_bgcolor', 'polar', 'scene', 'selectdirection', 'selectionrevision', 'separators', 'shapes', 'showlegend', 'sliders', 'smith', 'spikedistance', 'template', 'ternary', 'title', 'transition', 'uirevision', 'uniformtext', 'updatemenus', 'width', 'xaxis', 'yaxis', 'barmode', 'bargap', 'mapType'
+
+> 
+> 
+> 
+> ### * <FOOTER>
+> ###
+> cleanEx()
+> options(digits = 7L)
+> base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  32.376 0.652 33.11 0 0 
+> grDevices::dev.off()
+null device 
+          1 
+> ###
+> ### Local variables: ***
+> ### mode: outline-minor ***
+> ### outline-regexp: "\\(> \\)?### [*]+" ***
+> ### End: ***
+> quit('no')

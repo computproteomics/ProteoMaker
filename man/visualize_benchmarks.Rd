@@ -10,7 +10,8 @@ visualize_benchmarks(
   ref_par = "WrongIDs",
   fullrange = FALSE,
   cols = NULL,
-  errorbar = FALSE
+  errorbar = FALSE,
+  compare_par = NULL
 )
 }
 \arguments{
@@ -32,6 +33,10 @@ visualization. If \code{NULL}, default colors will be used.}
 \item{errorbar}{A logical value indicating whether to show mean +/- standard
 deviations in the
 visualization. Default is \code{FALSE}. This parameter is not applied to the color maps.}
+
+\item{compare_par}{A character vector specifying the names of an additional parameter for subsetting and then
+comparison of the benchmark values. This parameter is only applied when \code{ref_par} contains one parameter.
+If default \code{NULL}, the full set will be shown.}
 }
 \value{
 A bar plot or a colored map visualizing the specified benchmarks against the
