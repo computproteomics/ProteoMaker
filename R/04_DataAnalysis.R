@@ -154,6 +154,7 @@ proteinSummarisation <- function(peptable, parameters) {
   # Function to summarize protein groups
   summarizeProtein <- function(tmp) {
     out <- NULL
+    used_fallback <- FALSE
     if (nrow(tmp) >= minUniquePep) {
       tmp <- as.matrix(tmp)
       if (method == "sum.top3") {
@@ -188,20 +189,35 @@ proteinSummarisation <- function(peptable, parameters) {
             names_to = "sample",
             values_to = "intensity"
           )
-          long_df$sample <- factor(long_df$sample, levels = QuantColnames)
-          fit <- rlm(intensity ~ peptide + sample, data = long_df, na.action = na.omit)
-          coefs <- coef(fit)
-          sample_coefs <- coefs[grep("^sample", names(coefs))]
-
-          # Include intercept (baseline)
-          baseline <- coefs["(Intercept)"]
-          sample_names <- gsub("^sample", "", names(sample_coefs))
-
-          # Set full abundance vector (include baseline sample)
           out <- setNames(rep(NA_real_, length(QuantColnames)), QuantColnames)
-          baseline_sample <- levels(long_df$sample)[1]
-          out[baseline_sample] <- baseline
-          out[sample_names] <- baseline + sample_coefs
+          long_df <- long_df[!is.na(long_df$intensity), , drop = FALSE]
+          if (nrow(long_df) > 0) {
+            long_df$peptide <- factor(long_df$peptide)
+            long_df$sample <- factor(long_df$sample, levels = QuantColnames)
+            long_df$sample <- droplevels(long_df$sample)
+            n_pep <- nlevels(long_df$peptide)
+            n_samp <- nlevels(long_df$sample)
+            n_param <- n_pep + n_samp - 1L
+            if (n_pep > 1 && n_samp > 1 && nrow(long_df) > n_param) {
+              mm <- model.matrix(~ peptide + sample, data = long_df)
+              if (qr(mm)$rank == ncol(mm)) {
+                fit <- rlm(intensity ~ peptide + sample, data = long_df, na.action = na.omit)
+                coefs <- coef(fit)
+                sample_coefs <- coefs[grep("^sample", names(coefs))]
+
+                # Include intercept (baseline)
+                baseline <- coefs["(Intercept)"]
+                sample_names <- gsub("^sample", "", names(sample_coefs))
+                baseline_sample <- levels(long_df$sample)[1]
+                out[baseline_sample] <- baseline
+                out[sample_names] <- baseline + sample_coefs
+              }
+            }
+          }
+          if (all(is.na(out))) {
+            out <- apply(as.matrix(tmp[, QuantColnames, drop = FALSE]), 2, mean, na.rm = TRUE)
+            used_fallback <- TRUE
+          }
         } else {
           out <- tmp[1, QuantColnames]
         }
@@ -209,6 +225,7 @@ proteinSummarisation <- function(peptable, parameters) {
         stop("No valid method provided!")
       }
     }
+    attr(out, "used_fallback") <- used_fallback
     return(out)
   }
 
@@ -241,6 +258,7 @@ proteinSummarisation <- function(peptable, parameters) {
       rownames(tmp) <- make.unique(key)
       out <- tmp[1, , drop=F]
       tout <- summarizeProtein(tmp[, QuantColnames, drop = F])
+      used_fallback <- isTRUE(attr(tout, "used_fallback"))
       if (!is.null(tout)) {
         out[QuantColnames] <- tout
         # add other information
@@ -250,7 +268,7 @@ proteinSummarisation <- function(peptable, parameters) {
       } else {
         out <- NULL
       }
-      return(out)
+      return(list(out = out, used_fallback = used_fallback))
     })
     parallel::stopCluster(cluster)
   } else {
@@ -260,6 +278,7 @@ proteinSummarisation <- function(peptable, parameters) {
       rownames(tmp) <- make.unique(key)
       out <- tmp[1, ]
       tout <- summarizeProtein(tmp[, QuantColnames, drop = F])
+      used_fallback <- isTRUE(attr(tout, "used_fallback"))
       if (!is.null(tout)) {
         out[QuantColnames] <- tout
         # add other information
@@ -268,9 +287,11 @@ proteinSummarisation <- function(peptable, parameters) {
       } else {
         out <- NULL
       }
-      return(out)
+      return(list(out = out, used_fallback = used_fallback))
     })
   }
+  fallback_count <- sum(vapply(proteins, function(x) isTRUE(x$used_fallback), logical(1)))
+  proteins <- lapply(proteins, function(x) x$out)
   # join all protein data
   proteins <- Filter(Negate(is.null), proteins)
   protmat <- do.call(rbind, proteins)
@@ -278,6 +299,9 @@ proteinSummarisation <- function(peptable, parameters) {
   protmat <- protmat[rowSums(is.na(protmat[, QuantColnames])) < length(QuantColnames), ]
 
   cat("  - Finished summarizing into ", nrow(protmat), " protein groups")
+  if (method == "rlm" && fallback_count > 0) {
+    cat("\n  - rlm fallback to mean used in ", fallback_count, " protein groups")
+  }
   #  for (i in parameters$QuantColnames) protmat[,i] <- as.numeric(protmat[,i])
 
   return(protmat)
