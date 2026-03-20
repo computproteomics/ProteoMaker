@@ -4,7 +4,9 @@ ProteoMaker is a platform for the  generation of an in-silico bottom-up proteomi
 
 All the parameters that are used to generate the data are described in [man/Parameters.qmd](man/Parameters.qmd) (render to HTML if you prefer). The script that runs the entire pipeline is [`RunSims.R`](inst/cmd/RunSims.R). Alternatively, you can use the [Vignette](vignettes/Vignette.html). The simulations with multiple parameters can be set up and run. ProteoMaker also provides comparison of the results with the ground truth using [benchmarking metrics](man/Benchmarks.qmd) and visual comparison between simulated data sets.
 
-The pipeline is described in the figure [`ProteoMakerLayout.svg`](inst/img/ProteoMakerLayout.svg) and can be described as follows:
+You can also use the Shiny app: https://computproteomics.bmb.sdu.dk/app_direct/ProteoMaker/
+
+The pipeline can be described as follows:
 
 0) General functions to run the simulations: [`00_BatchRunFuncs.R`](R/00_BatchRunFuncs.R)
 1) Generation of ground truth data at the proteoform level [`01_GenerateGroundTruth.R`](R/01_GenerateGroundTruth.R).
