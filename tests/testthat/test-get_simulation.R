@@ -117,3 +117,57 @@ test_that("get_simulation handles invalid stage name", {
 
   expect_error(get_simulation(param, config, stage = "InvalidStage"), "Invalid stage name")
 })
+
+test_that("get_simulation with nested Parameters returns a list of all combinations", {
+  ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
+  unlink(ll, recursive = TRUE)
+  config <- test_proteomaker_config(resultFilePath = tempdir())
+  Param <- def_param()
+  Param$paramGroundTruth$NumReps <- c(3)
+  run_sims(Param, config)
+
+  results <- get_simulation(Param, config)
+  expect_true(is.list(results))
+  expect_equal(length(results), 1)
+  expect_true(is.list(results[[1]]))
+  expect_named(results[[1]], c("Benchmarks", "Param", "Stats", "StatsPep"), ignore.order = TRUE)
+})
+
+test_that("get_simulation with nested Parameters returns empty list when no sims exist", {
+  ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
+  unlink(ll, recursive = TRUE)
+  config <- test_proteomaker_config(resultFilePath = tempdir())
+  Param <- def_param()
+  Param$paramGroundTruth$NumReps <- c(3)
+
+  results <- get_simulation(Param, config)
+  expect_true(is.list(results))
+  expect_equal(length(results), 0)
+})
+
+test_that("get_simulation with nested Parameters and multiple values returns correct count", {
+  ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
+  unlink(ll, recursive = TRUE)
+  config <- test_proteomaker_config(resultFilePath = tempdir())
+  Param <- def_param()
+  Param$paramGroundTruth$NumReps <- c(3, 5)
+  run_sims(Param, config)
+
+  results <- get_simulation(Param, config)
+  expect_true(is.list(results))
+  expect_equal(length(results), 2)
+})
+
+test_that("get_simulation with nested Parameters respects stage argument", {
+  ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
+  unlink(ll, recursive = TRUE)
+  config <- test_proteomaker_config(resultFilePath = tempdir())
+  Param <- def_param()
+  Param$paramGroundTruth$NumReps <- c(3)
+  run_sims(Param, config)
+
+  results <- get_simulation(Param, config, stage = "MSRun")
+  expect_true(is.list(results))
+  expect_equal(length(results), 1)
+  expect_named(results[[1]], c("AfterMSRun", "Param"), ignore.order = TRUE)
+})
