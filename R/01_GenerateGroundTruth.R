@@ -386,8 +386,9 @@ performModification <- function(to.Modify, parameters) {
 #'  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
 #'  for each modifiable residue within each PTM type.
 #'  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson
-#'  distribution,
-#'  which determines the number of modifications per sequence.
+#'  distribution, which determines the number of modifications per sequence.
+#'  When set to \code{0}, exactly one site is selected per PTM type from all modifiable residues,
+#'  weighted by the background residue frequency distribution.
 #'  }
 #'
 #'
@@ -407,12 +408,33 @@ modify_seq <- function(seq, pars) {
     lapply(ptms, function(x) {
       weight <- pmod_res_distr[[x]]
       names(weight) <- pmod_res[[x]]
-      # Old way, not sure whether necessary
-      # weight <- length(unlist(x[[y]])) / lengths(x[[y]]) * weight
       weight[!is.finite(weight)] <- 0
 
       # All modifiable residues
       all_positions <- setNames(lapply(pmod_res[[x]], function(y) which(y == seq_string[[1]])), pmod_res[[x]])
+
+      if (lambda == 0) {
+        # lambda = 0: select exactly one modification site for this PTM type,
+        # chosen from all modifiable residues weighted by background residue frequency.
+        # This ensures exactly one modified site per PTM type per proteoform.
+        all_pos_flat <- unlist(all_positions)
+        all_res_flat <- rep(pmod_res[[x]], lengths(all_positions))
+        if (length(all_pos_flat) == 0) {
+          nummod.per.residue <- setNames(lapply(pmod_res[[x]], function(y) 0L), pmod_res[[x]])
+          return(list(modified = NULL, count = nummod.per.residue))
+        }
+        site_weights <- weight[all_res_flat]
+        site_weights[!is.finite(site_weights)] <- 0
+        if (sum(site_weights) == 0) site_weights <- rep(1 / length(site_weights), length(site_weights))
+        chosen_idx <- sample(seq_along(all_pos_flat), size = 1L, prob = site_weights)
+        chosen_pos <- all_pos_flat[chosen_idx]
+        chosen_res <- all_res_flat[chosen_idx]
+        out <- setNames(lapply(pmod_res[[x]], function(y) {
+          if (y == chosen_res) chosen_pos else NULL
+        }), pmod_res[[x]])
+        nummod.per.residue <- setNames(lapply(out, length), pmod_res[[x]])
+        return(list(modified = chosen_pos, count = nummod.per.residue))
+      }
 
       # Adjust by residue frequency in protein
       weight <- sapply(pmod_res[[x]], function(y) {
