@@ -42,7 +42,7 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$FracModProt*: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to `0.0`, indicating no proteins will be modified.
 
-*Param\$PropModPerProt*: Multiplier for generating additional modified proteoforms per selected protein. Setting to `1` (or the default `0`) keeps exactly one modified proteoform per protein. Values `>= 2` create extra modified copies (e.g., `2` yields two independently modified proteoforms per protein). To obtain **2 proteoforms per protein** (one modified + one unmodified), set `PropModPerProt = 1` and `RemoveNonModFormFrac = 0` (see below). To obtain **2 modified proteoforms** and no unmodified form, set `PropModPerProt = 2` and `RemoveNonModFormFrac = 1`.
+*Param\$PropModPerProt*: Multiplier for generating additional modified proteoforms per selected protein. Values of `0` or `1` (and the default `0`) keep exactly one modified proteoform per protein — the difference has no effect since the duplication step only activates for values `>= 2`. Values `>= 2` create that many independently modified proteoforms per protein (e.g., `2` yields two modified proteoforms). To obtain **2 proteoforms per protein** (one modified + one unmodified), set `PropModPerProt = 1` and `RemoveNonModFormFrac = 0` (see below). To obtain **2 modified proteoforms** and no unmodified form, set `PropModPerProt = 2` and `RemoveNonModFormFrac = 1`.
 
 *Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph")`. The mods name is mandatory.
 
@@ -50,7 +50,7 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$PTMTypesMass*: Mass shifts associated with each PTM type (provide as a named list, e.g. `list(ph = 79.9663)`). Defaults to `NA` and must be set when PTMs are enabled.
 
-*Param\$PTMMultipleLambda*: Controls the average number of modification sites per proteoform via a truncated Poisson distribution scaled by the number of modifiable sites in the sequence. Setting `PTMMultipleLambda = 0` produces **exactly one modified site per PTM type per proteoform**: a single site is chosen from all modifiable residues for that PTM type, weighted by the background residue frequency distribution. For small positive values (e.g., `0.1`) the expected number of modifications increases gradually. When using a **single PTM type**, `PTMMultipleLambda = 0` therefore guarantees **exactly one modified site per proteoform** overall. Defaults to `0`.
+*Param\$PTMMultipleLambda*: Controls the average number of modification sites per proteoform via a truncated Poisson distribution (truncated to [1, N] where N is the number of modifiable sites) scaled by the number of modifiable sites in the sequence. Must be positive to produce modifications for proteins with more than one modifiable residue. Use a small value (e.g., `0.001`) to obtain on average approximately one modified site per proteoform per PTM type; larger values increase the expected number of modifications. Defaults to `0`, which disables multi-site sampling — provide a positive value when PTMs are enabled.
 
 *Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually we use `list(ph = c("S", "T", "Y"))`
 
@@ -58,7 +58,7 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$RemoveNonModFormFrac*: The fraction of modifiable proteins for which the unmodified proteoform is removed. Defaults to `0`, meaning all selected proteins retain their unmodified counterpart alongside the modified one(s). Setting to `1` removes all unmodified counterparts so that only modified proteoforms remain.
 
-**Recipe — max one modified site per proteoform, two proteoforms per protein:**
+**Recipe — approximately one modified site per proteoform, two proteoforms per protein:**
 
 ```r
 Param$paramGroundTruth$FracModProt        <- 0.5          # 50 % of proteins are modified
@@ -67,9 +67,9 @@ Param$paramGroundTruth$PTMTypesMass       <- list(ph = 79.966331)
 Param$paramGroundTruth$PTMTypesDistr      <- list(ph = 1)
 Param$paramGroundTruth$ModifiableResidues <- list(mods = list(ph = c("S", "T", "Y")))
 Param$paramGroundTruth$ModifiableResiduesDistr <- list(mods = list(ph = c(S = 0.86, T = 0.13, Y = 0.01)))
-Param$paramGroundTruth$PTMMultipleLambda  <- 0   # at most 1 modified site per proteoform
-Param$paramGroundTruth$PropModPerProt     <- 1   # 1 modified proteoform per protein
-Param$paramGroundTruth$RemoveNonModFormFrac <- 0 # keep unmodified counterpart -> 2 proteoforms total
+Param$paramGroundTruth$PTMMultipleLambda  <- 0.001 # small lambda -> ~1 modified site per proteoform
+Param$paramGroundTruth$PropModPerProt     <- 1     # 1 modified proteoform per protein
+Param$paramGroundTruth$RemoveNonModFormFrac <- 0   # keep unmodified counterpart -> 2 proteoforms total
 ```
 
 ### Proteoform Abundance Generation

@@ -66,7 +66,7 @@ params:
   PTMMultipleLambda:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Controls the number of modification sites per proteoform via a truncated Poisson distribution scaled by the number of modifiable sites. Setting to 0 selects exactly one site per PTM type per proteoform (the site is chosen from all modifiable residues weighted by background residue frequencies). With a single PTM type and lambda = 0, each proteoform therefore has exactly one modified site. Positive values increase the expected number of modifications."
+    description: "Lambda for the truncated Poisson distribution (truncated to [1, N]) controlling the number of modification sites per proteoform, scaled by the number of modifiable sites. Must be positive to produce modifications for proteins with multiple modifiable residues. Use a small positive value (e.g. 0.001) for approximately one modified site per proteoform per PTM type. Defaults to 0 (multi-site sampling disabled)."
     min: 0
     max: 10
     class: "numeric"

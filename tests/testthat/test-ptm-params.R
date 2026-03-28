@@ -1,7 +1,7 @@
 library(testthat)
 
 # Helper: build the pars list expected by modify_seq
-make_pars <- function(lambda = 0) {
+make_pars <- function(lambda = 0.001) {
   pmod_res <- list(ph = c("S", "T", "Y"))
   ptms <- "ph"
   # pmod_res_distr is already multiplied by ptms_distr (as done inside modify())
@@ -11,7 +11,7 @@ make_pars <- function(lambda = 0) {
 }
 
 # Helper: minimal PTM parameters for run_sims
-make_ptm_params <- function(params, lambda = 0) {
+make_ptm_params <- function(params, lambda = 0.001) {
   params$paramGroundTruth$FracModProt <- 1
   params$paramGroundTruth$PropModPerProt <- 1
   params$paramGroundTruth$RemoveNonModFormFrac <- 0
@@ -24,34 +24,30 @@ make_ptm_params <- function(params, lambda = 0) {
   params
 }
 
-test_that("modify_seq with lambda = 0 returns at most one modification per PTM type", {
+test_that("modify_seq with lambda = 0 runs without error for multi-residue sequence", {
+  set.seed(42)
+  seq <- "MSTYSTSYTSSTTYYSSTMSTYSTSYTSSTTYYSS"
+  pars <- make_pars(lambda = 0)
+
+  # Should not throw an error even when lambda = 0 and pos_len > 1,
+  # and must produce no modifications (multi-site sampling is skipped).
+  r <- ProteoMaker:::modify_seq(seq, pars)
+  expect_equal(length(r$Positions), 0L)
+})
+
+test_that("modify_seq with small positive lambda produces at least one modification", {
   set.seed(42)
   # A sequence with many S, T, Y residues
   seq <- "MSTYSTSYTSSTTYYSSTMSTYSTSYTSSTTYYSS"
-  pars <- make_pars(lambda = 0)
+  pars <- make_pars(lambda = 0.001)
 
   results <- replicate(20, {
     r <- ProteoMaker:::modify_seq(seq, pars)
     length(r$Positions)
   })
 
-  # With lambda = 0 and a single PTM type, the implementation selects exactly 1 site
-  # from all modifiable residues, so every call must produce exactly 1 modification.
-  expect_true(all(results == 1), info = paste("Modification counts:", paste(results, collapse = ", ")))
-})
-
-test_that("modify_seq with lambda = 0 eventually produces a modification (not always empty)", {
-  set.seed(1)
-  seq <- "MSTYSTSYTSSTTYYSS"
-  pars <- make_pars(lambda = 0)
-
-  results <- replicate(10, {
-    r <- ProteoMaker:::modify_seq(seq, pars)
-    length(r$Positions)
-  })
-
-  # With residues present and lambda = 0 the implementation always picks exactly 1 site
-  expect_true(all(results == 1), info = paste("Modification counts:", paste(results, collapse = ", ")))
+  # With small positive lambda and many modifiable residues, modifications should occur
+  expect_true(any(results >= 1), info = paste("Modification counts:", paste(results, collapse = ", ")))
 })
 
 test_that("modify_seq with lambda > 0 can produce multiple modifications", {
@@ -68,7 +64,7 @@ test_that("modify_seq with lambda > 0 can produce multiple modifications", {
   expect_true(any(results > 1), info = "Expected at least one run with > 1 modification")
 })
 
-test_that("run_sims with PTMs and lambda=0 completes without error", {
+test_that("run_sims with PTMs completes without error", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
 
@@ -76,35 +72,12 @@ test_that("run_sims with PTMs and lambda=0 completes without error", {
   params <- def_param()
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
-  params <- make_ptm_params(params, lambda = 0)
+  params <- make_ptm_params(params, lambda = 0.001)
 
   results <- run_sims(params, config)
 
   expect_true(is.list(results))
   expect_true(length(results) > 0)
-})
-
-test_that("PTMMultipleLambda=0 yields at most 1 modified site per proteoform in full simulation", {
-  ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
-  unlink(ll, recursive = TRUE)
-
-  config <- test_proteomaker_config(resultFilePath = tempdir())
-  params <- def_param()
-  params$paramGroundTruth$NumReps <- 2
-  params$paramGroundTruth$NumCond <- 2
-  params <- make_ptm_params(params, lambda = 0)
-
-  results <- run_sims(params, config)
-
-  gt <- get_simulation(results[[1]]$Param, config, stage = "GroundTruth")
-  gt_df <- gt$groundTruth
-
-  modified_rows <- gt_df[sapply(gt_df$PTMPos, function(x) length(x) > 0), ]
-  if (nrow(modified_rows) > 0) {
-    site_counts <- sapply(modified_rows$PTMPos, length)
-    expect_true(all(site_counts <= 1),
-      info = paste("Max PTM sites per proteoform:", max(site_counts)))
-  }
 })
 
 test_that("PropModPerProt=1 and RemoveNonModFormFrac=0 yields 2 proteoforms per modified protein", {
@@ -115,7 +88,7 @@ test_that("PropModPerProt=1 and RemoveNonModFormFrac=0 yields 2 proteoforms per 
   params <- def_param()
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
-  params <- make_ptm_params(params, lambda = 0)
+  params <- make_ptm_params(params, lambda = 0.001)
 
   results <- run_sims(params, config)
 

@@ -387,8 +387,8 @@ performModification <- function(to.Modify, parameters) {
 #'  for each modifiable residue within each PTM type.
 #'  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson
 #'  distribution, which determines the number of modifications per sequence.
-#'  When set to \code{0}, exactly one site is selected per PTM type from all modifiable residues,
-#'  weighted by the background residue frequency distribution.
+#'  Must be positive; use a small value (e.g. \code{0.001}) to obtain approximately one modification per
+#'  proteoform on average.
 #'  }
 #'
 #'
@@ -413,29 +413,6 @@ modify_seq <- function(seq, pars) {
       # All modifiable residues
       all_positions <- setNames(lapply(pmod_res[[x]], function(y) which(y == seq_string[[1]])), pmod_res[[x]])
 
-      if (lambda == 0) {
-        # lambda = 0: select exactly one modification site for this PTM type,
-        # chosen from all modifiable residues weighted by background residue frequency.
-        # This ensures exactly one modified site per PTM type per proteoform.
-        all_pos_flat <- unlist(all_positions)
-        all_res_flat <- rep(pmod_res[[x]], lengths(all_positions))
-        if (length(all_pos_flat) == 0) {
-          nummod.per.residue <- setNames(lapply(pmod_res[[x]], function(y) 0L), pmod_res[[x]])
-          return(list(modified = NULL, count = nummod.per.residue))
-        }
-        site_weights <- weight[all_res_flat]
-        site_weights[!is.finite(site_weights)] <- 0
-        if (sum(site_weights) == 0) site_weights <- rep(1 / length(site_weights), length(site_weights))
-        chosen_idx <- sample(seq_along(all_pos_flat), size = 1L, prob = site_weights)
-        chosen_pos <- all_pos_flat[chosen_idx]
-        chosen_res <- all_res_flat[chosen_idx]
-        out <- setNames(lapply(pmod_res[[x]], function(y) {
-          if (y == chosen_res) chosen_pos else NULL
-        }), pmod_res[[x]])
-        nummod.per.residue <- setNames(lapply(out, length), pmod_res[[x]])
-        return(list(modified = chosen_pos, count = nummod.per.residue))
-      }
-
       # Adjust by residue frequency in protein
       weight <- sapply(pmod_res[[x]], function(y) {
         ttt <- weight[[y]] / length(all_positions[[y]]) * length(unlist(all_positions))
@@ -455,7 +432,7 @@ modify_seq <- function(seq, pars) {
         }
         # getting modified sites
         out <- NULL
-        if (pos_len > 1) {
+        if (pos_len > 1 && lambda > 0) {
           out <- sample(
             x = positions,
             size = weight[[y]] * extraDistr::rtpois(
@@ -463,7 +440,9 @@ modify_seq <- function(seq, pars) {
               a = 1, b = pos_len
             )
           )
-        } else if (runif(1) < weight[[y]]) {
+        } else if (pos_len == 1 && runif(1) < weight[[y]]) {
+          # Single-site proteins are modified probabilistically regardless of lambda
+          # (consistent with original design; lambda only gates the Poisson sampling path).
           out <- positions
         }
         return(out)
