@@ -386,8 +386,10 @@ performModification <- function(to.Modify, parameters) {
 #'  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
 #'  for each modifiable residue within each PTM type.
 #'  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson
-#'  distribution,
-#'  which determines the number of modifications per sequence.
+#'  distribution (truncated to [1, N]) controlling the number of modification sites per proteoform.
+#'  Setting to \code{0} (or any value \eqn{\le 10^{-4}}) is treated as \code{1e-4} internally, which causes
+#'  the truncated Poisson to almost surely return 1 — yielding approximately one modified site per PTM type
+#'  per proteoform.  Larger values increase the expected number of modifications.
 #'  }
 #'
 #'
@@ -398,7 +400,10 @@ modify_seq <- function(seq, pars) {
   ptms <- pars[[2]]
   pmod_res_distr <- pars[[3]]
   ptms_distr <- pars[[4]]
-  lambda <- pars[[5]]
+  # Clamp lambda: values <= 1e-4 (including 0) cause the truncated Poisson to
+  # almost surely return 1, giving approximately one modified site per PTM type.
+  # This matches the user-visible contract that PTMMultipleLambda = 0 yields 1 site.
+  lambda <- max(pars[[5]], 1e-4)
 
   seq_string <- strsplit(seq, split = "")
 
@@ -407,8 +412,6 @@ modify_seq <- function(seq, pars) {
     lapply(ptms, function(x) {
       weight <- pmod_res_distr[[x]]
       names(weight) <- pmod_res[[x]]
-      # Old way, not sure whether necessary
-      # weight <- length(unlist(x[[y]])) / lengths(x[[y]]) * weight
       weight[!is.finite(weight)] <- 0
 
       # All modifiable residues
