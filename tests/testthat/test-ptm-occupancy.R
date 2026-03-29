@@ -55,7 +55,7 @@ test_that("occupancy is 0.5 when modified and unmodified intensities are equal",
 })
 
 test_that("occupancy approaches 1 when modified >> unmodified", {
-  # mod = 2^10 = 1024, unmod = 2^0 = 1  =>  1024/1025 ≈ 0.999
+  # log_ratio = 10 - 0 = 10  =>  ratio = 2^10 = 1024  =>  1024/1025 ≈ 0.999
   pep <- make_peptable(mod_vals = c(10, 10, 10), unmod_vals = c(0, 0, 0))
   occ <- calcPTMOccupancy(pep, make_params())
 
@@ -63,7 +63,7 @@ test_that("occupancy approaches 1 when modified >> unmodified", {
 })
 
 test_that("occupancy approaches 0 when modified << unmodified", {
-  # mod = 2^0 = 1, unmod = 2^10 = 1024  =>  1/1025 ≈ 0.001
+  # log_ratio = 0 - 10 = -10  =>  ratio = 2^(-10) ≈ 0.001  =>  0.001/1.001 ≈ 0.001
   pep <- make_peptable(mod_vals = c(0, 0, 0), unmod_vals = c(10, 10, 10))
   occ <- calcPTMOccupancy(pep, make_params())
 
@@ -136,14 +136,14 @@ test_that("NA in unmodified sample propagates to occupancy", {
 # Multiple unmodified rows: their signals are averaged
 # ──────────────────────────────────────────────────────────────────────────────
 
-test_that("multiple unmodified rows are averaged before occupancy calculation", {
+test_that("multiple unmodified rows are averaged (geometric mean) before occupancy calculation", {
   quant_cols <- c("S1")
   # Two unmodified rows with log2 intensities 0 and 2:
-  # linear: 2^0=1 and 2^2=4  =>  column mean = (1+4)/2 = 2.5
-  # modified row is set to log2(2.5), giving linear intensity exactly 2.5
-  # occupancy = 2.5 / (2.5 + 2.5) = 0.5
+  #   geometric mean (= mean in log space): 2^((0+2)/2) = 2^1 = 2
+  # Modified row set to log2(2) = 1, giving linear intensity exactly 2.
+  # log_ratio = 1 - 1 = 0  =>  ratio = 2^0 = 1  =>  occupancy = 1/(1+1) = 0.5
   mod_row <- data.frame(Sequence = "MYPEPTIDE", stringsAsFactors = FALSE)
-  mod_row[quant_cols] <- log2(2.5)
+  mod_row[quant_cols] <- log2(2)   # 1 in log2 scale = geometric mean of unmod rows
   mod_row$PTMType <- list("ph")
   mod_row$PTMPos  <- list(1L)
   mod_row$Accession <- list("P11111")

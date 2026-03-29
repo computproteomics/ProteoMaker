@@ -35,19 +35,24 @@ A data frame with one row per modified peptidoform that has a
 \description{
 Computes the occupancy (partial stoichiometry) for each PTM site from
 peptidoform-level quantification data. Occupancy is defined as the fraction
-of protein molecules that carry the modification at a given site:
+of protein molecules that carry the modification at a given site and is
+computed from the log2-scale ratio of modified to unmodified intensities:
 
-\deqn{occupancy = \frac{I_{mod}}{I_{mod} + I_{unmod}}}
+\deqn{occupancy = \frac{R}{R + 1}, \quad R = 2^{\,\log_2 I_{mod} - \log_2 I_{unmod}}}
 
-where \eqn{I_{mod}} and \eqn{I_{unmod}} are the linear-scale intensities of
-the modified and unmodified peptidoforms, respectively.  The input
-intensities are assumed to be on the log2 scale, as produced by the
+where \eqn{I_{mod}} and \eqn{I_{unmod}} are the intensities of the modified
+and unmodified peptidoforms in the same sample.  Because absolute MS
+intensities do not reflect actual molecular abundances (they are affected by
+ionization efficiency, matrix effects, etc.), occupancy is derived from the
+within-sample log2 ratio rather than from the absolute intensities themselves.
+The input intensities are assumed to be on the log2 scale, as produced by the
 ProteoMaker pipeline.
 
 Only peptide sequences that are observed in both a modified and an
 unmodified form contribute to the result.  When multiple unmodified rows
 exist for the same sequence (e.g., from different charge states), their
-linear-scale intensities are averaged before computing occupancy.
+log2 intensities are averaged before computing the ratio (equivalent to
+using the geometric mean of the linear-scale intensities).
 Missing values (\code{NA}) in individual samples are propagated: if either
 the modified or unmodified intensity is \code{NA} for a sample, the
 occupancy for that sample is also \code{NA}.  When multiple unmodified rows
