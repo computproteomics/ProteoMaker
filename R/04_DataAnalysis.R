@@ -449,15 +449,19 @@ calcPTMOccupancy <- function(peptable, parameters) {
         mean(as.numeric(peptable[mi, cols]))
       })
 
-      # Protein ratio (Rprot): use ALL unmodified peptides from the same protein
-      # accession, analogous to the MaxQuant ProteinGroups ratio in Sharma/Olsen.
-      # colMeans() pools multiple peptide rows in log2 space (= geometric mean in
-      # linear); mean() then averages replicates within each condition.
+      # Protein ratio (Rprot): use only unmodified peptides from the same protein
+      # accession whose sequence does NOT appear as modified (i.e., exclude any
+      # counterpart unmodified peptides).  This follows requirement (c): only
+      # unmodified peptides that do not have any modified version contribute to the
+      # protein background ratio.  colMeans() pools rows in log2 space (geometric
+      # mean in linear); mean() averages replicates within each condition.
       acc_vec        <- unlist(peptable$Accession[[mi]])
       prot_unmod_idx <- which(!has_ptm &
                                 vapply(peptable$Accession,
                                        function(a) any(unlist(a) %in% acc_vec),
-                                       logical(1L)))
+                                       logical(1L)) &
+                                !(seqs %in% uniq_mod_seqs))
+      if (length(prot_unmod_idx) == 0L) next
       prot_mean <- sapply(cond_cols, function(cols) {
         mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE])))
       })
