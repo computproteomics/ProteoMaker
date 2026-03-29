@@ -386,9 +386,10 @@ performModification <- function(to.Modify, parameters) {
 #'  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
 #'  for each modifiable residue within each PTM type.
 #'  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson
-#'  distribution, which determines the number of modifications per sequence.
-#'  Must be positive; use a small value (e.g. \code{0.001}) to obtain approximately one modification per
-#'  proteoform on average.
+#'  distribution (truncated to [1, N]) controlling the number of modification sites per proteoform.
+#'  Setting to \code{0} (or any value \eqn{\le 10^{-4}}) is treated as \code{1e-4} internally, which causes
+#'  the truncated Poisson to almost surely return 1 — yielding approximately one modified site per PTM type
+#'  per proteoform.  Larger values increase the expected number of modifications.
 #'  }
 #'
 #'
@@ -399,7 +400,10 @@ modify_seq <- function(seq, pars) {
   ptms <- pars[[2]]
   pmod_res_distr <- pars[[3]]
   ptms_distr <- pars[[4]]
-  lambda <- pars[[5]]
+  # Clamp lambda: values <= 1e-4 (including 0) cause the truncated Poisson to
+  # almost surely return 1, giving approximately one modified site per PTM type.
+  # This matches the user-visible contract that PTMMultipleLambda = 0 yields 1 site.
+  lambda <- max(pars[[5]], 1e-4)
 
   seq_string <- strsplit(seq, split = "")
 
@@ -432,7 +436,7 @@ modify_seq <- function(seq, pars) {
         }
         # getting modified sites
         out <- NULL
-        if (pos_len > 1 && lambda > 0) {
+        if (pos_len > 1) {
           out <- sample(
             x = positions,
             size = weight[[y]] * extraDistr::rtpois(
@@ -440,9 +444,7 @@ modify_seq <- function(seq, pars) {
               a = 1, b = pos_len
             )
           )
-        } else if (pos_len == 1 && runif(1) < weight[[y]]) {
-          # Single-site proteins are modified probabilistically regardless of lambda
-          # (consistent with original design; lambda only gates the Poisson sampling path).
+        } else if (runif(1) < weight[[y]]) {
           out <- positions
         }
         return(out)

@@ -50,7 +50,7 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$PTMTypesMass*: Mass shifts associated with each PTM type (provide as a named list, e.g. `list(ph = 79.9663)`). Defaults to `NA` and must be set when PTMs are enabled.
 
-*Param\$PTMMultipleLambda*: Controls the average number of modification sites per proteoform via a truncated Poisson distribution (truncated to [1, N] where N is the number of modifiable sites) scaled by the number of modifiable sites in the sequence. Must be positive to produce modifications for proteins with more than one modifiable residue. Use a small value (e.g., `0.001`) to obtain on average approximately one modified site per proteoform per PTM type; larger values increase the expected number of modifications. Defaults to `0`, which disables multi-site sampling — provide a positive value when PTMs are enabled.
+*Param\$PTMMultipleLambda*: Controls the average number of modification sites per proteoform via a truncated Poisson distribution (truncated to [1, N] where N is the number of modifiable sites) scaled by the number of modifiable sites in the sequence. Values of `0` (the default) or any value `<= 1e-4` (e.g. `0.0001`) are treated identically: the lambda is clamped to `1e-4` internally, which causes the truncated Poisson to almost surely return 1, yielding **approximately one modified site per PTM type per proteoform**. Larger values increase the expected number of modifications.
 
 *Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually we use `list(ph = c("S", "T", "Y"))`
 
@@ -67,7 +67,7 @@ Param$paramGroundTruth$PTMTypesMass       <- list(ph = 79.966331)
 Param$paramGroundTruth$PTMTypesDistr      <- list(ph = 1)
 Param$paramGroundTruth$ModifiableResidues <- list(mods = list(ph = c("S", "T", "Y")))
 Param$paramGroundTruth$ModifiableResiduesDistr <- list(mods = list(ph = c(S = 0.86, T = 0.13, Y = 0.01)))
-Param$paramGroundTruth$PTMMultipleLambda  <- 0.001 # small lambda -> ~1 modified site per proteoform
+Param$paramGroundTruth$PTMMultipleLambda  <- 0     # 0 (or 0.0001) -> ~1 modified site per proteoform
 Param$paramGroundTruth$PropModPerProt     <- 1     # 1 modified proteoform per protein
 Param$paramGroundTruth$RemoveNonModFormFrac <- 0   # keep unmodified counterpart -> 2 proteoforms total
 ```

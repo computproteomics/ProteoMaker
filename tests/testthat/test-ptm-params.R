@@ -1,7 +1,7 @@
 library(testthat)
 
 # Helper: build the pars list expected by modify_seq
-make_pars <- function(lambda = 0.001) {
+make_pars <- function(lambda = 0) {
   pmod_res <- list(ph = c("S", "T", "Y"))
   ptms <- "ph"
   # pmod_res_distr is already multiplied by ptms_distr (as done inside modify())
@@ -11,7 +11,7 @@ make_pars <- function(lambda = 0.001) {
 }
 
 # Helper: minimal PTM parameters for run_sims
-make_ptm_params <- function(params, lambda = 0.001) {
+make_ptm_params <- function(params, lambda = 0) {
   params$paramGroundTruth$FracModProt <- 1
   params$paramGroundTruth$PropModPerProt <- 1
   params$paramGroundTruth$RemoveNonModFormFrac <- 0
@@ -24,30 +24,34 @@ make_ptm_params <- function(params, lambda = 0.001) {
   params
 }
 
-test_that("modify_seq with lambda = 0 runs without error for multi-residue sequence", {
-  set.seed(42)
-  seq <- "MSTYSTSYTSSTTYYSSTMSTYSTSYTSSTTYYSS"
-  pars <- make_pars(lambda = 0)
-
-  # Should not throw an error even when lambda = 0 and pos_len > 1,
-  # and must produce no modifications (multi-site sampling is skipped).
-  r <- ProteoMaker:::modify_seq(seq, pars)
-  expect_equal(length(r$Positions), 0L)
-})
-
-test_that("modify_seq with small positive lambda produces at least one modification", {
+test_that("modify_seq with lambda = 0 yields approximately 1 modification per PTM type", {
   set.seed(42)
   # A sequence with many S, T, Y residues
   seq <- "MSTYSTSYTSSTTYYSSTMSTYSTSYTSSTTYYSS"
-  pars <- make_pars(lambda = 0.001)
+  pars <- make_pars(lambda = 0)
 
   results <- replicate(20, {
     r <- ProteoMaker:::modify_seq(seq, pars)
     length(r$Positions)
   })
 
-  # With small positive lambda and many modifiable residues, modifications should occur
-  expect_true(any(results >= 1), info = paste("Modification counts:", paste(results, collapse = ", ")))
+  # lambda = 0 is clamped to 1e-4 internally; the truncated Poisson with such a
+  # tiny lambda always returns 1, so each call should produce >= 1 modification.
+  expect_true(all(results >= 1), info = paste("Modification counts:", paste(results, collapse = ", ")))
+})
+
+test_that("modify_seq with lambda = 0.0001 behaves the same as lambda = 0", {
+  set.seed(42)
+  seq <- "MSTYSTSYTSSTTYYSSTMSTYSTSYTSSTTYYSS"
+  pars_0 <- make_pars(lambda = 0)
+  pars_tiny <- make_pars(lambda = 0.0001)
+
+  # Both should yield the same distribution of modification counts since
+  # 0.0001 == 1e-4 and the internal clamp treats them identically.
+  set.seed(7); counts_0 <- replicate(20, length(ProteoMaker:::modify_seq(seq, pars_0)$Positions))
+  set.seed(7); counts_tiny <- replicate(20, length(ProteoMaker:::modify_seq(seq, pars_tiny)$Positions))
+
+  expect_identical(counts_0, counts_tiny)
 })
 
 test_that("modify_seq with lambda > 0 can produce multiple modifications", {
@@ -64,7 +68,7 @@ test_that("modify_seq with lambda > 0 can produce multiple modifications", {
   expect_true(any(results > 1), info = "Expected at least one run with > 1 modification")
 })
 
-test_that("run_sims with PTMs completes without error", {
+test_that("run_sims with PTMs and lambda=0 completes without error", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
 
@@ -72,7 +76,7 @@ test_that("run_sims with PTMs completes without error", {
   params <- def_param()
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
-  params <- make_ptm_params(params, lambda = 0.001)
+  params <- make_ptm_params(params, lambda = 0)
 
   results <- run_sims(params, config)
 
@@ -88,7 +92,7 @@ test_that("PropModPerProt=1 and RemoveNonModFormFrac=0 yields 2 proteoforms per 
   params <- def_param()
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
-  params <- make_ptm_params(params, lambda = 0.001)
+  params <- make_ptm_params(params, lambda = 0)
 
   results <- run_sims(params, config)
 
