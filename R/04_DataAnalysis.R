@@ -310,32 +310,36 @@ proteinSummarisation <- function(peptable, parameters) {
 
 #' Calculate PTM Site Occupancy
 #'
-#' Computes the occupancy (partial stoichiometry) for each PTM site from
-#' peptidoform-level quantification data. Occupancy is defined as the fraction
-#' of protein molecules that carry the modification at a given site and is
-#' computed from the log2-scale ratio of modified to unmodified intensities:
+#' Computes the occupancy (partial stoichiometry) for each PTM site using the
+#' between-condition ratio approach of Sharma et al. (2014).  For each
+#' non-reference condition \eqn{c} the occupancy relative to condition 1 is:
 #'
-#' \deqn{occupancy = \frac{R}{R + 1}, \quad R = 2^{\,\log_2 I_{mod} - \log_2 I_{unmod}}}
+#' \deqn{occupancy_c = \frac{R_p}{R_p + R_u},
+#'   \quad R_p = 2^{\bar{l}_{p,c} - \bar{l}_{p,1}},
+#'   \quad R_u = 2^{\bar{l}_{u,c} - \bar{l}_{u,1}}}
 #'
-#' where \eqn{I_{mod}} and \eqn{I_{unmod}} are the intensities of the modified
-#' and unmodified peptidoforms in the same sample.  Because absolute MS
-#' intensities do not reflect actual molecular abundances (they are affected by
-#' ionization efficiency, matrix effects, etc.), occupancy is derived from the
-#' within-sample log2 ratio rather than from the absolute intensities
-#' themselves.  The input intensities are assumed to be on the log2 scale, as
-#' produced by the ProteoMaker pipeline.
+#' where \eqn{\bar{l}_{p,c}} and \eqn{\bar{l}_{u,c}} are the mean log2
+#' intensities of the modified and unmodified peptidoforms across all replicates
+#' of condition \eqn{c}, respectively.  \eqn{R_p} and \eqn{R_u} are the
+#' between-condition intensity ratios for the modified and unmodified forms.
 #'
-#' Only peptide sequences that are observed in both a modified and an
-#' unmodified form contribute to the result.  When multiple unmodified rows
-#' exist for the same sequence (e.g., from different charge states), their
-#' log2 intensities are averaged before computing the ratio (equivalent to
-#' using the geometric mean of the linear-scale intensities).
-#' Missing values (\code{NA}) in individual samples are propagated: if either
-#' the modified or unmodified intensity is \code{NA} for a sample, the
-#' occupancy for that sample is also \code{NA}.  When multiple unmodified rows
-#' are present and any one of them has \code{NA} for a given sample, the
-#' averaged unmodified signal for that sample is also \code{NA}, so occupancy
-#' is \code{NA} as well.
+#' Absolute MS intensities are not used directly because they are confounded by
+#' ionisation efficiency and other systematic factors.  Dividing the
+#' modified-peptide ratio by the unmodified-peptide ratio normalises out these
+#' effects and produces a stoichiometry estimate that reflects actual abundance
+#' changes (Sharma et al., 2014; Olsen et al., 2010).
+#'
+#' Only peptide sequences observed in both a modified and an unmodified form
+#' contribute to the result.  When multiple unmodified rows exist for the same
+#' sequence (e.g. different charge states), their log2 intensities are pooled
+#' per condition before computing the between-condition ratio (equivalent to
+#' using the geometric mean of the linear-scale intensities across rows and
+#' replicates).  Missing values in individual replicates propagate strictly: any
+#' \code{NA} makes the condition mean \code{NA}, which in turn makes the
+#' occupancy \code{NA} for all conditions that depend on that mean (including
+#' all non-reference conditions when the NA is in the reference condition).
+#' The reference condition column (\code{C_1}) is always \code{NA} because the
+#' ratio of a condition to itself is uninformative.
 #'
 #' @param peptable A data frame of peptidoform-level data as produced by the
 #'   ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
@@ -343,9 +347,14 @@ proteinSummarisation <- function(peptable, parameters) {
 #'   \code{PTMPos} (list), \code{Accession} (list), and one column per sample
 #'   as given by \code{parameters$QuantColnames}.  Quantification values must
 #'   be on the log2 scale.
-#' @param parameters A named list of analysis parameters.  Must contain at
-#'   least \code{QuantColnames}, a character vector of the column names that
-#'   hold the per-sample log2 intensities.
+#' @param parameters A named list of analysis parameters.  Must contain:
+#'   \describe{
+#'     \item{QuantColnames}{Character vector of column names holding per-sample
+#'       log2 intensities.  Samples must be ordered as all replicates of
+#'       condition 1 first, then all replicates of condition 2, etc.}
+#'     \item{NumCond}{Integer.  Number of experimental conditions (\eqn{\geq 2}).}
+#'     \item{NumReps}{Integer.  Number of replicates per condition.}
+#'   }
 #'
 #' @return A data frame with one row per modified peptidoform that has a
 #'   matching unmodified counterpart.  Columns are:
@@ -354,11 +363,24 @@ proteinSummarisation <- function(peptable, parameters) {
 #'     \item{Accession}{Protein accession(s) (list column).}
 #'     \item{PTMPos}{Modification positions within the peptide (list column).}
 #'     \item{PTMType}{Modification types (list column).}
-#'     \item{<sample>}{One numeric column per entry in \code{QuantColnames},
-#'       containing the per-sample occupancy in the range \eqn{[0, 1]}.}
+#'     \item{C_1, C_2, \ldots, C_NumCond}{One numeric column per condition.
+#'       \code{C_1} (the reference) is always \code{NA}.  For conditions 2 and
+#'       above the value is the Sharma occupancy in the range \eqn{(0, 1)}.}
 #'   }
-#'   Returns an empty \code{data.frame} when no modified peptides are present
-#'   or when no modified peptide has an unmodified counterpart.
+#'   Returns an empty \code{data.frame} when no modified peptides are present,
+#'   when \code{NumCond < 2}, or when no modified peptide has an unmodified
+#'   counterpart.
+#'
+#' @references
+#' Sharma, K. et al. (2014) Ultradeep Human Phosphoproteome Reveals a Distinct
+#' Regulatory Nature of Tyr and Ser/Thr-Based Signaling.
+#' \emph{Cell Reports}, \bold{8}(5), 1583--1594.
+#' \doi{10.1016/j.celrep.2014.07.036}
+#'
+#' Olsen, J.V. et al. (2010) Quantitative Phosphoproteomics Reveals Widespread
+#' Full Phosphorylation Site Occupancy During Mitosis.
+#' \emph{Science Signaling}, \bold{3}(104), ra3.
+#' \doi{10.1126/scisignal.2000475}
 #'
 #' @examples
 #' \dontrun{
@@ -370,6 +392,8 @@ proteinSummarisation <- function(peptable, parameters) {
 #' @export
 calcPTMOccupancy <- function(peptable, parameters) {
   QuantColnames <- parameters$QuantColnames
+  NumCond       <- parameters$NumCond
+  NumReps       <- parameters$NumReps
 
   has_ptm <- lengths(peptable$PTMType) > 0
 
@@ -378,9 +402,20 @@ calcPTMOccupancy <- function(peptable, parameters) {
     return(data.frame())
   }
 
+  if (is.null(NumCond) || is.null(NumReps) || NumCond < 2L) {
+    message("calcPTMOccupancy: NumCond >= 2 required for between-condition occupancy; returning empty table.")
+    return(data.frame())
+  }
+
   message(" + Calculating PTM site occupancy")
 
-  seqs <- peptable$Sequence
+  # Group QuantColnames into per-condition replicate blocks
+  cond_cols      <- lapply(seq_len(NumCond), function(c) {
+    QuantColnames[seq.int((c - 1L) * NumReps + 1L, c * NumReps)]
+  })
+  out_cond_names <- paste0("C_", seq_len(NumCond))
+
+  seqs          <- peptable$Sequence
   uniq_mod_seqs <- unique(seqs[has_ptm])
 
   out_seq     <- character(0)
@@ -395,21 +430,34 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
     if (length(unmod_idx) == 0) next
 
-    # Average unmodified log2 intensities (= geometric mean); NA in any row
-    # propagates per-column because colMeans has na.rm = FALSE by default.
-    unmod_log <- colMeans(as.matrix(peptable[unmod_idx, QuantColnames, drop = FALSE]))
+    # Per-condition mean log2 unmodified intensity.
+    # colMeans() averages multiple unmodified rows (geometric mean in linear space);
+    # mean() then averages the replicates within each condition.
+    # NA in any replicate or unmodified row propagates to the condition mean.
+    unmod_mean <- sapply(cond_cols, function(cols) {
+      mean(colMeans(as.matrix(peptable[unmod_idx, cols, drop = FALSE])))
+    })
 
     for (mi in mod_idx) {
-      mod_log   <- as.numeric(peptable[mi, QuantColnames])
-      log_ratio <- mod_log - unmod_log          # log2(I_mod / I_unmod_geomean)
-      ratio_lin <- 2^log_ratio
-      occ       <- ratio_lin / (ratio_lin + 1)  # NA propagates naturally
+      # Per-condition mean log2 modified intensity
+      mod_mean <- sapply(cond_cols, function(cols) {
+        mean(as.numeric(peptable[mi, cols]))
+      })
+
+      # Sharma et al.: occ_c = Rp_c / (Rp_c + Ru_c)
+      # Rp_c = 2^(mod_mean_c - mod_mean_ref),  Ru_c = 2^(unmod_mean_c - unmod_mean_ref)
+      log_Rp <- mod_mean   - mod_mean[1L]    # 0 for c = 1 (reference)
+      log_Ru <- unmod_mean - unmod_mean[1L]  # 0 for c = 1 (reference)
+      Rp     <- 2^log_Rp
+      Ru     <- 2^log_Ru
+      occ        <- Rp / (Rp + Ru)
+      occ[1L]    <- NA_real_                 # reference condition is uninformative
 
       out_seq     <- c(out_seq, seq)
       out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
       out_ptmpos  <- c(out_ptmpos,  list(peptable$PTMPos[[mi]]))
       out_ptmtype <- c(out_ptmtype, list(peptable$PTMType[[mi]]))
-      out_quant   <- c(out_quant,   list(setNames(as.list(occ), QuantColnames)))
+      out_quant   <- c(out_quant,   list(setNames(as.list(occ), out_cond_names)))
     }
   }
 
@@ -418,12 +466,12 @@ calcPTMOccupancy <- function(peptable, parameters) {
     return(data.frame())
   }
 
-  quant_df           <- as.data.frame(do.call(rbind, lapply(out_quant, as.data.frame)))
-  result             <- data.frame(Sequence = out_seq, stringsAsFactors = FALSE)
-  result[QuantColnames] <- quant_df
-  result$Accession   <- out_acc
-  result$PTMPos      <- out_ptmpos
-  result$PTMType     <- out_ptmtype
+  quant_df               <- as.data.frame(do.call(rbind, lapply(out_quant, as.data.frame)))
+  result                 <- data.frame(Sequence = out_seq, stringsAsFactors = FALSE)
+  result[out_cond_names] <- quant_df
+  result$Accession       <- out_acc
+  result$PTMPos          <- out_ptmpos
+  result$PTMType         <- out_ptmtype
 
   message("  - Occupancy calculated for ", nrow(result), " modified peptidoforms across ",
           length(unique(out_seq)), " unique peptide sequences")
