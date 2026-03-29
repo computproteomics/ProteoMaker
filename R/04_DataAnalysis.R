@@ -311,40 +311,42 @@ proteinSummarisation <- function(peptable, parameters) {
 #' Calculate PTM Site Occupancy
 #'
 #' Computes the occupancy (partial stoichiometry) for each PTM site using the
-#' full three-ratio approach of Sharma et al. (2014).  For each non-reference
-#' condition \eqn{c} the occupancy is:
+#' full three-ratio approach of Sharma et al. (2014) / Olsen et al. (2010).
+#' For each non-reference condition \eqn{c} the occupancy is:
 #'
 #' \deqn{occupancy_c =
-#'   \frac{occ_1 \cdot R_p}{occ_1 \cdot R_p + (1 - occ_1) \cdot R_u}}
+#'   \frac{occ_1 \cdot R_p}{occ_1 \cdot R_p + (1 - occ_1) \cdot R_{prot}}}
 #'
 #' where
 #' \deqn{occ_1 = \frac{2^{\bar{l}_{p,1}}}{2^{\bar{l}_{p,1}} + 2^{\bar{l}_{u,1}}},
-#'   \quad R_p = 2^{\bar{l}_{p,c} - \bar{l}_{p,1}},
-#'   \quad R_u = 2^{\bar{l}_{u,c} - \bar{l}_{u,1}}}
+#'   \quad R_p    = 2^{\bar{l}_{p,c}    - \bar{l}_{p,1}},
+#'   \quad R_{prot} = 2^{\bar{l}_{prot,c} - \bar{l}_{prot,1}}}
 #'
-#' \eqn{occ_1} is the occupancy in the reference condition (condition 1),
-#' computed within-condition from the mean log2 intensities.  \eqn{R_p} and
-#' \eqn{R_u} are the between-condition intensity fold-changes for the modified
-#' and unmodified peptidoforms, respectively.
-#'
-#' The formula can be derived directly: if \eqn{p_c} and \eqn{u_c} denote the
-#' linear intensities in condition \eqn{c}, then \eqn{p_c = p_1 R_p} and
-#' \eqn{u_c = u_1 R_u}, so
-#' \eqn{occ_c = p_1 R_p / (p_1 R_p + u_1 R_u) = occ_1 R_p / (occ_1 R_p + (1-occ_1) R_u)}.
-#' Using only \eqn{R_p} and \eqn{R_u} without \eqn{occ_1} (i.e. treating
-#' \eqn{occ_1 = 0.5}) gives an incorrect result whenever the reference
-#' occupancy differs from 50\%.
+#' The three quantities are:
+#' \describe{
+#'   \item{\eqn{occ_1}}{Reference-condition occupancy at the specific PTM site,
+#'     computed within condition 1 from the mean log2 intensities of the modified
+#'     (\eqn{\bar{l}_{p,1}}) and same-sequence unmodified (\eqn{\bar{l}_{u,1}})
+#'     peptidoforms.}
+#'   \item{\eqn{R_p}}{Between-condition fold-change of the modified peptidoform.}
+#'   \item{\eqn{R_{prot}}}{Between-condition fold-change of the protein, estimated
+#'     as the geometric mean of \emph{all} unmodified peptides belonging to the
+#'     same protein accession (analogous to the MaxQuant ProteinGroups ratio used
+#'     in Sharma et al. and Olsen et al.).  Using only the same-sequence unmodified
+#'     counterpart would give the peptide ratio, not the protein ratio, which is
+#'     incorrect whenever the protein carries other peptides with different
+#'     abundance changes.}
+#' }
 #'
 #' Only peptide sequences observed in both a modified and an unmodified form
-#' contribute to the result.  When multiple unmodified rows exist for the same
-#' sequence (e.g. different charge states), their log2 intensities are pooled
-#' per condition (geometric mean in linear space).  Missing values in individual
-#' replicates propagate strictly: any \code{NA} makes the condition mean
-#' \code{NA}, which in turn makes the occupancy \code{NA} for all conditions
-#' that depend on that mean (including all non-reference conditions when the
-#' \code{NA} is in the reference condition).  The reference condition column
-#' (\code{C_1}) is always \code{NA} because \eqn{occ_1} is reported separately
-#' as the within-condition stoichiometry, not as a ratio.
+#' contribute to the result.  The protein ratio \eqn{R_{prot}} is computed from
+#' all unmodified rows whose \code{Accession} overlaps with the modified
+#' peptide's \code{Accession}; their log2 intensities are pooled per condition
+#' (geometric mean in linear space across rows, then arithmetic mean across
+#' replicates).  Missing values in individual replicates propagate strictly:
+#' any \code{NA} makes the condition mean \code{NA}, which in turn makes the
+#' occupancy \code{NA} for all conditions that depend on that mean.  The
+#' reference condition column (\code{C_1}) is always \code{NA}.
 #'
 #' @param peptable A data frame of peptidoform-level data as produced by the
 #'   ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
@@ -435,10 +437,8 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
     if (length(unmod_idx) == 0) next
 
-    # Per-condition mean log2 unmodified intensity.
-    # colMeans() averages multiple unmodified rows in log2 space (arithmetic mean
-    # in log2 = geometric mean in linear space); mean() then averages the replicates
-    # within the condition.  NA in any replicate or row propagates to the condition mean.
+    # Per-condition mean log2 of the same-sequence unmodified peptidoform.
+    # Used only to compute occ_ref (site-specific reference occupancy).
     unmod_mean <- sapply(cond_cols, function(cols) {
       mean(colMeans(as.matrix(peptable[unmod_idx, cols, drop = FALSE])))
     })
@@ -449,17 +449,30 @@ calcPTMOccupancy <- function(peptable, parameters) {
         mean(as.numeric(peptable[mi, cols]))
       })
 
+      # Protein ratio (Rprot): use ALL unmodified peptides from the same protein
+      # accession, analogous to the MaxQuant ProteinGroups ratio in Sharma/Olsen.
+      # colMeans() pools multiple peptide rows in log2 space (= geometric mean in
+      # linear); mean() then averages replicates within each condition.
+      acc_vec        <- unlist(peptable$Accession[[mi]])
+      prot_unmod_idx <- which(!has_ptm &
+                                vapply(peptable$Accession,
+                                       function(a) any(unlist(a) %in% acc_vec),
+                                       logical(1L)))
+      prot_mean <- sapply(cond_cols, function(cols) {
+        mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE])))
+      })
+
       # Full Sharma et al. 3-ratio formula:
-      # occ_ref from within-condition 1 (the third ratio / anchor)
+      # occ_ref: site-specific reference occupancy (from same-sequence unmodified)
       occ_ref <- 2^mod_mean[1L] / (2^mod_mean[1L] + 2^unmod_mean[1L])
 
-      log_Rp <- mod_mean   - mod_mean[1L]    # 0 for c = 1 (reference)
-      log_Ru <- unmod_mean - unmod_mean[1L]  # 0 for c = 1 (reference)
-      Rp     <- 2^log_Rp
-      Ru     <- 2^log_Ru
-      # occ_c = (occ_ref * Rp_c) / (occ_ref * Rp_c + (1 - occ_ref) * Ru_c)
-      occ        <- (occ_ref * Rp) / (occ_ref * Rp + (1 - occ_ref) * Ru)
-      occ[1L]    <- NA_real_                 # reference condition is uninformative
+      log_Rp    <- mod_mean  - mod_mean[1L]   # 0 for c = 1 (reference)
+      log_Rprot <- prot_mean - prot_mean[1L]  # 0 for c = 1 (reference)
+      Rp        <- 2^log_Rp
+      Rprot     <- 2^log_Rprot
+      # occ_c = (occ_ref * Rp_c) / (occ_ref * Rp_c + (1 - occ_ref) * Rprot_c)
+      occ        <- (occ_ref * Rp) / (occ_ref * Rp + (1 - occ_ref) * Rprot)
+      occ[1L]    <- NA_real_                  # reference condition is uninformative
 
       out_seq     <- c(out_seq, seq)
       out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))

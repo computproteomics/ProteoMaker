@@ -60,9 +60,9 @@ test_that("occupancy equals reference occupancy when modified and unmodified bet
   expect_true(is.na(occ[1, "C_1"]))
 })
 
-test_that("occupancy approaches 1 when modified ratio >> unmodified ratio", {
+test_that("occupancy approaches 1 when modified ratio >> protein ratio", {
   # Condition 1: mod=1, unmod=1  =>  occ_ref = 0.5
-  # Condition 2: mod=11, unmod=1  =>  Rp=2^10=1024, Ru=1
+  # Condition 2: mod=11, unmod=1  =>  Rp=2^10=1024, Rprot=1 (one unmod peptide)
   # occ_C2 = (0.5*1024)/(0.5*1024 + 0.5*1) = 512/512.5 ≈ 0.999
   pep <- make_peptable(mod_vals = c(1, 1, 11, 11), unmod_vals = c(1, 1, 1, 1))
   occ <- calcPTMOccupancy(pep, make_params())
@@ -70,9 +70,9 @@ test_that("occupancy approaches 1 when modified ratio >> unmodified ratio", {
   expect_true(as.numeric(occ[1, "C_2"]) > 0.99)
 })
 
-test_that("occupancy approaches 0 when modified ratio << unmodified ratio", {
+test_that("occupancy approaches 0 when modified ratio << protein ratio", {
   # Condition 1: mod=1, unmod=1  =>  occ_ref = 0.5
-  # Condition 2: mod=1, unmod=11  =>  Rp=1, Ru=2^10=1024
+  # Condition 2: mod=1, unmod=11  =>  Rp=1, Rprot=2^10=1024 (one unmod peptide)
   # occ_C2 = (0.5*1)/(0.5*1 + 0.5*1024) = 0.5/512.5 ≈ 0.001
   pep <- make_peptable(mod_vals = c(1, 1, 1, 1), unmod_vals = c(1, 1, 11, 11))
   occ <- calcPTMOccupancy(pep, make_params())
@@ -292,8 +292,8 @@ test_that("three conditions produce per-condition occupancy columns C_1, C_2, C_
   qc     <- params$QuantColnames   # C_1_R_1, C_2_R_1, C_3_R_1
 
   # Condition 1: mod=2, unmod=2  =>  occ_ref = 4/(4+4) = 0.5
-  # Condition 2: mod=3, unmod=2  =>  Rp=2, Ru=1  =>  occ=(0.5*2)/(0.5*2+0.5*1)=2/3
-  # Condition 3: mod=2, unmod=3  =>  Rp=1, Ru=2  =>  occ=(0.5*1)/(0.5*1+0.5*2)=1/3
+  # Condition 2: mod=3, unmod=2  =>  Rp=2, Rprot=1  =>  occ=(0.5*2)/(0.5*2+0.5*1)=2/3
+  # Condition 3: mod=2, unmod=3  =>  Rp=1, Rprot=2  =>  occ=(0.5*1)/(0.5*1+0.5*2)=1/3
   pep <- make_peptable(
     mod_vals   = c(2, 3, 2),
     unmod_vals = c(2, 2, 3),
@@ -312,7 +312,7 @@ test_that("3-ratio formula uses reference occupancy: result differs from 2-ratio
   # Condition 1: mod=4 (linear 16), unmod=2 (linear 4)
   #   occ_ref = 16/(16+4) = 0.8
   # Condition 2: mod=4 (same), unmod=4 (linear 16)
-  #   Rp = 2^(4-4) = 1,  Ru = 2^(4-2) = 4
+  #   Rp = 2^(4-4) = 1,  Rprot = 2^(4-2) = 4
   # 3-ratio: occ_C2 = (0.8*1)/(0.8*1+0.2*4) = 0.8/1.6 = 0.5
   # 2-ratio (wrong): would give 1/(1+4) = 0.2
   params <- make_params(num_cond = 2, num_reps = 1)
@@ -325,5 +325,53 @@ test_that("3-ratio formula uses reference occupancy: result differs from 2-ratio
   )
   occ <- calcPTMOccupancy(pep, params)
 
+  expect_equal(as.numeric(occ[1, "C_2"]), 0.5, tolerance = 1e-9)
+})
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Protein ratio from ALL unmodified peptides (not just same-sequence)
+# ──────────────────────────────────────────────────────────────────────────────
+
+test_that("protein ratio uses all unmodified peptides from the same accession", {
+  # Protein P12345 has two peptides:
+  #   - MODSEQ: observed as both modified and unmodified
+  #   - OTHERPEP: only observed as unmodified (a second protein peptide)
+  # The protein ratio Rprot should be the geometric mean of BOTH unmodified peptides.
+  #
+  # 2 conditions, 1 replicate each.
+  # Modified MODSEQ:       C1=2, C2=3  =>  Rp = 2^(3-2) = 2
+  # Unmodified MODSEQ:     C1=2, C2=2  =>  (same-sequence Ru = 1)
+  # Unmodified OTHERPEP:   C1=2, C2=4  =>  (Ru_other = 4)
+  # Protein ratio (geometric mean in log2 space):
+  #   prot_mean[1] = (2+2)/2 = 2,  prot_mean[2] = (2+4)/2 = 3  =>  Rprot = 2
+  # occ_ref = 2^2/(2^2+2^2) = 0.5
+  # occ_C2 = (0.5*2)/(0.5*2+0.5*2) = 0.5
+  # If only same-sequence used (wrong): Rprot=1 => occ_C2 = (0.5*2)/(0.5*2+0.5*1) = 2/3
+  params <- make_params(num_cond = 2, num_reps = 1)
+  qc     <- params$QuantColnames
+
+  mod_row <- data.frame(Sequence = "MODSEQ", stringsAsFactors = FALSE)
+  mod_row[qc] <- as.list(c(2, 3))
+  mod_row$PTMType   <- list("ph")
+  mod_row$PTMPos    <- list(1L)
+  mod_row$Accession <- list("P12345")
+
+  unmod_same <- data.frame(Sequence = "MODSEQ", stringsAsFactors = FALSE)
+  unmod_same[qc] <- as.list(c(2, 2))
+  unmod_same$PTMType   <- list(character(0))
+  unmod_same$PTMPos    <- list(integer(0))
+  unmod_same$Accession <- list("P12345")
+
+  unmod_other <- data.frame(Sequence = "OTHERPEP", stringsAsFactors = FALSE)
+  unmod_other[qc] <- as.list(c(2, 4))
+  unmod_other$PTMType   <- list(character(0))
+  unmod_other$PTMPos    <- list(integer(0))
+  unmod_other$Accession <- list("P12345")
+
+  pep <- rbind(mod_row, unmod_same, unmod_other)
+  occ <- calcPTMOccupancy(pep, params)
+
+  expect_equal(nrow(occ), 1L)
+  # Must equal 0.5 (protein ratio = 2), NOT 2/3 (same-sequence-only ratio = 1)
   expect_equal(as.numeric(occ[1, "C_2"]), 0.5, tolerance = 1e-9)
 })
