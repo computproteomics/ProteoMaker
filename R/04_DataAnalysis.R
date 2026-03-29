@@ -306,3 +306,120 @@ proteinSummarisation <- function(peptable, parameters) {
 
   return(protmat)
 }
+
+
+#' Calculate PTM Site Occupancy
+#'
+#' Computes the occupancy (partial stoichiometry) for each PTM site from
+#' peptidoform-level quantification data. Occupancy is defined as the fraction
+#' of protein molecules that carry the modification at a given site:
+#'
+#' \deqn{occupancy = \frac{I_{mod}}{I_{mod} + I_{unmod}}}
+#'
+#' where \eqn{I_{mod}} and \eqn{I_{unmod}} are the linear-scale intensities of
+#' the modified and unmodified peptidoforms, respectively.  The input
+#' intensities are assumed to be on the log2 scale, as produced by the
+#' ProteoMaker pipeline.
+#'
+#' Only peptide sequences that are observed in both a modified and an
+#' unmodified form contribute to the result.  When multiple unmodified rows
+#' exist for the same sequence (e.g., from different charge states), their
+#' linear-scale intensities are averaged before computing occupancy.
+#' Missing values (\code{NA}) in individual samples are propagated: if either
+#' the modified or unmodified intensity is \code{NA} for a sample, the
+#' occupancy for that sample is also \code{NA}.  When multiple unmodified rows
+#' are present and any one of them has \code{NA} for a given sample, the
+#' averaged unmodified signal for that sample is also \code{NA}, so occupancy
+#' is \code{NA} as well.
+#'
+#' @param peptable A data frame of peptidoform-level data as produced by the
+#'   ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
+#'   Required columns: \code{Sequence} (character), \code{PTMType} (list),
+#'   \code{PTMPos} (list), \code{Accession} (list), and one column per sample
+#'   as given by \code{parameters$QuantColnames}.  Quantification values must
+#'   be on the log2 scale.
+#' @param parameters A named list of analysis parameters.  Must contain at
+#'   least \code{QuantColnames}, a character vector of the column names that
+#'   hold the per-sample log2 intensities.
+#'
+#' @return A data frame with one row per modified peptidoform that has a
+#'   matching unmodified counterpart.  Columns are:
+#'   \describe{
+#'     \item{Sequence}{Stripped peptide sequence.}
+#'     \item{Accession}{Protein accession(s) (list column).}
+#'     \item{PTMPos}{Modification positions within the peptide (list column).}
+#'     \item{PTMType}{Modification types (list column).}
+#'     \item{<sample>}{One numeric column per entry in \code{QuantColnames},
+#'       containing the per-sample occupancy in the range \eqn{[0, 1]}.}
+#'   }
+#'   Returns an empty \code{data.frame} when no modified peptides are present
+#'   or when no modified peptide has an unmodified counterpart.
+#'
+#' @examples
+#' \dontrun{
+#' # After running the ProteoMaker pipeline and obtaining StatsPep:
+#' occ <- calcPTMOccupancy(StatsPep, Param)
+#' head(occ)
+#' }
+#'
+#' @export
+calcPTMOccupancy <- function(peptable, parameters) {
+  QuantColnames <- parameters$QuantColnames
+
+  has_ptm <- lengths(peptable$PTMType) > 0
+
+  if (sum(has_ptm) == 0) {
+    message("calcPTMOccupancy: no modified peptides found; returning empty table.")
+    return(data.frame())
+  }
+
+  message(" + Calculating PTM site occupancy")
+
+  seqs <- peptable$Sequence
+  uniq_mod_seqs <- unique(seqs[has_ptm])
+
+  out_seq     <- character(0)
+  out_acc     <- list()
+  out_ptmpos  <- list()
+  out_ptmtype <- list()
+  out_quant   <- vector("list", 0)
+
+  for (seq in uniq_mod_seqs) {
+    mod_idx   <- which(has_ptm & seqs == seq)
+    unmod_idx <- which(!has_ptm & seqs == seq)
+
+    if (length(unmod_idx) == 0) next
+
+    # Unmodified linear-scale signal; average across multiple unmodified rows
+    unmod_mat <- 2^as.matrix(peptable[unmod_idx, QuantColnames, drop = FALSE])
+    unmod_lin <- colMeans(unmod_mat)
+
+    for (mi in mod_idx) {
+      mod_lin <- 2^as.numeric(peptable[mi, QuantColnames])
+      total   <- mod_lin + unmod_lin
+      occ     <- ifelse(is.na(mod_lin) | is.na(unmod_lin) | total == 0, NA_real_, mod_lin / total)
+
+      out_seq     <- c(out_seq, seq)
+      out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
+      out_ptmpos  <- c(out_ptmpos,  list(peptable$PTMPos[[mi]]))
+      out_ptmtype <- c(out_ptmtype, list(peptable$PTMType[[mi]]))
+      out_quant   <- c(out_quant,   list(setNames(as.list(occ), QuantColnames)))
+    }
+  }
+
+  if (length(out_seq) == 0) {
+    message("calcPTMOccupancy: no peptides with both modified and unmodified forms found.")
+    return(data.frame())
+  }
+
+  quant_df           <- as.data.frame(do.call(rbind, lapply(out_quant, as.data.frame)))
+  result             <- data.frame(Sequence = out_seq, stringsAsFactors = FALSE)
+  result[QuantColnames] <- quant_df
+  result$Accession   <- out_acc
+  result$PTMPos      <- out_ptmpos
+  result$PTMType     <- out_ptmtype
+
+  message("  - Occupancy calculated for ", nrow(result), " modified peptidoforms across ",
+          length(unique(out_seq)), " unique peptide sequences")
+  result
+}
