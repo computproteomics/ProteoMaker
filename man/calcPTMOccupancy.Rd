@@ -41,35 +41,41 @@ A data frame with one row per modified peptidoform that has a
 }
 \description{
 Computes the occupancy (partial stoichiometry) for each PTM site using the
-between-condition ratio approach of Sharma et al. (2014).  For each
-non-reference condition \eqn{c} the occupancy relative to condition 1 is:
+full three-ratio approach of Sharma et al. (2014).  For each non-reference
+condition \eqn{c} the occupancy is:
 
-\deqn{occupancy_c = \frac{R_p}{R_p + R_u},
+\deqn{occupancy_c =
+  \frac{occ_1 \cdot R_p}{occ_1 \cdot R_p + (1 - occ_1) \cdot R_u}}
+
+where
+
+\deqn{occ_1 = \frac{2^{\bar{l}_{p,1}}}{2^{\bar{l}_{p,1}} + 2^{\bar{l}_{u,1}}},
   \quad R_p = 2^{\bar{l}_{p,c} - \bar{l}_{p,1}},
   \quad R_u = 2^{\bar{l}_{u,c} - \bar{l}_{u,1}}}
 
-where \eqn{\bar{l}_{p,c}} and \eqn{\bar{l}_{u,c}} are the mean log2
-intensities of the modified and unmodified peptidoforms across all replicates
-of condition \eqn{c}, respectively.  \eqn{R_p} and \eqn{R_u} are the
-between-condition intensity ratios for the modified and unmodified forms.
+\eqn{occ_1} is the occupancy in the reference condition (condition 1),
+computed within-condition from the mean log2 intensities.  \eqn{R_p} and
+\eqn{R_u} are the between-condition intensity fold-changes for the modified
+and unmodified peptidoforms, respectively.
 
-Absolute MS intensities are not used directly because they are confounded by
-ionisation efficiency and other systematic factors.  Dividing the
-modified-peptide ratio by the unmodified-peptide ratio normalises out these
-effects and produces a stoichiometry estimate that reflects actual abundance
-changes (Sharma et al., 2014; Olsen et al., 2010).
+The formula can be derived directly: if \eqn{p_c} and \eqn{u_c} denote the
+linear intensities in condition \eqn{c}, then \eqn{p_c = p_1 R_p} and
+\eqn{u_c = u_1 R_u}, so
+\eqn{occ_c = p_1 R_p / (p_1 R_p + u_1 R_u) = occ_1 R_p / (occ_1 R_p + (1-occ_1) R_u)}.
+Using only \eqn{R_p} and \eqn{R_u} without \eqn{occ_1} (i.e. treating
+\eqn{occ_1 = 0.5}) gives an incorrect result whenever the reference
+occupancy differs from 50\%.
 
 Only peptide sequences observed in both a modified and an unmodified form
 contribute to the result.  When multiple unmodified rows exist for the same
 sequence (e.g. different charge states), their log2 intensities are pooled
-per condition before computing the between-condition ratio (equivalent to
-using the geometric mean of the linear-scale intensities across rows and
-replicates).  Missing values in individual replicates propagate strictly: any
-\code{NA} makes the condition mean \code{NA}, which in turn makes the
-occupancy \code{NA} for all conditions that depend on that mean (including
-all non-reference conditions when the NA is in the reference condition).
-The reference condition column (\code{C_1}) is always \code{NA} because the
-ratio of a condition to itself is uninformative.
+per condition (geometric mean in linear space).  Missing values in individual
+replicates propagate strictly: any \code{NA} makes the condition mean
+\code{NA}, which in turn makes the occupancy \code{NA} for all conditions
+that depend on that mean (including all non-reference conditions when the
+\code{NA} is in the reference condition).  The reference condition column
+(\code{C_1}) is always \code{NA} because \eqn{occ_1} is reported separately
+as the within-condition stoichiometry, not as a ratio.
 }
 \examples{
 \dontrun{

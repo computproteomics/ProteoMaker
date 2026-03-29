@@ -49,9 +49,10 @@ test_that("calcPTMOccupancy returns one row per modified peptidoform", {
   expect_equal(nrow(occ), 1L)
 })
 
-test_that("occupancy is 0.5 when modified and unmodified between-condition ratios are equal", {
-  # Condition 1: mod=2, unmod=2;  Condition 2: mod=3, unmod=3
-  # Rp = 2^(3-2)=2,  Ru = 2^(3-2)=2  =>  occ_C2 = 2/(2+2) = 0.5
+test_that("occupancy equals reference occupancy when modified and unmodified between-condition ratios are equal", {
+  # Condition 1: mod=2, unmod=2  =>  occ_ref = 4/(4+4) = 0.5
+  # Condition 2: mod=3, unmod=3  =>  Rp=2, Ru=2
+  # When Rp == Ru, occ_c = occ_ref  =>  occ_C2 = 0.5
   pep <- make_peptable(mod_vals = c(2, 2, 3, 3), unmod_vals = c(2, 2, 3, 3))
   occ <- calcPTMOccupancy(pep, make_params())
 
@@ -60,8 +61,9 @@ test_that("occupancy is 0.5 when modified and unmodified between-condition ratio
 })
 
 test_that("occupancy approaches 1 when modified ratio >> unmodified ratio", {
-  # Condition 1: mod=1, unmod=1;  Condition 2: mod=11, unmod=1
-  # Rp = 2^10 = 1024,  Ru = 1  =>  occ_C2 = 1024/1025 ≈ 0.999
+  # Condition 1: mod=1, unmod=1  =>  occ_ref = 0.5
+  # Condition 2: mod=11, unmod=1  =>  Rp=2^10=1024, Ru=1
+  # occ_C2 = (0.5*1024)/(0.5*1024 + 0.5*1) = 512/512.5 ≈ 0.999
   pep <- make_peptable(mod_vals = c(1, 1, 11, 11), unmod_vals = c(1, 1, 1, 1))
   occ <- calcPTMOccupancy(pep, make_params())
 
@@ -69,8 +71,9 @@ test_that("occupancy approaches 1 when modified ratio >> unmodified ratio", {
 })
 
 test_that("occupancy approaches 0 when modified ratio << unmodified ratio", {
-  # Condition 1: mod=1, unmod=1;  Condition 2: mod=1, unmod=11
-  # Rp = 1,  Ru = 2^10 = 1024  =>  occ_C2 = 1/1025 ≈ 0.001
+  # Condition 1: mod=1, unmod=1  =>  occ_ref = 0.5
+  # Condition 2: mod=1, unmod=11  =>  Rp=1, Ru=2^10=1024
+  # occ_C2 = (0.5*1)/(0.5*1 + 0.5*1024) = 0.5/512.5 ≈ 0.001
   pep <- make_peptable(mod_vals = c(1, 1, 1, 1), unmod_vals = c(1, 1, 11, 11))
   occ <- calcPTMOccupancy(pep, make_params())
 
@@ -223,22 +226,24 @@ test_that("multiple unmodified rows are geometric-mean averaged per condition", 
   params <- make_params(num_cond = 2, num_reps = 1)
   qc     <- params$QuantColnames   # C_1_R_1, C_2_R_1
 
-  # Two unmod rows per condition: log2 values 0 and 2 in both conditions
-  # Geometric mean = 2^((0+2)/2) = 2^1 = 2 in both conditions
-  # Modified: 2 in both conditions (= geometric mean of unmod)
-  # Rp = 2^(2-2) = 1,  Ru = 2^(2-2) = 1  =>  occ_C2 = 0.5
+  # Two unmod rows: log2 = 1 and 3 in both conditions.
+  # colMeans in log2 space = (1+3)/2 = 2  <=>  geometric mean in linear = 2^2 = 4.
+  # Arithmetic mean of linear values would give (2+8)/2 = 5, i.e. log2 ≈ 2.32 — different!
+  # Modified: log2 = 2 in both conditions (equals the geometric-mean unmod).
+  # occ_ref = 2^2 / (2^2 + 2^2) = 0.5
+  # Rp = Ru = 2^(2-2) = 1  =>  occ_C2 = (0.5*1)/(0.5*1+0.5*1) = 0.5
   mod_row <- data.frame(Sequence = "MYPEPTIDE", stringsAsFactors = FALSE)
   mod_row[qc] <- as.list(c(2, 2))
   mod_row$PTMType <- list("ph"); mod_row$PTMPos <- list(1L)
   mod_row$Accession <- list("P11111")
 
   unmod1 <- data.frame(Sequence = "MYPEPTIDE", stringsAsFactors = FALSE)
-  unmod1[qc] <- as.list(c(0, 0))   # log2 = 0 in both conditions
+  unmod1[qc] <- as.list(c(1, 1))   # log2 = 1 in both conditions
   unmod1$PTMType <- list(character(0)); unmod1$PTMPos <- list(integer(0))
   unmod1$Accession <- list("P11111")
 
   unmod2 <- data.frame(Sequence = "MYPEPTIDE", stringsAsFactors = FALSE)
-  unmod2[qc] <- as.list(c(2, 2))   # log2 = 2 in both conditions
+  unmod2[qc] <- as.list(c(3, 3))   # log2 = 3 in both conditions
   unmod2$PTMType <- list(character(0)); unmod2$PTMPos <- list(integer(0))
   unmod2$Accession <- list("P11111")
 
@@ -286,9 +291,9 @@ test_that("three conditions produce per-condition occupancy columns C_1, C_2, C_
   params <- make_params(num_cond = 3, num_reps = 1)
   qc     <- params$QuantColnames   # C_1_R_1, C_2_R_1, C_3_R_1
 
-  # Condition 1: mod=2, unmod=2 (reference)
-  # Condition 2: mod=3, unmod=2  =>  Rp=2, Ru=1  =>  occ=2/3
-  # Condition 3: mod=2, unmod=3  =>  Rp=1, Ru=2  =>  occ=1/3
+  # Condition 1: mod=2, unmod=2  =>  occ_ref = 4/(4+4) = 0.5
+  # Condition 2: mod=3, unmod=2  =>  Rp=2, Ru=1  =>  occ=(0.5*2)/(0.5*2+0.5*1)=2/3
+  # Condition 3: mod=2, unmod=3  =>  Rp=1, Ru=2  =>  occ=(0.5*1)/(0.5*1+0.5*2)=1/3
   pep <- make_peptable(
     mod_vals   = c(2, 3, 2),
     unmod_vals = c(2, 2, 3),
@@ -299,4 +304,26 @@ test_that("three conditions produce per-condition occupancy columns C_1, C_2, C_
   expect_true(is.na(occ[1, "C_1"]))
   expect_equal(as.numeric(occ[1, "C_2"]), 2/3, tolerance = 1e-9)
   expect_equal(as.numeric(occ[1, "C_3"]), 1/3, tolerance = 1e-9)
+})
+
+test_that("3-ratio formula uses reference occupancy: result differs from 2-ratio when occ_ref != 0.5", {
+  # When occ_ref = 0.5 the formulas coincide; here we use occ_ref != 0.5 to
+  # verify the full formula is applied.
+  # Condition 1: mod=4 (linear 16), unmod=2 (linear 4)
+  #   occ_ref = 16/(16+4) = 0.8
+  # Condition 2: mod=4 (same), unmod=4 (linear 16)
+  #   Rp = 2^(4-4) = 1,  Ru = 2^(4-2) = 4
+  # 3-ratio: occ_C2 = (0.8*1)/(0.8*1+0.2*4) = 0.8/1.6 = 0.5
+  # 2-ratio (wrong): would give 1/(1+4) = 0.2
+  params <- make_params(num_cond = 2, num_reps = 1)
+  qc     <- params$QuantColnames
+
+  pep <- make_peptable(
+    mod_vals   = c(4, 4),
+    unmod_vals = c(2, 4),
+    quant_cols = qc
+  )
+  occ <- calcPTMOccupancy(pep, params)
+
+  expect_equal(as.numeric(occ[1, "C_2"]), 0.5, tolerance = 1e-9)
 })
