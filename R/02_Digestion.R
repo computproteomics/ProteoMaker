@@ -591,7 +591,13 @@ proteoformDigestion <- function(proteoform, parameters, searchIndex = NULL) {
         to.aggregate <- stats::aggregate(to.aggregate[, 2:3], by = list(to.aggregate[, 1]), FUN = list)
 
         # Calculate and add the mass addition due to modifications per modified peptide.
+        # Accept both formats:
+        #   wrapped:  list(mods = c(ph = 79.966331))  → [[1]] gives c(ph = 79.966331)
+        #   flat:     list(ph = 79.966331)            → [[1]] gives unnamed scalar; recover via unlist()
         modification.mass <- parameters$PTMTypesMass[[1]]
+        if (is.null(names(modification.mass))) {
+          modification.mass <- unlist(parameters$PTMTypesMass)
+        }
         names(modification.mass) <- parameters$PTMTypes[[1]]
         to.aggregate$mass_shift <- sapply(to.aggregate[, 3],
                                           function(x) sum(unlist(modification.mass[x]), na.rm = TRUE))

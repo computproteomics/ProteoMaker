@@ -35,23 +35,22 @@ Param$paramGroundTruth$NumReps <- c(5)
 
 # Param$paramGroundTruth$FracModProt <- 0.5
 # Param$paramGroundTruth$PTMTypes <- list(mods=c("ph", "ox"))
-# Param$paramGroundTruth$PTMTypesDistr <- list(m1 = c(ph=0.5, ox = 0.4))
-# Param$paramGroundTruth$PTMTypesMass <- list(m1 = c(ph=79.966331,
-#                                                    ox = 15.994915))
+# Param$paramGroundTruth$PTMTypesDistr <- list(ph=0.5, ox = 0.4)
+# Param$paramGroundTruth$PTMTypesMass <- list(ph=79.966331, ox = 15.994915)
 # Param$paramGroundTruth$ModifiableResidues <-
-#   list(m1 = list(ph=c("S", "T", "Y"), ox = c("M", "K")))
+#   list(mods = list(ph=c("S", "T", "Y"), ox = c("M", "K")))
 # Param$paramGroundTruth$ModifiableResiduesDistr <-
-#   list(m1 = list(ph=c(0.86, 0.13, 0.01), ox = c(0.5, 0.5)))
+#   list(mods = list(ph=c(S=0.86, T=0.13, Y=0.01), ox = c(M=0.5, K=0.5)))
 # Param$paramDigest$EnrichPTM <- "ph"
 
 # Param$paramGroundTruth$PTMTypes <- list(mods=c("ph", "ox"))
-# Param$paramGroundTruth$PTMTypesDistr <- list(m1 = c(ph=0.5, ox = 0.04))
+# Param$paramGroundTruth$PTMTypesDistr <- list(ph=0.5, ox = 0.04)
 # Param$paramGroundTruth$PTMTypesMass <-
-#   list(m1 = c(ph=79.966331, ox = 15.994915))
+#   list(ph=79.966331, ox = 15.994915)
 # Param$paramGroundTruth$ModifiableResidues <-
-#   list(m1 = list(ph=c("S", "T", "Y"), ox = c("M")))
+#   list(mods = list(ph=c("S", "T", "Y"), ox = c("M")))
 # Param$paramGroundTruth$ModifiableResiduesDistr <-
-#   list(m1 = list(ph=c(0.86, 0.13, 0.01), ox = c(1)))
+#   list(mods = list(ph=c(S=0.86, T=0.13, Y=0.01), ox = c(M=1)))
 # Param$paramGroundTruth$PTMMultipleLambda <- c(0.5)
 # Param$paramDataAnalysis$MinUniquePep <- 100
 

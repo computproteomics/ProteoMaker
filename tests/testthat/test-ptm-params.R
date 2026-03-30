@@ -84,6 +84,31 @@ test_that("run_sims with PTMs and lambda=0 completes without error", {
   expect_true(length(results) > 0)
 })
 
+test_that("flat PTMTypesDistr format list(ph=1) runs without error", {
+  ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
+  unlink(ll, recursive = TRUE)
+
+  config <- test_proteomaker_config(resultFilePath = tempdir())
+  params <- def_param()
+  params$paramGroundTruth$NumReps <- 2
+  params$paramGroundTruth$NumCond <- 2
+  # Use the flat format documented in the YAML description
+  params$paramGroundTruth$FracModProt <- 0.5
+  params$paramGroundTruth$PropModPerProt <- 1
+  params$paramGroundTruth$RemoveNonModFormFrac <- 0
+  params$paramGroundTruth$PTMTypes <- list(mods = c("ph"))
+  params$paramGroundTruth$PTMTypesMass <- list(ph = 79.966331)
+  params$paramGroundTruth$PTMTypesDistr <- list(ph = 1)
+  params$paramGroundTruth$ModifiableResidues <- list(mods = list(ph = c("S", "T", "Y")))
+  params$paramGroundTruth$ModifiableResiduesDistr <- list(mods = list(ph = c(S = 0.86, T = 0.13, Y = 0.01)))
+  params$paramGroundTruth$PTMMultipleLambda <- 0
+
+  results <- run_sims(params, config)
+
+  expect_true(is.list(results))
+  expect_true(length(results) > 0)
+})
+
 test_that("PropModPerProt=1 and RemoveNonModFormFrac=0 yields 2 proteoforms per modified protein", {
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
