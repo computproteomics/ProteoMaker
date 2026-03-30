@@ -306,3 +306,199 @@ proteinSummarisation <- function(peptable, parameters) {
 
   return(protmat)
 }
+
+
+#' Calculate PTM Site Occupancy
+#'
+#' Computes the occupancy (partial stoichiometry) for each PTM site using the
+#' full three-ratio approach of Sharma et al. (2014) / Olsen et al. (2010).
+#' For each non-reference condition \eqn{c} the occupancy is:
+#'
+#' \deqn{occupancy_c =
+#'   \frac{occ_1 \cdot R_p}{occ_1 \cdot R_p + (1 - occ_1) \cdot R_{prot}}}
+#'
+#' where
+#' \deqn{occ_1 = \frac{2^{\bar{l}_{p,1}}}{2^{\bar{l}_{p,1}} + 2^{\bar{l}_{u,1}}},
+#'   \quad R_p    = 2^{\bar{l}_{p,c}    - \bar{l}_{p,1}},
+#'   \quad R_{prot} = 2^{\bar{l}_{prot,c} - \bar{l}_{prot,1}}}
+#'
+#' The three quantities are:
+#' \describe{
+#'   \item{\eqn{occ_1}}{Reference-condition occupancy at the specific PTM site,
+#'     computed within condition 1 from the mean log2 intensities of the modified
+#'     (\eqn{\bar{l}_{p,1}}) and same-sequence unmodified (\eqn{\bar{l}_{u,1}})
+#'     peptidoforms.}
+#'   \item{\eqn{R_p}}{Between-condition fold-change of the modified peptidoform.}
+#'   \item{\eqn{R_{prot}}}{Between-condition fold-change of the protein, estimated
+#'     as the geometric mean of \emph{all} unmodified peptides belonging to the
+#'     same protein accession (analogous to the MaxQuant ProteinGroups ratio used
+#'     in Sharma et al. and Olsen et al.).  Using only the same-sequence unmodified
+#'     counterpart would give the peptide ratio, not the protein ratio, which is
+#'     incorrect whenever the protein carries other peptides with different
+#'     abundance changes.}
+#' }
+#'
+#' Only peptide sequences observed in both a modified and an unmodified form
+#' contribute to the result.  The protein ratio \eqn{R_{prot}} is computed from
+#' all unmodified rows whose \code{Accession} overlaps with the modified
+#' peptide's \code{Accession}; their log2 intensities are pooled per condition
+#' (geometric mean in linear space across rows, then arithmetic mean across
+#' replicates).  Missing values in individual replicates propagate strictly:
+#' any \code{NA} makes the condition mean \code{NA}, which in turn makes the
+#' occupancy \code{NA} for all conditions that depend on that mean.  The
+#' reference condition column (\code{C_1}) is always \code{NA}.
+#'
+#' @param peptable A data frame of peptidoform-level data as produced by the
+#'   ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
+#'   Required columns: \code{Sequence} (character), \code{PTMType} (list),
+#'   \code{PTMPos} (list), \code{Accession} (list), and one column per sample
+#'   as given by \code{parameters$QuantColnames}.  Quantification values must
+#'   be on the log2 scale.
+#' @param parameters A named list of analysis parameters.  Must contain:
+#'   \describe{
+#'     \item{QuantColnames}{Character vector of column names holding per-sample
+#'       log2 intensities.  Samples must be ordered as all replicates of
+#'       condition 1 first, then all replicates of condition 2, etc.}
+#'     \item{NumCond}{Integer.  Number of experimental conditions (\eqn{\geq 2}).}
+#'     \item{NumReps}{Integer.  Number of replicates per condition.}
+#'   }
+#'
+#' @return A data frame with one row per modified peptidoform that has a
+#'   matching unmodified counterpart.  Columns are:
+#'   \describe{
+#'     \item{Sequence}{Stripped peptide sequence.}
+#'     \item{Accession}{Protein accession(s) (list column).}
+#'     \item{PTMPos}{Modification positions within the peptide (list column).}
+#'     \item{PTMType}{Modification types (list column).}
+#'     \item{C_1, C_2, \ldots, C_NumCond}{One numeric column per condition.
+#'       \code{C_1} (the reference) is always \code{NA}.  For conditions 2 and
+#'       above the value is the Sharma occupancy in the range \eqn{(0, 1)}.}
+#'   }
+#'   Returns an empty \code{data.frame} when no modified peptides are present,
+#'   when \code{NumCond < 2}, or when no modified peptide has an unmodified
+#'   counterpart.
+#'
+#' @references
+#' Sharma, K. et al. (2014) Ultradeep Human Phosphoproteome Reveals a Distinct
+#' Regulatory Nature of Tyr and Ser/Thr-Based Signaling.
+#' \emph{Cell Reports}, \bold{8}(5), 1583--1594.
+#' \doi{10.1016/j.celrep.2014.07.036}
+#'
+#' Olsen, J.V. et al. (2010) Quantitative Phosphoproteomics Reveals Widespread
+#' Full Phosphorylation Site Occupancy During Mitosis.
+#' \emph{Science Signaling}, \bold{3}(104), ra3.
+#' \doi{10.1126/scisignal.2000475}
+#'
+#' @examples
+#' \dontrun{
+#' # After running the ProteoMaker pipeline and obtaining StatsPep:
+#' occ <- calcPTMOccupancy(StatsPep, Param)
+#' head(occ)
+#' }
+#'
+#' @export
+calcPTMOccupancy <- function(peptable, parameters) {
+  QuantColnames <- parameters$QuantColnames
+  NumCond       <- parameters$NumCond
+  NumReps       <- parameters$NumReps
+
+  has_ptm <- lengths(peptable$PTMType) > 0
+
+  if (sum(has_ptm) == 0) {
+    message("calcPTMOccupancy: no modified peptides found; returning empty table.")
+    return(data.frame())
+  }
+
+  if (is.null(NumCond) || is.null(NumReps) || NumCond < 2L) {
+    message("calcPTMOccupancy: NumCond >= 2 required for between-condition occupancy; returning empty table.")
+    return(data.frame())
+  }
+
+  message(" + Calculating PTM site occupancy")
+
+  # Group QuantColnames into per-condition replicate blocks
+  cond_cols      <- lapply(seq_len(NumCond), function(c) {
+    QuantColnames[seq.int((c - 1L) * NumReps + 1L, c * NumReps)]
+  })
+  out_cond_names <- paste0("C_", seq_len(NumCond))
+
+  seqs          <- peptable$Sequence
+  uniq_mod_seqs <- unique(seqs[has_ptm])
+
+  out_seq     <- character(0)
+  out_acc     <- list()
+  out_ptmpos  <- list()
+  out_ptmtype <- list()
+  out_quant   <- vector("list", 0)
+
+  for (seq in uniq_mod_seqs) {
+    mod_idx   <- which(has_ptm & seqs == seq)
+    unmod_idx <- which(!has_ptm & seqs == seq)
+
+    if (length(unmod_idx) == 0) next
+
+    # Per-condition mean log2 of the same-sequence unmodified peptidoform.
+    # Used only to compute occ_ref (site-specific reference occupancy).
+    unmod_mean <- sapply(cond_cols, function(cols) {
+      mean(colMeans(as.matrix(peptable[unmod_idx, cols, drop = FALSE])))
+    })
+
+    for (mi in mod_idx) {
+      # Per-condition mean log2 modified intensity
+      mod_mean <- sapply(cond_cols, function(cols) {
+        mean(as.numeric(peptable[mi, cols]))
+      })
+
+      # Protein ratio (Rprot): use only unmodified peptides from the same protein
+      # accession whose sequence does NOT appear as modified (i.e., exclude any
+      # counterpart unmodified peptides).  This follows requirement (c): only
+      # unmodified peptides that do not have any modified version contribute to the
+      # protein background ratio.  colMeans() pools rows in log2 space (geometric
+      # mean in linear); mean() averages replicates within each condition.
+      acc_vec        <- unlist(peptable$Accession[[mi]])
+      prot_unmod_idx <- which(!has_ptm &
+                                vapply(peptable$Accession,
+                                       function(a) any(unlist(a) %in% acc_vec),
+                                       logical(1L)) &
+                                !(seqs %in% uniq_mod_seqs))
+      if (length(prot_unmod_idx) == 0L) next
+      prot_mean <- sapply(cond_cols, function(cols) {
+        mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE])))
+      })
+
+      # Full Sharma et al. 3-ratio formula:
+      # occ_ref: site-specific reference occupancy (from same-sequence unmodified)
+      occ_ref <- 2^mod_mean[1L] / (2^mod_mean[1L] + 2^unmod_mean[1L])
+
+      log_Rp    <- mod_mean  - mod_mean[1L]   # 0 for c = 1 (reference)
+      log_Rprot <- prot_mean - prot_mean[1L]  # 0 for c = 1 (reference)
+      Rp        <- 2^log_Rp
+      Rprot     <- 2^log_Rprot
+      # occ_c = (occ_ref * Rp_c) / (occ_ref * Rp_c + (1 - occ_ref) * Rprot_c)
+      occ        <- (occ_ref * Rp) / (occ_ref * Rp + (1 - occ_ref) * Rprot)
+      occ[1L]    <- NA_real_                  # reference condition is uninformative
+
+      out_seq     <- c(out_seq, seq)
+      out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
+      out_ptmpos  <- c(out_ptmpos,  list(peptable$PTMPos[[mi]]))
+      out_ptmtype <- c(out_ptmtype, list(peptable$PTMType[[mi]]))
+      out_quant   <- c(out_quant,   list(setNames(as.list(occ), out_cond_names)))
+    }
+  }
+
+  if (length(out_seq) == 0) {
+    message("calcPTMOccupancy: no peptides with both modified and unmodified forms found.")
+    return(data.frame())
+  }
+
+  quant_df               <- as.data.frame(do.call(rbind, lapply(out_quant, as.data.frame)))
+  result                 <- data.frame(Sequence = out_seq, stringsAsFactors = FALSE)
+  result[out_cond_names] <- quant_df
+  result$Accession       <- out_acc
+  result$PTMPos          <- out_ptmpos
+  result$PTMType         <- out_ptmtype
+
+  message("  - Occupancy calculated for ", nrow(result), " modified peptidoforms across ",
+          length(unique(out_seq)), " unique peptide sequences")
+  result
+}

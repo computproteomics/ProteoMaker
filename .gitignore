@@ -4,3 +4,4 @@ SimulatedDataSets/*
 .Rproj.user
 .Rhistory
 inst/shiny/SimulatedDataSets/
+*.Rcheck/
