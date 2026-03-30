@@ -521,7 +521,13 @@ modify <- function(seq, param) {
   pmod_res <- param$ModifiableResidues[[1]]
   pmod_res_distr <- param$ModifiableResiduesDistr[[1]]
   ptms <- param$PTMTypes[[1]]
+  # Accept both formats:
+  #   wrapped:  list(mods = c(ph = 1))  → [[1]] already gives c(ph = 1)
+  #   flat:     list(ph = 1)            → [[1]] gives unnamed scalar; recover via unlist()
   ptms_distr <- param$PTMTypesDistr[[1]]
+  if (is.null(names(ptms_distr))) {
+    ptms_distr <- unlist(param$PTMTypesDistr)
+  }
   # In case of multiple modification types, amino acid background frequences
   # for each type are proportionally adjusted to background frequences of modification types.
   pmod_res_distr <- setNames(lapply(
