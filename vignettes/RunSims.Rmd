@@ -70,14 +70,15 @@ Param$paramGroundTruth$PathToFasta <- "fasta_example.fasta"
 Param$paramGroundTruth$PercExpressedProt <- 1.0
 # Param$paramGroundTruth$NumReps <- c(3)
 # Param$paramGroundTruth$NumCond <- 5
-# Param$paramGroundTruth$FracModProt <- 0.5
-# Param$paramGroundTruth$PTMTypes <- "ph"
-# Param$paramGroundTruth$PTMTypesMass <- c(79.966331)
-# Param$paramGroundTruth$PTMTypesDist <- c(1)
-# Param$paramGroundTruth$PTMMultipleLambda <- c(0.1)
-# Param$paramGroundTruth$ModifiableResidues <- list(c("S", "T", "Y"))
-# Param$paramGroundTruth$ModifiableResiduesDistr <- list(c(0.86,0.13, 0.01))
-Param$paramGroundTruth$NumReps <- c(3:5)
+Param$paramGroundTruth$FracModProt        <- 0.5          # 50 % of proteins are modified
+Param$paramGroundTruth$PTMTypes           <- list(mods = c("ph"))
+Param$paramGroundTruth$PTMTypesMass       <- list(ph = 79.966331)
+Param$paramGroundTruth$PTMTypesDistr      <- list(ph = 1)
+Param$paramGroundTruth$ModifiableResidues <- list(mods = list(ph = c("S", "T", "Y")))
+Param$paramGroundTruth$ModifiableResiduesDistr <- list(mods = list(ph = c(S = 0.86, T = 0.13, Y = 0.01)))
+Param$paramGroundTruth$PTMMultipleLambda  <- 0     # 0 (or 0.0001) -> ~1 modified site per proteoform
+Param$paramGroundTruth$PropModPerProt     <- 1     # 1 modified proteoform per protein
+Param$paramGroundTruth$RemoveNonModFormFrac <- 0   # keep unmodified counterpart -> 2 proteoforms total# Param$paramGroundTruth$NumReps <- c(3:5)
 # Param$paramProteoformAb$QuantNoise <- seq(0.1, 0.9, 0.5)
 # Param$paramProteoformAb$DiffRegFrac <- c(0.1, 0.3, 0.5)
 # Param$paramProteoformAb$DiffRegMax <- seq(0.5, 2, 0.5)

@@ -437,10 +437,16 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
     if (length(unmod_idx) == 0) next
 
+    # There should be only one peptide
+    if (length(unmod_idx) > 1 || length(mod_idx) > 1) {
+      warning("Found more than one peptide ", seq, "!!")
+      next
+    }
+
     # Per-condition mean log2 of the same-sequence unmodified peptidoform.
     # Used only to compute occ_ref (site-specific reference occupancy).
     unmod_mean <- sapply(cond_cols, function(cols) {
-      mean(colMeans(as.matrix(peptable[unmod_idx, cols, drop = FALSE])))
+      mean(as.numeric(peptable[unmod_idx, cols]))
     })
 
     for (mi in mod_idx) {
@@ -466,17 +472,17 @@ calcPTMOccupancy <- function(peptable, parameters) {
         mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE])))
       })
 
-      # Full Sharma et al. 3-ratio formula:
-      # occ_ref: site-specific reference occupancy (from same-sequence unmodified)
-      occ_ref <- 2^mod_mean[1L] / (2^mod_mean[1L] + 2^unmod_mean[1L])
 
-      log_Rp    <- mod_mean  - mod_mean[1L]   # 0 for c = 1 (reference)
+      log_Rm    <- mod_mean  - mod_mean[1L]   # 0 for c = 1 (reference)
+      log_Ru    <- unmod_mean  - unmod_mean[1L]   # 0 for c = 1 (reference)
       log_Rprot <- prot_mean - prot_mean[1L]  # 0 for c = 1 (reference)
-      Rp        <- 2^log_Rp
-      Rprot     <- 2^log_Rprot
-      # occ_c = (occ_ref * Rp_c) / (occ_ref * Rp_c + (1 - occ_ref) * Rprot_c)
-      occ        <- (occ_ref * Rp) / (occ_ref * Rp + (1 - occ_ref) * Rprot)
-      occ[1L]    <- NA_real_                  # reference condition is uninformative
+      Rm        <- 2^log_Rm[seq_len(NumCond-1)+1]
+      Ru        <- 2^log_Ru[seq_len(NumCond-1)+1]
+      Rprot     <- 2^log_Rprot[seq_len(NumCond-1)+1]
+      print(paste(Rm, Ru, Rprot))
+
+      occ[1L]    <- mean((Rprot - Ru) / (Rm - Ru))
+      occ        <- c(occ[1], occ[1] * Rm / Rprot)
 
       out_seq     <- c(out_seq, seq)
       out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
