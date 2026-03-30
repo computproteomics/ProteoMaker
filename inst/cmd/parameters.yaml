@@ -58,23 +58,23 @@ params:
   PropModPerProt:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Factor for generating more that many modified proteoforms per selected protein."
+    description: "Multiplier for generating additional modified proteoforms per selected protein. 1 (or 0) keeps exactly one modified proteoform; values >= 2 create that many independently modified proteoforms per protein. To get 2 proteoforms total (1 modified + 1 unmodified), set PropModPerProt = 1 and RemoveNonModFormFrac = 0."
     min: 0
-    max: 5
+    max: 500
     class: "numeric"
     default: 0
   PTMMultipleLambda:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Poisson parameter for multiply modified proteins, scaled to the number of possible PTM sites."
+    description: "Lambda for the truncated Poisson distribution (truncated to [1, N]) controlling the number of modification sites per proteoform, scaled by the number of modifiable sites. Values of 0 (default) or any value <= 1e-4 (e.g. 0.0001) are clamped to 1e-4 internally, causing the truncated Poisson to almost surely return 1 — yielding approximately one modified site per PTM type per proteoform. Larger values increase the expected number of modifications."
     min: 0
-    max: 5
+    max: 10
     class: "numeric"
     default: 0
   RemoveNonModFormFrac:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Fraction of modifiable proteins set to be without non-modified forms."
+    description: "Fraction of modifiable proteins for which the unmodified proteoform is removed. Defaults to 0 (all modified proteins retain their unmodified counterpart). Set to 1 to keep only modified forms. Combined with PropModPerProt = 1 and RemoveNonModFormFrac = 0 yields exactly 2 proteoforms per modified protein (1 modified + 1 unmodified)."
     min: 0
     max: 1
     class: "numeric"
