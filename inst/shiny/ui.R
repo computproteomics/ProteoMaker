@@ -8,6 +8,8 @@ library(DT)
 library(ProteoMaker)
 library(dplyr)
 
+version <- installed.packages()["ProteoMaker","Version"]
+
 # Function to create UI elements based on parameter type
 create_param_ui <- function(param_name, param_info) {
 
@@ -121,12 +123,44 @@ create_param_panels <- function(group, def_params) {
 
 # UI Section
 ui <- page_sidebar(
+  theme = bs_theme(bootswatch = "vapor"),
+  tags$head(
+    tags$style(HTML("
+      .popover {
+        --bs-popover-bg: var(--bs-body-bg);
+        --bs-popover-border-color: var(--bs-border-color);
+        --bs-popover-header-bg: var(--bs-tertiary-bg);
+        --bs-popover-header-color: var(--bs-body-color);
+        --bs-popover-body-color: var(--bs-body-color);
+      }
+
+      .popover .popover-body a,
+      .popover .popover-header a {
+        color: var(--bs-link-color);
+      }
+    "))
+  ),
   # Load the audio file and play it automatically
   title = tagList(
   tags$img(src = "ProteoMakerLogo.png", height = "70px"),
-  h2("ProteoMaker Simulator")
-  ),
-  theme = bs_theme(bootswatch = "vapor"),
+  h2("ProteoMaker Simulator"),
+  popover(
+    actionLink(
+      "help_btn",
+      label = NULL,
+      icon = icon("question-circle")
+    ),
+    title = paste("Version:", version),
+    placement = "bottom",
+    HTML(paste0(
+      '<div style="min-width:260px;">',
+      '<p><a href="http://github.com/computproteomics/ProteoMaker" target="_blank">',
+      'Source code and installation instructions</a></p>',
+      '<p><a href="https://TODO" target="_blank">Paper</a></p>',
+      '<p><a href="http://computproteomics.bmb.sdu.dk" target="_blank">Author</a></p>',
+      '<p><a href="https://www.sdu.dk" target="_blank">Institution</a></p>',
+      '</div>'
+    )))),
   shinyjs::useShinyjs(),
   #bootstrapLib(bs_theme()),
   sidebar = sidebar(
