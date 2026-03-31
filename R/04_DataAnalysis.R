@@ -310,43 +310,53 @@ proteinSummarisation <- function(peptable, parameters) {
 
 #' Calculate PTM Site Occupancy
 #'
-#' Computes the occupancy (partial stoichiometry) for each PTM site using the
-#' full three-ratio approach of Sharma et al. (2014) / Olsen et al. (2010).
-#' For each non-reference condition \eqn{c} the occupancy is:
-#'
-#' \deqn{occupancy_c =
-#'   \frac{occ_1 \cdot R_p}{occ_1 \cdot R_p + (1 - occ_1) \cdot R_{prot}}}
-#'
-#' where
-#' \deqn{occ_1 = \frac{2^{\bar{l}_{p,1}}}{2^{\bar{l}_{p,1}} + 2^{\bar{l}_{u,1}}},
-#'   \quad R_p    = 2^{\bar{l}_{p,c}    - \bar{l}_{p,1}},
-#'   \quad R_{prot} = 2^{\bar{l}_{prot,c} - \bar{l}_{prot,1}}}
-#'
-#' The three quantities are:
+#' Estimates the per-condition PTM-site occupancy (stoichiometry) using a
+#' mass-balance three-ratio approach.  For each modified peptidoform the
+#' method uses three between-condition fold-change ratios:
 #' \describe{
-#'   \item{\eqn{occ_1}}{Reference-condition occupancy at the specific PTM site,
-#'     computed within condition 1 from the mean log2 intensities of the modified
-#'     (\eqn{\bar{l}_{p,1}}) and same-sequence unmodified (\eqn{\bar{l}_{u,1}})
-#'     peptidoforms.}
-#'   \item{\eqn{R_p}}{Between-condition fold-change of the modified peptidoform.}
-#'   \item{\eqn{R_{prot}}}{Between-condition fold-change of the protein, estimated
-#'     as the geometric mean of \emph{all} unmodified peptides belonging to the
-#'     same protein accession (analogous to the MaxQuant ProteinGroups ratio used
-#'     in Sharma et al. and Olsen et al.).  Using only the same-sequence unmodified
-#'     counterpart would give the peptide ratio, not the protein ratio, which is
-#'     incorrect whenever the protein carries other peptides with different
-#'     abundance changes.}
+#'   \item{\eqn{R_{m,c}}}{Fold-change of the \emph{modified} peptidoform,
+#'     \eqn{R_{m,c} = 2^{\bar{l}_{m,c} - \bar{l}_{m,1}}}.}
+#'   \item{\eqn{R_{u,c}}}{Fold-change of the \emph{same-sequence unmodified}
+#'     counterpart peptidoform,
+#'     \eqn{R_{u,c} = 2^{\bar{l}_{u,c} - \bar{l}_{u,1}}}.}
+#'   \item{\eqn{R_{prot,c}}}{Fold-change of the protein, estimated from the
+#'     geometric mean (in linear space) of all unmodified peptides from the
+#'     same protein accession whose sequence does \emph{not} appear in any
+#'     modified form in the data,
+#'     \eqn{R_{prot,c} = 2^{\bar{l}_{prot,c} - \bar{l}_{prot,1}}}.}
 #' }
+#' Here \eqn{\bar{l}_{x,c}} is the mean log2 intensity across replicates of
+#' condition \eqn{c} and subscript 1 denotes the reference condition.  For the
+#' protein ratio, log2 intensities from multiple non-counterpart unmodified rows
+#' are pooled first via \code{colMeans} (geometric mean in linear space) and
+#' then averaged across replicates.  Missing values are removed
+#' (\code{na.rm = TRUE}) at every averaging step; consequently, an individual
+#' missing replicate is silently excluded from the mean for that condition.
+#' However, if \emph{all} replicates of a condition are missing, the condition
+#' mean becomes \code{NaN}.
 #'
-#' Only peptide sequences observed in both a modified and an unmodified form
-#' contribute to the result.  The protein ratio \eqn{R_{prot}} is computed from
-#' all unmodified rows whose \code{Accession} overlaps with the modified
-#' peptide's \code{Accession}; their log2 intensities are pooled per condition
-#' (geometric mean in linear space across rows, then arithmetic mean across
-#' replicates).  Missing values in individual replicates propagate strictly:
-#' any \code{NA} makes the condition mean \code{NA}, which in turn makes the
-#' occupancy \code{NA} for all conditions that depend on that mean.  The
-#' reference condition column (\code{C_1}) is always \code{NA}.
+#' Under a simple mass-balance model, the reference-condition occupancy satisfies
+#' the identity \eqn{occ_1 = (R_{prot,c} - R_{u,c}) / (R_{m,c} - R_{u,c})} for
+#' every non-reference condition \eqn{c}.  For robustness this quantity is
+#' estimated as the mean over all \eqn{C - 1} non-reference conditions:
+#'
+#' \deqn{occ_1 = \frac{1}{C - 1} \sum_{c=2}^{C}
+#'   \frac{R_{prot,c} - R_{u,c}}{R_{m,c} - R_{u,c}}}
+#'
+#' Per-condition occupancy is then obtained by:
+#'
+#' \deqn{occ_c = occ_1 \cdot \frac{R_{m,c}}{R_{prot,c}}, \quad c = 2, \ldots, C}
+#'
+#' The reference condition column (\code{C_1}) contains \eqn{occ_1}; all other
+#' columns contain \eqn{occ_c}.  When \eqn{R_{m,c} = R_{u,c}} for any
+#' condition (denominator of the \eqn{occ_1} estimator is zero), the
+#' per-condition term yields \code{NaN}, which propagates through the mean to
+#' \eqn{occ_1} and consequently to \emph{all} output columns.  A peptide
+#' sequence is omitted from the result when: (a) no same-sequence unmodified
+#' row is present; (b) no non-counterpart unmodified row from the same protein
+#' is available to estimate \eqn{R_{prot}}; or (c) more than one modified or
+#' more than one unmodified row exists for that sequence (a warning is issued
+#' and the sequence is skipped).
 #'
 #' @param peptable A data frame of peptidoform-level data as produced by the
 #'   ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
@@ -363,20 +373,23 @@ proteinSummarisation <- function(peptable, parameters) {
 #'     \item{NumReps}{Integer.  Number of replicates per condition.}
 #'   }
 #'
-#' @return A data frame with one row per modified peptidoform that has a
-#'   matching unmodified counterpart.  Columns are:
+#' @return A data frame with one row per modified peptidoform that has both a
+#'   same-sequence unmodified counterpart and at least one non-counterpart
+#'   unmodified peptide from the same protein.  Columns are:
 #'   \describe{
 #'     \item{Sequence}{Stripped peptide sequence.}
 #'     \item{Accession}{Protein accession(s) (list column).}
 #'     \item{PTMPos}{Modification positions within the peptide (list column).}
 #'     \item{PTMType}{Modification types (list column).}
 #'     \item{C_1, C_2, \ldots, C_NumCond}{One numeric column per condition.
-#'       \code{C_1} (the reference) is always \code{NA}.  For conditions 2 and
-#'       above the value is the Sharma occupancy in the range \eqn{(0, 1)}.}
+#'       \code{C_1} contains the estimated reference-condition occupancy
+#'       \eqn{occ_1}.  Columns \code{C_2} through \code{C_NumCond} contain
+#'       \eqn{occ_c = occ_1 \cdot R_{m,c} / R_{prot,c}}.  Values may fall
+#'       outside \eqn{[0, 1]} or be \code{NaN} when the data are inconsistent
+#'       with the mass-balance model (e.g.\ \eqn{R_{m,c} = R_{u,c}}).}
 #'   }
 #'   Returns an empty \code{data.frame} when no modified peptides are present,
-#'   when \code{NumCond < 2}, or when no modified peptide has an unmodified
-#'   counterpart.
+#'   when \code{NumCond < 2}, or when no qualifying modified peptide is found.
 #'
 #' @references
 #' Sharma, K. et al. (2014) Ultradeep Human Phosphoproteome Reveals a Distinct
