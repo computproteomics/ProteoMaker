@@ -35,8 +35,8 @@ deviations in the
 visualization. Default is \code{FALSE}. This parameter is not applied to the color maps.}
 
 \item{compare_par}{A character vector specifying the names of an additional parameter for subsetting and then
-comparison of the benchmark values. This parameter is only applied when \code{ref_par} contains one parameter.
-If default \code{NULL}, the full set will be shown.}
+comparison of the benchmark values. This parameter is only applied when `ref_par` contains one parameter.
+If defulat `NULL`, the full set will be shown.}
 }
 \value{
 A bar plot or a colored map visualizing the specified benchmarks against the
@@ -48,7 +48,7 @@ bar plots for the specified benchmarks and parameters, allowing for the
 comparison of benchmark values across different parameter settings.
 }
 \examples{
-conf <- set_proteomaker(resultFilePath = tempdir(), cores = NULL)
+conf <- set_proteomaker(resultFilePath = tempdir())
 results <- run_sims(def_param(), conf)
 benchmark_matrix <- matrix_benchmarks(results, conf)
 visualize_benchmarks(benchmark_matrix, ref_par = "NumReps")

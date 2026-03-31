@@ -32,12 +32,12 @@ A data frame with one row per modified peptidoform that has both a
     \item{Accession}{Protein accession(s) (list column).}
     \item{PTMPos}{Modification positions within the peptide (list column).}
     \item{PTMType}{Modification types (list column).}
-    \item{C_1, C_2, ..., C_NumCond}{One numeric column per condition.
+    \item{C_1, C_2, \ldots, C_NumCond}{One numeric column per condition.
       \code{C_1} contains the estimated reference-condition occupancy
       \eqn{occ_1}.  Columns \code{C_2} through \code{C_NumCond} contain
       \eqn{occ_c = occ_1 \cdot R_{m,c} / R_{prot,c}}.  Values may fall
       outside \eqn{[0, 1]} or be \code{NaN} when the data are inconsistent
-      with the mass-balance model (e.g. \eqn{R_{m,c} = R_{u,c}}).}
+      with the mass-balance model (e.g.\ \eqn{R_{m,c} = R_{u,c}}).}
   }
   Returns an empty \code{data.frame} when no modified peptides are present,
   when \code{NumCond < 2}, or when no qualifying modified peptide is found.
@@ -58,7 +58,6 @@ method uses three between-condition fold-change ratios:
     modified form in the data,
     \eqn{R_{prot,c} = 2^{\bar{l}_{prot,c} - \bar{l}_{prot,1}}}.}
 }
-
 Here \eqn{\bar{l}_{x,c}} is the mean log2 intensity across replicates of
 condition \eqn{c} and subscript 1 denotes the reference condition.  For the
 protein ratio, log2 intensities from multiple non-counterpart unmodified rows
@@ -68,7 +67,8 @@ then averaged across replicates.  Missing values are removed
 missing replicate is silently excluded from the mean for that condition.
 However, if \emph{all} replicates of a condition are missing, the condition
 mean becomes \code{NaN}.
-
+}
+\details{
 Under a simple mass-balance model, the reference-condition occupancy satisfies
 the identity \eqn{occ_1 = (R_{prot,c} - R_{u,c}) / (R_{m,c} - R_{u,c})} for
 every non-reference condition \eqn{c}.  For robustness this quantity is

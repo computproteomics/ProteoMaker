@@ -17,8 +17,10 @@ modify_seq(seq, pars)
  \item \code{ModifiableResiduesDistr}: A list of numeric vectors representing the background frequencies
  for each modifiable residue within each PTM type.
  \item \code{PTMMultipleLambda}: A numeric value specifying the lambda parameter for the truncated Poisson
- distribution,
- which determines the number of modifications per sequence.
+ distribution (truncated to [1, N]) controlling the number of modification sites per proteoform.
+ Setting to \code{0} (or any value \eqn{\le 10^{-4}}) is treated as \code{1e-4} internally, which causes
+ the truncated Poisson to almost surely return 1 — yielding approximately one modified site per PTM type
+ per proteoform.  Larger values increase the expected number of modifications.
  }
 
 
