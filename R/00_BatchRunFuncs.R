@@ -364,7 +364,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
           for (ll in 1:length(listtodatanalysis)) {
             Param <- "none"
             tParam <- c(msParam, listtodatanalysis[[ll]])
-            Benchmarks <- NULL
+            Benchmarks <- Occupancies <- NULL
             md5 <- digest::digest(tParam, algo = "md5")
             filename <- paste0(Config$resultFilePath, "/outputDataAnalysis_", md5, ".RData")
             if (!overwrite & file.exists(filename)) {
@@ -386,8 +386,9 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
                 Stats <- runPolySTest(Prots, Param, refCond = 1, onlyLIMMA = F, cores = Config$cores)
                 # much faster with only LIMMA tests
                 StatsPep <- runPolySTest(allPeps, Param, refCond = 1, onlyLIMMA = T, cores = Config$cores)
-                # Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
-                save(Param, Stats, StatsPep, Benchmarks, file = filename)
+                # get occupancies for all PTM types (for later benchmarking)
+                Occupancies <- calcPTMOccupancy(allPeps, Param)
+                save(Param, Stats, StatsPep, Occupancies, Benchmarks, file = filename)
               } else {
                 message("Too few proteins or no statistical tests requested.
                                         Skipping this protein summarization, statistical testing and
@@ -397,7 +398,7 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
 
               if (Config$calcAllBenchmarks & !is.null(Stats)) {
                 Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
-                save(Param, Stats, StatsPep, Benchmarks, file = filename)
+                save(Param, Stats, StatsPep, Occupancies, Benchmarks, file = filename)
               }
             } else {
               Param <- tParam

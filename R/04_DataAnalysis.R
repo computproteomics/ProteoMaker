@@ -446,13 +446,14 @@ calcPTMOccupancy <- function(peptable, parameters) {
     # Per-condition mean log2 of the same-sequence unmodified peptidoform.
     # Used only to compute occ_ref (site-specific reference occupancy).
     unmod_mean <- sapply(cond_cols, function(cols) {
-      mean(as.numeric(peptable[unmod_idx, cols]))
+      mean(as.numeric(peptable[unmod_idx, cols]), na.rm=TRUE)
     })
+
 
     for (mi in mod_idx) {
       # Per-condition mean log2 modified intensity
       mod_mean <- sapply(cond_cols, function(cols) {
-        mean(as.numeric(peptable[mi, cols]))
+        mean(as.numeric(peptable[mi, cols]), na.rm=TRUE)
       })
 
       # Protein ratio (Rprot): use only unmodified peptides from the same protein
@@ -469,20 +470,21 @@ calcPTMOccupancy <- function(peptable, parameters) {
                                 !(seqs %in% uniq_mod_seqs))
       if (length(prot_unmod_idx) == 0L) next
       prot_mean <- sapply(cond_cols, function(cols) {
-        mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE])))
+        mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE]), na.rm=TRUE), na.rm = TRUE)
       })
+
 
 
       log_Rm    <- mod_mean  - mod_mean[1L]   # 0 for c = 1 (reference)
       log_Ru    <- unmod_mean  - unmod_mean[1L]   # 0 for c = 1 (reference)
       log_Rprot <- prot_mean - prot_mean[1L]  # 0 for c = 1 (reference)
+
       Rm        <- 2^log_Rm[seq_len(NumCond-1)+1]
       Ru        <- 2^log_Ru[seq_len(NumCond-1)+1]
       Rprot     <- 2^log_Rprot[seq_len(NumCond-1)+1]
-      print(paste(Rm, Ru, Rprot))
 
-      occ[1L]    <- mean((Rprot - Ru) / (Rm - Ru))
-      occ        <- c(occ[1], occ[1] * Rm / Rprot)
+      occ    <- mean((Rprot - Ru) / (Rm - Ru))
+      occ        <- c(occ, occ * Rm / Rprot)
 
       out_seq     <- c(out_seq, seq)
       out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
