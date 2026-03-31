@@ -89,9 +89,9 @@ test_that("formula correctly computes per-condition occupancy as occ_1 * Rm / Rp
 })
 
 test_that("occupancy approaches 0 when modified ratio << protein ratio", {
-  # Condition 1: mod=1, unmod=1  =>  occ_ref = 0.5
-  # Condition 2: mod=1, unmod=11  =>  Rp=1, Rprot=2^10=1024 (one unmod peptide)
-  # occ_C2 = (0.5*1)/(0.5*1 + 0.5*1024) = 0.5/512.5 ≈ 0.001
+  # 2 conditions, 2 replicates: mod unchanged (Rm=1), unmod and protein increase 1024x (Ru=Rprot=1024).
+  # occ_1 = (Rprot - Ru) / (Rm - Ru) = (1024-1024)/(1-1024) = 0
+  # occ_2 = occ_1 * Rm / Rprot = 0  (denominator is degenerate: Rm=Ru)
   pep <- make_peptable(mod_vals = c(1, 1, 1, 1), unmod_vals = c(1, 1, 11, 11))
   occ <- calcPTMOccupancy(pep, make_params())
 
