@@ -690,6 +690,18 @@ server <- function(input, output, session) {
             }
           }
         }
+        # create parameter file
+        # Add values from the input fields to the params list
+        tparams <- parameters()
+        for (param_name in names(tparams)) {
+          if (is.null(tparams[[param_name]]$value)) {
+            tparams[[param_name]]$value <- input[[param_name]]
+          }
+        }
+        tparams <- list(params=tparams)
+        # Write the yaml file
+        yaml::write_yaml(tparams, file = file.path(result_dir, "simulation_parameters.yaml"))
+
 
         # Create a zip file containing all results
         zip::zipr(file, files = list.files(result_dir, full.names = TRUE))
