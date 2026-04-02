@@ -258,8 +258,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
       ok_lr <- !is.na(lr_col_stat) && !is.na(Stats[i, lr_col_stat])
       if (length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval) & ok_lr)) {
         tval <- colMeans(tval[, 2:ncol(tval), drop = F] - tval[, 1], na.rm = T)
-        diffs[i] <- tval
-        sumsquare <- sumsquare + (tval - Stats[i, lr_col_stat]) * (tval - Stats[i, lr_col_stat])
+        diffs[i] <- tval[1]
+        sumsquare <- sumsquare + (tval[1] - Stats[i, lr_col_stat]) * (tval[1] - Stats[i, lr_col_stat])
       } else {
         diffs[i] <- 0
       }
@@ -316,14 +316,14 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
       tampl[is.na(tampl)] <- 0
       tval <- pat * tampl
       tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
-      sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]
-      tdiff <- (tval - sdata) * (tval - sdata)
+      sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))[1]]
+      tdiff <- (tval[1] - sdata) * (tval[1] - sdata)
       if (!is.na(tdiff)) {
         sumsquare <- sumsquare + tdiff
-        diffs[i] <- tval
+        diffs[i] <- tval[1]
         if (length(StatsPep$PTMType[i][[1]]) > 0) {
           sumsquaremod <- sumsquaremod + tdiff
-          diffsmod[i] <- tval
+          diffsmod[i] <- tval[1]
         }
       }
     }
