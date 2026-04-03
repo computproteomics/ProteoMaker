@@ -246,20 +246,23 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
     values[values == "NA"] <- NA # Replace "NA" strings with actual NA values
     as.numeric(values)
   })
-  # pick first available log-ratios column for proteins
   lr_cols_stats <- grep("^log-ratios", colnames(Stats), value = TRUE)
-  lr_col_stat <- if (length(lr_cols_stats) > 0) lr_cols_stats[1] else NA_character_
   diffs <- vector("numeric", length(patterns))
   sumsquare <- 0
   for (i in 1:length(patterns)) {
     tampl <- na.omit(amplitudes[i][[1]])
     if (length(tampl) > 0) {
       tval <- patterns[i][[1]] * tampl
-      ok_lr <- !is.na(lr_col_stat) && !is.na(Stats[i, lr_col_stat])
-      if (length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval) & ok_lr)) {
+      ok_lr <- length(lr_cols_stats) > 0 && any(!is.na(Stats[i, lr_cols_stats]))
+      if (length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval)) & ok_lr) {
         tval <- colMeans(tval[, 2:ncol(tval), drop = F] - tval[, 1], na.rm = T)
-        diffs[i] <- tval
-        sumsquare <- sumsquare + (tval - Stats[i, lr_col_stat]) * (tval - Stats[i, lr_col_stat])
+        n_compare <- min(length(tval), length(lr_cols_stats))
+        meas_lr <- as.numeric(Stats[i, lr_cols_stats[seq_len(n_compare)]])
+        valid <- !is.na(meas_lr)
+        if (any(valid)) {
+          diffs[i] <- mean(tval[seq_len(n_compare)][valid])
+          sumsquare <- sumsquare + mean((tval[seq_len(n_compare)][valid] - meas_lr[valid])^2)
+        }
       } else {
         diffs[i] <- 0
       }
@@ -308,6 +311,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   })
   diffs <- diffsmod <- vector("numeric", length(patterns))
   sumsquare <- sumsquaremod <- 0
+  lr_cols_pep <- grep("^log-ratios", colnames(StatsPep), value = TRUE)
   for (i in 1:length(patterns)) {
     tampl <- amplitudes[[i]]
     diffs[i] <- diffsmod[i] <- 0
@@ -316,14 +320,16 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
       tampl[is.na(tampl)] <- 0
       tval <- pat * tampl
       tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
-      sdata <- StatsPep[i, grep("^log-ratios", colnames(StatsPep))]
-      tdiff <- (tval - sdata) * (tval - sdata)
-      if (!is.na(tdiff)) {
+      n_compare <- min(length(tval), length(lr_cols_pep))
+      sdata <- as.numeric(StatsPep[i, lr_cols_pep[seq_len(n_compare)]])
+      valid <- !is.na(sdata)
+      if (any(valid)) {
+        tdiff <- mean((tval[seq_len(n_compare)][valid] - sdata[valid])^2)
         sumsquare <- sumsquare + tdiff
-        diffs[i] <- tval
+        diffs[i] <- mean(tval[seq_len(n_compare)][valid])
         if (length(StatsPep$PTMType[i][[1]]) > 0) {
           sumsquaremod <- sumsquaremod + tdiff
-          diffsmod[i] <- tval
+          diffsmod[i] <- diffs[i]
         }
       }
     }

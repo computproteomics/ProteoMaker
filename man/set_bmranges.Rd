@@ -6,6 +6,14 @@
 \usage{
 set_bmranges(titles)
 }
+\arguments{
+\item{titles}{A named character vector of benchmark metric titles, as
+returned by \code{get_bmtitles()}.}
+}
+\value{
+A named list of numeric vectors specifying the \code{c(min, max)}
+display range for each benchmark metric.
+}
 \description{
 setting maximal ranges for benchmarking metrics
 }

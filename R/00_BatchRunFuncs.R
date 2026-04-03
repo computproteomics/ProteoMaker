@@ -1374,6 +1374,11 @@ get_bmtitles <- function () {
 }
 
 #' setting maximal ranges for benchmarking metrics
+#'
+#' @param titles A named character vector of benchmark metric titles, as
+#'   returned by \code{get_bmtitles()}.
+#' @return A named list of numeric vectors specifying the \code{c(min, max)}
+#'   display range for each benchmark metric.
 set_bmranges <- function(titles) {
   ranges <- lapply(titles, function(x) c(0, NA))
   names(ranges) <- names(titles)
