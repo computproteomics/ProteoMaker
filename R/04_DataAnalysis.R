@@ -185,9 +185,9 @@ proteinSummarisation <- function(peptable, parameters) {
           tmp <- as.data.frame(tmp)
           tmp$peptide <- rownames(tmp)
           long_df <- pivot_longer(tmp,
-            cols = -peptide,
-            names_to = "sample",
-            values_to = "intensity"
+                                  cols = -peptide,
+                                  names_to = "sample",
+                                  values_to = "intensity"
           )
           out <- setNames(rep(NA_real_, length(QuantColnames)), QuantColnames)
           long_df <- long_df[!is.na(long_df$intensity), , drop = FALSE]
@@ -409,6 +409,8 @@ proteinSummarisation <- function(peptable, parameters) {
 #' head(occ)
 #' }
 #'
+#' @importFrom mvtnorm pmvnorm
+#'
 #' @export
 calcPTMOccupancy <- function(peptable, parameters) {
   QuantColnames <- parameters$QuantColnames
@@ -434,6 +436,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
     QuantColnames[seq.int((c - 1L) * NumReps + 1L, c * NumReps)]
   })
   out_cond_names <- paste0("C_", seq_len(NumCond))
+  out_comp_names <- paste0("prob_", out_cond_names[seq_len(NumCond-1)+1], "_vs_C1")
 
   seqs          <- peptable$Sequence
   uniq_mod_seqs <- unique(seqs[has_ptm])
@@ -443,6 +446,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
   out_ptmpos  <- list()
   out_ptmtype <- list()
   out_quant   <- vector("list", 0)
+  out_prob   <- vector("list", 0)
 
   for (seq in uniq_mod_seqs) {
     mod_idx   <- which(has_ptm & seqs == seq)
@@ -462,12 +466,20 @@ calcPTMOccupancy <- function(peptable, parameters) {
       mean(as.numeric(peptable[unmod_idx, cols]), na.rm=TRUE)
     })
 
+    # Sd across replicates averaged across conditions
+    unmod_sd <- mean(sapply(cond_cols, function(cols) {
+      sd(as.numeric(peptable[unmod_idx, cols]), na.rm=TRUE)
+    }))
+
 
     for (mi in mod_idx) {
       # Per-condition mean log2 modified intensity
       mod_mean <- sapply(cond_cols, function(cols) {
         mean(as.numeric(peptable[mi, cols]), na.rm=TRUE)
       })
+      mod_sd <- mean(sapply(cond_cols, function(cols) {
+        sd(as.numeric(peptable[mi, cols]), na.rm=TRUE)
+      }))
 
       # Protein ratio (Rprot): use only unmodified peptides from the same protein
       # accession whose sequence does NOT appear as modified (i.e., exclude any
@@ -485,8 +497,9 @@ calcPTMOccupancy <- function(peptable, parameters) {
       prot_mean <- sapply(cond_cols, function(cols) {
         mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE]), na.rm=TRUE), na.rm = TRUE)
       })
-
-
+      prot_sd <- mean(sapply(cond_cols, function(cols) {
+        sd(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE]), na.rm=TRUE), na.rm = TRUE)
+      }))
 
       log_Rm    <- mod_mean  - mod_mean[1L]   # 0 for c = 1 (reference)
       log_Ru    <- unmod_mean  - unmod_mean[1L]   # 0 for c = 1 (reference)
@@ -499,11 +512,52 @@ calcPTMOccupancy <- function(peptable, parameters) {
       occ    <- mean((Rprot - Ru) / (Rm - Ru))
       occ        <- c(occ, occ * Rm / Rprot)
 
+      # Setting missing standard deviations to max values of the others times 10
+      # to avoid zero variance in the multivariate normal distribution
+      if (is.na(mod_sd)) mod_sd <- max(c(unmod_sd, prot_sd), na.rm = TRUE) * 10
+      if (is.na(unmod_sd)) unmod_sd <- max(c(mod_sd, prot_sd), na.rm = TRUE) * 10
+      if (is.na(prot_sd)) prot_sd <- max(c(mod_sd, unmod_sd), na.rm = TRUE) * 10
+
+
+      # Calculating the probabilities from a multi-variate normal distirbution
+      Sigma_ab <- matrix(c(
+        prot_sd^2 + unmod_sd^2,   -prot_sd^2,
+        -prot_sd^2,           mod_sd^2 + prot_sd^2
+      ), nrow = 2, byrow = TRUE) * 2 / NumReps
+
+      mu_ab <- cbind(log_Rprot - log_Ru, log_Rm - log_Rprot)
+      p_both_neg <- p_both_pos <- vector(length=nrow(mu_ab))
+      if (all(is.finite(Sigma_ab))) {
+        for (i in seq_len(nrow(mu_ab))) {
+          if (!any(is.na(mu_ab[i,]))) {
+            p_both_neg[i] <- mvtnorm::pmvnorm(
+              lower = c(-Inf, -Inf),
+              upper = c(0, 0),
+              mean  = mu_ab[i, ],
+              sigma = Sigma_ab
+            )[1]
+
+            # P(A >= 0, B >= 0)
+            p_both_pos[i] <- mvtnorm::pmvnorm(
+              lower = c(0, 0),
+              upper = c(Inf, Inf),
+              mean  = mu_ab[i, ],
+              sigma = Sigma_ab
+            )[1]
+          }
+        }
+      }
+
+      occ_prob <- p_both_neg + p_both_pos
+
+      occ_prob <- occ_prob[-1]
+
       out_seq     <- c(out_seq, seq)
       out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
       out_ptmpos  <- c(out_ptmpos,  list(peptable$PTMPos[[mi]]))
       out_ptmtype <- c(out_ptmtype, list(peptable$PTMType[[mi]]))
       out_quant   <- c(out_quant,   list(setNames(as.list(occ), out_cond_names)))
+      out_prob    <- c(out_prob,   list(setNames(as.list(occ_prob), out_comp_names)))
     }
   }
 
@@ -513,8 +567,10 @@ calcPTMOccupancy <- function(peptable, parameters) {
   }
 
   quant_df               <- as.data.frame(do.call(rbind, lapply(out_quant, as.data.frame)))
+  prob_df               <- as.data.frame(do.call(rbind, lapply(out_prob, as.data.frame)))
   result                 <- data.frame(Sequence = out_seq, stringsAsFactors = FALSE)
   result[out_cond_names] <- quant_df
+  result[out_comp_names] <- prob_df
   result$Accession       <- out_acc
   result$PTMPos          <- out_ptmpos
   result$PTMType         <- out_ptmtype
