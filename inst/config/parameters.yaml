@@ -58,7 +58,7 @@ params:
   PropModPerProt:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Multiplier for generating additional modified proteoforms per selected protein. 1 (or 0) keeps exactly one modified proteoform; values >= 2 create that many independently modified proteoforms per protein. To get 2 proteoforms total (1 modified + 1 unmodified), set PropModPerProt = 1 and RemoveNonModFormFrac = 0."
+    description: "Multiplier for generating additional modified proteoforms per selected protein. Values >= 2 create that many independently modified proteoforms per protein."
     min: 0
     max: 500
     class: "numeric"
@@ -66,7 +66,7 @@ params:
   PTMMultipleLambda:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Lambda for the truncated Poisson distribution (truncated to [1, N]) controlling the number of modification sites per proteoform, scaled by the number of modifiable sites. Values of 0 (default) or any value <= 1e-4 (e.g. 0.0001) are clamped to 1e-4 internally, causing the truncated Poisson to almost surely return 1 — yielding approximately one modified site per PTM type per proteoform. Larger values increase the expected number of modifications."
+    description: "Lambda for the truncated Poisson distribution (truncated to [1, N]) controlling the number of modification sites per proteoform."
     min: 0
     max: 10
     class: "numeric"
@@ -74,7 +74,7 @@ params:
   RemoveNonModFormFrac:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Fraction of modifiable proteins for which the unmodified proteoform is removed. Defaults to 0 (all modified proteins retain their unmodified counterpart). Set to 1 to keep only modified forms. Combined with PropModPerProt = 1 and RemoveNonModFormFrac = 0 yields exactly 2 proteoforms per modified protein (1 modified + 1 unmodified)."
+    description: "Fraction of modifiable proteins for which the unmodified proteoform is removed. "
     min: 0
     max: 1
     class: "numeric"
@@ -82,8 +82,7 @@ params:
   PTMTypes:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: 'Types of post-translational modifications (PTMs), provided by their (short) names such as "ph"
-    for phosphorylation. When having single or multple PTMs, embed all names per simulation in a list item, such as list(mods=c("ph")'
+    description: 'Types of post-translational modifications (PTMs). Use a list such as list(mods=c("ph")'
     class: "ptm"
     min: NA
     max: NA
@@ -112,7 +111,7 @@ params:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
     description: 'Residues that can be modified for each PTM type. Given as a named list of strings, each list element
-    representing a PTM type and the residues that can be modified for this PTM type. For example ph: ["S", "T"].'
+    representing a PTM type and the residues.'
     min: NA
     max: NA
     class: "ptm"
@@ -268,7 +267,7 @@ params:
   EnrichmentQuantDiff:
     group: "Sample Preparation"
     type: "paramDigest"
-    description: "Quantitative difference (means on log-scale) between enriched and non-enriched peptifdes in
+    description: "Quantitative difference (means on log-scale) between enriched and non-enriched peptides in
     enriched samples."
     min: -10
     max: 10
