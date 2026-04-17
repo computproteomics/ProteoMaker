@@ -11,6 +11,7 @@ visualize_benchmarks(
   fullrange = FALSE,
   cols = NULL,
   errorbar = FALSE,
+  errorstyle = "bar",
   compare_par = NULL
 )
 }
@@ -33,6 +34,10 @@ visualization. If \code{NULL}, default colors will be used.}
 \item{errorbar}{A logical value indicating whether to show mean +/- standard
 deviations in the
 visualization. Default is \code{FALSE}. This parameter is not applied to the color maps.}
+
+\item{errorstyle}{A character value specifying how uncertainty should be shown
+when \code{errorbar = TRUE}. Use \code{"bar"} for vertical error bars or
+\code{"area"} for a shaded mean +/- SD band.}
 
 \item{compare_par}{A character vector specifying the names of an additional parameter for subsetting and then
 comparison of the benchmark values. This parameter is only applied when `ref_par` contains one parameter.
