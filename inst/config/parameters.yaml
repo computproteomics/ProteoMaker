@@ -58,11 +58,11 @@ params:
   PropModPerProt:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
-    description: "Multiplier for generating additional modified proteoforms per selected protein. Values >= 2 create that many independently modified proteoforms per protein."
-    min: 0
+    description: "Multiplier for generating additional modified proteoforms per selected protein. Values >= 1 create distribute that many independently modified proteoforms per protein."
+    min: 1
     max: 500
     class: "numeric"
-    default: 0
+    default: 1
   PTMMultipleLambda:
     group: "Ground Truth Data"
     type: "paramGroundTruth"

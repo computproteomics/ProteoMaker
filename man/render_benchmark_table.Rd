@@ -4,13 +4,24 @@
 \alias{render_benchmark_table}
 \title{Render a Benchmark Summary Table}
 \usage{
-render_benchmark_table(benchmatrix, benchmarks = NULL)
+render_benchmark_table(
+  benchmatrix,
+  benchmarks = NULL,
+  benchmark_level = NULL,
+  benchmark_category = NULL
+)
 }
 \arguments{
 \item{benchmatrix}{A data frame or matrix containing benchmark metrics.}
 
 \item{benchmarks}{A character vector of benchmark variable names, or a numeric vector of column indices.
-If NULL, the first 12 defined benchmarks will be used.}
+If NULL, all grouped benchmarks will be used.}
+
+\item{benchmark_level}{A character vector specifying benchmark level groups
+to include.}
+
+\item{benchmark_category}{A character vector specifying benchmark purpose
+groups to include.}
 }
 \value{
 A data frame summarizing the selected benchmark metrics.

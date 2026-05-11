@@ -512,11 +512,23 @@ calcPTMOccupancy <- function(peptable, parameters) {
       occ    <- mean((Rprot - Ru) / (Rm - Ru))
       occ        <- c(occ, occ * Rm / Rprot)
 
-      # Setting missing standard deviations to max values of the others times 10
-      # to avoid zero variance in the multivariate normal distribution
-      if (is.na(mod_sd)) mod_sd <- max(c(unmod_sd, prot_sd), na.rm = TRUE) * 10
-      if (is.na(unmod_sd)) unmod_sd <- max(c(mod_sd, prot_sd), na.rm = TRUE) * 10
-      if (is.na(prot_sd)) prot_sd <- max(c(mod_sd, unmod_sd), na.rm = TRUE) * 10
+      # Treat non-positive and NA SDs as unavailable (e.g. single replicate or
+      # identical replicates produce sd = NA or sd = 0).
+      if (!isTRUE(mod_sd   > 0)) mod_sd   <- NA_real_
+      if (!isTRUE(unmod_sd > 0)) unmod_sd <- NA_real_
+      if (!isTRUE(prot_sd  > 0)) prot_sd  <- NA_real_
+
+      # Fill missing SDs from the available ones (×10 as uncertainty inflation).
+      # Only attempt this when at least one valid SD exists; otherwise all remain
+      # NA, Sigma_ab will contain NAs, and the pmvnorm block is safely skipped.
+      valid_sds <- c(mod_sd, unmod_sd, prot_sd)
+      valid_sds <- valid_sds[is.finite(valid_sds)]
+      if (length(valid_sds) > 0) {
+        ref_sd <- max(valid_sds) * 10
+        if (is.na(mod_sd))   mod_sd   <- ref_sd
+        if (is.na(unmod_sd)) unmod_sd <- ref_sd
+        if (is.na(prot_sd))  prot_sd  <- ref_sd
+      }
 
 
       # Calculating the probabilities from a multi-variate normal distirbution

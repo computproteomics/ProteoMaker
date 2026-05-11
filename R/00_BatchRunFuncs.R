@@ -692,7 +692,6 @@ matrix_benchmarks <- function(allBs, Config) {
 #'
 #' @importFrom colorspace qualitative_hcl
 #' @importFrom lattice levelplot
-#' @importFrom gplots plotCI
 #'
 #' @export
 visualize_benchmarks <- function(benchmatrix,
@@ -1000,9 +999,9 @@ visualize_benchmarks <- function(benchmatrix,
         x_plot <- xf[x_plot]
         axis_at <- x_plot
       }
-      gplots::plotCI(x_plot, y, uiw = NA, gap = 0, xaxt = "n", sfrac = 0.02,
-                     xlab = params, ylab = axis_labels[metric], pch = pch, col = col,
-                     cex = 1.2, cex.lab = 0.9, cex.axis = 0.85, ylim = yr)
+      plot(x_plot, y, xaxt = "n",
+           xlab = params, ylab = axis_labels[metric], pch = pch, col = col,
+           cex = 1.2, cex.lab = 0.9, cex.axis = 0.85, ylim = yr)
       axis(1, at = axis_at, labels = unique(x), las = 1)
     }
     title(main = titles[metric], col.main = "black", font.main = 2)

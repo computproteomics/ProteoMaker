@@ -296,7 +296,7 @@ performModification <- function(to.Modify, parameters) {
     # equal to to.Modify is created, when 2 the size is double etc etc)
     mod.proteoforms <- to.Modify
 
-    if (parameters$PropModPerProt >= 2) {
+    if (parameters$PropModPerProt > 1) {
       mod.proteoforms <- rbind(
         mod.proteoforms,
         to.Modify[sample(
