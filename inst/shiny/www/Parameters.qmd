@@ -22,17 +22,17 @@ This document provides a detailed description of the parameters used in the Prot
 
 ### Number of Replicates
 
-*Param\$NumReps*: The number of biological or technical replicates for each condition. Replicates are essential for statistical validity and reproducibility of the results. Ensuring adequate replication helps in reducing variability and increasing the reliability of the results. Default set to `5`.
+*Param\$NumReps*: The number of replicates for each condition. These can represent technical or biological replicates. Replicates are essential for statistical validity and reproducibility of the results. Ensuring adequate replication helps in reducing variability and increasing the reliability of the results. Default set to `5`.
 
 ## Input Data Paths
 
 ### Path to FASTA File
 
-*Param\$PathToFasta*: The file path to the FASTA file containing the protein sequences. This file is essential for identifying and quantifying proteins in your samples. Accurate protein identification depends heavily on the quality and completeness of the FASTA file. Default set to `InputData/fasta_full_human.fasta`.
+*Param\$PathToFasta*: The file path to the FASTA file containing the protein sequences. ProteoMaker is able to process standard fasta files from UniProt. Other formats might require reformatting the protein headers. This file is essential for identifying and quantifying proteins in your samples. Accurate protein identification depends heavily on the quality and completeness of the FASTA file. Default set to `InputData/fasta_example.fasta`.
 
 ### Path to Protein List
 
-*Param\$PathToProteinList*: The file path to a list of proteins of interest, if any. This can be used to focus the analysis on a subset of proteins. Providing a specific list can streamline the analysis and enhance focus on a set of related proteoforms or biological pathways. Default set to `NA`.
+*Param\$PathToProteinList*: The file path to a list of proteins of interest that will be selected for being modified. This can be used to focus the analysis on a subset of proteins from all proteins in the fasta file. Providing a specific list can streamline the analysis and enhance focus on a set of related proteoforms or biological pathways. Default set to `NA`.
 
 ## Ground Truth Proteoform-Centric Data Generation
 
@@ -40,17 +40,17 @@ This document provides a detailed description of the parameters used in the Prot
 
 *Param\$PercExpressedProt*: The fraction (0-1) of proteins from the FASTA used to seed the ground-truth proteome. The selection is random to mimic that not every protein is expressed; default is `1` (all proteins retained).
 
-*Param\$FracModProt*: The fraction of proteins selected to be modified. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to `0.0`, indicating no proteins will be modified.
+*Param\$FracModProt*: The fraction of proteins selected to be modified from either the full protein list or, if given, the shortened protein set from `PathToProteinList`\`. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to `0.0`, indicating no proteins will be modified.
 
-*Param\$PropModPerProt*: Multiplier for generating additional modified proteoforms per selected protein. Values of `0` or `1` (and the default `0`) keep exactly one modified proteoform per protein — the difference has no effect since the duplication step only activates for values `>= 2`. Values `>= 2` create that many independently modified proteoforms per protein (e.g., `2` yields two modified proteoforms). To obtain **2 proteoforms per protein** (one modified + one unmodified), set `PropModPerProt = 1` and `RemoveNonModFormFrac = 0` (see below). To obtain **2 modified proteoforms** and no unmodified form, set `PropModPerProt = 2` and `RemoveNonModFormFrac = 1`.
+*Param\$PropModPerProt*: Multiplier for generating additional modified proteoforms per selected protein. A values `1` (the default) keeps exactly one modified proteoform per protein. Values `>= 1` create that many independently modified proteoforms per protein, randomly assigning them from the pool of proteins selected to be modified.
 
-*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph")`. The mods name is mandatory.
+*Param\$PTMTypes*: The types of PTMs to be considered. Default set to `NA` for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: `list(mods=c("ph", "ac"))`, `list(mods="ph")`. The `mods` attribute in the list is mandatory. PTMs can be named arbitrarily.
 
-*Param\$PTMTypesDistr*: Relative frequency for each PTM type supplied as a named list (values should sum to 1). Defaults to `NA`, so the simulator uses equal weights unless specified.
+*Param\$PTMTypesDistr*: Relative frequency for each PTM type within all PTMs supplied as a named list (values should sum to 1). Defaults to `NA`, so the simulator uses equal weights unless specified.
 
-*Param\$PTMTypesMass*: Mass shifts associated with each PTM type (provide as a named list, e.g. `list(ph = 79.9663)`). Defaults to `NA` and must be set when PTMs are enabled.
+*Param\$PTMTypesMass*: Mass shifts associated with each PTM type (provide as a named list, e.g. `list(ph = 79.9663)`). Defaults to `NA` and must be set when PTMs are enabled. Values can be arbitrary or taken from UniMod.
 
-*Param\$PTMMultipleLambda*: Controls the average number of modification sites per proteoform via a truncated Poisson distribution (truncated to [1, N] where N is the number of modifiable sites) scaled by the number of modifiable sites in the sequence. Values of `0` (the default) or any value `<= 1e-4` (e.g. `0.0001`) are treated identically: the lambda is clamped to `1e-4` internally, which causes the truncated Poisson to almost surely return 1, yielding **approximately one modified site per PTM type per proteoform**. Larger values increase the expected number of modifications.
+*Param\$PTMMultipleLambda*: Controls the average number of modification sites per proteoform via a truncated Poisson distribution (truncated to \[1, N\] where N is the number of modifiable sites) scaled by the number of modifiable sites in the sequence. Values of `0` (the default) or any value `<= 1e-4` (e.g. `0.0001`) are treated identically: the lambda is clamped to `1e-4` internally, which causes the truncated Poisson to almost surely return 1, yielding **approximately one modified site per PTM type per proteoform**. Larger values increase the expected number of modifications.
 
 *Param\$ModifiableResidues*: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually we use `list(ph = c("S", "T", "Y"))`
 
@@ -60,7 +60,7 @@ This document provides a detailed description of the parameters used in the Prot
 
 **Recipe — approximately one modified site per proteoform, two proteoforms per protein:**
 
-```r
+``` r
 Param$paramGroundTruth$FracModProt        <- 0.5          # 50 % of proteins are modified
 Param$paramGroundTruth$PTMTypes           <- list(mods = c("ph"))
 Param$paramGroundTruth$PTMTypesMass       <- list(ph = 79.966331)
@@ -78,7 +78,7 @@ Param$paramGroundTruth$RemoveNonModFormFrac <- 0   # keep unmodified counterpart
 
 *Param\$QuantNoise*: Standard deviation of the log2 noise added to every quantitative value. Default `0.5` to reflect technical and biological variability.
 
-*Param\$DiffRegFrac*: Fraction of proteoforms marked as differentially regulated. Default `0.3`.
+*Param\$DiffRegFrac*: Fraction of proteoforms marked as differentially regulated. Adapt it to the number of protein abundance changes that you expect to happen. Default `0.3`.
 
 *Param\$DiffRegMax*: Maximum absolute log2 fold change applied to regulated proteoforms. Default `1`.
 
@@ -86,11 +86,11 @@ Param$paramGroundTruth$RemoveNonModFormFrac <- 0   # keep unmodified counterpart
 
 *Param\$UserInputFoldChanges_RegulationFC*: Optional override for the fold change applied to those user-specified proteoforms (default `0`, i.e. disabled).
 
-*Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.
+*Param\$AbsoluteQuanMean*: The mean value for absolute quantitation. Set to `30.5`. This parameter sets the baseline for absolute quantitation values on protein level. Proteoform abundances are then distributed according to a exponential distribution with the total summing up to the protein level.
 
-*Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation values on protein level. Proteoform abundances are then distributed according to a uniform distribution with the total summing up to the protein level.
+*Param\$AbsoluteQuanSD*: The standard deviation for absolute quantitation. Set to `3.6`. This parameter models the variability in absolute quantitation values on protein level. Proteoform abundances are then distributed according to a exponential distribution with the total summing up to the protein level.
 
-*Param\$*ThreshRemoveProteoforms: The threshold for absolute quantification values to remove quantitative values when *AbsoluteQuanMean* is not equal to `NA`. Set to `0.0`. This parameter ensures that low-abundant proteoforms are cut off.
+*Param\$*ThreshRemoveProteoforms: The threshold for absolute quantification values to remove quantitative values when *AbsoluteQuanMean* is not equal to `NA`. Set to `0.0`. This parameter ensures that low-abundant proteoforms are cut off. **All** values below this threshold are removed.
 
 ## Enzymatic Digestion Parameters
 
@@ -114,17 +114,17 @@ Param$paramGroundTruth$RemoveNonModFormFrac <- 0   # keep unmodified counterpart
 
 ### Least Abundant Peptide Loss
 
-*Param\$LeastAbundantLoss*: The percentage of least abundant peptides to be removed. Set to `0.0`. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified.
+*Param\$LeastAbundantLoss*: The fraction of least abundant peptides to be removed. Set to `0.0`. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified. This parameter is an alternative to `ThreshRemoveProteins`, this time removing a fraction and not implying a fixed threshold.
 
 ## Sample Preparation Simulation Parameters
 
 ### PTM for enrichment
 
-*Param\$EnrichPTM*: PTM that will be enriched. One can select only one PTM and all of its residues will be affected. Default is 'NA', so no PTM will be enriched.
+*Param\$EnrichPTM*: PTM that will be enriched. Only one PTM can be selected. All of its residues will be affected. Default is 'NA', so no PTM will be enriched and no enrichment fraction will be created.
 
 ### Enrichment Loss
 
-*Param\$EnrichmentLoss*: The loss of phosphorylated peptides during enrichment. Set to `0.2`. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.
+*Param\$EnrichmentLoss*: The loss of peptides of the enriched fraction during enrichment. Set to `0.2`. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.
 
 ## Enrichment Quantitative adjustement
 
@@ -201,4 +201,4 @@ The parameter randomly removes non-modified peptides until reaching the given fr
 
 ### Paired or Unpaired
 
-*Param\$StatPaired*: Indicates whether the statistical test is paired. Set to `FALSE`. This parameter determines the type of statistical test applied to the data, affecting the analysis of differential expression.
+*Param\$StatPaired*: Indicates whether the statistical test for differential abundance is paired or unpaired. Set to `FALSE`.
