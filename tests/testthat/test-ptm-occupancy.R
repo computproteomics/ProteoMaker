@@ -61,6 +61,24 @@ test_that("calcPTMOccupancy returns one row per modified peptidoform", {
   expect_equal(nrow(occ), 1L)
 })
 
+test_that("calcPTMOccupancy skips peptides with ambiguous protein start positions", {
+  pep <- make_peptable(mod_vals = c(1, 1, 2, 2), unmod_vals = c(1, 1, 1, 1))
+  pep$Start <- I(list(c(10L, 20L), 10L, 40L))
+
+  occ <- calcPTMOccupancy(pep, make_params())
+
+  expect_equal(nrow(occ), 0L)
+})
+
+test_that("calcPTMOccupancy skips peptides with ambiguous accessions", {
+  pep <- make_peptable(mod_vals = c(1, 1, 2, 2), unmod_vals = c(1, 1, 1, 1))
+  pep$Accession[[1]] <- c("P12345", "P67890")
+
+  occ <- calcPTMOccupancy(pep, make_params())
+
+  expect_equal(nrow(occ), 0L)
+})
+
 test_that("formula correctly estimates reference-condition occupancy occ_1", {
   # 2 conditions, 1 replicate each.
   # mod: ref=0, C2=2 (log2)  =>  Rm = 2^(2-0) = 4
@@ -102,11 +120,21 @@ test_that("occupancy approaches 0 when modified ratio << protein ratio", {
 # Output structure
 # ──────────────────────────────────────────────────────────────────────────────
 
-test_that("output contains expected columns (Sequence, Accession, PTMPos, PTMType, C_1, C_2)", {
+test_that("output contains expected columns (Sequence, Accession, PTMPos, ProteinPTMPos, PTMType, C_1, C_2)", {
   pep <- make_peptable(mod_vals = c(1, 1, 2, 2), unmod_vals = c(1, 1, 1, 1))
   occ <- calcPTMOccupancy(pep, make_params())
 
-  expect_true(all(c("Sequence", "Accession", "PTMPos", "PTMType", "C_1", "C_2") %in% names(occ)))
+  expect_true(all(c("Sequence", "Accession", "PTMPos", "ProteinPTMPos", "PTMType", "C_1", "C_2") %in% names(occ)))
+})
+
+test_that("ProteinPTMPos reports protein-level modification positions when Start is available", {
+  pep <- make_peptable(mod_vals = c(1, 1, 2, 2), unmod_vals = c(1, 1, 1, 1))
+  pep$Start <- I(list(10L, 10L, 40L))
+
+  occ <- calcPTMOccupancy(pep, make_params())
+
+  expect_identical(occ$PTMPos[[1]], 3L)
+  expect_identical(occ$ProteinPTMPos[[1]], 12L)
 })
 
 test_that("C_1 column contains the estimated reference-condition occupancy occ_1", {

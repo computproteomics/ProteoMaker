@@ -18,9 +18,10 @@ The pipeline can be described as follows:
 
 ## Installation
 
-Install the package from GitHub with `devtools`:
+Install the package from GitHub with `pak`:
 ```
-devtools::install_github("computproteomics/ProteoMaker")
+install.packages("pak")
+pak::pak("computproteomics/ProteoMaker")
 ```
 
 ## Quick Start

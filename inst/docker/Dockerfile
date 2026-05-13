@@ -14,26 +14,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 RUN R -q -e "options(repos = c(CRAN = Sys.getenv('CRAN_REPO')), timeout = 600, download.file.method = 'libcurl'); \
-  install.packages(c('BiocManager', 'remotes', 'devtools')); \
+  install.packages(c('BiocManager', 'pak')); \
   update.packages(ask = FALSE)"
 
 RUN R -q -e 'options(timeout = 600); BiocManager::install(c("preprocessCore", "qvalue", "limma", "SummarizedExperiment", "cleaver", "S4Vectors"), ask = FALSE, update = FALSE)'
 
-#RUN R -e 'install.packages("devtools");options(timeout=10000);devtools::install_github("rr-2/PeptideRanger")'
+#RUN R -e 'install.packages("pak");options(timeout=10000);pak::pak("rr-2/PeptideRanger")'
 RUN --mount=type=secret,id=github_pat \
       if [ -f /run/secrets/github_pat ]; then \
         export GITHUB_PAT="$(cat /run/secrets/github_pat)"; \
       fi; \
-      R -q -e "options(timeout = 600); remotes::install_github(c('rr-2/PeptideRanger', 'computproteomics/polystest'), upgrade = 'never')"
-#RUN R -e 'devtools::install_github("computproteomics/polystest")'
+      R -q -e "options(timeout = 600); pak::pak(c('rr-2/PeptideRanger', 'computproteomics/polystest'), upgrade = FALSE)"
+#RUN R -e 'pak::pak("computproteomics/polystest")'
 
 # libraries for the shiny app
 RUN R -q -e 'options(repos = c(CRAN = Sys.getenv("CRAN_REPO")), timeout = 600, download.file.method = "libcurl"); install.packages(c("rmarkdown", "shinyWidgets", "shinyBS", "bslib", "shinyalert", "shinyjs", "DT"))'
 
 # Install ProteoMaker
 COPY . /tmp/ProteoMaker
-RUN R -q -e "options(timeout = 600); remotes::install_local('/tmp/ProteoMaker', upgrade = 'never')"
-#RUN R -q -e "remotes::install_github("computproteomics/ProteoMaker")'
+RUN R -q -e "options(timeout = 600); pak::local_install('/tmp/ProteoMaker', upgrade = FALSE)"
+#RUN R -q -e "pak::pak('computproteomics/ProteoMaker')"
 
 RUN rm -rf /srv/shiny-server
 RUN mkdir /srv/shiny-server

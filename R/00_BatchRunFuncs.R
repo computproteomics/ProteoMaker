@@ -415,6 +415,121 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
 }
 
 
+#' Calculate Ground-Truth PTM Occupancy
+#'
+#' Calculates replicate-level ground-truth PTM occupancy from proteoform
+#' abundances. Occupancy is computed per protein accession, PTM type, and PTM
+#' position as the fraction of protein abundance carried by proteoforms with
+#' that PTM site.
+#'
+#' @param proteoformAb A data frame as returned by
+#'   \code{addProteoformAbundance()}, containing \code{Sequence},
+#'   \code{Accession}, \code{PTMPos}, \code{PTMType}, and the quantification
+#'   columns listed in \code{parameters$QuantColnames}.
+#' @param parameters A named list containing \code{QuantColnames}.
+#'
+#' @return A data frame with one row per accession/PTM-site combination.
+#'   Quantification columns contain replicate-level occupancy values. The
+#'   \code{PTMPos}, \code{PTMType}, and \code{Accession} columns are list
+#'   columns to match the estimated occupancy output shape.
+#'
+#' @examples
+#' proteoformAb <- data.frame(
+#'   Sequence = rep("MSTK", 3),
+#'   Accession = rep("P1", 3),
+#'   C_1_R_1 = log2(c(25, 75, 50)),
+#'   C_1_R_2 = log2(c(50, 50, 100)),
+#'   stringsAsFactors = FALSE
+#' )
+#' proteoformAb$PTMPos <- I(list(integer(0), 2L, 2L))
+#' proteoformAb$PTMType <- I(list(character(0), "Phospho", "Phospho"))
+#' params <- list(QuantColnames = c("C_1_R_1", "C_1_R_2"))
+#' calcGroundTruthPTMOccupancy(proteoformAb, params)
+#'
+#' @export
+calcGroundTruthPTMOccupancy <- function(proteoformAb, parameters) {
+  QuantColnames <- parameters$QuantColnames
+
+  if (is.null(proteoformAb) || nrow(proteoformAb) == 0) {
+    return(data.frame())
+  }
+
+  has_ptm <- lengths(proteoformAb$PTMType) > 0
+  if (sum(has_ptm) == 0) {
+    message("calcGroundTruthPTMOccupancy: no modified proteoforms found; returning empty table.")
+    return(data.frame())
+  }
+
+  canonical_sites <- function(pos, type) {
+    pos <- unlist(pos)
+    type <- unlist(type)
+    if (length(pos) == 0) {
+      return(data.frame(pos = integer(0), type = character(0), key = character(0)))
+    }
+    ord <- order(pos, type)
+    pos <- pos[ord]
+    type <- type[ord]
+    data.frame(
+      pos = pos,
+      type = type,
+      key = paste(type, pos, sep = "@"),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  ptm_info <- mapply(canonical_sites, proteoformAb$PTMPos, proteoformAb$PTMType, SIMPLIFY = FALSE)
+  acc_key <- vapply(proteoformAb$Accession, function(x) paste(sort(unique(unlist(x))), collapse = ";"),
+                    character(1))
+
+  mod_keys <- unique(unlist(lapply(which(has_ptm), function(i) {
+    paste(acc_key[[i]], ptm_info[[i]]$key, sep = "|")
+  })))
+  out <- vector("list", length(mod_keys))
+
+  for (i in seq_along(mod_keys)) {
+    key_parts <- strsplit(mod_keys[[i]], "|", fixed = TRUE)[[1]]
+    acc <- key_parts[[1]]
+    site_key <- key_parts[[2]]
+    site_parts <- strsplit(site_key, "@", fixed = TRUE)[[1]]
+    site_type <- site_parts[[1]]
+    site_pos <- as.integer(site_parts[[2]])
+
+    numerator_idx <- which(acc_key == acc & vapply(ptm_info, function(x) site_key %in% x$key, logical(1)))
+    denominator_idx <- which(acc_key == acc)
+    first_idx <- numerator_idx[[1]]
+
+    occupancy <- vapply(QuantColnames, function(col) {
+      numerator <- sum(2^as.numeric(proteoformAb[numerator_idx, col]), na.rm = TRUE)
+      denominator_values <- as.numeric(proteoformAb[denominator_idx, col])
+      if (all(is.na(denominator_values))) {
+        return(NA_real_)
+      }
+      denominator <- sum(2^denominator_values, na.rm = TRUE)
+      if (!is.finite(denominator) || denominator <= 0) {
+        return(NA_real_)
+      }
+      numerator / denominator
+    }, numeric(1))
+
+    row <- data.frame(
+      Sequence = proteoformAb$Sequence[[first_idx]],
+      as.list(occupancy),
+      stringsAsFactors = FALSE
+    )
+    names(row)[seq_along(QuantColnames) + 1L] <- QuantColnames
+    row$Accession <- list(unlist(proteoformAb$Accession[first_idx]))
+    row$PTMPos <- list(site_pos)
+    row$PTMType <- list(site_type)
+    out[[i]] <- row
+  }
+
+  result <- do.call(rbind, out)
+  rownames(result) <- seq_len(nrow(result))
+  message("  - Ground-truth occupancy calculated for ", nrow(result), " PTM sites.")
+  result
+}
+
+
 #' Retrieve intermediate outputs for a simulation
 #'
 #' This function retrieves intermediate outputs for a simulation based on the

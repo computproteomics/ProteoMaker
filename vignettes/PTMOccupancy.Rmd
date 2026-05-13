@@ -1,0 +1,191 @@
+---
+title: "PTM Occupancy Ground Truth"
+author: ""
+date: "2026-05-12"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PTM Occupancy Ground Truth}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This vignette runs a small ProteoMaker simulation with phosphorylation-like PTMs and compares the PTM occupancies estimated from peptide-level data with the ground-truth occupancies calculated from proteoform abundances.
+
+The estimated occupancy table reports peptide-local PTM positions and protein-level PTM positions. The comparison below joins estimated and ground-truth occupancies by accession and protein-level PTM site.
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+## Configure a Small PTM Simulation
+
+```{r}
+library(ProteoMaker)
+
+proteomaker_config <- set_proteomaker(
+  fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
+  resultFilePath = file.path(tempdir(), "ProteoMaker_PTM_occupancy"),
+  cores = 1,
+  clusterType = "PSOCK",
+  runStatTests = TRUE,
+  calcAllBenchmarks = FALSE
+)
+
+Param <- def_param()
+
+Param$paramGroundTruth$PathToFasta <- "fasta_example.fasta"
+Param$paramGroundTruth$NumCond <- 2
+Param$paramGroundTruth$NumReps <- 3
+Param$paramGroundTruth$PercExpressedProt <- 1
+
+# Generate modified proteins and keep their unmodified counterparts.
+Param$paramGroundTruth$FracModProt <- 0.5
+Param$paramGroundTruth$PropModPerProt <- 1
+Param$paramGroundTruth$PTMMultipleLambda <- 0.0
+Param$paramGroundTruth$RemoveNonModFormFrac <- 0
+
+Param$paramGroundTruth$PTMTypes <- list(mods = c("ph"))
+Param$paramGroundTruth$PTMTypesMass <- list(ph = 79.966331)
+Param$paramGroundTruth$PTMTypesDistr <- list(ph = 1)
+Param$paramGroundTruth$ModifiableResidues <- list(mods = list(ph = c("S", "T", "Y")))
+Param$paramGroundTruth$ModifiableResiduesDistr <- list(
+  mods = list(ph = c(S = 0.86, T = 0.13, Y = 0.01))
+)
+
+# Keep the MSRun simple so the comparison is easy to inspect.
+Param$paramMSRun$PercDetectability <- 1
+Param$paramMSRun$PercDetectedVal <- 1
+Param$paramMSRun$MSNoise <- 0
+Param$paramMSRun$WrongIDs <- 0.0
+Param$paramMSRun$WrongLocalizations <- 0.0
+Param$paramMSRun$MaxNAPerPep <- 100
+```
+
+## Run the Simulation and Retrieve Outputs
+
+```{r}
+allBs <- run_sims(Param, proteomaker_config, overwrite = TRUE)
+
+sim_param <- allBs[[1]]$Param
+data_analysis <- get_simulation(sim_param, proteomaker_config, stage = "DataAnalysis")
+proteoform_ab <- get_simulation(sim_param, proteomaker_config, stage = "ProteoformAb")$proteoformAb
+
+estimated_occ <- data_analysis$Occupancies
+ground_truth_occ <- calcGroundTruthPTMOccupancy(proteoform_ab, sim_param)
+```
+
+## Site Counts
+
+```{r}
+condition_cols <- paste0("C_", seq_len(sim_param$NumCond))
+condition_replicates <- split(sim_param$QuantColnames, rep(condition_cols, each = sim_param$NumReps))
+
+for (cond in condition_cols) {
+  ground_truth_occ[[cond]] <- rowMeans(
+    ground_truth_occ[, condition_replicates[[cond]], drop = FALSE],
+    na.rm = TRUE
+  )
+}
+
+estimated_sites <- data.frame(
+  Accession = vapply(estimated_occ$Accession, function(x) unlist(x)[1], character(1)),
+  PTMType = vapply(estimated_occ$PTMType, function(x) unlist(x)[1], character(1)),
+  PTMPos = vapply(estimated_occ$ProteinPTMPos, function(x) as.integer(unlist(x)[1]), integer(1)),
+  estimated_occ[, condition_cols, drop = FALSE]
+)
+
+ground_truth_sites <- data.frame(
+  Accession = vapply(ground_truth_occ$Accession, function(x) unlist(x)[1], character(1)),
+  PTMType = vapply(ground_truth_occ$PTMType, function(x) unlist(x)[1], character(1)),
+  PTMPos = vapply(ground_truth_occ$PTMPos, function(x) unlist(x)[1], integer(1)),
+  ground_truth_occ[, condition_cols, drop = FALSE]
+)
+
+comparison <- merge(
+  estimated_sites,
+  ground_truth_sites,
+  by = c("Accession", "PTMType", "PTMPos"),
+  suffixes = c("_estimated", "_ground_truth")
+)
+
+site_cols <- c("Accession", "PTMType", "PTMPos")
+estimated_site_ids <- unique(estimated_sites[, site_cols])
+ground_truth_site_ids <- unique(ground_truth_sites[, site_cols])
+matched_site_ids <- unique(comparison[, site_cols])
+
+counts <- data.frame(
+  Metric = c(
+    "Ground-truth PTM sites",
+    "Estimated PTM sites",
+    "Matched PTM sites",
+    "Ground truth only",
+    "Estimated only"
+  ),
+  Count = c(
+    nrow(ground_truth_site_ids),
+    nrow(estimated_site_ids),
+    nrow(matched_site_ids),
+    nrow(ground_truth_site_ids) - nrow(matched_site_ids),
+    nrow(estimated_site_ids) - nrow(matched_site_ids)
+  )
+)
+
+counts
+```
+
+## Occupancy Distributions
+
+The check is whether estimated and ground-truth occupancies occupy similar ranges. Ground-truth distributions are shown after averaging replicates within each condition.
+
+```{r}
+estimated_distribution <- summary(estimated_occ[, condition_cols, drop = FALSE])
+ground_truth_distribution <- summary(ground_truth_occ[, condition_cols, drop = FALSE])
+
+estimated_distribution
+ground_truth_distribution
+```
+
+```{r fig.width=7, fig.height=4}
+# histograms 
+for(i in condition_cols) {
+  hist(estimated_occ[[i]], main = paste("Estimated occupancy -", i), xlab = "Occupancy", 
+       breaks = 20*diff(range(estimated_occ[[i]])), xlim = c(-1, 2), border = NA, col = "#1b9e77")
+  hist(ground_truth_occ[[i]], main = paste("Ground truth occupancy -", i), xlab = "Occupancy", 
+       xlim=c(-1,2), breaks = 20, border = NA, col="#d95f02")
+}
+```
+
+## Direct Value Comparison
+
+For matched PTM sites, compare the estimated and true occupancy values per condition. 
+
+```{r}
+for (i in condition_cols) {
+  plot(
+    comparison[[paste0(i, "_estimated")]],
+    comparison[[paste0(i, "_ground_truth")]],
+    main = paste("Estimated vs Ground Truth Occupancy -", i),
+    xlab = "Estimated Occupancy",
+    ylab = "Ground Truth Occupancy",
+    pch = 16, col = rgb(0.1, 0.1, 0.1, 0.5)
+  )
+  abline(a = 0, b = 1, col = "red", lty = 2)
+}
+
+# on log-scale
+for (i in condition_cols) {
+  plot(
+    log10(comparison[[paste0(i, "_estimated")]] + 1e-6),
+    log10(comparison[[paste0(i, "_ground_truth")]] + 1e-6),
+    main = paste("Estimated vs Ground Truth Occupancy (log10) -", i),
+    xlab = "Estimated Occupancy (log10)",
+    ylab = "Ground Truth Occupancy (log10)",
+    pch = 16, col = rgb(0.1, 0.1, 0.1, 0.5)
+  )
+  abline(a = 0, b = 1, col = "red", lty = 2)
+}
+
+```
+

@@ -356,14 +356,17 @@ proteinSummarisation <- function(peptable, parameters) {
 #' row is present; (b) no non-counterpart unmodified row from the same protein
 #' is available to estimate \eqn{R_{prot}}; or (c) more than one modified or
 #' more than one unmodified row exists for that sequence (a warning is issued
-#' and the sequence is skipped).
+#' and the sequence is skipped). If peptide start positions are available,
+#' modified peptides with more than one possible protein start position are
+#' also skipped because their protein-level PTM position is ambiguous.
 #'
 #' @param peptable A data frame of peptidoform-level data as produced by the
 #'   ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
 #'   Required columns: \code{Sequence} (character), \code{PTMType} (list),
 #'   \code{PTMPos} (list), \code{Accession} (list), and one column per sample
 #'   as given by \code{parameters$QuantColnames}.  Quantification values must
-#'   be on the log2 scale.
+#'   be on the log2 scale. If \code{Start} is present, it is used to report
+#'   protein-level PTM positions in \code{ProteinPTMPos}.
 #' @param parameters A named list of analysis parameters.  Must contain:
 #'   \describe{
 #'     \item{QuantColnames}{Character vector of column names holding per-sample
@@ -380,6 +383,9 @@ proteinSummarisation <- function(peptable, parameters) {
 #'     \item{Sequence}{Stripped peptide sequence.}
 #'     \item{Accession}{Protein accession(s) (list column).}
 #'     \item{PTMPos}{Modification positions within the peptide (list column).}
+#'     \item{ProteinPTMPos}{Modification positions within the protein sequence
+#'       (list column), or \code{NA} when peptide start positions are not
+#'       available.}
 #'     \item{PTMType}{Modification types (list column).}
 #'     \item{C_1, C_2, \ldots, C_NumCond}{One numeric column per condition.
 #'       \code{C_1} contains the estimated reference-condition occupancy
@@ -431,6 +437,8 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
   message(" + Calculating PTM site occupancy")
 
+  unique_values <- function(x) unique(unlist(x))
+
   # Group QuantColnames into per-condition replicate blocks
   cond_cols      <- lapply(seq_len(NumCond), function(c) {
     QuantColnames[seq.int((c - 1L) * NumReps + 1L, c * NumReps)]
@@ -444,6 +452,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
   out_seq     <- character(0)
   out_acc     <- list()
   out_ptmpos  <- list()
+  out_protptmpos <- list()
   out_ptmtype <- list()
   out_quant   <- vector("list", 0)
   out_prob   <- vector("list", 0)
@@ -458,6 +467,21 @@ calcPTMOccupancy <- function(peptable, parameters) {
     if (length(unmod_idx) > 1 || length(mod_idx) > 1) {
       warning("Found more than one peptide ", seq, "!!")
       next
+    }
+
+    if ("Accession" %in% names(peptable)) {
+      mod_acc <- unique_values(peptable$Accession[[mod_idx]])
+      unmod_acc <- unique_values(peptable$Accession[[unmod_idx]])
+      if (length(mod_acc) != 1 || length(unmod_acc) != 1 || mod_acc != unmod_acc) {
+        next
+      }
+    }
+
+    if ("Start" %in% names(peptable)) {
+      mod_start <- unique_values(peptable$Start[[mod_idx]])
+      if (length(mod_start) != 1) {
+        next
+      }
     }
 
     # Per-condition mean log2 of the same-sequence unmodified peptidoform.
@@ -564,9 +588,15 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
       occ_prob <- occ_prob[-1]
 
+      protein_ptmpos <- NA_integer_
+      if ("Start" %in% names(peptable)) {
+        protein_ptmpos <- mod_start + unlist(peptable$PTMPos[[mi]]) - 1L
+      }
+
       out_seq     <- c(out_seq, seq)
       out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
       out_ptmpos  <- c(out_ptmpos,  list(peptable$PTMPos[[mi]]))
+      out_protptmpos <- c(out_protptmpos, list(protein_ptmpos))
       out_ptmtype <- c(out_ptmtype, list(peptable$PTMType[[mi]]))
       out_quant   <- c(out_quant,   list(setNames(as.list(occ), out_cond_names)))
       out_prob    <- c(out_prob,   list(setNames(as.list(occ_prob), out_comp_names)))
@@ -585,6 +615,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
   result[out_comp_names] <- prob_df
   result$Accession       <- out_acc
   result$PTMPos          <- out_ptmpos
+  result$ProteinPTMPos   <- out_protptmpos
   result$PTMType         <- out_ptmtype
 
   message("  - Occupancy calculated for ", nrow(result), " modified peptidoforms across ",
