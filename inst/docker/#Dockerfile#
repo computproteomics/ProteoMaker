@@ -20,7 +20,7 @@ RUN --mount=type=secret,id=github_pat \
 #RUN R -e 'pak::pak("computproteomics/polystest")'
 
 # libraries for the shiny app
-RUN R -e 'install.packages(c("rmarkdown","shinyWidgets","shinyBS","bslib","shinyalert","shinyjs","DT"))'
+RUN R -e 'install.packages(c("rmarkdown","shinyWidgets","shinyBS","bslib","shinyalert","shinyjs","DT","zip"))'
 
 # Install ProteoMaker
 #RUN R -e 'install.packages("pak");pak::pak("computproteomics/ProteoMaker")'

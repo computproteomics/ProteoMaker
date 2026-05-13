@@ -631,13 +631,24 @@ server <- function(input, output, session) {
     filename = function() {
       paste0("ProteoMaker_all_results_", Sys.Date(), ".zip")
     },
+    contentType = "application/zip",
     content = function(file) {
+      if (!sim_available()) {
+        stop("No simulation results available for download.")
+      }
+      if (!requireNamespace("zip", quietly = TRUE)) {
+        stop("The R package 'zip' is required to download all results.")
+      }
+
       if(sim_available()) {
         message(" ---- Downloading all results ----")
         # Create a temporary directory to store the results
         temp_dir <- tempdir()
         # Create a subdirectory for ProteoMaker results
         result_dir <- file.path(temp_dir, "ProteoMaker_results")
+        if (dir.exists(result_dir)) {
+          unlink(result_dir, recursive = TRUE)
+        }
         dir.create(result_dir, showWarnings = FALSE)
 
         stages_all <- c("GroundTruth", "ProteoformAb",

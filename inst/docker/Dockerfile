@@ -28,7 +28,7 @@ RUN --mount=type=secret,id=github_pat \
 #RUN R -e 'pak::pak("computproteomics/polystest")'
 
 # libraries for the shiny app
-RUN R -q -e 'options(repos = c(CRAN = Sys.getenv("CRAN_REPO")), timeout = 600, download.file.method = "libcurl"); install.packages(c("rmarkdown", "shinyWidgets", "shinyBS", "bslib", "shinyalert", "shinyjs", "DT"))'
+RUN R -q -e 'options(repos = c(CRAN = Sys.getenv("CRAN_REPO")), timeout = 600, download.file.method = "libcurl"); install.packages(c("rmarkdown", "shinyWidgets", "shinyBS", "bslib", "shinyalert", "shinyjs", "DT", "zip"))'
 
 # Install ProteoMaker
 COPY . /tmp/ProteoMaker
