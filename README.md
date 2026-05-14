@@ -39,7 +39,9 @@ pak::pak("computproteomics/ProteoMaker")
    Intermediate `outputDataAnalysis_<hash>.RData` files and benchmark tables are written to `results/`.
 3. Explore the outputs, for example:
    ```r
-   visualize_benchmarks(Config$resultFilePath)
+   #Explore output
+   Benchmatrix <- matrix_benchmarks(Result, Config)
+   visualize_benchmarks(Benchmatrix)
    ```
    or open the vignette for a full walkthrough.
 
