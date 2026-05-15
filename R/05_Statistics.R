@@ -121,7 +121,7 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA = F, cores = 1) {
       stringr::str_split(fullData$Regulation_Amplitude, ";"),
       function(x) {
         y <- as.numeric(ifelse(x == "NA", NA, x))
-        !is.na(sum(as.numeric(y), na.rm = T))
+        length(y) > 0 && all(!is.na(y)) && all(y != 0)
       }
     )
   )
