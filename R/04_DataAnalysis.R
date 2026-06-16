@@ -225,7 +225,7 @@ proteinSummarisation <- function(peptable, parameters) {
         stop("No valid method provided!")
       }
     }
-    attr(out, "used_fallback") <- used_fallback
+    if (!is.null(out)) attr(out, "used_fallback") <- used_fallback
     return(out)
   }
 
