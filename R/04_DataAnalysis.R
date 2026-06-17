@@ -449,15 +449,13 @@ calcPTMOccupancy <- function(peptable, parameters) {
   seqs          <- peptable$Sequence
   uniq_mod_seqs <- unique(seqs[has_ptm])
 
-  # Fix 2: precompute sequence -> row-index maps to avoid O(N) which() per sequence
+  # Row-index maps for fast sequence lookup inside the loop
   mod_seq_idx   <- split(which(has_ptm),  seqs[has_ptm])
   unmod_seq_idx <- split(which(!has_ptm), seqs[!has_ptm])
 
-  # Fix 3: hoist the constant non-modified-sequence mask out of the loop
-  non_mod_seq_mask <- !has_ptm & !(seqs %in% uniq_mod_seqs)
-
-  # Fix 1: build accession -> non-counterpart-unmod-row index once, before the loop
-  non_counterpart_unmod_idx <- which(non_mod_seq_mask)
+  # Accession -> row index for unmodified peptides whose sequence never appears modified;
+  # these are the only rows that contribute to the protein background ratio (Rprot)
+  non_counterpart_unmod_idx <- which(!has_ptm & !(seqs %in% uniq_mod_seqs))
   acc_to_rows <- list()
   for (.idx in non_counterpart_unmod_idx) {
     for (.acc in unlist(peptable$Accession[[.idx]])) {
@@ -465,7 +463,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
     }
   }
 
-  # Fix 4: pre-allocate output list instead of growing with c()
+  # Pre-allocate output vectors to avoid repeated memory reallocation
   n_mod <- length(uniq_mod_seqs)
   out_seq        <- vector("character", n_mod)
   out_acc        <- vector("list", n_mod)
@@ -482,9 +480,17 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
     if (is.null(unmod_idx) || length(unmod_idx) == 0) next
 
-    # There should be only one peptide
-    if (length(unmod_idx) > 1 || length(mod_idx) > 1) {
-      warning("Found more than one peptide ", seq, "!!")
+    if (length(mod_idx) > 1) {
+      mod_keys <- vapply(mod_idx, function(i) {
+        paste(unlist(peptable$PTMType[[i]]), unlist(peptable$PTMPos[[i]]), sep = "@", collapse = ";")
+      }, character(1))
+      if (length(unique(mod_keys)) > 1) {
+        warning("Found more than one modified peptidoform for peptide ", seq, "!!")
+      }
+      next
+    }
+
+    if (length(unmod_idx) > 1) {
       next
     }
 

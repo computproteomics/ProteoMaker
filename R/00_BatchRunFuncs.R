@@ -481,35 +481,47 @@ calcGroundTruthPTMOccupancy <- function(proteoformAb, parameters) {
   acc_key <- vapply(proteoformAb$Accession, function(x) paste(sort(unique(unlist(x))), collapse = ";"),
                     character(1))
 
-  mod_keys <- unique(unlist(lapply(which(has_ptm), function(i) {
-    paste(acc_key[[i]], ptm_info[[i]]$key, sep = "|")
-  })))
+  # Row indices per accession for fast denominator lookup inside the loop
+  acc_denom_idx <- split(seq_len(nrow(proteoformAb)), acc_key)
+
+  # Row indices and site metadata per (accession|site_key) for fast numerator lookup
+  numerator_idx_map <- list()
+  for (.i in which(has_ptm)) {
+    for (.r in seq_len(nrow(ptm_info[[.i]]))) {
+      .k        <- ptm_info[[.i]]$key[.r]
+      .full_key <- paste(acc_key[[.i]], .k, sep = "|")
+      if (is.null(numerator_idx_map[[.full_key]])) {
+        numerator_idx_map[[.full_key]] <- list(
+          rows      = .i,
+          acc       = acc_key[[.i]],
+          site_pos  = ptm_info[[.i]]$pos[.r],
+          site_type = ptm_info[[.i]]$type[.r],
+          first_row = .i
+        )
+      } else {
+        numerator_idx_map[[.full_key]]$rows <- c(numerator_idx_map[[.full_key]]$rows, .i)
+      }
+    }
+  }
+
+  # Linear-scale abundance matrix; computed once so colSums can be used in the loop
+  lin_mat <- 2^as.matrix(proteoformAb[, QuantColnames, drop = FALSE])
+
+  mod_keys <- names(numerator_idx_map)
   out <- vector("list", length(mod_keys))
 
   for (i in seq_along(mod_keys)) {
-    key_parts <- strsplit(mod_keys[[i]], "|", fixed = TRUE)[[1]]
-    acc <- key_parts[[1]]
-    site_key <- key_parts[[2]]
-    site_parts <- strsplit(site_key, "@", fixed = TRUE)[[1]]
-    site_type <- site_parts[[1]]
-    site_pos <- as.integer(site_parts[[2]])
+    meta          <- numerator_idx_map[[mod_keys[[i]]]]
+    numerator_idx <- meta$rows
+    denominator_idx <- acc_denom_idx[[meta$acc]]
+    first_idx <- meta$first_row
 
-    numerator_idx <- which(acc_key == acc & vapply(ptm_info, function(x) site_key %in% x$key, logical(1)))
-    denominator_idx <- which(acc_key == acc)
-    first_idx <- numerator_idx[[1]]
-
-    occupancy <- vapply(QuantColnames, function(col) {
-      numerator <- sum(2^as.numeric(proteoformAb[numerator_idx, col]), na.rm = TRUE)
-      denominator_values <- as.numeric(proteoformAb[denominator_idx, col])
-      if (all(is.na(denominator_values))) {
-        return(NA_real_)
-      }
-      denominator <- sum(2^denominator_values, na.rm = TRUE)
-      if (!is.finite(denominator) || denominator <= 0) {
-        return(NA_real_)
-      }
-      numerator / denominator
-    }, numeric(1))
+    num_sums   <- colSums(lin_mat[numerator_idx, , drop = FALSE], na.rm = TRUE)
+    denom_vals <- lin_mat[denominator_idx, , drop = FALSE]
+    all_na     <- colSums(!is.na(denom_vals)) == 0L
+    denom_sums <- colSums(denom_vals, na.rm = TRUE)
+    denom_sums[all_na | !is.finite(denom_sums) | denom_sums <= 0] <- NA_real_
+    occupancy  <- num_sums / denom_sums
 
     row <- data.frame(
       Sequence = proteoformAb$Sequence[[first_idx]],
@@ -518,8 +530,8 @@ calcGroundTruthPTMOccupancy <- function(proteoformAb, parameters) {
     )
     names(row)[seq_along(QuantColnames) + 1L] <- QuantColnames
     row$Accession <- list(unlist(proteoformAb$Accession[first_idx]))
-    row$PTMPos <- list(site_pos)
-    row$PTMType <- list(site_type)
+    row$PTMPos <- list(meta$site_pos)
+    row$PTMType <- list(meta$site_type)
     out[[i]] <- row
   }
 

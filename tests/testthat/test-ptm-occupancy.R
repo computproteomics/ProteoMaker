@@ -304,9 +304,9 @@ test_that("NA in non-counterpart background propagates via occ_1 to all output c
 # Multiple unmodified rows: geometric mean per condition
 # ──────────────────────────────────────────────────────────────────────────────
 
-test_that("sequence with multiple unmodified counterpart rows is skipped with a warning", {
+test_that("sequence with multiple unmodified counterpart rows is skipped without warning", {
   # The code requires exactly one unmodified row per sequence.  When two unmodified
-  # rows exist for the same sequence a warning is issued and the sequence is skipped.
+  # rows exist for the same sequence, the sequence is skipped without a peptidoform warning.
   params <- make_params(num_cond = 2, num_reps = 1)
   qc     <- params$QuantColnames   # C_1_R_1, C_2_R_1
 
@@ -333,10 +333,7 @@ test_that("sequence with multiple unmodified counterpart rows is skipped with a 
 
   pep <- rbind(mod_row, unmod1, unmod2, other)
 
-  expect_warning(
-    occ <- calcPTMOccupancy(pep, params),
-    regexp = "more than one peptide"
-  )
+  expect_warning(occ <- calcPTMOccupancy(pep, params), NA)
   expect_equal(nrow(occ), 0L)
 })
 
@@ -345,8 +342,8 @@ test_that("sequence with multiple unmodified counterpart rows is skipped with a 
 # ──────────────────────────────────────────────────────────────────────────────
 
 test_that("sequence with multiple modified peptidoforms is skipped with a warning", {
-  # The code requires exactly one modified row per sequence.  When two modified
-  # rows exist for the same sequence a warning is issued and the sequence is skipped.
+  # The code requires exactly one modified peptidoform per sequence.  When two
+  # modified peptidoforms exist for the same sequence a warning is issued and the sequence is skipped.
   params <- make_params(num_cond = 2, num_reps = 1)
   qc     <- params$QuantColnames
 
@@ -375,7 +372,7 @@ test_that("sequence with multiple modified peptidoforms is skipped with a warnin
 
   expect_warning(
     occ <- calcPTMOccupancy(pep, params),
-    regexp = "more than one peptide"
+    regexp = "more than one modified peptidoform"
   )
   expect_equal(nrow(occ), 0L)
 })
