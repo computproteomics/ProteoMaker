@@ -494,3 +494,87 @@ test_that("returns empty data.frame when modified peptide has no non-counterpart
   occ <- calcPTMOccupancy(rbind(mod_row, unmod_row), params)
   expect_equal(nrow(occ), 0L)
 })
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Multiple proteins in the same peptable
+# ──────────────────────────────────────────────────────────────────────────────
+
+test_that("accession index is not contaminated across proteins", {
+  # Two proteins with identical per-condition fold-changes but different
+  # non-counterpart background peptides. If accession lookup leaks rows across
+  # proteins, Rprot (and therefore both occupancy values) will be wrong.
+  #
+  # Protein A (P_AAA):
+  #   mod SEQA:    ref=0, C2=2  => Rm = 4
+  #   unmod SEQA:  ref=0, C2=0  => Ru = 1
+  #   bg BGPEP_A:  ref=0, C2=1  => Rprot_A = 2
+  #   occ_1_A = (2-1)/(4-1) = 1/3;  occ_2_A = (1/3)*4/2 = 2/3
+  #
+  # Protein B (P_BBB) — different background abundance change:
+  #   mod SEQB:    ref=0, C2=2  => Rm = 4  (same as A)
+  #   unmod SEQB:  ref=0, C2=0  => Ru = 1  (same as A)
+  #   bg BGPEP_B:  ref=0, C2=3  => Rprot_B = 8
+  #   occ_1_B = (8-1)/(4-1) = 7/3;  occ_2_B = (7/3)*4/8 = 7/6
+  #
+  # If the index leaks BGPEP_A into protein B's Rprot:
+  #   colMeans of [0,1] and [0,3] = [0, 2], Rprot = 4
+  #   occ_1_B = (4-1)/(4-1) = 1  (wrong!)
+  params <- make_params(num_cond = 2, num_reps = 1)
+  qc     <- params$QuantColnames
+
+  make_row <- function(seq, vals, ptmtype, ptmpos, acc) {
+    r <- data.frame(Sequence = seq, stringsAsFactors = FALSE)
+    r[qc] <- as.list(vals)
+    r$PTMType   <- list(ptmtype)
+    r$PTMPos    <- list(ptmpos)
+    r$Accession <- list(acc)
+    r
+  }
+
+  pep <- rbind(
+    make_row("SEQA",   c(0, 2), "ph",          1L,          "P_AAA"),
+    make_row("SEQA",   c(0, 0), character(0),  integer(0),  "P_AAA"),
+    make_row("BGPEP_A",c(0, 1), character(0),  integer(0),  "P_AAA"),
+    make_row("SEQB",   c(0, 2), "ph",          1L,          "P_BBB"),
+    make_row("SEQB",   c(0, 0), character(0),  integer(0),  "P_BBB"),
+    make_row("BGPEP_B",c(0, 3), character(0),  integer(0),  "P_BBB")
+  )
+
+  occ <- calcPTMOccupancy(pep, params)
+
+  expect_equal(nrow(occ), 2L)
+
+  occ_a <- occ[occ$Sequence == "SEQA", ]
+  occ_b <- occ[occ$Sequence == "SEQB", ]
+
+  expect_equal(as.numeric(occ_a[1, "C_1"]), 1/3,  tolerance = 1e-9)
+  expect_equal(as.numeric(occ_a[1, "C_2"]), 2/3,  tolerance = 1e-9)
+  expect_equal(as.numeric(occ_b[1, "C_1"]), 7/3,  tolerance = 1e-9)
+  expect_equal(as.numeric(occ_b[1, "C_2"]), 7/6,  tolerance = 1e-9)
+})
+
+test_that("modified peptide with no same-protein background is skipped even with background from another protein", {
+  # Protein A has a modified peptide + counterpart unmodified, but NO background
+  # unmodified peptide of its own. Protein B has an unmodified background peptide.
+  # The Rprot lookup must not pick up protein B's background → protein A is skipped.
+  params <- make_params(num_cond = 2, num_reps = 1)
+  qc     <- params$QuantColnames
+
+  make_row <- function(seq, vals, ptmtype, ptmpos, acc) {
+    r <- data.frame(Sequence = seq, stringsAsFactors = FALSE)
+    r[qc] <- as.list(vals)
+    r$PTMType   <- list(ptmtype)
+    r$PTMPos    <- list(ptmpos)
+    r$Accession <- list(acc)
+    r
+  }
+
+  pep <- rbind(
+    make_row("SEQA",   c(0, 2), "ph",         1L,         "P_AAA"),
+    make_row("SEQA",   c(0, 0), character(0), integer(0), "P_AAA"),
+    make_row("BGPEP_B",c(0, 1), character(0), integer(0), "P_BBB")  # different protein
+  )
+
+  occ <- calcPTMOccupancy(pep, params)
+  expect_equal(nrow(occ), 0L)
+})

@@ -449,19 +449,38 @@ calcPTMOccupancy <- function(peptable, parameters) {
   seqs          <- peptable$Sequence
   uniq_mod_seqs <- unique(seqs[has_ptm])
 
-  out_seq     <- character(0)
-  out_acc     <- list()
-  out_ptmpos  <- list()
-  out_protptmpos <- list()
-  out_ptmtype <- list()
-  out_quant   <- vector("list", 0)
-  out_prob   <- vector("list", 0)
+  # Fix 2: precompute sequence -> row-index maps to avoid O(N) which() per sequence
+  mod_seq_idx   <- split(which(has_ptm),  seqs[has_ptm])
+  unmod_seq_idx <- split(which(!has_ptm), seqs[!has_ptm])
+
+  # Fix 3: hoist the constant non-modified-sequence mask out of the loop
+  non_mod_seq_mask <- !has_ptm & !(seqs %in% uniq_mod_seqs)
+
+  # Fix 1: build accession -> non-counterpart-unmod-row index once, before the loop
+  non_counterpart_unmod_idx <- which(non_mod_seq_mask)
+  acc_to_rows <- list()
+  for (.idx in non_counterpart_unmod_idx) {
+    for (.acc in unlist(peptable$Accession[[.idx]])) {
+      acc_to_rows[[.acc]] <- c(acc_to_rows[[.acc]], .idx)
+    }
+  }
+
+  # Fix 4: pre-allocate output list instead of growing with c()
+  n_mod <- length(uniq_mod_seqs)
+  out_seq        <- vector("character", n_mod)
+  out_acc        <- vector("list", n_mod)
+  out_ptmpos     <- vector("list", n_mod)
+  out_protptmpos <- vector("list", n_mod)
+  out_ptmtype    <- vector("list", n_mod)
+  out_quant      <- vector("list", n_mod)
+  out_prob       <- vector("list", n_mod)
+  out_n <- 0L
 
   for (seq in uniq_mod_seqs) {
-    mod_idx   <- which(has_ptm & seqs == seq)
-    unmod_idx <- which(!has_ptm & seqs == seq)
+    mod_idx   <- mod_seq_idx[[seq]]
+    unmod_idx <- unmod_seq_idx[[seq]]
 
-    if (length(unmod_idx) == 0) next
+    if (is.null(unmod_idx) || length(unmod_idx) == 0) next
 
     # There should be only one peptide
     if (length(unmod_idx) > 1 || length(mod_idx) > 1) {
@@ -511,12 +530,9 @@ calcPTMOccupancy <- function(peptable, parameters) {
       # unmodified peptides that do not have any modified version contribute to the
       # protein background ratio.  colMeans() pools rows in log2 space (geometric
       # mean in linear); mean() averages replicates within each condition.
+      # Fix 1: O(1) lookup via precomputed index instead of O(N) vapply scan
       acc_vec        <- unlist(peptable$Accession[[mi]])
-      prot_unmod_idx <- which(!has_ptm &
-                                vapply(peptable$Accession,
-                                       function(a) any(unlist(a) %in% acc_vec),
-                                       logical(1L)) &
-                                !(seqs %in% uniq_mod_seqs))
+      prot_unmod_idx <- unique(unlist(acc_to_rows[acc_vec]))
       if (length(prot_unmod_idx) == 0L) next
       prot_mean <- sapply(cond_cols, function(cols) {
         mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE]), na.rm=TRUE), na.rm = TRUE)
@@ -593,23 +609,33 @@ calcPTMOccupancy <- function(peptable, parameters) {
         protein_ptmpos <- mod_start + unlist(peptable$PTMPos[[mi]]) - 1L
       }
 
-      out_seq     <- c(out_seq, seq)
-      out_acc     <- c(out_acc,     list(peptable$Accession[[mi]]))
-      out_ptmpos  <- c(out_ptmpos,  list(peptable$PTMPos[[mi]]))
-      out_protptmpos <- c(out_protptmpos, list(protein_ptmpos))
-      out_ptmtype <- c(out_ptmtype, list(peptable$PTMType[[mi]]))
-      out_quant   <- c(out_quant,   list(setNames(as.list(occ), out_cond_names)))
-      out_prob    <- c(out_prob,   list(setNames(as.list(occ_prob), out_comp_names)))
+      out_n <- out_n + 1L
+      out_seq[[out_n]]        <- seq
+      out_acc[[out_n]]        <- peptable$Accession[[mi]]
+      out_ptmpos[[out_n]]     <- peptable$PTMPos[[mi]]
+      out_protptmpos[[out_n]] <- protein_ptmpos
+      out_ptmtype[[out_n]]    <- peptable$PTMType[[mi]]
+      out_quant[[out_n]]      <- setNames(as.list(occ), out_cond_names)
+      out_prob[[out_n]]       <- setNames(as.list(occ_prob), out_comp_names)
     }
   }
 
-  if (length(out_seq) == 0) {
+  if (out_n == 0L) {
     message("calcPTMOccupancy: no peptides with both modified and unmodified forms found.")
     return(data.frame())
   }
 
+  # Trim pre-allocated vectors to actual output size
+  out_seq        <- out_seq[seq_len(out_n)]
+  out_acc        <- out_acc[seq_len(out_n)]
+  out_ptmpos     <- out_ptmpos[seq_len(out_n)]
+  out_protptmpos <- out_protptmpos[seq_len(out_n)]
+  out_ptmtype    <- out_ptmtype[seq_len(out_n)]
+  out_quant      <- out_quant[seq_len(out_n)]
+  out_prob       <- out_prob[seq_len(out_n)]
+
   quant_df               <- as.data.frame(do.call(rbind, lapply(out_quant, as.data.frame)))
-  prob_df               <- as.data.frame(do.call(rbind, lapply(out_prob, as.data.frame)))
+  prob_df                <- as.data.frame(do.call(rbind, lapply(out_prob, as.data.frame)))
   result                 <- data.frame(Sequence = out_seq, stringsAsFactors = FALSE)
   result[out_cond_names] <- quant_df
   result[out_comp_names] <- prob_df
