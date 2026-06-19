@@ -311,25 +311,26 @@ proteinSummarisation <- function(peptable, parameters) {
 #' Calculate PTM Site Occupancy
 #'
 #' Estimates the per-condition PTM-site occupancy (stoichiometry) using a
-#' mass-balance three-ratio approach.  For each modified peptidoform the
-#' method uses three between-condition fold-change ratios:
+#' mass-balance three-ratio approach.  For each protein PTM site the method
+#' uses three between-condition fold-change ratios:
 #' \describe{
-#'   \item{\eqn{R_{m,c}}}{Fold-change of the \emph{modified} peptidoform,
+#'   \item{\eqn{R_{m,c}}}{Fold-change of all peptidoforms carrying the modified
+#'     site,
 #'     \eqn{R_{m,c} = 2^{\bar{l}_{m,c} - \bar{l}_{m,1}}}.}
-#'   \item{\eqn{R_{u,c}}}{Fold-change of the \emph{same-sequence unmodified}
-#'     counterpart peptidoform,
+#'   \item{\eqn{R_{u,c}}}{Fold-change of all unmodified peptidoforms covering
+#'     the same protein site,
 #'     \eqn{R_{u,c} = 2^{\bar{l}_{u,c} - \bar{l}_{u,1}}}.}
 #'   \item{\eqn{R_{prot,c}}}{Fold-change of the protein, estimated from the
 #'     geometric mean (in linear space) of all unmodified peptides from the
-#'     same protein accession whose sequence does \emph{not} appear in any
-#'     modified form in the data,
+#'     same protein accession that do not cover any modified site on that
+#'     protein,
 #'     \eqn{R_{prot,c} = 2^{\bar{l}_{prot,c} - \bar{l}_{prot,1}}}.}
 #' }
 #' Here \eqn{\bar{l}_{x,c}} is the mean log2 intensity across replicates of
-#' condition \eqn{c} and subscript 1 denotes the reference condition.  For the
-#' protein ratio, log2 intensities from multiple non-counterpart unmodified rows
-#' are pooled first via \code{colMeans} (geometric mean in linear space) and
-#' then averaged across replicates.  Missing values are removed
+#' condition \eqn{c} and subscript 1 denotes the reference condition.  When a
+#' ratio is supported by multiple peptidoform rows, log2 intensities are pooled
+#' first via \code{colMeans} (geometric mean in linear space) and then averaged
+#' across replicates.  Missing values are removed
 #' (\code{na.rm = TRUE}) at every averaging step; consequently, an individual
 #' missing replicate is silently excluded from the mean for that condition.
 #' However, if \emph{all} replicates of a condition are missing, the condition
@@ -351,22 +352,18 @@ proteinSummarisation <- function(peptable, parameters) {
 #' columns contain \eqn{occ_c}.  When \eqn{R_{m,c} = R_{u,c}} for any
 #' condition (denominator of the \eqn{occ_1} estimator is zero), the
 #' per-condition term yields \code{NaN}, which propagates through the mean to
-#' \eqn{occ_1} and consequently to \emph{all} output columns.  A peptide
-#' sequence is omitted from the result when: (a) no same-sequence unmodified
-#' row is present; (b) no non-counterpart unmodified row from the same protein
-#' is available to estimate \eqn{R_{prot}}; or (c) more than one modified or
-#' more than one unmodified row exists for that sequence (a warning is issued
-#' and the sequence is skipped). If peptide start positions are available,
-#' modified peptides with more than one possible protein start position are
-#' also skipped because their protein-level PTM position is ambiguous.
+#' \eqn{occ_1} and consequently to \emph{all} output columns.  A PTM site is
+#' omitted from the result when no unmodified peptide covers the site, when no
+#' protein-background peptide is available for \eqn{R_{prot}}, or when the
+#' modified peptide maps to more than one accession or protein start position.
 #'
 #' @param peptable A data frame of peptidoform-level data as produced by the
 #'   ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
 #'   Required columns: \code{Sequence} (character), \code{PTMType} (list),
-#'   \code{PTMPos} (list), \code{Accession} (list), and one column per sample
+#'   \code{PTMPos} (list), \code{Accession} (list), \code{Start}, \code{Stop},
+#'   and one column per sample
 #'   as given by \code{parameters$QuantColnames}.  Quantification values must
-#'   be on the log2 scale. If \code{Start} is present, it is used to report
-#'   protein-level PTM positions in \code{ProteinPTMPos}.
+#'   be on the log2 scale.
 #' @param parameters A named list of analysis parameters.  Must contain:
 #'   \describe{
 #'     \item{QuantColnames}{Character vector of column names holding per-sample
@@ -376,11 +373,11 @@ proteinSummarisation <- function(peptable, parameters) {
 #'     \item{NumReps}{Integer.  Number of replicates per condition.}
 #'   }
 #'
-#' @return A data frame with one row per modified peptidoform that has both a
-#'   same-sequence unmodified counterpart and at least one non-counterpart
-#'   unmodified peptide from the same protein.  Columns are:
+#' @return A data frame with one row per protein PTM site that has both a
+#'   modified-site signal and at least one unmodified peptide covering the same
+#'   site.  Columns are:
 #'   \describe{
-#'     \item{Sequence}{Stripped peptide sequence.}
+#'     \item{Sequence}{Stripped modified peptide sequence(s).}
 #'     \item{Accession}{Protein accession(s) (list column).}
 #'     \item{PTMPos}{Modification positions within the peptide (list column).}
 #'     \item{ProteinPTMPos}{Modification positions within the protein sequence
@@ -395,7 +392,7 @@ proteinSummarisation <- function(peptable, parameters) {
 #'       with the mass-balance model (e.g.\ \eqn{R_{m,c} = R_{u,c}}).}
 #'   }
 #'   Returns an empty \code{data.frame} when no modified peptides are present,
-#'   when \code{NumCond < 2}, or when no qualifying modified peptide is found.
+#'   when \code{NumCond < 2}, or when no qualifying PTM site is found.
 #'
 #' @references
 #' Sharma, K. et al. (2014) Ultradeep Human Phosphoproteome Reveals a Distinct
@@ -437,197 +434,247 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
   message(" + Calculating PTM site occupancy")
 
+  if (!all(c("Start", "Stop") %in% names(peptable))) {
+    message("calcPTMOccupancy: Start and Stop columns required for PTM site occupancy; returning empty table.")
+    return(data.frame())
+  }
+
   unique_values <- function(x) unique(unlist(x))
+  protein_ptm_pos <- function(start, ptm_pos) {
+    start <- unique_values(start)
+    if (length(start) != 1L) return(rep(NA_integer_, length(unlist(ptm_pos))))
+    start + unlist(ptm_pos) - 1L
+  }
+  site_key <- function(accession, ptm_type, protein_pos) {
+    paste(accession, ptm_type, protein_pos, sep = "|")
+  }
+  is_unambiguous_row <- function(i) {
+    length(unique_values(peptable$Accession[[i]])) == 1L &&
+      (!"Start" %in% names(peptable) || length(unique_values(peptable$Start[[i]])) == 1L)
+  }
 
   # Group QuantColnames into per-condition replicate blocks
   cond_cols      <- lapply(seq_len(NumCond), function(c) {
     QuantColnames[seq.int((c - 1L) * NumReps + 1L, c * NumReps)]
   })
+  quant_mat <- as.matrix(peptable[, QuantColnames, drop = FALSE])
   out_cond_names <- paste0("C_", seq_len(NumCond))
   out_comp_names <- paste0("prob_", out_cond_names[seq_len(NumCond-1)+1], "_vs_C1")
 
-  seqs          <- peptable$Sequence
-  uniq_mod_seqs <- unique(seqs[has_ptm])
+  mod_site_records <- lapply(which(has_ptm), function(i) {
+    if (!"Start" %in% names(peptable)) return(NULL)
+    if (!is_unambiguous_row(i)) return(NULL)
+    ptm_pos <- unlist(peptable$PTMPos[[i]])
+    ptm_type <- unlist(peptable$PTMType[[i]])
+    if (length(ptm_pos) == 0L || length(ptm_pos) != length(ptm_type)) return(NULL)
 
-  # Row-index maps for fast sequence lookup inside the loop
-  mod_seq_idx   <- split(which(has_ptm),  seqs[has_ptm])
-  unmod_seq_idx <- split(which(!has_ptm), seqs[!has_ptm])
+    protein_pos <- protein_ptm_pos(peptable$Start[[i]], ptm_pos)
+    if (any(is.na(protein_pos))) return(NULL)
 
-  # Accession -> row index for unmodified peptides whose sequence never appears modified;
-  # these are the only rows that contribute to the protein background ratio (Rprot)
-  non_counterpart_unmod_idx <- which(!has_ptm & !(seqs %in% uniq_mod_seqs))
-  acc_to_rows <- list()
-  for (.idx in non_counterpart_unmod_idx) {
-    for (.acc in unlist(peptable$Accession[[.idx]])) {
-      acc_to_rows[[.acc]] <- c(acc_to_rows[[.acc]], .idx)
+    acc <- unique_values(peptable$Accession[[i]])
+    data.frame(
+      row_index = rep(i, length(ptm_pos)),
+      Sequence = rep(peptable$Sequence[[i]], length(ptm_pos)),
+      Accession = rep(acc, length(ptm_pos)),
+      PTMType = ptm_type,
+      PTMPos = ptm_pos,
+      ProteinPTMPos = protein_pos,
+      SiteKey = site_key(acc, ptm_type, protein_pos),
+      stringsAsFactors = FALSE
+    )
+  })
+  mod_sites <- do.call(rbind, mod_site_records[!vapply(mod_site_records, is.null, logical(1))])
+  site_groups <- if (!is.null(mod_sites) && nrow(mod_sites) > 0L) {
+    split(mod_sites, mod_sites$SiteKey)
+  } else {
+    list()
+  }
+  unmod_row_records <- lapply(which(!has_ptm), function(i) {
+    if (!is_unambiguous_row(i)) return(NULL)
+    start <- unique_values(peptable$Start[[i]])
+    stop <- unique_values(peptable$Stop[[i]])
+    if (length(start) != 1L || length(stop) != 1L) return(NULL)
+
+    data.frame(
+      row_index = i,
+      Accession = unique_values(peptable$Accession[[i]]),
+      Start = start,
+      Stop = stop,
+      stringsAsFactors = FALSE
+    )
+  })
+  unmod_rows <- do.call(rbind, unmod_row_records[!vapply(unmod_row_records, is.null, logical(1))])
+  unmod_by_acc <- if (!is.null(unmod_rows) && nrow(unmod_rows) > 0L) {
+    split(unmod_rows, unmod_rows$Accession)
+  } else {
+    list()
+  }
+  mod_sites_by_acc <- if (!is.null(mod_sites) && nrow(mod_sites) > 0L) {
+    lapply(split(mod_sites$ProteinPTMPos, mod_sites$Accession), unique)
+  } else {
+    list()
+  }
+  background_by_acc <- lapply(names(unmod_by_acc), function(acc) {
+    rows <- unmod_by_acc[[acc]]
+    acc_mod_sites <- mod_sites_by_acc[[acc]]
+    if (is.null(acc_mod_sites) || length(acc_mod_sites) == 0L) return(rows$row_index)
+
+    covers_modified_site <- vapply(seq_len(nrow(rows)), function(j) {
+      any(rows$Start[j] <= acc_mod_sites & rows$Stop[j] >= acc_mod_sites)
+    }, logical(1))
+    rows$row_index[!covers_modified_site]
+  })
+  names(background_by_acc) <- names(unmod_by_acc)
+  supporting_modified <- function(site_group) {
+    row_idx <- unique(site_group$row_index)
+    list(
+      row_idx = row_idx,
+      sequences = unique(peptable$Sequence[row_idx])
+    )
+  }
+  matching_unmodified <- function(site_group) {
+    acc <- unique(site_group$Accession)
+    protein_pos <- unique(site_group$ProteinPTMPos)
+    if (length(acc) != 1L || length(protein_pos) != 1L) return(integer(0))
+
+    rows <- unmod_by_acc[[acc]]
+    if (is.null(rows)) return(integer(0))
+    rows$row_index[rows$Start <= protein_pos & rows$Stop >= protein_pos]
+  }
+  site_condition_means <- function(site_group) {
+    mod_rows <- supporting_modified(site_group)$row_idx
+    unmod_rows <- matching_unmodified(site_group)
+    if (length(mod_rows) == 0L || length(unmod_rows) == 0L) return(NULL)
+
+    condition_mean <- function(rows, cols) {
+      mean(colMeans(quant_mat[rows, cols, drop = FALSE], na.rm = TRUE), na.rm = TRUE)
     }
+    list(
+      mod_mean = sapply(cond_cols, function(cols) condition_mean(mod_rows, cols)),
+      unmod_mean = sapply(cond_cols, function(cols) condition_mean(unmod_rows, cols)),
+      mod_rows = mod_rows,
+      unmod_rows = unmod_rows
+    )
+  }
+
+  site_protein_background <- function(site_group) {
+    acc <- unique(site_group$Accession)
+    if (length(acc) != 1L) return(integer(0))
+    rows <- background_by_acc[[acc]]
+    if (is.null(rows)) return(integer(0))
+    rows
+  }
+  site_estimate <- function(site_group) {
+    means <- site_condition_means(site_group)
+    if (is.null(means)) return(NULL)
+
+    prot_rows <- site_protein_background(site_group)
+    if (length(prot_rows) == 0L) return(NULL)
+
+    prot_mean <- sapply(cond_cols, function(cols) {
+      mean(colMeans(quant_mat[prot_rows, cols, drop = FALSE], na.rm = TRUE), na.rm = TRUE)
+    })
+    condition_sd <- function(rows) {
+      mean(sapply(cond_cols, function(cols) {
+        sd(colMeans(quant_mat[rows, cols, drop = FALSE], na.rm = TRUE), na.rm = TRUE)
+      }), na.rm = TRUE)
+    }
+    condition_ratio <- function(condition_mean) {
+      log_ratio <- condition_mean - condition_mean[1L]
+      2^log_ratio[seq_len(NumCond - 1L) + 1L]
+    }
+    log_Rm <- means$mod_mean - means$mod_mean[1L]
+    log_Ru <- means$unmod_mean - means$unmod_mean[1L]
+    log_Rprot <- prot_mean - prot_mean[1L]
+    Rm <- condition_ratio(means$mod_mean)
+    Ru <- condition_ratio(means$unmod_mean)
+    Rprot <- condition_ratio(prot_mean)
+    occ <- mean((Rprot - Ru) / (Rm - Ru))
+
+    mod_sd <- condition_sd(means$mod_rows)
+    unmod_sd <- condition_sd(means$unmod_rows)
+    prot_sd <- condition_sd(prot_rows)
+    if (!isTRUE(mod_sd > 0)) mod_sd <- NA_real_
+    if (!isTRUE(unmod_sd > 0)) unmod_sd <- NA_real_
+    if (!isTRUE(prot_sd > 0)) prot_sd <- NA_real_
+
+    valid_sds <- c(mod_sd, unmod_sd, prot_sd)
+    valid_sds <- valid_sds[is.finite(valid_sds)]
+    if (length(valid_sds) > 0L) {
+      ref_sd <- max(valid_sds) * 10
+      if (is.na(mod_sd)) mod_sd <- ref_sd
+      if (is.na(unmod_sd)) unmod_sd <- ref_sd
+      if (is.na(prot_sd)) prot_sd <- ref_sd
+    }
+
+    Sigma_ab <- matrix(c(
+      prot_sd^2 + unmod_sd^2, -prot_sd^2,
+      -prot_sd^2, mod_sd^2 + prot_sd^2
+    ), nrow = 2, byrow = TRUE) * 2 / NumReps
+
+    ratio_idx <- seq_len(NumCond - 1L) + 1L
+    mu_ab <- cbind(log_Rprot[ratio_idx] - log_Ru[ratio_idx],
+                   log_Rm[ratio_idx] - log_Rprot[ratio_idx])
+    p_both_neg <- p_both_pos <- numeric(nrow(mu_ab))
+    if (all(is.finite(Sigma_ab))) {
+      for (i in seq_len(nrow(mu_ab))) {
+        if (!any(is.na(mu_ab[i, ]))) {
+          p_both_neg[i] <- as.numeric(mvtnorm::pmvnorm(
+            lower = c(-Inf, -Inf),
+            upper = c(0, 0),
+            mean = mu_ab[i, ],
+            sigma = Sigma_ab
+          )[1])
+
+          p_both_pos[i] <- as.numeric(mvtnorm::pmvnorm(
+            lower = c(0, 0),
+            upper = c(Inf, Inf),
+            mean = mu_ab[i, ],
+            sigma = Sigma_ab
+          )[1])
+        }
+      }
+    }
+
+    list(
+      occ = c(occ, occ * Rm / Rprot),
+      prob = p_both_neg + p_both_pos,
+      Rm = Rm,
+      Ru = Ru,
+      Rprot = Rprot,
+      mod_rows = means$mod_rows,
+      unmod_rows = means$unmod_rows,
+      prot_rows = prot_rows
+    )
   }
 
   # Pre-allocate output vectors to avoid repeated memory reallocation
-  n_mod <- length(uniq_mod_seqs)
-  out_seq        <- vector("character", n_mod)
-  out_acc        <- vector("list", n_mod)
-  out_ptmpos     <- vector("list", n_mod)
-  out_protptmpos <- vector("list", n_mod)
-  out_ptmtype    <- vector("list", n_mod)
-  out_quant      <- vector("list", n_mod)
-  out_prob       <- vector("list", n_mod)
+  n_sites <- length(site_groups)
+  out_seq        <- vector("character", n_sites)
+  out_acc        <- vector("list", n_sites)
+  out_ptmpos     <- vector("list", n_sites)
+  out_protptmpos <- vector("list", n_sites)
+  out_ptmtype    <- vector("list", n_sites)
+  out_quant      <- vector("list", n_sites)
+  out_prob       <- vector("list", n_sites)
   out_n <- 0L
 
-  for (seq in uniq_mod_seqs) {
-    mod_idx   <- mod_seq_idx[[seq]]
-    unmod_idx <- unmod_seq_idx[[seq]]
+  for (site_group in site_groups) {
+    estimate <- site_estimate(site_group)
+    if (is.null(estimate)) next
 
-    if (is.null(unmod_idx) || length(unmod_idx) == 0) next
-
-    if (length(mod_idx) > 1) {
-      mod_keys <- vapply(mod_idx, function(i) {
-        paste(unlist(peptable$PTMType[[i]]), unlist(peptable$PTMPos[[i]]), sep = "@", collapse = ";")
-      }, character(1))
-      if (length(unique(mod_keys)) > 1) {
-        warning("Found more than one modified peptidoform for peptide ", seq, "!!")
-      }
-      next
-    }
-
-    if (length(unmod_idx) > 1) {
-      next
-    }
-
-    if ("Accession" %in% names(peptable)) {
-      mod_acc <- unique_values(peptable$Accession[[mod_idx]])
-      unmod_acc <- unique_values(peptable$Accession[[unmod_idx]])
-      if (length(mod_acc) != 1 || length(unmod_acc) != 1 || mod_acc != unmod_acc) {
-        next
-      }
-    }
-
-    if ("Start" %in% names(peptable)) {
-      mod_start <- unique_values(peptable$Start[[mod_idx]])
-      if (length(mod_start) != 1) {
-        next
-      }
-    }
-
-    # Per-condition mean log2 of the same-sequence unmodified peptidoform.
-    # Used only to compute occ_ref (site-specific reference occupancy).
-    unmod_mean <- sapply(cond_cols, function(cols) {
-      mean(as.numeric(peptable[unmod_idx, cols]), na.rm=TRUE)
-    })
-
-    # Sd across replicates averaged across conditions
-    unmod_sd <- mean(sapply(cond_cols, function(cols) {
-      sd(as.numeric(peptable[unmod_idx, cols]), na.rm=TRUE)
-    }))
-
-
-    for (mi in mod_idx) {
-      # Per-condition mean log2 modified intensity
-      mod_mean <- sapply(cond_cols, function(cols) {
-        mean(as.numeric(peptable[mi, cols]), na.rm=TRUE)
-      })
-      mod_sd <- mean(sapply(cond_cols, function(cols) {
-        sd(as.numeric(peptable[mi, cols]), na.rm=TRUE)
-      }))
-
-      # Protein ratio (Rprot): use only unmodified peptides from the same protein
-      # accession whose sequence does NOT appear as modified (i.e., exclude any
-      # counterpart unmodified peptides).  This follows requirement (c): only
-      # unmodified peptides that do not have any modified version contribute to the
-      # protein background ratio.  colMeans() pools rows in log2 space (geometric
-      # mean in linear); mean() averages replicates within each condition.
-      # Fix 1: O(1) lookup via precomputed index instead of O(N) vapply scan
-      acc_vec        <- unlist(peptable$Accession[[mi]])
-      prot_unmod_idx <- unique(unlist(acc_to_rows[acc_vec]))
-      if (length(prot_unmod_idx) == 0L) next
-      prot_mean <- sapply(cond_cols, function(cols) {
-        mean(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE]), na.rm=TRUE), na.rm = TRUE)
-      })
-      prot_sd <- mean(sapply(cond_cols, function(cols) {
-        sd(colMeans(as.matrix(peptable[prot_unmod_idx, cols, drop = FALSE]), na.rm=TRUE), na.rm = TRUE)
-      }))
-
-      log_Rm    <- mod_mean  - mod_mean[1L]   # 0 for c = 1 (reference)
-      log_Ru    <- unmod_mean  - unmod_mean[1L]   # 0 for c = 1 (reference)
-      log_Rprot <- prot_mean - prot_mean[1L]  # 0 for c = 1 (reference)
-
-      Rm        <- 2^log_Rm[seq_len(NumCond-1)+1]
-      Ru        <- 2^log_Ru[seq_len(NumCond-1)+1]
-      Rprot     <- 2^log_Rprot[seq_len(NumCond-1)+1]
-
-      occ    <- mean((Rprot - Ru) / (Rm - Ru))
-      occ        <- c(occ, occ * Rm / Rprot)
-
-      # Treat non-positive and NA SDs as unavailable (e.g. single replicate or
-      # identical replicates produce sd = NA or sd = 0).
-      if (!isTRUE(mod_sd   > 0)) mod_sd   <- NA_real_
-      if (!isTRUE(unmod_sd > 0)) unmod_sd <- NA_real_
-      if (!isTRUE(prot_sd  > 0)) prot_sd  <- NA_real_
-
-      # Fill missing SDs from the available ones (×10 as uncertainty inflation).
-      # Only attempt this when at least one valid SD exists; otherwise all remain
-      # NA, Sigma_ab will contain NAs, and the pmvnorm block is safely skipped.
-      valid_sds <- c(mod_sd, unmod_sd, prot_sd)
-      valid_sds <- valid_sds[is.finite(valid_sds)]
-      if (length(valid_sds) > 0) {
-        ref_sd <- max(valid_sds) * 10
-        if (is.na(mod_sd))   mod_sd   <- ref_sd
-        if (is.na(unmod_sd)) unmod_sd <- ref_sd
-        if (is.na(prot_sd))  prot_sd  <- ref_sd
-      }
-
-
-      # Calculating the probabilities from a multi-variate normal distirbution
-      Sigma_ab <- matrix(c(
-        prot_sd^2 + unmod_sd^2,   -prot_sd^2,
-        -prot_sd^2,           mod_sd^2 + prot_sd^2
-      ), nrow = 2, byrow = TRUE) * 2 / NumReps
-
-      mu_ab <- cbind(log_Rprot - log_Ru, log_Rm - log_Rprot)
-      p_both_neg <- p_both_pos <- vector(length=nrow(mu_ab))
-      if (all(is.finite(Sigma_ab))) {
-        for (i in seq_len(nrow(mu_ab))) {
-          if (!any(is.na(mu_ab[i,]))) {
-            p_both_neg[i] <- mvtnorm::pmvnorm(
-              lower = c(-Inf, -Inf),
-              upper = c(0, 0),
-              mean  = mu_ab[i, ],
-              sigma = Sigma_ab
-            )[1]
-
-            # P(A >= 0, B >= 0)
-            p_both_pos[i] <- mvtnorm::pmvnorm(
-              lower = c(0, 0),
-              upper = c(Inf, Inf),
-              mean  = mu_ab[i, ],
-              sigma = Sigma_ab
-            )[1]
-          }
-        }
-      }
-
-      occ_prob <- p_both_neg + p_both_pos
-
-      occ_prob <- occ_prob[-1]
-
-      protein_ptmpos <- NA_integer_
-      if ("Start" %in% names(peptable)) {
-        protein_ptmpos <- mod_start + unlist(peptable$PTMPos[[mi]]) - 1L
-      }
-
-      out_n <- out_n + 1L
-      out_seq[[out_n]]        <- seq
-      out_acc[[out_n]]        <- peptable$Accession[[mi]]
-      out_ptmpos[[out_n]]     <- peptable$PTMPos[[mi]]
-      out_protptmpos[[out_n]] <- protein_ptmpos
-      out_ptmtype[[out_n]]    <- peptable$PTMType[[mi]]
-      out_quant[[out_n]]      <- setNames(as.list(occ), out_cond_names)
-      out_prob[[out_n]]       <- setNames(as.list(occ_prob), out_comp_names)
-    }
+    out_n <- out_n + 1L
+    out_seq[[out_n]]        <- paste(unique(site_group$Sequence), collapse = ";")
+    out_acc[[out_n]]        <- unique(site_group$Accession)
+    out_ptmpos[[out_n]]     <- unique(site_group$PTMPos)
+    out_protptmpos[[out_n]] <- unique(site_group$ProteinPTMPos)
+    out_ptmtype[[out_n]]    <- unique(site_group$PTMType)
+    out_quant[[out_n]]      <- setNames(as.list(estimate$occ), out_cond_names)
+    out_prob[[out_n]]       <- setNames(as.list(estimate$prob), out_comp_names)
   }
 
   if (out_n == 0L) {
-    message("calcPTMOccupancy: no peptides with both modified and unmodified forms found.")
+    message("calcPTMOccupancy: no PTM sites with modified and covering unmodified peptides found.")
     return(data.frame())
   }
 
@@ -650,7 +697,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
   result$ProteinPTMPos   <- out_protptmpos
   result$PTMType         <- out_ptmtype
 
-  message("  - Occupancy calculated for ", nrow(result), " modified peptidoforms across ",
-          length(unique(out_seq)), " unique peptide sequences")
+  message("  - Occupancy calculated for ", nrow(result), " PTM sites across ",
+          length(unique(out_seq)), " modified peptide sequence groups")
   result
 }

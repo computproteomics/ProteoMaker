@@ -32,12 +32,16 @@ make_peptable <- function(mod_vals, unmod_vals, other_vals = unmod_vals,
   mod_row$PTMType    <- ptmtype
   mod_row$PTMPos     <- ptmpos
   mod_row$Accession  <- list("P12345")
+  mod_row$Start      <- list(10L)
+  mod_row$Stop       <- list(16L)
 
   unmod_row <- data.frame(Sequence = "AASPEPR", stringsAsFactors = FALSE)
   unmod_row[quant_cols] <- as.list(unmod_vals)
   unmod_row$PTMType  <- list(character(0))
   unmod_row$PTMPos   <- list(integer(0))
   unmod_row$Accession <- list("P12345")
+  unmod_row$Start    <- list(10L)
+  unmod_row$Stop     <- list(16L)
 
   # Non-counterpart unmodified peptide: different sequence, same protein.
   # Required for Rprot computation.
@@ -46,6 +50,8 @@ make_peptable <- function(mod_vals, unmod_vals, other_vals = unmod_vals,
   other_row$PTMType  <- list(character(0))
   other_row$PTMPos   <- list(integer(0))
   other_row$Accession <- list("P12345")
+  other_row$Start    <- list(30L)
+  other_row$Stop     <- list(38L)
 
   rbind(mod_row, unmod_row, other_row)
 }
@@ -54,7 +60,7 @@ make_peptable <- function(mod_vals, unmod_vals, other_vals = unmod_vals,
 # Basic correctness  (2 conditions × 2 replicates)
 # ──────────────────────────────────────────────────────────────────────────────
 
-test_that("calcPTMOccupancy returns one row per modified peptidoform", {
+test_that("calcPTMOccupancy returns one row per PTM site", {
   pep <- make_peptable(mod_vals = c(1, 1, 2, 2), unmod_vals = c(1, 1, 1, 1))
   occ <- calcPTMOccupancy(pep, make_params())
 
@@ -293,6 +299,8 @@ test_that("NA in non-counterpart background propagates via occ_1 to all output c
   other_row$Accession <- list("P33333")
 
   pep <- rbind(mod_row, unmod_same, other_row)
+  pep$Start <- I(list(10L, 10L, 30L))
+  pep$Stop <- I(list(16L, 16L, 37L))
   occ <- calcPTMOccupancy(pep, params)
 
   expect_true(is.na(occ[1, "C_1"]))   # occ_1 = NaN (is.na(NaN) == TRUE)
@@ -304,9 +312,9 @@ test_that("NA in non-counterpart background propagates via occ_1 to all output c
 # Multiple unmodified rows: geometric mean per condition
 # ──────────────────────────────────────────────────────────────────────────────
 
-test_that("sequence with multiple unmodified counterpart rows is skipped without warning", {
-  # The code requires exactly one unmodified row per sequence.  When two unmodified
-  # rows exist for the same sequence, the sequence is skipped without a peptidoform warning.
+test_that("site with multiple covering unmodified peptides is averaged without warning", {
+  # Multiple unmodified peptides covering the same protein site are valid site
+  # support rows and are averaged into Ru.
   params <- make_params(num_cond = 2, num_reps = 1)
   qc     <- params$QuantColnames   # C_1_R_1, C_2_R_1
 
@@ -332,18 +340,55 @@ test_that("sequence with multiple unmodified counterpart rows is skipped without
   other$Accession <- list("P11111")
 
   pep <- rbind(mod_row, unmod1, unmod2, other)
+  pep$Start <- I(list(10L, 10L, 10L, 30L))
+  pep$Stop <- I(list(18L, 18L, 18L, 37L))
 
   expect_warning(occ <- calcPTMOccupancy(pep, params), NA)
-  expect_equal(nrow(occ), 0L)
+  expect_equal(nrow(occ), 1L)
+})
+
+test_that("different unmodified peptide covering the PTM site contributes to Ru", {
+  # The unmodified peptide has a different stripped sequence, e.g. due to a
+  # missed cleavage, but still covers the same protein residue.
+  params <- make_params(num_cond = 2, num_reps = 1)
+  qc     <- params$QuantColnames
+
+  mod_row <- data.frame(Sequence = "MODSEQ", stringsAsFactors = FALSE)
+  mod_row[qc] <- as.list(c(0, 2))
+  mod_row$PTMType   <- list("ph")
+  mod_row$PTMPos    <- list(3L)
+  mod_row$Accession <- list("P11111")
+
+  unmod_covering <- data.frame(Sequence = "XXMODSEQK", stringsAsFactors = FALSE)
+  unmod_covering[qc] <- as.list(c(0, 0))
+  unmod_covering$PTMType   <- list(character(0))
+  unmod_covering$PTMPos    <- list(integer(0))
+  unmod_covering$Accession <- list("P11111")
+
+  other <- data.frame(Sequence = "OTHERPEP", stringsAsFactors = FALSE)
+  other[qc] <- as.list(c(0, 1))
+  other$PTMType   <- list(character(0))
+  other$PTMPos    <- list(integer(0))
+  other$Accession <- list("P11111")
+
+  pep <- rbind(mod_row, unmod_covering, other)
+  pep$Start <- I(list(10L, 8L, 30L))
+  pep$Stop <- I(list(15L, 16L, 37L))
+
+  occ <- calcPTMOccupancy(pep, params)
+
+  expect_equal(nrow(occ), 1L)
+  expect_equal(as.numeric(occ[1, "C_1"]), 1/3, tolerance = 1e-9)
+  expect_equal(as.numeric(occ[1, "C_2"]), 2/3, tolerance = 1e-9)
 })
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Multiple modified peptidoforms for the same sequence
 # ──────────────────────────────────────────────────────────────────────────────
 
-test_that("sequence with multiple modified peptidoforms is skipped with a warning", {
-  # The code requires exactly one modified peptidoform per sequence.  When two
-  # modified peptidoforms exist for the same sequence a warning is issued and the sequence is skipped.
+test_that("sequence with multiple modified peptidoforms returns one row per PTM site", {
+  # Different modified peptidoforms on the same peptide sequence can represent
+  # different protein sites, so they are estimated separately.
   params <- make_params(num_cond = 2, num_reps = 1)
   qc     <- params$QuantColnames
 
@@ -369,12 +414,11 @@ test_that("sequence with multiple modified peptidoforms is skipped with a warnin
   other$Accession <- list("P22222")
 
   pep <- rbind(mod1, mod2, unmod, other)
+  pep$Start <- I(list(10L, 10L, 10L, 30L))
+  pep$Stop <- I(list(15L, 15L, 15L, 37L))
 
-  expect_warning(
-    occ <- calcPTMOccupancy(pep, params),
-    regexp = "more than one modified peptidoform"
-  )
-  expect_equal(nrow(occ), 0L)
+  expect_warning(occ <- calcPTMOccupancy(pep, params), NA)
+  expect_equal(nrow(occ), 2L)
 })
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -463,6 +507,8 @@ test_that("protein ratio uses only non-counterpart unmodified peptides", {
   unmod_other$Accession <- list("P12345")
 
   pep <- rbind(mod_row, unmod_same, unmod_other)
+  pep$Start <- I(list(10L, 10L, 30L))
+  pep$Stop <- I(list(15L, 15L, 37L))
   occ <- calcPTMOccupancy(pep, params)
 
   expect_equal(nrow(occ), 1L)
@@ -488,7 +534,11 @@ test_that("returns empty data.frame when modified peptide has no non-counterpart
   unmod_row$PTMPos   <- list(integer(0))
   unmod_row$Accession <- list("P00001")
 
-  occ <- calcPTMOccupancy(rbind(mod_row, unmod_row), params)
+  pep <- rbind(mod_row, unmod_row)
+  pep$Start <- I(list(10L, 10L))
+  pep$Stop <- I(list(18L, 18L))
+
+  occ <- calcPTMOccupancy(pep, params)
   expect_equal(nrow(occ), 0L)
 })
 
@@ -525,6 +575,8 @@ test_that("accession index is not contaminated across proteins", {
     r$PTMType   <- list(ptmtype)
     r$PTMPos    <- list(ptmpos)
     r$Accession <- list(acc)
+    r$Start     <- list(if (startsWith(seq, "SEQ")) 10L else 30L)
+    r$Stop      <- list(if (startsWith(seq, "SEQ")) 13L else 36L)
     r
   }
 
@@ -563,6 +615,8 @@ test_that("modified peptide with no same-protein background is skipped even with
     r$PTMType   <- list(ptmtype)
     r$PTMPos    <- list(ptmpos)
     r$Accession <- list(acc)
+    r$Start     <- list(if (startsWith(seq, "SEQ")) 10L else 30L)
+    r$Stop      <- list(if (startsWith(seq, "SEQ")) 13L else 36L)
     r
   }
 
