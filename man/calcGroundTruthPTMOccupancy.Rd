@@ -15,16 +15,16 @@ columns listed in \code{parameters$QuantColnames}.}
 \item{parameters}{A named list containing \code{QuantColnames}.}
 }
 \value{
-A data frame with one row per accession/PTM-signature combination.
+A data frame with one row per accession/PTM-site combination.
   Quantification columns contain replicate-level occupancy values. The
   \code{PTMPos}, \code{PTMType}, and \code{Accession} columns are list
   columns to match the estimated occupancy output shape.
 }
 \description{
 Calculates replicate-level ground-truth PTM occupancy from proteoform
-abundances. Occupancy is computed per protein accession and full PTM
-signature as the fraction of protein abundance carried by proteoforms with
-that exact PTM signature.
+abundances. Occupancy is computed per protein accession, PTM type, and PTM
+position as the fraction of protein abundance carried by proteoforms with
+that PTM site.
 }
 \examples{
 proteoformAb <- data.frame(

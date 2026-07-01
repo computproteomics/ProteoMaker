@@ -10,7 +10,8 @@ calcPTMOccupancy(peptable, parameters)
 \item{peptable}{A data frame of peptidoform-level data as produced by the
 ProteoMaker pipeline (output of \code{MSRunSim} or \code{runPolySTest}).
 Required columns: \code{Sequence} (character), \code{PTMType} (list),
-\code{PTMPos} (list), \code{Accession} (list), and one column per sample
+\code{PTMPos} (list), \code{Accession} (list), \code{Start}, \code{Stop},
+and one column per sample
 as given by \code{parameters$QuantColnames}.  Quantification values must
 be on the log2 scale.}
 
@@ -24,13 +25,16 @@ be on the log2 scale.}
 }}
 }
 \value{
-A data frame with one row per modified peptidoform that has both a
-  same-sequence unmodified counterpart and at least one non-counterpart
-  unmodified peptide from the same protein.  Columns are:
+A data frame with one row per protein PTM site that has both a
+  modified-site signal and at least one unmodified peptide covering the same
+  site.  Columns are:
   \describe{
-    \item{Sequence}{Stripped peptide sequence.}
+    \item{Sequence}{Stripped modified peptide sequence(s).}
     \item{Accession}{Protein accession(s) (list column).}
     \item{PTMPos}{Modification positions within the peptide (list column).}
+    \item{ProteinPTMPos}{Modification positions within the protein sequence
+      (list column), or \code{NA} when peptide start positions are not
+      available.}
     \item{PTMType}{Modification types (list column).}
     \item{C_1, C_2, \ldots, C_NumCond}{One numeric column per condition.
       \code{C_1} contains the estimated reference-condition occupancy
@@ -40,29 +44,30 @@ A data frame with one row per modified peptidoform that has both a
       with the mass-balance model (e.g.\ \eqn{R_{m,c} = R_{u,c}}).}
   }
   Returns an empty \code{data.frame} when no modified peptides are present,
-  when \code{NumCond < 2}, or when no qualifying modified peptide is found.
+  when \code{NumCond < 2}, or when no qualifying PTM site is found.
 }
 \description{
 Estimates the per-condition PTM-site occupancy (stoichiometry) using a
-mass-balance three-ratio approach.  For each modified peptidoform the
-method uses three between-condition fold-change ratios:
+mass-balance three-ratio approach.  For each protein PTM site the method
+uses three between-condition fold-change ratios:
 \describe{
-  \item{\eqn{R_{m,c}}}{Fold-change of the \emph{modified} peptidoform,
+  \item{\eqn{R_{m,c}}}{Fold-change of all peptidoforms carrying the modified
+    site,
     \eqn{R_{m,c} = 2^{\bar{l}_{m,c} - \bar{l}_{m,1}}}.}
-  \item{\eqn{R_{u,c}}}{Fold-change of the \emph{same-sequence unmodified}
-    counterpart peptidoform,
+  \item{\eqn{R_{u,c}}}{Fold-change of all unmodified peptidoforms covering
+    the same protein site,
     \eqn{R_{u,c} = 2^{\bar{l}_{u,c} - \bar{l}_{u,1}}}.}
   \item{\eqn{R_{prot,c}}}{Fold-change of the protein, estimated from the
     geometric mean (in linear space) of all unmodified peptides from the
-    same protein accession whose sequence does \emph{not} appear in any
-    modified form in the data,
+    same protein accession that do not cover any modified site on that
+    protein,
     \eqn{R_{prot,c} = 2^{\bar{l}_{prot,c} - \bar{l}_{prot,1}}}.}
 }
 Here \eqn{\bar{l}_{x,c}} is the mean log2 intensity across replicates of
-condition \eqn{c} and subscript 1 denotes the reference condition.  For the
-protein ratio, log2 intensities from multiple non-counterpart unmodified rows
-are pooled first via \code{colMeans} (geometric mean in linear space) and
-then averaged across replicates.  Missing values are removed
+condition \eqn{c} and subscript 1 denotes the reference condition.  When a
+ratio is supported by multiple peptidoform rows, log2 intensities are pooled
+first via \code{colMeans} (geometric mean in linear space) and then averaged
+across replicates.  Missing values are removed
 (\code{na.rm = TRUE}) at every averaging step; consequently, an individual
 missing replicate is silently excluded from the mean for that condition.
 However, if \emph{all} replicates of a condition are missing, the condition
@@ -85,12 +90,10 @@ The reference condition column (\code{C_1}) contains \eqn{occ_1}; all other
 columns contain \eqn{occ_c}.  When \eqn{R_{m,c} = R_{u,c}} for any
 condition (denominator of the \eqn{occ_1} estimator is zero), the
 per-condition term yields \code{NaN}, which propagates through the mean to
-\eqn{occ_1} and consequently to \emph{all} output columns.  A peptide
-sequence is omitted from the result when: (a) no same-sequence unmodified
-row is present; (b) no non-counterpart unmodified row from the same protein
-is available to estimate \eqn{R_{prot}}; or (c) more than one modified or
-more than one unmodified row exists for that sequence (a warning is issued
-and the sequence is skipped).
+\eqn{occ_1} and consequently to \emph{all} output columns.  A PTM site is
+omitted from the result when no unmodified peptide covers the site, when no
+protein-background peptide is available for \eqn{R_{prot}}, or when the
+modified peptide maps to more than one accession or protein start position.
 }
 \examples{
 \dontrun{
