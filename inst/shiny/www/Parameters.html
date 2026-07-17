@@ -71,10 +71,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </head>
 
-<body class="fullcontent">
+<body>
 
-<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#summary" id="toc-summary" class="nav-link active" data-scroll-target="#summary">Summary</a>
+  <ul class="collapse">
+  <li><a href="#configuration-from-set_proteomaker" id="toc-configuration-from-set_proteomaker" class="nav-link" data-scroll-target="#configuration-from-set_proteomaker">Configuration from <code>set_proteomaker()</code></a></li>
+  <li><a href="#simulation-parameters-from-def_param" id="toc-simulation-parameters-from-def_param" class="nav-link" data-scroll-target="#simulation-parameters-from-def_param">Simulation Parameters from <code>def_param()</code></a></li>
+  <li><a href="#section-map" id="toc-section-map" class="nav-link" data-scroll-target="#section-map">Section Map</a></li>
+  </ul></li>
+  <li><a href="#using-the-parameters" id="toc-using-the-parameters" class="nav-link" data-scroll-target="#using-the-parameters">Using the Parameters</a></li>
+  <li><a href="#set_proteomaker-configuration" id="toc-set_proteomaker-configuration" class="nav-link" data-scroll-target="#set_proteomaker-configuration"><code>set_proteomaker()</code> Configuration</a>
+  <ul class="collapse">
+  <li><a href="#paths" id="toc-paths" class="nav-link" data-scroll-target="#paths">Paths</a></li>
+  <li><a href="#runtime" id="toc-runtime" class="nav-link" data-scroll-target="#runtime">Runtime</a></li>
+  </ul></li>
+  <li><a href="#def_param-simulation-parameters" id="toc-def_param-simulation-parameters" class="nav-link" data-scroll-target="#def_param-simulation-parameters"><code>def_param()</code> Simulation Parameters</a>
+  <ul class="collapse">
+  <li><a href="#paramgroundtruth-ground-truth-and-experimental-design" id="toc-paramgroundtruth-ground-truth-and-experimental-design" class="nav-link" data-scroll-target="#paramgroundtruth-ground-truth-and-experimental-design"><code>paramGroundTruth</code>: Ground Truth and Experimental Design</a></li>
+  <li><a href="#paramproteoformab-proteoform-abundance" id="toc-paramproteoformab-proteoform-abundance" class="nav-link" data-scroll-target="#paramproteoformab-proteoform-abundance"><code>paramProteoformAb</code>: Proteoform Abundance</a></li>
+  <li><a href="#paramdigest-digestion-and-sample-preparation" id="toc-paramdigest-digestion-and-sample-preparation" class="nav-link" data-scroll-target="#paramdigest-digestion-and-sample-preparation"><code>paramDigest</code>: Digestion and Sample Preparation</a></li>
+  <li><a href="#parammsrun-ms-run-and-search" id="toc-parammsrun-ms-run-and-search" class="nav-link" data-scroll-target="#parammsrun-ms-run-and-search"><code>paramMSRun</code>: MS Run and Search</a></li>
+  <li><a href="#paramdataanalysis-data-analysis" id="toc-paramdataanalysis-data-analysis" class="nav-link" data-scroll-target="#paramdataanalysis-data-analysis"><code>paramDataAnalysis</code>: Data Analysis</a></li>
+  </ul></li>
+  <li><a href="#ptm-setup-recipe" id="toc-ptm-setup-recipe" class="nav-link" data-scroll-target="#ptm-setup-recipe">PTM Setup Recipe</a></li>
+  <li><a href="#practical-notes" id="toc-practical-notes" class="nav-link" data-scroll-target="#practical-notes">Practical Notes</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -96,190 +127,933 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This document provides a detailed description of the parameters used in the ProteoMaker pipeline. ProteoMaker is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. For more information about the project, visit <a href="https://github.com/computproteomics/ProteoMaker">ProteoMaker on GitHub</a>.</p>
-<section id="global-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="global-parameters">Global Parameters</h2>
-<section id="parallel-computing" class="level3">
-<h3 class="anchored" data-anchor-id="parallel-computing">Parallel Computing</h3>
-<p><em>Param$Cores</em>: The number of CPU cores to use for parallel computing. Set to <code>1</code>. Using multiple cores can significantly speed up the computation.</p>
-<p><em>Param$ClusterType</em>: The type of cluster to use for parallel computing. Currently set to <code>PSOCK</code>. The cluster type determines how parallel processing is managed.</p>
+<style>
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+th, td {
+  vertical-align: top;
+  padding: 0.35rem 0.5rem;
+}
+table td:nth-child(1), table th:nth-child(1) { width: 22%; }
+table td:nth-child(2), table th:nth-child(2) { width: 14%; }
+table td:nth-child(3), table th:nth-child(3) { width: 16%; }
+table td:nth-child(4), table th:nth-child(4) { width: 48%; }
+code { white-space: nowrap; }
+</style>
+<p>This vignette describes the parameters used by ProteoMaker. The parameters are split into two groups:</p>
+<ul>
+<li><code>set_proteomaker()</code> controls paths, parallelization, and which downstream work is run.</li>
+<li><code>def_param()</code> returns the simulation parameters used by the pipeline stages.</li>
+</ul>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<section id="configuration-from-set_proteomaker" class="level3">
+<h3 class="anchored" data-anchor-id="configuration-from-set_proteomaker">Configuration from <code>set_proteomaker()</code></h3>
+<p>These parameters are not part of the simulation hash. They control where files are read and written, how much parallelism is used, and whether optional downstream steps run.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>fastaFilePath</code></td>
+<td style="text-align: right;">package <code>Proteomes</code> folder</td>
+<td>Directory containing FASTA files referenced by <code>PathToFasta</code>.</td>
+</tr>
+<tr class="even">
+<td><code>resultFilePath</code></td>
+<td style="text-align: right;"><code>SimulatedDatasets</code></td>
+<td>Output directory for cached simulation stages and benchmark results.</td>
+</tr>
+<tr class="odd">
+<td><code>cores</code></td>
+<td style="text-align: right;"><code>2</code></td>
+<td>Number of CPU cores used by parallel steps.</td>
+</tr>
+<tr class="even">
+<td><code>clusterType</code></td>
+<td style="text-align: right;"><code>PSOCK</code></td>
+<td>Parallel cluster backend, usually <code>PSOCK</code> or <code>FORK</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>runStatTests</code></td>
+<td style="text-align: right;"><code>TRUE</code></td>
+<td>Run statistical tests after simulation.</td>
+</tr>
+<tr class="even">
+<td><code>calcAllBenchmarks</code></td>
+<td style="text-align: right;"><code>TRUE</code></td>
+<td>Calculate benchmark summaries after statistical testing.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="simulation-parameters-from-def_param" class="level3">
+<h3 class="anchored" data-anchor-id="simulation-parameters-from-def_param">Simulation Parameters from <code>def_param()</code></h3>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 23%">
+<col style="width: 7%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">List</th>
+<th style="text-align: left;">Section</th>
+<th style="text-align: right;">Parameters</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">paramGroundTruth</td>
+<td style="text-align: left;">Ground Truth and Experimental Design</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">Define the input proteome, experiment layout, expressed proteins, and PTM ground truth.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">paramProteoformAb</td>
+<td style="text-align: left;">Proteoform Abundance</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">Generate quantitative proteoform abundances and regulation patterns.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">paramDigest</td>
+<td style="text-align: left;">Digestion and Sample Preparation</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">Digest proteoforms and optionally simulate PTM enrichment or sample preparation losses.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">paramMSRun</td>
+<td style="text-align: left;">MS Run and Search</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">Simulate detection, missing values, instrument noise, false IDs, and localization errors.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">paramDataAnalysis</td>
+<td style="text-align: left;">Data Analysis</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">Control protein summarisation and statistical testing.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="section-map" class="level3">
+<h3 class="anchored" data-anchor-id="section-map">Section Map</h3>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">List</th>
+<th style="text-align: left;">Section</th>
+<th style="text-align: right;">Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">paramGroundTruth</td>
+<td style="text-align: left;">Experimental Design</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">paramGroundTruth</td>
+<td style="text-align: left;">Ground Truth Data</td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">paramGroundTruth</td>
+<td style="text-align: left;">Input Data</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">paramProteoformAb</td>
+<td style="text-align: left;">Proteoform Quantities</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">paramDigest</td>
+<td style="text-align: left;">Enzymatic Digestion</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">paramDigest</td>
+<td style="text-align: left;">Sample Preparation</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">paramMSRun</td>
+<td style="text-align: left;">MS Run</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">paramMSRun</td>
+<td style="text-align: left;">MS Search</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">paramMSRun</td>
+<td style="text-align: left;">MS Search Results Filter</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">paramDataAnalysis</td>
+<td style="text-align: left;">Protein Summarization</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">11</td>
+<td style="text-align: left;">paramDataAnalysis</td>
+<td style="text-align: left;">Statistical Testing</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </section>
 </section>
-<section id="experimental-design" class="level2">
-<h2 class="anchored" data-anchor-id="experimental-design">Experimental Design</h2>
-<section id="number-of-conditions" class="level3">
-<h3 class="anchored" data-anchor-id="number-of-conditions">Number of Conditions</h3>
-<p><em>Param$NumCond</em>: The number of different experimental conditions to be tested. For example, if you are comparing treated versus untreated samples, this value would be 2. This parameter is crucial for setting up the experimental design. Default set to <code>2</code>.</p>
+<section id="using-the-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="using-the-parameters">Using the Parameters</h2>
+<p>Use <code>set_proteomaker()</code> once for runtime configuration and <code>def_param()</code> for the simulation design.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>config <span class="ot">&lt;-</span> <span class="fu">set_proteomaker</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">fastaFilePath =</span> <span class="fu">system.file</span>(<span class="st">"Proteomes"</span>, <span class="at">package =</span> <span class="st">"ProteoMaker"</span>),</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">resultFilePath =</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"SimulatedDataSets"</span>),</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">cores =</span> <span class="dv">1</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">clusterType =</span> <span class="st">"PSOCK"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">runStatTests =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">calcAllBenchmarks =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>Param <span class="ot">&lt;-</span> <span class="fu">def_param</span>()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PathToFasta <span class="ot">&lt;-</span> <span class="st">"fasta_example.fasta"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>NumCond <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>NumReps <span class="ot">&lt;-</span> <span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Each top-level element in <code>Param</code> corresponds to one pipeline stage. Parameters can be vectors; <code>run_sims()</code> expands them into combinations.</p>
 </section>
-<section id="number-of-replicates" class="level3">
-<h3 class="anchored" data-anchor-id="number-of-replicates">Number of Replicates</h3>
-<p><em>Param$NumReps</em>: The number of replicates for each condition. These can represent technical or biological replicates. Replicates are essential for statistical validity and reproducibility of the results. Ensuring adequate replication helps in reducing variability and increasing the reliability of the results. Default set to <code>5</code>.</p>
+<section id="set_proteomaker-configuration" class="level2">
+<h2 class="anchored" data-anchor-id="set_proteomaker-configuration"><code>set_proteomaker()</code> Configuration</h2>
+<section id="paths" class="level3">
+<h3 class="anchored" data-anchor-id="paths">Paths</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>fastaFilePath</code></td>
+<td>Directory containing FASTA files. <code>PathToFasta</code> values from <code>Param$paramGroundTruth</code> are resolved relative to this directory.</td>
+</tr>
+<tr class="even">
+<td><code>resultFilePath</code></td>
+<td>Directory used for saved stage files, retrieved simulations, and benchmark tables. The directory is created if needed.</td>
+</tr>
+</tbody>
+</table>
 </section>
-</section>
-<section id="input-data-paths" class="level2">
-<h2 class="anchored" data-anchor-id="input-data-paths">Input Data Paths</h2>
-<section id="path-to-fasta-file" class="level3">
-<h3 class="anchored" data-anchor-id="path-to-fasta-file">Path to FASTA File</h3>
-<p><em>Param$PathToFasta</em>: The file path to the FASTA file containing the protein sequences. ProteoMaker is able to process standard fasta files from UniProt. Other formats might require reformatting the protein headers. This file is essential for identifying and quantifying proteins in your samples. Accurate protein identification depends heavily on the quality and completeness of the FASTA file. Default set to <code>InputData/fasta_example.fasta</code>.</p>
-</section>
-<section id="path-to-protein-list" class="level3">
-<h3 class="anchored" data-anchor-id="path-to-protein-list">Path to Protein List</h3>
-<p><em>Param$PathToProteinList</em>: The file path to a list of proteins of interest that will be selected for being modified. This can be used to focus the analysis on a subset of proteins from all proteins in the fasta file. Providing a specific list can streamline the analysis and enhance focus on a set of related proteoforms or biological pathways. Default set to <code>NA</code>.</p>
-</section>
-</section>
-<section id="ground-truth-proteoform-centric-data-generation" class="level2">
-<h2 class="anchored" data-anchor-id="ground-truth-proteoform-centric-data-generation">Ground Truth Proteoform-Centric Data Generation</h2>
-<section id="proteoform-ids-generation" class="level3">
-<h3 class="anchored" data-anchor-id="proteoform-ids-generation">Proteoform IDs Generation</h3>
-<p><em>Param$PercExpressedProt</em>: The fraction (0-1) of proteins from the FASTA used to seed the ground-truth proteome. The selection is random to mimic that not every protein is expressed; default is <code>1</code> (all proteins retained).</p>
-<p><em>Param$FracModProt</em>: The fraction of proteins selected to be modified from either the full protein list or, if given, the shortened protein set from <code>PathToProteinList</code>`. This parameter controls how many proteins will undergo post-translational modifications (PTMs). It helps in simulating realistic biological scenarios. Default set to <code>0.0</code>, indicating no proteins will be modified.</p>
-<p><em>Param$PropModPerProt</em>: Multiplier for generating additional modified proteoforms per selected protein. A values <code>1</code> (the default) keeps exactly one modified proteoform per protein. Values <code>&gt;= 1</code> create that many independently modified proteoforms per protein, randomly assigning them from the pool of proteins selected to be modified.</p>
-<p><em>Param$PTMTypes</em>: The types of PTMs to be considered. Default set to <code>NA</code> for no modification. This parameter allows for the inclusion of different types of PTMs in the simulation. Always use a list: <code>list(mods=c("ph", "ac"))</code>, <code>list(mods="ph")</code>. The <code>mods</code> attribute in the list is mandatory. PTMs can be named arbitrarily.</p>
-<p><em>Param$PTMTypesDistr</em>: Relative frequency for each PTM type within all PTMs supplied as a named list (values should sum to 1). Defaults to <code>NA</code>, so the simulator uses equal weights unless specified.</p>
-<p><em>Param$PTMTypesMass</em>: Mass shifts associated with each PTM type (provide as a named list, e.g.&nbsp;<code>list(ph = 79.9663)</code>). Defaults to <code>NA</code> and must be set when PTMs are enabled. Values can be arbitrary or taken from UniMod.</p>
-<p><em>Param$PTMMultipleLambda</em>: Controls the average number of modification sites per proteoform via a truncated Poisson distribution (truncated to [1, N] where N is the number of modifiable sites) scaled by the number of modifiable sites in the sequence. Values of <code>0</code> (the default) or any value <code>&lt;= 1e-4</code> (e.g.&nbsp;<code>0.0001</code>) are treated identically: the lambda is clamped to <code>1e-4</code> internally, which causes the truncated Poisson to almost surely return 1, yielding <strong>approximately one modified site per PTM type per proteoform</strong>. Larger values increase the expected number of modifications.</p>
-<p><em>Param$ModifiableResidues</em>: The residues where each PTM can occur. For phosphorylation, these are usually serine (S), threonine (T), and tyrosine (Y). This parameter defines the possible modification sites on the proteins. Each PTM type requires a set of residues. For phosphorylation, usually we use <code>list(ph = c("S", "T", "Y"))</code></p>
-<p><em>Param$ModifiableResiduesDistr</em>: The relative distribution of modifiable residues. For phosphorylation, this can be set to <code>0.86</code> for serine, <code>0.13</code> for threonine, and <code>0.01</code> for tyrosine. This reflects the observed frequencies of modifications at these residues in real biological data. Also given as named list.</p>
-<p><em>Param$RemoveNonModFormFrac</em>: The fraction of modifiable proteins for which the unmodified proteoform is removed. Defaults to <code>0</code>, meaning all selected proteins retain their unmodified counterpart alongside the modified one(s). Setting to <code>1</code> removes all unmodified counterparts so that only modified proteoforms remain.</p>
-<p><strong>Recipe — approximately one modified site per proteoform, two proteoforms per protein:</strong></p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>FracModProt        <span class="ot">&lt;-</span> <span class="fl">0.5</span>          <span class="co"># 50 % of proteins are modified</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMTypes           <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">mods =</span> <span class="fu">c</span>(<span class="st">"ph"</span>))</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMTypesMass       <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="fl">79.966331</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMTypesDistr      <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="dv">1</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>ModifiableResidues <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">mods =</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="fu">c</span>(<span class="st">"S"</span>, <span class="st">"T"</span>, <span class="st">"Y"</span>)))</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>ModifiableResiduesDistr <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">mods =</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="fu">c</span>(<span class="at">S =</span> <span class="fl">0.86</span>, <span class="at">T =</span> <span class="fl">0.13</span>, <span class="at">Y =</span> <span class="fl">0.01</span>)))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMMultipleLambda  <span class="ot">&lt;-</span> <span class="dv">0</span>     <span class="co"># 0 (or 0.0001) -&gt; ~1 modified site per proteoform</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PropModPerProt     <span class="ot">&lt;-</span> <span class="dv">1</span>     <span class="co"># 1 modified proteoform per protein</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>RemoveNonModFormFrac <span class="ot">&lt;-</span> <span class="dv">0</span>   <span class="co"># keep unmodified counterpart -&gt; 2 proteoforms total</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="proteoform-abundance-generation" class="level3">
-<h3 class="anchored" data-anchor-id="proteoform-abundance-generation">Proteoform Abundance Generation</h3>
-<p><em>Param$QuantColnames</em>: Vector of column names that hold quantitative values, typically formatted as <code>C_&lt;condition&gt;_R_&lt;replicate&gt;</code> to keep conditions and replicates explicit.</p>
-<p><em>Param$QuantNoise</em>: Standard deviation of the log2 noise added to every quantitative value. Default <code>0.5</code> to reflect technical and biological variability.</p>
-<p><em>Param$DiffRegFrac</em>: Fraction of proteoforms marked as differentially regulated. Adapt it to the number of protein abundance changes that you expect to happen. Default <code>0.3</code>.</p>
-<p><em>Param$DiffRegMax</em>: Maximum absolute log2 fold change applied to regulated proteoforms. Default <code>1</code>.</p>
-<p><em>Param$UserInputFoldChanges_NumRegProteoforms</em>: Optional override for the number of regulated proteoforms (default <code>0</code>, meaning use the fraction above).</p>
-<p><em>Param$UserInputFoldChanges_RegulationFC</em>: Optional override for the fold change applied to those user-specified proteoforms (default <code>0</code>, i.e.&nbsp;disabled).</p>
-<p><em>Param$AbsoluteQuanMean</em>: The mean value for absolute quantitation. Set to <code>30.5</code>. This parameter sets the baseline for absolute quantitation values on protein level. Proteoform abundances are then distributed according to a exponential distribution with the total summing up to the protein level.</p>
-<p><em>Param$AbsoluteQuanSD</em>: The standard deviation for absolute quantitation. Set to <code>3.6</code>. This parameter models the variability in absolute quantitation values on protein level. Proteoform abundances are then distributed according to a exponential distribution with the total summing up to the protein level.</p>
-<p><em>Param$</em>ThreshRemoveProteoforms: The threshold for absolute quantification values to remove quantitative values when <em>AbsoluteQuanMean</em> is not equal to <code>NA</code>. Set to <code>0.0</code>. This parameter ensures that low-abundant proteoforms are cut off. <strong>All</strong> values below this threshold are removed.</p>
-</section>
-</section>
-<section id="enzymatic-digestion-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="enzymatic-digestion-parameters">Enzymatic Digestion Parameters</h2>
-<section id="enzyme" class="level3">
-<h3 class="anchored" data-anchor-id="enzyme">Enzyme</h3>
-<p><em>Param$Enzyme</em>: The enzyme used for protein digestion. Set to <code>trypsin</code> by default <code>("(?!(RP\|KP))(?=(K\|R))(?!(K\|R)$)")</code>. Trypsin is commonly used in proteomics for its specificity and efficiency in cleaving proteins. Other possible values are trypsin.strict <code>("(?=(K|R))(?!(K|R)$)")</code>, chymotrypsin.h <code>("(?!(FP\|YP\|PY\|WP))(?=(F\|Y\|W))(?!(F\|Y\|W)$)")</code>, chymotrypsin.l <code>("(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)")</code>, pepsin.2 <code>("(?=(F\|L\|W\|Y\|A\|E\|Q))(?!(F\|L\|W\|Y\|A\|E\|Q)$)")</code>, pepsin.1.3 <code>("(?=(F|L))(?!(F|L)$)")</code>, lysC <code>("(?=(K))(?!(K)$)")</code>, and argC <code>("(?!(RP))(?=(R))(?!(R)$)")</code>.</p>
-</section>
-<section id="proportion-of-peptides-with-missed-cleavages" class="level3">
-<h3 class="anchored" data-anchor-id="proportion-of-peptides-with-missed-cleavages">Proportion of Peptides with Missed Cleavages</h3>
-<p><em>Param$PropMissedCleavages</em>: Additional fraction of peptides simulated with missed cleavages. Default <code>0.01</code>.</p>
-</section>
-<section id="maximum-number-of-missed-cleavages" class="level3">
-<h3 class="anchored" data-anchor-id="maximum-number-of-missed-cleavages">Maximum Number of Missed Cleavages</h3>
-<p><em>Param$MaxNumMissedCleavages</em>: Maximum number of missed cleavages allowed per peptide. Default <code>2</code>.</p>
-</section>
-<section id="peptide-length-filter" class="level3">
-<h3 class="anchored" data-anchor-id="peptide-length-filter">Peptide Length Filter</h3>
-<p><em>Param$PepMinLength</em>: The minimum length of peptides to be considered. Set to <code>7</code>. This filter ensures that only peptides of a certain length are included, which is important for reliable identification.</p>
-<p><em>Param$PepMaxLength</em>: The maximum length of peptides to be considered. Set to <code>30</code>. This parameter excludes excessively long peptides that might not be covered by the mass range.</p>
-</section>
-<section id="least-abundant-peptide-loss" class="level3">
-<h3 class="anchored" data-anchor-id="least-abundant-peptide-loss">Least Abundant Peptide Loss</h3>
-<p><em>Param$LeastAbundantLoss</em>: The fraction of least abundant peptides to be removed. Set to <code>0.0</code>. This parameter allows for the exclusion of peptides that are too low in abundance to be reliably quantified. This parameter is an alternative to <code>ThreshRemoveProteins</code>, this time removing a fraction and not implying a fixed threshold.</p>
-</section>
-</section>
-<section id="sample-preparation-simulation-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="sample-preparation-simulation-parameters">Sample Preparation Simulation Parameters</h2>
-<section id="ptm-for-enrichment" class="level3">
-<h3 class="anchored" data-anchor-id="ptm-for-enrichment">PTM for enrichment</h3>
-<p><em>Param$EnrichPTM</em>: PTM that will be enriched. Only one PTM can be selected. All of its residues will be affected. Default is ‘NA’, so no PTM will be enriched and no enrichment fraction will be created.</p>
-</section>
-<section id="enrichment-loss" class="level3">
-<h3 class="anchored" data-anchor-id="enrichment-loss">Enrichment Loss</h3>
-<p><em>Param$EnrichmentLoss</em>: The loss of peptides of the enriched fraction during enrichment. Set to <code>0.2</code>. This parameter models the inefficiencies in the enrichment process, where some peptides are lost.</p>
+<section id="runtime" class="level3">
+<h3 class="anchored" data-anchor-id="runtime">Runtime</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cores</code></td>
+<td>Number of cores used by parallelized steps. Larger values can substantially increase RAM use.</td>
+</tr>
+<tr class="even">
+<td><code>clusterType</code></td>
+<td>Parallel backend. <code>PSOCK</code> is portable; <code>FORK</code> can be faster on Unix-like systems but is not available everywhere.</td>
+</tr>
+<tr class="odd">
+<td><code>runStatTests</code></td>
+<td>If <code>FALSE</code>, simulation can stop before statistical testing and occupancy/benchmark calculation.</td>
+</tr>
+<tr class="even">
+<td><code>calcAllBenchmarks</code></td>
+<td>If <code>TRUE</code>, benchmark metrics are calculated after statistical testing.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
-<section id="enrichment-quantitative-adjustement" class="level2">
-<h2 class="anchored" data-anchor-id="enrichment-quantitative-adjustement">Enrichment Quantitative adjustement</h2>
-<p><em>Param$EnrichmentQuantDiff</em>: The adjustment of peptide intensities after enrichment. Set to <code>0</code>. This parameter changes the mean intensities of all modified enriched peptides versus mean of all non-modified peptides to reflect the enrichment process.</p>
-<section id="enrichment-efficiency" class="level3">
-<h3 class="anchored" data-anchor-id="enrichment-efficiency">Enrichment Efficiency</h3>
-<p><em>Param$EnrichmentEfficiency</em>: The efficiency of enrichment for modified peptides. Default set to <code>1</code>. This parameter reflects how effectively modified peptides are enriched relative to non-modified peptides, given by the adjusting the peptide intensities.<br>
-The parameter randomly removes non-modified peptides until reaching the given fraction of present modified peptides.</p>
+<section id="def_param-simulation-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="def_param-simulation-parameters"><code>def_param()</code> Simulation Parameters</h2>
+<p>The tables below follow the actual top-level lists returned by <code>def_param()</code>. Defaults and ranges are read from <code>inst/config/parameters.yaml</code>.</p>
+<section id="paramgroundtruth-ground-truth-and-experimental-design" class="level3">
+<h3 class="anchored" data-anchor-id="paramgroundtruth-ground-truth-and-experimental-design"><code>paramGroundTruth</code>: Ground Truth and Experimental Design</h3>
+<p>Define the input proteome, experiment layout, expressed proteins, and PTM ground truth.</p>
+<section id="experimental-design" class="level4">
+<h4 class="anchored" data-anchor-id="experimental-design">Experimental Design</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 71%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ProteoMakerVersion</td>
+<td style="text-align: left;">dev</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Keeping version to ensure reproducibility. Automatically set when running simulation.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NumCond</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">1 - 10</td>
+<td style="text-align: left;">Number of conditions.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">NumReps</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">1 - 10</td>
+<td style="text-align: left;">Number of replicates.</td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="enrichment-protocol-noise" class="level3">
-<h3 class="anchored" data-anchor-id="enrichment-protocol-noise">Enrichment Protocol Noise</h3>
-<p><em>Param$EnrichmentNoise</em>: The noise introduced by the enrichment protocol. Set to <code>0.2</code>. This parameter adds variability to the enrichment process.</p>
+<section id="input-data" class="level4">
+<h4 class="anchored" data-anchor-id="input-data">Input Data</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 3%">
+<col style="width: 20%">
+<col style="width: 22%">
+<col style="width: 9%">
+<col style="width: 44%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">PathToFasta</td>
+<td style="text-align: left;">fasta_example.fasta</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Path to input FASTA file.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">PathToProteinList</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Path to input protein list (optional).</td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="modification-loss" class="level3">
-<h3 class="anchored" data-anchor-id="modification-loss">Modification Loss</h3>
-<p><em>Param$ModificationLoss</em>: Removal of modified peptides in non-enriched samples. The parameter denotes the fraction of to be removed peptides. Set to <code>0</code>.</p>
+<section id="ground-truth-data" class="level4">
+<h4 class="anchored" data-anchor-id="ground-truth-data">Ground Truth Data</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 1%">
+<col style="width: 11%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 79%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">PercExpressedProt</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction of expressed proteins from fasta file.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">FracModProt</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction of proteins selected to be modified (0 for none, 1 for all).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">PropModPerProt</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1 - 500</td>
+<td style="text-align: left;">Multiplier for generating additional modified proteoforms per selected protein. Values &gt;= 1 create distribute that many independently modified proteoforms per protein.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">PTMMultipleLambda</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 10</td>
+<td style="text-align: left;">Lambda for the truncated Poisson distribution (truncated to [1, N]) controlling the number of modification sites per proteoform.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">RemoveNonModFormFrac</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction of modifiable proteins for which the unmodified proteoform is removed.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">11</td>
+<td style="text-align: left;">PTMTypes</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Types of post-translational modifications (PTMs). Use a list such as list(mods=c(“ph”)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">12</td>
+<td style="text-align: left;">PTMTypesDistr</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Distribution of PTM types. This means how much of which PTM type is present. Given as named list of values that sum up to 1.0.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">13</td>
+<td style="text-align: left;">PTMTypesMass</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0 - 200</td>
+<td style="text-align: left;">Mass shifts for each PTM type. Also given as named list for the same simulation</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">14</td>
+<td style="text-align: left;">ModifiableResidues</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Residues that can be modified for each PTM type. Given as a named list of strings, each list element representing a PTM type and the residues.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">15</td>
+<td style="text-align: left;">ModifiableResiduesDistr</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Distribution of modifications across residues. Same layout as for PTMTypesDist.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
-<section id="mass-spectrometry-ms-run-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="mass-spectrometry-ms-run-parameters">Mass Spectrometry (MS) Run Parameters</h2>
-<section id="detectability-filter" class="level3">
-<h3 class="anchored" data-anchor-id="detectability-filter">Detectability filter</h3>
-<p><em>Param$PercDetectability</em>: Keeps the top fraction of peptides by the PeptideRanger detectability model (e.g., <code>0.25</code> retains the most detectable 25%). Default value is <code>0.25</code>.</p>
-<!--*Param\$PercDetectedPep*: The percentage of peptides detected during the MS run. Set to `0.3`. This parameter #models the efficiency of peptide detection by the MS instrument.-->
+<section id="paramproteoformab-proteoform-abundance" class="level3">
+<h3 class="anchored" data-anchor-id="paramproteoformab-proteoform-abundance"><code>paramProteoformAb</code>: Proteoform Abundance</h3>
+<p>Generate quantitative proteoform abundances and regulation patterns.</p>
+<section id="proteoform-quantities" class="level4">
+<h4 class="anchored" data-anchor-id="proteoform-quantities">Proteoform Quantities</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 2%">
+<col style="width: 26%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 59%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">16</td>
+<td style="text-align: left;">QuantNoise</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0 - 5</td>
+<td style="text-align: left;">Noise level of quantitative values (standard deviation).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">17</td>
+<td style="text-align: left;">DiffRegFrac</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction of differentially regulated proteoforms.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">18</td>
+<td style="text-align: left;">DiffRegMax</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0 - 10</td>
+<td style="text-align: left;">Maximum amplitude of difference for differentially regulated proteoforms (log2 scale).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">19</td>
+<td style="text-align: left;">UserInputFoldChanges_NumRegProteoforms</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 1000</td>
+<td style="text-align: left;">Custom set of regulated proteoforms (optional). Number of regulated proteoforms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">20</td>
+<td style="text-align: left;">UserInputFoldChanges_RegulationFC</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">-10 - 10</td>
+<td style="text-align: left;">Custom set of regulated proteoforms (optional). Fold change of regulation.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">21</td>
+<td style="text-align: left;">AbsoluteQuanMean</td>
+<td style="text-align: left;">30.5</td>
+<td style="text-align: left;">0 - 100</td>
+<td style="text-align: left;">Mean for absolute quantification (proteins).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">22</td>
+<td style="text-align: left;">AbsoluteQuanSD</td>
+<td style="text-align: left;">3.6</td>
+<td style="text-align: left;">0 - 10</td>
+<td style="text-align: left;">Standard deviation for absolute quantification (proteins).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">23</td>
+<td style="text-align: left;">ThreshRemoveProteoforms</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 100</td>
+<td style="text-align: left;">Threshold of absolute quantification values to remove proteoforms.</td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="detected-values" class="level3">
-<h3 class="anchored" data-anchor-id="detected-values">Detected Values</h3>
-<p><em>Param$PercDetectedVal</em>: Fraction of intensities retained per replicate/condition (missing values are introduced for the remainder). Default <code>0.5</code>.</p>
 </section>
-<section id="intensity-dependence-weight" class="level3">
-<h3 class="anchored" data-anchor-id="intensity-dependence-weight">Intensity-Dependence Weight</h3>
-<p><em>Param$WeightDetectVal</em>: Controls how strongly intensity influences the missing-value mechanism (higher values bias removal toward low-intensity peptides). Ranges 0-50; default <code>1</code>.</p>
+<section id="paramdigest-digestion-and-sample-preparation" class="level3">
+<h3 class="anchored" data-anchor-id="paramdigest-digestion-and-sample-preparation"><code>paramDigest</code>: Digestion and Sample Preparation</h3>
+<p>Digest proteoforms and optionally simulate PTM enrichment or sample preparation losses.</p>
+<section id="enzymatic-digestion" class="level4">
+<h4 class="anchored" data-anchor-id="enzymatic-digestion">Enzymatic Digestion</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 3%">
+<col style="width: 24%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 53%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">24</td>
+<td style="text-align: left;">Enzyme</td>
+<td style="text-align: left;">trypsin</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Enzyme used for digestion (e.g., trypsin).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">25</td>
+<td style="text-align: left;">PropMissedCleavages</td>
+<td style="text-align: left;">0.01</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Proportion of peptides with missed cleavages.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">26</td>
+<td style="text-align: left;">MaxNumMissedCleavages</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">0 - 10</td>
+<td style="text-align: left;">Maximum number of missed cleavages per peptide.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">27</td>
+<td style="text-align: left;">PepMinLength</td>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">1 - 50</td>
+<td style="text-align: left;">Minimum peptide length.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">28</td>
+<td style="text-align: left;">PepMaxLength</td>
+<td style="text-align: left;">30</td>
+<td style="text-align: left;">1 - 60</td>
+<td style="text-align: left;">Maximum peptide length.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">29</td>
+<td style="text-align: left;">LeastAbundantLoss</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction of least abundant peptides to remove.</td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="ms-noise" class="level3">
-<h3 class="anchored" data-anchor-id="ms-noise">MS Noise</h3>
-<p><em>Param$MSNoise</em>: Adds Gaussian noise to intensities to mimic instrument variability. Default <code>0.25</code> (log2 scale).</p>
+<section id="sample-preparation" class="level4">
+<h4 class="anchored" data-anchor-id="sample-preparation">Sample Preparation</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 2%">
+<col style="width: 14%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 72%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">30</td>
+<td style="text-align: left;">EnrichPTM</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Post-translational modification (PTM) that will be enriched.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">31</td>
+<td style="text-align: left;">EnrichmentLoss</td>
+<td style="text-align: left;">0.2</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction loss of peptides during enrichment.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">EnrichmentEfficiency</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Efficiency of enrichment for modified peptides (fraction).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">33</td>
+<td style="text-align: left;">EnrichmentQuantDiff</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">-10 - 10</td>
+<td style="text-align: left;">Quantitative difference (means on log-scale) between enriched and non-enriched peptides in enriched samples.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">34</td>
+<td style="text-align: left;">EnrichmentNoise</td>
+<td style="text-align: left;">0.2</td>
+<td style="text-align: left;">0 - 10</td>
+<td style="text-align: left;">Noise due to enrichment protocol.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">ModificationLoss</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction loss of modified peptides in non-enriched samples during sample preparation.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
-<section id="ms-search-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="ms-search-parameters">MS Search Parameters</h2>
-<section id="wrong-identifications" class="level3">
-<h3 class="anchored" data-anchor-id="wrong-identifications">Wrong Identifications</h3>
-<p><em>Param$WrongIDs</em>: The percentage of wrong identifications in the MS search. Set to <code>0.01</code>. This parameter models the rate of incorrect peptide identifications due to errors in the database search process.</p>
+<section id="parammsrun-ms-run-and-search" class="level3">
+<h3 class="anchored" data-anchor-id="parammsrun-ms-run-and-search"><code>paramMSRun</code>: MS Run and Search</h3>
+<p>Simulate detection, missing values, instrument noise, false IDs, and localization errors.</p>
+<section id="ms-run" class="level4">
+<h4 class="anchored" data-anchor-id="ms-run">MS Run</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 1%">
+<col style="width: 10%">
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 79%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">36</td>
+<td style="text-align: left;">PercDetectability</td>
+<td style="text-align: left;">0.25</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Keeping the given percentage of peptides according to their predicted detectibility from PeptideRanger predictions (trained on ProteomicsDB).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">37</td>
+<td style="text-align: left;">PercDetectedVal</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Fraction of detected values (replicate/condition).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">38</td>
+<td style="text-align: left;">WeightDetectVal</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0 - 50</td>
+<td style="text-align: left;">Weights for intensity-dependence of non-detection.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">39</td>
+<td style="text-align: left;">MSNoise</td>
+<td style="text-align: left;">0.25</td>
+<td style="text-align: left;">0 - 1</td>
+<td style="text-align: left;">Noise due to the MS instrument.</td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="wrong-localizations" class="level3">
-<h3 class="anchored" data-anchor-id="wrong-localizations">Wrong Localizations</h3>
-<p><em>Param$WrongLocalizations</em>: Fraction of identifications with incorrect PTM site assignment. Default <code>0</code> (no mis-localisations); non-zero values flag affected peptides via the <code>isMisLocated</code> column.</p>
+<section id="ms-search" class="level4">
+<h4 class="anchored" data-anchor-id="ms-search">MS Search</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 26%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 47%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">40</td>
+<td style="text-align: left;">WrongIDs</td>
+<td style="text-align: left;">0.01</td>
+<td style="text-align: left;">0 - 0.1</td>
+<td style="text-align: left;">Fraction of wrong identifications.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">41</td>
+<td style="text-align: left;">WrongLocalizations</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0 - 0.1</td>
+<td style="text-align: left;">Fraction of wrong localizations.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ms-search-results-filter" class="level4">
+<h4 class="anchored" data-anchor-id="ms-search-results-filter">MS Search Results Filter</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 3%">
+<col style="width: 15%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 61%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">42</td>
+<td style="text-align: left;">MaxNAPerPep</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0 - 100</td>
+<td style="text-align: left;">Maximum number of NA values per peptide allowed.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
-<section id="filtering-ms-search-results" class="level2">
-<h2 class="anchored" data-anchor-id="filtering-ms-search-results">Filtering MS Search Results</h2>
-<section id="maximum-na-per-peptide" class="level3">
-<h3 class="anchored" data-anchor-id="maximum-na-per-peptide">Maximum NA per Peptide</h3>
-<p><em>Param$MaxNAPerPep</em>: The maximum number of NA values allowed per peptide. Set to <code>100</code>. This parameter filters out peptides with excessive missing values, ensuring more reliable quantitation.</p>
+<section id="paramdataanalysis-data-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="paramdataanalysis-data-analysis"><code>paramDataAnalysis</code>: Data Analysis</h3>
+<p>Control protein summarisation and statistical testing.</p>
+<section id="protein-summarization" class="level4">
+<h4 class="anchored" data-anchor-id="protein-summarization">Protein Summarization</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 1%">
+<col style="width: 9%">
+<col style="width: 5%">
+<col style="width: 7%">
+<col style="width: 75%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">43</td>
+<td style="text-align: left;">SharedPep</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE - TRUE</td>
+<td style="text-align: left;">Include shared peptides in summariation</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">44</td>
+<td style="text-align: left;">ProtSummarization</td>
+<td style="text-align: left;">medpolish</td>
+<td style="text-align: left;">NA - NA</td>
+<td style="text-align: left;">Method for summarizing to proteins (sum.top3, median, mean, sum, medpolish or rlm). sum and sum.top3 are on absolute scale, not on log2.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">45</td>
+<td style="text-align: left;">MinUniquePep</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1 - 10</td>
+<td style="text-align: left;">Minimum number of unique peptides available.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">46</td>
+<td style="text-align: left;">IncludeModPep</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE - TRUE</td>
+<td style="text-align: left;">Include modified peptides in summarization</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="statistical-testing" class="level4">
+<h4 class="anchored" data-anchor-id="statistical-testing">Statistical Testing</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 3%">
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 14%">
+<col style="width: 61%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Range</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">47</td>
+<td style="text-align: left;">StatPaired</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE - TRUE</td>
+<td style="text-align: left;">Whether the statistical testing is paired or unpaired.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
-<section id="protein-summarization" class="level2">
-<h2 class="anchored" data-anchor-id="protein-summarization">Protein Summarization</h2>
-<section id="summarization-method" class="level3">
-<h3 class="anchored" data-anchor-id="summarization-method">Summarization Method</h3>
-<p><em>Param$ProtSummarization</em>: Method used to aggregate peptide intensities into protein groups. Choices are <code>sum.top3</code>, <code>medpolish</code>, <code>median</code>, <code>mean</code>, <code>sum</code>, and <code>rlm</code>; default is <code>medpolish</code>. The <code>sum</code>-based methods operate on the anti-log (intensity) scale before log2 transformation.</p>
 </section>
-<section id="shared-peptides" class="level3">
-<h3 class="anchored" data-anchor-id="shared-peptides">Shared Peptides</h3>
-<p><em>Param$SharedPep</em>: Boolean whether to include shared peptides in the summarization. Set to <code>FALSE</code>. This parameter allows for the inclusion of peptides that are shared between multiple proteins, which can affect quantitation and identification.</p>
+<section id="ptm-setup-recipe" class="level2">
+<h2 class="anchored" data-anchor-id="ptm-setup-recipe">PTM Setup Recipe</h2>
+<p>This minimal phosphorylation setup keeps the unmodified counterpart and creates approximately one modified site per modified proteoform.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>FracModProt <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMTypes <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">mods =</span> <span class="fu">c</span>(<span class="st">"ph"</span>))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMTypesMass <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="fl">79.966331</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMTypesDistr <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="dv">1</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>ModifiableResidues <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">mods =</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="fu">c</span>(<span class="st">"S"</span>, <span class="st">"T"</span>, <span class="st">"Y"</span>)))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>ModifiableResiduesDistr <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">mods =</span> <span class="fu">list</span>(<span class="at">ph =</span> <span class="fu">c</span>(<span class="at">S =</span> <span class="fl">0.86</span>, <span class="at">T =</span> <span class="fl">0.13</span>, <span class="at">Y =</span> <span class="fl">0.01</span>))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PTMMultipleLambda <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>PropModPerProt <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>Param<span class="sc">$</span>paramGroundTruth<span class="sc">$</span>RemoveNonModFormFrac <span class="ot">&lt;-</span> <span class="dv">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 </section>
-<section id="minimum-number-of-unique-peptides" class="level3">
-<h3 class="anchored" data-anchor-id="minimum-number-of-unique-peptides">Minimum Number of Unique Peptides</h3>
-<p><em>Param$MinUniquePep</em>: The minimum number of unique peptides required for summarization. Set to <code>1</code>. This parameter ensures that proteins are summarized only if they have sufficient peptide evidence.</p>
-</section>
-<section id="include-modified-peptides" class="level3">
-<h3 class="anchored" data-anchor-id="include-modified-peptides">Include Modified Peptides</h3>
-<p><em>Param$IncludeModPep</em>: Boolean controlling whether modified peptides contribute to protein summarisation. Defaults to <code>FALSE</code>; set to <code>TRUE</code> to keep PTM-bearing peptides when aggregating.</p>
-</section>
-</section>
-<section id="statistical-testing-of-peptides-and-proteins" class="level2">
-<h2 class="anchored" data-anchor-id="statistical-testing-of-peptides-and-proteins">Statistical Testing of Peptides and Proteins</h2>
-<section id="paired-or-unpaired" class="level3">
-<h3 class="anchored" data-anchor-id="paired-or-unpaired">Paired or Unpaired</h3>
-<p><em>Param$StatPaired</em>: Indicates whether the statistical test for differential abundance is paired or unpaired. Set to <code>FALSE</code>.</p>
-</section>
+<section id="practical-notes" class="level2">
+<h2 class="anchored" data-anchor-id="practical-notes">Practical Notes</h2>
+<ul>
+<li>Use <code>set_proteomaker()</code> for filesystem and runtime settings.</li>
+<li>Use <code>def_param()</code> for anything that should define a simulated dataset.</li>
+<li>Keep small parameter grids while testing; each vector-valued parameter multiplies the number of simulations.</li>
+<li><code>PathToFasta</code> names a FASTA file, while <code>fastaFilePath</code> names the directory that contains it.</li>
+</ul>
 </section>
 
 </main>
