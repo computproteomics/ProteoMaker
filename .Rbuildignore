@@ -11,8 +11,6 @@
 ^.gitignore
 ^inst/Proteomes/input_Stoechio
 ^tmp/
-^man/.*\.html$
-^man/.*\.qmd$
 ^Results$
 ^SimulatedDatasets$
 ^t\.rds$

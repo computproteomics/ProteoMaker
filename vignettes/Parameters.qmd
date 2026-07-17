@@ -1,0 +1,332 @@
+---
+title: "ProteoMaker Pipeline Parameters"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    code-fold: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+find_parameter_yaml <- function() {
+  candidates <- c(
+    file.path("..", "inst", "config", "parameters.yaml"),
+    file.path("inst", "config", "parameters.yaml"),
+    system.file("config", "parameters.yaml", package = "ProteoMaker")
+  )
+  candidates <- candidates[nzchar(candidates)]
+  candidates[file.exists(candidates)][1]
+}
+
+as_text <- function(x) {
+  if (is.null(x) || length(x) == 0 || all(is.na(x))) return("NA")
+  if (is.list(x)) x <- unlist(x, use.names = TRUE)
+  paste(x, collapse = ", ")
+}
+
+html_escape <- function(x) {
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x <- gsub("$", "&#36;", x, fixed = TRUE)
+  x
+}
+
+fmt_default <- function(x) {
+  x <- as_text(x)
+  ifelse(nchar(x) > 55, paste0(substr(x, 1, 52), "..."), x)
+}
+
+long_description <- c(
+  ProteoMakerVersion = "Keeps the ProteoMaker version in the parameter set so cached simulation files can be traced back to the package version that generated them. This is set automatically by `run_sims()` and usually does not need to be changed manually.",
+  NumCond = "Number of experimental conditions to simulate. For example, a treated-versus-control experiment has `2` conditions. This value defines the condition blocks used throughout the pipeline and is used together with `NumReps` to create quantitative column names.",
+  NumReps = "Number of replicates per condition. Replicates may represent technical or biological replicates and are required for the downstream statistical tests. Increasing this value improves statistical stability but increases the size of every simulated dataset.",
+  PathToFasta = "Name of the FASTA file containing the protein sequences. ProteoMaker reads this file from the directory configured with `set_proteomaker(fastaFilePath = ...)`. Standard UniProt FASTA files are supported; unusual header formats may require reformatting before simulation.",
+  PathToProteinList = "Optional file containing protein accessions to select for modification. Use this to focus PTM simulation on a predefined protein subset. If `NA`, modified proteins are sampled from the FASTA according to `FracModProt`.",
+  PercExpressedProt = "Fraction of proteins from the FASTA retained as the expressed proteome. The selection is random and mimics the fact that not every encoded protein is observed in a biological sample. The default `1` keeps all proteins.",
+  FracModProt = "Fraction of modifiable proteins selected for PTM generation. Selection is made from all modifiable proteins, or from `PathToProteinList` if a protein list is supplied. Use `0` for no modified proteins and `1` to modify all eligible proteins.",
+  PropModPerProt = "Multiplier for generating modified proteoforms per selected protein. A value of `1` creates one modified proteoform per selected protein. Values greater than `1` create additional independently modified proteoforms from the selected protein pool.",
+  PTMMultipleLambda = "Controls the average number of modification sites per proteoform via a truncated Poisson distribution over the available modifiable sites. Values of `0` or values less than or equal to `1e-4` are clamped internally and usually produce approximately one modified site per PTM type per proteoform. Larger values increase multi-site modification.",
+  RemoveNonModFormFrac = "Fraction of selected modifiable proteins for which the unmodified proteoform is removed. The default `0` keeps unmodified counterparts, which is useful for occupancy estimation. Setting this to `1` removes all unmodified counterparts for selected proteins.",
+  PTMTypes = "PTM types to simulate. Use the list form `list(mods = c(\"ph\", \"ac\"))`; the `mods` element is required. Names are arbitrary but must be used consistently in `PTMTypesMass`, `PTMTypesDistr`, `ModifiableResidues`, and `ModifiableResiduesDistr`.",
+  PTMTypesDistr = "Relative frequency of each PTM type among all simulated PTMs. Provide a named list with values that sum to 1, for example `list(ph = 1)` for phosphorylation only or `list(ph = 0.8, ox = 0.2)` for mixed PTMs.",
+  PTMTypesMass = "Mass shift for each PTM type, provided as a named list such as `list(ph = 79.966331)`. This must be set when PTMs are enabled. Values can use UniMod masses or any custom mass shifts needed for the simulation.",
+  ModifiableResidues = "Residues on which each PTM type can occur. For phosphorylation, this is usually `list(mods = list(ph = c(\"S\", \"T\", \"Y\")))`. Each PTM type should have a matching residue vector.",
+  ModifiableResiduesDistr = "Relative residue frequencies for each PTM type. For phosphorylation, a common setup is `S = 0.86`, `T = 0.13`, and `Y = 0.01`. These values bias site selection among the residues listed in `ModifiableResidues`.",
+  QuantNoise = "Standard deviation of log2 noise added to quantitative proteoform values. The default `0.5` introduces moderate technical and biological variability.",
+  DiffRegFrac = "Fraction of proteoforms marked as differentially regulated. Use this to control how many true abundance changes are present in the simulated experiment.",
+  DiffRegMax = "Maximum absolute log2 fold-change amplitude assigned to regulated proteoforms. Larger values create stronger regulation effects.",
+  UserInputFoldChanges_NumRegProteoforms = "Optional override for the number of regulated proteoforms. The default `0` disables the override and uses `DiffRegFrac` instead.",
+  UserInputFoldChanges_RegulationFC = "Optional override for the fold change applied to user-specified regulated proteoforms. The default `0` disables this override.",
+  AbsoluteQuanMean = "Mean absolute protein abundance before proteoform-level distribution. Proteoform abundances are distributed from the protein-level abundance so that proteoforms sum back to the parent protein abundance.",
+  AbsoluteQuanSD = "Standard deviation of absolute protein abundance. This controls variability in the baseline abundance distribution before proteoform-level splitting.",
+  ThreshRemoveProteoforms = "Threshold for removing low-abundance proteoform quantitative values when absolute quantification is enabled. Values below this threshold are removed.",
+  Enzyme = "Protease used for in-silico digestion. The default is `trypsin`. Other supported rules include `trypsin.strict`, `chymotrypsin.h`, `chymotrypsin.l`, `pepsin.2`, `pepsin.1.3`, `lysC`, and `argC`.",
+  PropMissedCleavages = "Additional fraction of peptides simulated with missed cleavages. This introduces incomplete digestion beyond the fully cleaved peptide set.",
+  MaxNumMissedCleavages = "Maximum number of missed cleavages allowed per peptide. Higher values increase the number and length range of possible peptides.",
+  PepMinLength = "Minimum peptide length retained after digestion. Short peptides are often difficult to identify reliably and are filtered out.",
+  PepMaxLength = "Maximum peptide length retained after digestion. Very long peptides may fall outside practical MS detection or search ranges.",
+  LeastAbundantLoss = "Fraction of least abundant peptides removed after peptide summarisation. This simulates systematic loss of weak peptide signals and is an alternative to fixed abundance thresholding.",
+  EnrichPTM = "PTM type to enrich during sample preparation. Only one PTM can be enriched at a time. The default `NA` disables enrichment and no enrichment fraction is created.",
+  EnrichmentLoss = "Fraction of peptides lost during enrichment. This models sample handling and enrichment inefficiency.",
+  EnrichmentEfficiency = "Efficiency of enrichment for modified peptides. The implementation removes non-modified peptides until the requested fraction of modified peptides is reached.",
+  EnrichmentQuantDiff = "Mean log-scale intensity difference introduced between enriched modified peptides and non-modified peptides. Use this to model quantitative shifts caused by enrichment.",
+  EnrichmentNoise = "Additional noise introduced by the enrichment protocol.",
+  ModificationLoss = "Fraction of modified peptides removed from non-enriched samples during sample preparation.",
+  PercDetectability = "Fraction of peptides retained by the PeptideRanger detectability model. For example, `0.25` keeps the top 25 percent most detectable peptides.",
+  PercDetectedVal = "Fraction of peptide intensity values retained per replicate and condition. Values not retained become missing values.",
+  WeightDetectVal = "Controls how strongly intensity affects missingness. Higher values make low-intensity peptides more likely to be missing.",
+  MSNoise = "Gaussian noise added to peptide intensities to mimic instrument variability. Values are on the log2 scale.",
+  WrongIDs = "Fraction of peptide identifications replaced by wrong identifications. This models false peptide IDs from database search.",
+  WrongLocalizations = "Fraction of PTM-bearing identifications with incorrect PTM site localization. Affected peptides are flagged through the localization columns.",
+  MaxNAPerPep = "Maximum number of missing values allowed per peptide before filtering. Higher values keep peptides with more missingness.",
+  SharedPep = "Whether shared peptides can be used in protein summarisation. Shared peptides can increase coverage but may make protein-level interpretation less specific.",
+  ProtSummarization = "Method used to aggregate peptide intensities into protein groups. Choices are `sum.top3`, `medpolish`, `median`, `mean`, `sum`, and `rlm`. The `sum` methods operate on the intensity scale before returning log2 values.",
+  MinUniquePep = "Minimum number of unique peptides required for protein summarisation. Proteins with fewer unique peptides are skipped.",
+  IncludeModPep = "Whether modified peptides contribute to protein summarisation. The default `FALSE` excludes PTM-bearing peptides from protein abundance summarisation.",
+  StatPaired = "Whether downstream statistical testing uses a paired design. Set this according to the experimental design being simulated."
+)
+
+params <- yaml::yaml.load_file(find_parameter_yaml())$params
+param_df <- do.call(rbind, lapply(names(params), function(parameter) {
+  p <- params[[parameter]]
+  data.frame(
+    Parameter = parameter,
+    Section = p$group,
+    List = p$type,
+    Class = p$class,
+    Default = fmt_default(p$default),
+    Range = paste(as_text(p$min), as_text(p$max), sep = " - "),
+    Description = p$description,
+    LongDescription = if (parameter %in% names(long_description)) long_description[[parameter]] else p$description,
+    stringsAsFactors = FALSE
+  )
+}))
+
+list_labels <- c(
+  paramGroundTruth = "Ground Truth and Experimental Design",
+  paramProteoformAb = "Proteoform Abundance",
+  paramDigest = "Digestion and Sample Preparation",
+  paramMSRun = "MS Run and Search",
+  paramDataAnalysis = "Data Analysis"
+)
+
+list_purpose <- c(
+  paramGroundTruth = "Define the input proteome, experiment layout, expressed proteins, and PTM ground truth.",
+  paramProteoformAb = "Generate quantitative proteoform abundances and regulation patterns.",
+  paramDigest = "Digest proteoforms and optionally simulate PTM enrichment or sample preparation losses.",
+  paramMSRun = "Simulate detection, missing values, instrument noise, false IDs, and localization errors.",
+  paramDataAnalysis = "Control protein summarisation and statistical testing."
+)
+
+enzyme_rules <- data.frame(
+  Enzyme = c(
+    "trypsin", "trypsin.strict", "chymotrypsin.h", "chymotrypsin.l",
+    "pepsin.2", "pepsin.1.3", "lysC", "argC"
+  ),
+  Cleavage = c(
+    "K or R, except KP/RP",
+    "K or R, including KP/RP",
+    "F, Y, or W; high specificity exclusions",
+    "F, Y, W, L, or P; broader specificity exclusions",
+    "F, L, W, Y, A, E, or Q",
+    "F or L",
+    "K",
+    "R, except RP"
+  ),
+  Regex = c(
+    "(?!(RP|KP))(?=(K|R))(?!(K|R)$)",
+    "(?=(K|R))(?!(K|R)$)",
+    "(?!(FP|YP|PY|WP))(?=(F|Y|W))(?!(F|Y|W)$)",
+    "(?!(FP|YP|PY|WP|LP|MP))(?=(F|Y|W|L|P))(?!(F|Y|W|L|P)$)",
+    "(?=(F|L|W|Y|A|E|Q))(?!(F|L|W|Y|A|E|Q)$)",
+    "(?=(F|L))(?!(F|L)$)",
+    "(?=(K))(?!(K)$)",
+    "(?!(RP))(?=(R))(?!(R)$)"
+  ),
+  stringsAsFactors = FALSE
+)
+```
+
+<style>
+table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+th, td {
+  vertical-align: top;
+  padding: 0.35rem 0.5rem;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: normal;
+}
+code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.param-meta {
+  margin: 0.2rem 0 0.45rem 0;
+  color: #555;
+  font-size: 0.92rem;
+}
+.param-entry {
+  margin-bottom: 1.1rem;
+}
+.summary-table .param-list-row td {
+  background: #eef3f7;
+  font-weight: 700;
+  border-top: 1px solid #c8d3dc;
+}
+.summary-table .param-section-row td {
+  background: #f7f7f7;
+  font-weight: 600;
+}
+.enzyme-table td:nth-child(1), .enzyme-table th:nth-child(1) { width: 18%; }
+.enzyme-table td:nth-child(2), .enzyme-table th:nth-child(2) { width: 32%; }
+.enzyme-table td:nth-child(3), .enzyme-table th:nth-child(3) { width: 50%; }
+</style>
+
+This document describes the parameters used in the ProteoMaker pipeline. ProteoMaker generates in-silico bottom-up LC-MS datasets from proteoforms, from ground-truth proteoform generation through digestion, MS simulation, data analysis, and benchmarking.
+
+Parameters are split into two groups:
+
+- `set_proteomaker()` controls paths, parallelization, and which downstream steps are run.
+- `def_param()` returns the simulation parameters used by the pipeline stages.
+
+## Summary
+
+### Configuration from `set_proteomaker()`
+
+These settings are not part of the simulation parameter grid. They control where files are read and written, how much parallelism is used, and whether optional downstream steps run.
+
+| Parameter | Default | Purpose |
+|---|---:|---|
+| `fastaFilePath` | package `Proteomes` folder | Directory containing FASTA files referenced by `PathToFasta`. |
+| `resultFilePath` | `SimulatedDatasets` | Output directory for cached simulation stages and benchmark results. |
+| `cores` | `2` | Number of CPU cores used by parallel steps. |
+| `clusterType` | `PSOCK` | Parallel cluster backend, usually `PSOCK` or `FORK`. |
+| `runStatTests` | `TRUE` | Run statistical tests after simulation. |
+| `calcAllBenchmarks` | `TRUE` | Calculate benchmark summaries after statistical testing. |
+
+### All `def_param()` Parameters
+
+```{r all-def-param-summary, results="asis"}
+summary_df <- param_df[, c("List", "Section", "Parameter", "Default", "Description")]
+summary_df$List <- factor(summary_df$List, levels = names(list_labels))
+summary_df <- summary_df[order(summary_df$List, summary_df$Section), ]
+summary_df$List <- as.character(summary_df$List)
+
+cat('<table class="summary-table">\n')
+cat("<thead><tr><th>Parameter</th><th>Default</th><th>Short description</th></tr></thead>\n")
+cat("<tbody>\n")
+for (list_name in names(list_labels)) {
+  list_df <- summary_df[summary_df$List == list_name, , drop = FALSE]
+  if (nrow(list_df) == 0L) next
+  cat("<tr class=\"param-list-row\"><td colspan=\"3\"><code>", list_name, "</code>: ",
+      html_escape(list_labels[[list_name]]), "</td></tr>\n", sep = "")
+
+  for (section in unique(list_df$Section)) {
+    section_df <- list_df[list_df$Section == section, , drop = FALSE]
+    cat("<tr class=\"param-section-row\"><td colspan=\"3\">", html_escape(section), "</td></tr>\n", sep = "")
+    for (i in seq_len(nrow(section_df))) {
+      cat("<tr><td><code>", html_escape(section_df$Parameter[i]), "</code></td><td><code>",
+          html_escape(section_df$Default[i]), "</code></td><td>",
+          html_escape(section_df$Description[i]), "</td></tr>\n", sep = "")
+    }
+  }
+}
+cat("</tbody>\n</table>\n")
+```
+
+## Using the Parameters
+
+Use `set_proteomaker()` once for runtime configuration and `def_param()` for the simulation design.
+
+```{r usage-example, echo=TRUE, eval=FALSE}
+config <- set_proteomaker(
+  fastaFilePath = system.file("Proteomes", package = "ProteoMaker"),
+  resultFilePath = file.path(tempdir(), "SimulatedDataSets"),
+  cores = 1,
+  clusterType = "PSOCK",
+  runStatTests = TRUE,
+  calcAllBenchmarks = TRUE
+)
+
+Param <- def_param()
+Param$paramGroundTruth$PathToFasta <- "fasta_example.fasta"
+Param$paramGroundTruth$NumCond <- 2
+Param$paramGroundTruth$NumReps <- 3
+```
+
+Each top-level element in `Param` corresponds to one pipeline stage. Parameters can be vectors; `run_sims()` expands them into combinations.
+
+## `def_param()` Simulation Parameters
+
+The detailed sections below follow the actual top-level lists returned by `def_param()`. Defaults and ranges are read from `inst/config/parameters.yaml`; the explanatory text adds the longer guidance from the original vignette.
+
+```{r parameter-sections, results="asis"}
+for (list_name in names(list_labels)) {
+  cat("\n### `", list_name, "`: ", list_labels[[list_name]], "\n\n", sep = "")
+  cat(list_purpose[[list_name]], "\n\n")
+
+  list_df <- param_df[param_df$List == list_name, , drop = FALSE]
+  for (section in unique(list_df$Section)) {
+    cat("\n#### ", section, "\n\n", sep = "")
+    section_df <- list_df[list_df$Section == section, , drop = FALSE]
+    for (i in seq_len(nrow(section_df))) {
+      row <- section_df[i, ]
+      cat("<div class=\"param-entry\">\n\n")
+      cat("##### `Param$", row$List, "$", row$Parameter, "`\n\n", sep = "")
+      cat("<p class=\"param-meta\"><strong>Default:</strong> <code>", row$Default,
+          "</code> &nbsp; <strong>Range:</strong> <code>", row$Range,
+          "</code> &nbsp; <strong>Class:</strong> <code>", row$Class, "</code></p>\n\n",
+          sep = "")
+      cat(row$LongDescription, "\n\n")
+      if (identical(row$Parameter, "Enzyme")) {
+        cat("Supported enzyme definitions used by the digestion code:\n\n")
+        cat('<table class="enzyme-table">\n')
+        cat("<thead><tr><th>Enzyme</th><th>Cleavage rule</th><th>Regex</th></tr></thead>\n")
+        cat("<tbody>\n")
+        for (j in seq_len(nrow(enzyme_rules))) {
+          cat("<tr><td><code>", html_escape(enzyme_rules$Enzyme[j]), "</code></td><td>",
+              html_escape(enzyme_rules$Cleavage[j]), "</td><td><code>",
+              html_escape(enzyme_rules$Regex[j]), "</code></td></tr>\n", sep = "")
+        }
+        cat("</tbody>\n</table>\n\n")
+      }
+      cat("</div>\n\n")
+    }
+  }
+}
+```
+
+## PTM Setup Recipe
+
+This minimal phosphorylation setup keeps the unmodified counterpart and creates approximately one modified site per modified proteoform.
+
+```{r ptm-recipe, echo=TRUE, eval=FALSE}
+Param$paramGroundTruth$FracModProt <- 0.5
+Param$paramGroundTruth$PTMTypes <- list(mods = c("ph"))
+Param$paramGroundTruth$PTMTypesMass <- list(ph = 79.966331)
+Param$paramGroundTruth$PTMTypesDistr <- list(ph = 1)
+Param$paramGroundTruth$ModifiableResidues <- list(mods = list(ph = c("S", "T", "Y")))
+Param$paramGroundTruth$ModifiableResiduesDistr <- list(
+  mods = list(ph = c(S = 0.86, T = 0.13, Y = 0.01))
+)
+Param$paramGroundTruth$PTMMultipleLambda <- 0
+Param$paramGroundTruth$PropModPerProt <- 1
+Param$paramGroundTruth$RemoveNonModFormFrac <- 0
+```
+
+## Practical Notes
+
+- Use `set_proteomaker()` for filesystem and runtime settings.
+- Use `def_param()` for anything that should define a simulated dataset.
+- Keep small parameter grids while testing; each vector-valued parameter multiplies the number of simulations.
+- `PathToFasta` names a FASTA file, while `fastaFilePath` names the directory that contains it.
+- The old commented `PercDetectedPep` entry is not part of the current parameter set; use `PercDetectability` and `PercDetectedVal`.
