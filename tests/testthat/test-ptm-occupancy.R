@@ -382,6 +382,39 @@ test_that("different unmodified peptide covering the PTM site contributes to Ru"
   expect_equal(as.numeric(occ[1, "C_2"]), 2/3, tolerance = 1e-9)
 })
 
+test_that("multiple modified peptides for the same PTM site are averaged", {
+  # Two different modified peptide sequences map to the same protein residue.
+  # Their modified signal is averaged before the site occupancy is estimated.
+  params <- make_params(num_cond = 2, num_reps = 1)
+  qc     <- params$QuantColnames
+
+  make_row <- function(seq, vals, ptmtype, ptmpos, start, stop, acc = "P_SITE") {
+    r <- data.frame(Sequence = seq, stringsAsFactors = FALSE)
+    r[qc] <- as.list(vals)
+    r$PTMType <- list(ptmtype)
+    r$PTMPos <- list(ptmpos)
+    r$Accession <- list(acc)
+    r$Start <- list(start)
+    r$Stop <- list(stop)
+    r
+  }
+
+  pep <- rbind(
+    make_row("SITEMOD_A", c(0, 2), "ph", 1L, 10L, 18L),
+    make_row("SITEMOD_B", c(0, 0), "ph", 3L, 8L, 16L),
+    make_row("COVERING", c(0, 0), character(0), integer(0), 8L, 18L),
+    make_row("BACKGROUND", c(0, log2(1.5)), character(0), integer(0), 30L, 40L)
+  )
+
+  expect_warning(occ <- calcPTMOccupancy(pep, params), NA)
+
+  expect_equal(nrow(occ), 1L)
+  expect_equal(occ$ProteinPTMPos[[1]], 10L)
+  expect_equal(sort(occ$Sequence), "SITEMOD_A;SITEMOD_B")
+  expect_equal(as.numeric(occ[1, "C_1"]), 0.5, tolerance = 1e-9)
+  expect_equal(as.numeric(occ[1, "C_2"]), 2/3, tolerance = 1e-9)
+})
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Multiple modified peptidoforms for the same sequence
 # ──────────────────────────────────────────────────────────────────────────────
