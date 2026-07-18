@@ -1,147 +1,178 @@
 ---
 title: "ProteoMaker Benchmarks"
-format: html
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
 editor: visual
 ---
 
+```{=html}
+<style>
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+th, td {
+  vertical-align: top;
+  padding: 0.35rem 0.5rem;
+  overflow-wrap: anywhere;
+}
+table td:nth-child(1), table th:nth-child(1) { width: 34%; }
+table td:nth-child(2), table th:nth-child(2) { width: 36%; }
+table td:nth-child(3), table th:nth-child(3) { width: 30%; }
+code { white-space: normal; overflow-wrap: anywhere; }
+</style>
+```
+
 This document provides a detailed description of the benchmarks used in the ProteoMaker pipeline. ProteoMaker is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. These benchmarks are essential for comparing the results and evaluating the performance of the pipeline. For more information about the project, visit [ProteoMaker on GitHub](https://github.com/computproteomics/ProteoMaker).
 
-## List of Benchmarks
+## Summary
 
-The following values and distributions are collected and used for assessing quantitative and statistical fidelity of the simulation and benchmarking pipeline.
+The following values and distributions are collected and used for assessing quantitative and statistical fidelity of the simulation and benchmarking pipeline. The summary table lists the benchmark names used in output objects and figures; the detailed sections below describe how each metric is calculated and how it should be interpreted.
+
+| Benchmarking Metrics | Name | Label (for figures) |
+|----|----|----|
+| **Peptidoform** |  |  |
+| Total Number of Peptidoforms | numPeptides | #Total peptidoforms (mod+unmod) |
+| Number of Protein Accessions | numProteins | #Protein accessions (all peptidoforms) |
+| Proportion of Unique Peptidoforms | propUniquePep | \% Unique peptidoforms (single protein) |
+| Unique Peptide Sequences | uniqueStrippedPep | #Unique peptide sequences |
+| Percentage Missingness | percMissingPep | \% Missing peptidoform values |
+| AUC of ROC (Peptidoforms) | aucDiffRegPeptides.FDR_limma 2 vs 1.AUC | Peptidoform AUC (truth vs limma FDR) |
+| TPR at FDR \< 0.01 | tprPep0.01.FDR_limma 2 vs 1.TPR | TPR peptidoforms (FDR \< 0.01) |
+| TPR at FDR \< 0.05 | tprPep0.05.FDR_limma 2 vs 1.TPR | TPR peptidoforms (FDR \< 0.05) |
+| True FDR at 0.01 | tFDRPep0.01.FDR_limma 2 vs 1.tFDR | True FDR (peptidoforms, 0.01) |
+| True FDR at 0.05 | tFDRPep0.05.FDR_limma 2 vs 1.tFDR | True FDR (peptidoforms, 0.05) |
+| Dynamic Range | dynRangePep | Dynamic range (peptidoforms) |
+| Fold-Change Error | meanSquareDiffFCPep | Fold-change error (peptidoforms) |
+| Within-Replicate SD | sdWithinRepsPep | Replicate SD (peptidoforms) |
+| Skewness | skewnessPeps | Skewness (peptidoforms) |
+| Kurtosis | kurtosisPeps | Kurtosis (peptidoforms) |
+| Overall SD | sdPeps | Overall SD (peptidoforms) |
+| **Peptide** |  |  |
+| Miscleavage Distribution | propMisCleavedPeps.{0,1,...} | Miscleavage distribution (per missed-cleavage count) |
+| **Protein group** |  |  |
+| Quantified Protein Groups | numQuantProtGroups | #Quantified protein groups |
+| Single-Protein Groups | propUniqueProts | \% Single-protein groups |
+| Percentage Missingness | percMissingProt | \% Missing protein-group values |
+| Mean Peptide Sequences per Protein Group | meanPepPerProt | Peptide sequences per protein group |
+| AUC of ROC (Protein Groups) | aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC | Protein-group AUC (truth vs FDR) |
+| TPR at FDR \< 0.01 | tprProt0.01.FDR_PolySTest 2 vs 1.TPR | TPR protein groups (FDR \< 0.01) |
+| TPR at FDR \< 0.05 | tprProt0.05.FDR_PolySTest 2 vs 1.TPR | TPR protein groups (FDR \< 0.05) |
+| True FDR at 0.01 | tFDRProt0.01.FDR_PolySTest 2 vs 1.tFDR | True FDR (protein groups, 0.01) |
+| True FDR at 0.05 | tFDRProt0.05.FDR_PolySTest 2 vs 1.tFDR | True FDR (protein groups, 0.05) |
+| Fold-Change Error | meanSquareDiffFCProt | Fold-change error (protein groups) |
+| Within-Replicate SD | sdWithinRepsProt | Replicate SD (protein groups) |
+| Miscleaved Protein Groups | propMisCleavedProts | \% Miscleaved protein groups |
+| Significant Wrong-ID Protein Groups at 0.01 | propDiffRegWrongIDProt0.01.FDR_PolySTest 2 vs 1 | \% Wrong-ID (protein groups, 0.01) |
+| Significant Wrong-ID Protein Groups at 0.05 | propDiffRegWrongIDProt0.05.FDR_PolySTest 2 vs 1 | \% Wrong-ID (protein groups, 0.05) |
+| Skewness | skewnessProts | Skewness (protein groups) |
+| Kurtosis | kurtosisProts | Kurtosis (protein groups) |
+| Overall SD | sdProts | Overall SD (protein groups) |
+| **Proteoform** |  |  |
+| Total Proteoforms | numProteoforms | #Proteoforms |
+| Mean Proteoforms per Protein | meanProteoformsPerProt | Proteoforms per protein |
+| Number of Modified Peptidoforms | numModPeptides | #Modified peptidoforms |
+| Modified with Unmodified Match | propModAndUnmodPep | \% Modified with unmodified match |
+| AUC (Adj. Modified Peptidoforms) | aucDiffRegAdjModPep.FDR_limma 2 vs 1.AUC | AUC (adj. mod. peptidoforms) |
+| TPR (Adj. Mod Peptidoforms) at 0.01 | tprAdjModPep0.01.FDR_limma 2 vs 1.TPR | TPR (adj. mod. peptidoforms, 0.01) |
+| TPR (Adj. Mod Peptidoforms) at 0.05 | tprAdjModPep0.05.FDR_limma 2 vs 1.TPR | TPR (adj. mod. peptidoforms, 0.05) |
+| True FDR (Adj. Mod Peptidoforms) at 0.01 | tFDRAdjModPep0.01.FDR_limma 2 vs 1.tFDR | True FDR (mod. peptidoforms, 0.01) |
+| True FDR (Adj. Mod Peptidoforms) at 0.05 | tFDRAdjModPep0.05.FDR_limma 2 vs 1.tFDR | True FDR (mod. peptidoforms, 0.05) |
+| Significant Mod Peptidoforms (0.01) | propDiffRegPepWrong0.01.FDR_PolySTest 2 vs 1 | \% Significant mod. peptidoforms (0.01) |
+| Significant Mod Peptidoforms (0.05) | propDiffRegPepWrong0.05.FDR_PolySTest 2 vs 1 | \% Significant mod. peptidoforms (0.05) |
+| Modified Peptidoforms with Protein Quant | percOverlapModPepProt | \% Mod peptidoforms with protein quant |
+| Fold-Change Error (Mod Peptidoforms) | meanSquareDiffFCModPep | Fold-change error (mod. peptidoforms) |
+
+## Metric Details
+
+For ROC-derived metrics, ProteoMaker uses the `min1Reg` column as the ground-truth label. This labels a feature as regulated when at least one contributing peptidoform/proteoform has a non-zero programmed regulation amplitude. The reported 0.01 and 0.05 summaries are taken from the ROC row with an estimated FDR closest to the requested value, not necessarily from a strict `FDR <= cutoff` subset.
 
 ### Peptidoform Level
 
--   **Total Number of Peptidoforms** (`numPeptides`, label: **#Total peptidoforms (mod+unmod)**): Total count of all peptidoforms (modified and unmodified). Fixed PTMs are not included.
+- **Total Number of Peptidoforms** (`numPeptides`, label: **#Total peptidoforms (mod+unmod)**): Total count of all peptidoforms (modified and unmodified). Fixed PTMs are not included.
 
--   **Number of Protein Accessions** (`numProteins`, label: **#Protein accessions (all peptidoforms)**): Distinct protein accessions represented by at least one peptidoform.
+- **Number of Protein Accessions** (`numProteins`, label: **#Protein accessions (all peptidoforms)**): Distinct protein accessions represented by at least one peptidoform.
 
--   **Proportion of Unique Peptidoforms** (`propUniquePep`, label: **% Unique peptidoforms (single protein)**): Fraction of peptidoforms mapping to exactly one protein accession.
+- **Proportion of Unique Peptidoforms** (`propUniquePep`, label: **% Unique peptidoforms (single protein)**): Fraction of peptidoforms mapping to exactly one protein accession.
 
--   **Total Number of Unique Peptide Sequences** (`uniqueStrippedPep`, label: **#Unique peptide sequences**): Unique peptide sequences after removing PTM annotations.
+- **Total Number of Unique Peptide Sequences** (`uniqueStrippedPep`, label: **#Unique peptide sequences**): Unique peptide sequences after removing PTM annotations.
 
--   **Percentage Missingness** (`percMissingPep`, label: **% Missing peptidoform values**): Percentage of missing values across peptidoform-level intensities.
+- **Percentage Missingness** (`percMissingPep`, label: **% Missing peptidoform values**): Percentage of missing values across peptidoform-level intensities.
 
--   **AUC of ROC Curve for Correct Differentially Regulated Peptidoforms** (`aucDiffRegPeptides.FDR_limma 2 vs 1.AUC`, label: *Peptidoform AUC (truth vs limma FDR)*): Area under the ROC curve for identifying truly regulated peptidoforms using the limma-based FDR estimates.
+- **AUC of ROC Curve for Correct Differentially Regulated Peptidoforms** (`aucDiffRegPeptides.FDR_limma 2 vs 1.AUC`, label: *Peptidoform AUC (truth vs limma FDR)*): Area under the ROC curve for ranking peptidoforms by the available FDR columns against the `min1Reg` truth label.
 
--   **TPR (True Positive Rate)** (`tprPep0.01.FDR_limma 2 vs 1.TPR`, `tprPep0.05.FDR_limma 2 vs 1.TPR`, label: *TPR peptidoforms (FDR \< 0.01/0.05)*): True positive rate at estimated FDR thresholds of 0.01 and 0.05.
+- **TPR (True Positive Rate)** (`tprPep0.01.FDR_limma 2 vs 1.TPR`, `tprPep0.05.FDR_limma 2 vs 1.TPR`, label: *TPR peptidoforms (FDR \< 0.01/0.05)*): True positive rate at the ROC point whose estimated FDR is closest to 0.01 or 0.05.
 
--   **True FDR for Estimated FDR** (`tFDRPep0.01.FDR_limma 2 vs 1.tFDR`, `tFDRPep0.05.FDR_limma 2 vs 1.tFDR`, label: *True FDR (peptidoforms)*): Actual (true) FDR at estimated FDR levels of 0.01 and 0.05.
+- **True FDR for Estimated FDR** (`tFDRPep0.01.FDR_limma 2 vs 1.tFDR`, `tFDRPep0.05.FDR_limma 2 vs 1.tFDR`, label: *True FDR (peptidoforms)*): Realized false-discovery proportion at the ROC point whose estimated FDR is closest to 0.01 or 0.05.
 
--   **Miscleavage Count Distribution** (`propMisCleavedPeps`, label: *Miscleavage distribution*): Vector of proportions for peptides grouped by their number of missed cleavages (e.g., fractions for 0, 1, 2, ... missed cleavages).
+- **Miscleavage Count Distribution** (`propMisCleavedPeps`, label: *Miscleavage distribution*): Vector of proportions for peptides grouped by the first missed-cleavage value stored in `MC` (e.g., fractions for 0, 1, 2, ... missed cleavages).
 
--   **Dynamic Range** (`dynRangePep`, label: *Dynamic range (peptidoforms)*): Log2 range of peptidoform intensities.
+- **Dynamic Range** (`dynRangePep`, label: *Dynamic range (peptidoforms)*): Log2 range of peptidoform intensities.
 
--   **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCPep`, label: *Fold-change error (peptidoforms)*): Fold-change error (ground truth vs. measured), computed as squared differences for log2 FC.
+- **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCPep`, label: *Fold-change error (peptidoforms)*): Average squared difference between measured peptidoform log2 fold changes and the programmed fold changes reconstructed from `Regulation_Pattern * Regulation_Amplitude`. Features with zero reconstructed truth are excluded from the denominator.
 
--   **Mean of Std. Dev. Within Replicates** (`sdWithinRepsPep`, label: *Replicate SD (peptidoforms)*): Within-group variation of regulated peptidoforms.
+- **Mean of Std. Dev. Within Replicates** (`sdWithinRepsPep`, label: *Replicate SD (peptidoforms)*): Mean within-condition replicate standard deviation for peptidoforms marked as regulated by `min1Reg`.
 
--   **Skewness** (`skewnessPeps`, label: *Skewness (peptidoforms)*): Asymmetry of peptidoform intensity distribution.
+- **Skewness** (`skewnessPeps`, label: *Skewness (peptidoforms)*): Asymmetry of peptidoform intensity distribution.
 
--   **Kurtosis** (`kurtosisPeps`, label: *Kurtosis (peptidoforms)*): Peakedness (tailedness) of peptidoform intensity distribution.
+- **Kurtosis** (`kurtosisPeps`, label: *Kurtosis (peptidoforms)*): Peakedness (tailedness) of peptidoform intensity distribution.
 
--   **Standard Deviation** (`sdPeps`, label: *Overall SD (peptidoforms)*): Spread of peptidoform intensity distribution.
+- **Standard Deviation** (`sdPeps`, label: *Overall SD (peptidoforms)*): Spread of peptidoform intensity distribution.
 
 ### Protein-Group Level
 
--   **Number of Quantified Protein Groups** (`numQuantProtGroups`, label: **#Quantified protein groups**): Count of protein groups that passed summarisation (respecting the configured shared/modified peptide settings) and retain at least one quantified value.
+Protein-group regulation benchmarks use the regulation metadata retained on the peptides/proteoforms that form each inferred protein group. In particular, `meanSquareDiffFCProt` compares measured protein-group log2 fold changes with the average programmed regulation of the contributing regulated proteoforms, and the ROC-derived protein-group metrics use `min1Reg` as the truth label. These metrics do **not** currently recompute truth from the summed simulated abundance of all proteoforms of a protein. This can make the protein-group regulation benchmarks misleading when only a subset of proteoforms is regulated, because unchanged proteoforms would dilute the real total protein fold change but are not explicitly included in this ground-truth proxy.
 
--   **Proportion of Single-Protein Groups** (`propUniqueProts`, label: **% Single-protein groups**): Fraction of protein groups with a single protein accession.
+- **Number of Quantified Protein Groups** (`numQuantProtGroups`, label: **#Quantified protein groups**): Count of protein groups that passed summarisation (respecting the configured shared/modified peptide settings) and retain at least one quantified value.
 
--   **Percentage Missingness** (`percMissingProt`, label: **% Missing protein-group values**): Missingness of values across protein-group intensities.
+- **Proportion of Single-Protein Groups** (`propUniqueProts`, label: **% Single-protein groups**): Fraction of protein groups with a single protein accession.
 
--   **Mean Number of Peptide Sequences per Protein Group** (`meanPepPerProt`, label: *Peptide sequences per protein group*): Mean count of peptide sequences per quantified protein group.
+- **Percentage Missingness** (`percMissingProt`, label: **% Missing protein-group values**): Missingness of values across protein-group intensities.
 
--   **AUC of ROC Curve for Correct Differentially Regulated Features** (`aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC`, label: *Protein-group AUC (truth vs FDR)*): AUC for identifying differentially regulated protein groups, applying PolySTest.
+- **Mean Number of Peptide Sequences per Protein Group** (`meanPepPerProt`, label: *Peptide sequences per protein group*): Mean count of peptide sequences per quantified protein group.
 
--   **TPR (True Positive Rate)** (`tprProt0.01.FDR_PolySTest 2 vs 1.TPR`, `tprProt0.05.FDR_PolySTest 2 vs 1.TPR`, label: *TPR protein groups (FDR \< 0.01/0.05)*): True positive rate for regulated protein groups at PolySTest-estimated FDR thresholds of 0.01 and 0.05.
+- **AUC of ROC Curve for Correct Differentially Regulated Features** (`aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC`, label: *Protein-group AUC (truth vs FDR)*): AUC for ranking protein groups by the available FDR columns against the `min1Reg` truth label.
 
--   **True FDR for Estimated FDR** (`tFDRProt0.01.FDR_PolySTest 2 vs 1.tFDR`, `tFDRProt0.05.FDR_PolySTest 2 vs 1.tFDR`, label: *True FDR (protein groups)*): Actual false-discovery rate realised at those PolySTest thresholds.
+- **TPR (True Positive Rate)** (`tprProt0.01.FDR_PolySTest 2 vs 1.TPR`, `tprProt0.05.FDR_PolySTest 2 vs 1.TPR`, label: *TPR protein groups (FDR \< 0.01/0.05)*): True positive rate at the ROC point whose estimated FDR is closest to 0.01 or 0.05.
 
--   **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCProt`, label: *Fold-change error (protein groups)*): Average squared error between simulated and measured log2 fold-changes.
+- **True FDR for Estimated FDR** (`tFDRProt0.01.FDR_PolySTest 2 vs 1.tFDR`, `tFDRProt0.05.FDR_PolySTest 2 vs 1.tFDR`, label: *True FDR (protein groups)*): Realized false-discovery proportion at the ROC point whose estimated FDR is closest to 0.01 or 0.05.
 
--   **Dynamic Range** (`dynRangeProt`, label: *Dynamic range (protein groups)*): Log2 range of protein-group intensities.
+- **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCProt`, label: *Fold-change error (protein groups)*): Average squared error between measured protein-group log2 fold changes and the programmed proteoform-regulation proxy described above. Treat this as an approximate protein-group benchmark, especially when proteins contain both regulated and unchanged proteoforms.
 
--   **Mean of Std. Dev. Within Replicates** (`sdWithinRepsProt`, label: *Replicate SD (protein groups)*): Within-group variation of regulated protein groups.
+- **Dynamic Range** (`dynRangeProt`, label: *Dynamic range (protein groups)*): Log2 range of protein-group intensities.
 
--   **Proportion of Protein Groups with Miscleaved Peptides** (`propMisCleavedProts`, label: **% Miscleaved protein groups**): Fraction of quantified protein groups that contain at least one peptide with a missed cleavage.
+- **Mean of Std. Dev. Within Replicates** (`sdWithinRepsProt`, label: *Replicate SD (protein groups)*): Mean within-condition replicate standard deviation for protein groups marked as regulated in all contributing entries by `allReg`.
 
--   **Proportion of Regulated Protein Groups with Wrong Identified Peptides** (`propDiffRegWrongIDProt0.01.FDR_PolySTest 2 vs 1`, `propDiffRegWrongIDProt0.05.FDR_PolySTest 2 vs 1`, label: **% Wrong-ID (protein groups)**): Fraction of regulated protein groups with wrongly identified peptides at 0.01 and 0.05 PolySTest FDR thresholds.
+- **Proportion of Protein Groups with Miscleaved Peptides** (`propMisCleavedProts`, label: **% Miscleaved protein groups**): Fraction of quantified protein groups that contain at least one peptide with a missed cleavage.
 
--   **Skewness** (`skewnessProts`, label: *Skewness (protein groups)*): Asymmetry in distribution of protein-group intensities.
+- **Proportion of Significant Protein Groups with Wrong Identified Peptides** (`propDiffRegWrongIDProt0.01.FDR_PolySTest 2 vs 1`, `propDiffRegWrongIDProt0.05.FDR_PolySTest 2 vs 1`, label: **% Wrong-ID (protein groups)**): Fraction of protein groups with FDR below 0.01 or 0.05 that contain at least one peptide marked as `WrongID`; this does not require the protein group to be truly regulated.
 
--   **Kurtosis** (`kurtosisProts`, label: *Kurtosis (protein groups)*): Peakedness of protein-group intensity distribution.
+- **Skewness** (`skewnessProts`, label: *Skewness (protein groups)*): Asymmetry in distribution of protein-group intensities.
 
--   **Standard Deviation** (`sdProts`, label: *Overall SD (protein groups)*): Overall spread of protein-group intensity values.
+- **Kurtosis** (`kurtosisProts`, label: *Kurtosis (protein groups)*): Peakedness of protein-group intensity distribution.
+
+- **Standard Deviation** (`sdProts`, label: *Overall SD (protein groups)*): Overall spread of protein-group intensity values.
 
 ### Proteoform Level
 
--   **Number and Mean of Proteoforms per Protein** (`numProteoforms`, `meanProteoformsPerProt`, label: **#Proteoforms**, *Proteoforms per protein*): Total and mean count of distinct proteoforms across protein groups.
+- **Number and Mean of Proteoforms per Protein** (`numProteoforms`, `meanProteoformsPerProt`, label: **#Proteoforms**, *Proteoforms per protein*): Total and mean count of distinct `Proteoform_ID` values represented in quantified protein groups.
 
--   **Number of Modified Peptidoforms** (`numModPeptides`, label: **#Modified peptidoforms**): Total count of peptidoforms carrying simulated PTMs.
+- **Number of Modified Peptidoforms** (`numModPeptides`, label: **#Modified peptidoforms**): Total count of peptidoforms carrying simulated PTMs.
 
--   **Proportion of Modified Peptidoforms with Identical Unmodified Form** (`propModAndUnmodPep`, label: **% Modified with unmodified match**): Fraction of modified peptidoforms that have a corresponding unmodified form.
+- **Proportion of Modified Peptidoforms with Identical Unmodified Form** (`propModAndUnmodPep`, label: **% Modified with unmodified match**): Fraction of modified peptidoforms whose stripped peptide-sequence group also contains at least one unmodified entry. The check is sequence-level and does not enforce a stricter accession/site-level counterpart.
 
--   **AUC for Correctly Regulated Modified Peptidoforms** (`aucDiffRegAdjModPep.FDR_limma 2 vs 1.AUC`, label: *AUC (adj. mod. peptidoforms)*): AUC calculated after adjustment for parent protein abundance (reported only when at least 200 modified peptidoforms have matching protein quantification).
+- **AUC for Correctly Regulated Modified Peptidoforms** (`aucDiffRegAdjModPep.FDR_limma 2 vs 1.AUC`, label: *AUC (adj. mod. peptidoforms)*): AUC after subtracting the matched protein-group abundance from modified peptidoform abundance and rerunning limma-only tests. Reported only when more than 200 modified peptidoforms have matching protein quantification.
 
--   **TPR** (`tprAdjModPep0.01.FDR_limma 2 vs 1.TPR`, `tprAdjModPep0.05.FDR_limma 2 vs 1.TPR`, label: *TPR (adj. mod. peptidoforms)*): True positive rate for regulated modified peptidoforms at estimated FDRs 0.01 and 0.05.
+- **TPR** (`tprAdjModPep0.01.FDR_limma 2 vs 1.TPR`, `tprAdjModPep0.05.FDR_limma 2 vs 1.TPR`, label: *TPR (adj. mod. peptidoforms)*): True positive rate for adjusted modified peptidoforms at the ROC point whose estimated FDR is closest to 0.01 or 0.05.
 
--   **True FDR** (`tFDRAdjModPep0.01.FDR_limma 2 vs 1.tFDR`, `tFDRAdjModPep0.05.FDR_limma 2 vs 1.tFDR`, label: *True FDR (mod. peptidoforms)*): Actual FDR of modified peptidoform results at FDRs 0.01 and 0.05.
+- **True FDR** (`tFDRAdjModPep0.01.FDR_limma 2 vs 1.tFDR`, `tFDRAdjModPep0.05.FDR_limma 2 vs 1.tFDR`, label: *True FDR (mod. peptidoforms)*): Realized false-discovery proportion for adjusted modified peptidoforms at the ROC point whose estimated FDR is closest to 0.01 or 0.05.
 
--   **Share of Significant Modified Peptidoforms** (`propDiffRegPepWrong0.01.FDR_PolySTest 2 vs 1`, `propDiffRegPepWrong0.05.FDR_PolySTest 2 vs 1`, label: **% Wrongly significant (mod. peptidoforms)**): Fraction of modified peptidoforms whose FDR values fall below 0.01 or 0.05, respectively.
+- **Share of Significant Modified Peptidoforms** (`propDiffRegPepWrong0.01.FDR_PolySTest 2 vs 1`, `propDiffRegPepWrong0.05.FDR_PolySTest 2 vs 1`, label: **% Significant mod. peptidoforms**): Fraction of modified peptidoforms whose FDR values fall below 0.01 or 0.05, respectively. Despite the historical metric name, this is not restricted to false positives or wrong identifications.
 
--   **Proportion of Modified Peptidoforms with Quantified Protein Group** (`percOverlapModPepProt`, label: **% Mod peptidoforms with protein quant**): Fraction of modified peptidoforms with quantifiable protein-group background.
+- **Proportion of Modified Peptidoforms with Quantified Protein Group** (`percOverlapModPepProt`, label: **% Mod peptidoforms with protein quant**): Fraction of modified peptidoforms whose merged accession string exactly matches a quantified protein-group row name.
 
--   **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCModPep`, label: *Fold-change error (mod. peptidoforms)*): Squared differences between simulated and measured log2 fold-changes of modified peptidoforms.
-
-## Benchmark Overview Table
-
-| Benchmarking Metrics | Name | Label (for figures) | Category |
-|----|----|----|----|
-| Total Number of Peptidoforms | numPeptides | #Total peptidoforms (mod+unmod) | Peptidoform |
-| Number of Protein Accessions | numProteins | #Protein accessions (all peptidoforms) | Peptidoform |
-| Proportion of Unique Peptidoforms | propUniquePep | \% Unique peptidoforms (single protein) | Peptidoform |
-| Unique Peptide Sequences | uniqueStrippedPep | #Unique peptide sequences | Peptidoform |
-| Percentage Missingness | percMissingPep | \% Missing peptidoform values | Peptidoform |
-| AUC of ROC (Peptidoforms) | aucDiffRegPeptides.FDR_limma 2 vs 1.AUC | Peptidoform AUC (truth vs limma FDR) | Peptidoform |
-| TPR at FDR \< 0.01 | tprPep0.01.FDR_limma 2 vs 1.TPR | TPR peptidoforms (FDR \< 0.01) | Peptidoform |
-| TPR at FDR \< 0.05 | tprPep0.05.FDR_limma 2 vs 1.TPR | TPR peptidoforms (FDR \< 0.05) | Peptidoform |
-| True FDR at 0.01 | tFDRPep0.01.FDR_limma 2 vs 1.tFDR | True FDR (peptidoforms, 0.01) | Peptidoform |
-| True FDR at 0.05 | tFDRPep0.05.FDR_limma 2 vs 1.tFDR | True FDR (peptidoforms, 0.05) | Peptidoform |
-| Miscleavage Distribution | propMisCleavedPeps.{0,1,...} | Miscleavage distribution (per missed-cleavage count) | Peptide |
-| Dynamic Range | dynRangePep | Dynamic range (peptidoforms) | Peptidoform |
-| Fold-Change Error | meanSquareDiffFCPep | Fold-change error (peptidoforms) | Peptidoform |
-| Within-Replicate SD | sdWithinRepsPep | Replicate SD (peptidoforms) | Peptidoform |
-| Skewness | skewnessPeps | Skewness (peptidoforms) | Peptidoform |
-| Kurtosis | kurtosisPeps | Kurtosis (peptidoforms) | Peptidoform |
-| Overall SD | sdPeps | Overall SD (peptidoforms) | Peptidoform |
-| Quantified Protein Groups | numQuantProtGroups | #Quantified protein groups | Protein group |
-| Single-Protein Groups | propUniqueProts | \% Single-protein groups | Protein group |
-| Percentage Missingness | percMissingProt | \% Missing protein-group values | Protein group |
-| Mean Peptide Sequences per Protein Group | meanPepPerProt | Peptide sequences per protein group | Protein group |
-| AUC of ROC (Protein Groups) | aucDiffRegProteins.FDR_PolySTest 2 vs 1.AUC | Protein-group AUC (truth vs FDR) | Protein group |
-| TPR at FDR \< 0.01 | tprProt0.01.FDR_PolySTest 2 vs 1.TPR | TPR protein groups (FDR \< 0.01) | Protein group |
-| TPR at FDR \< 0.05 | tprProt0.05.FDR_PolySTest 2 vs 1.TPR | TPR protein groups (FDR \< 0.05) | Protein group |
-| True FDR at 0.01 | tFDRProt0.01.FDR_PolySTest 2 vs 1.tFDR | True FDR (protein groups, 0.01) | Protein group |
-| True FDR at 0.05 | tFDRProt0.05.FDR_PolySTest 2 vs 1.tFDR | True FDR (protein groups, 0.05) | Protein group |
-| Fold-Change Error | meanSquareDiffFCProt | Fold-change error (protein groups) | Protein group |
-| Within-Replicate SD | sdWithinRepsProt | Replicate SD (protein groups) | Protein group |
-| Miscleaved Protein Groups | propMisCleavedProts | \% Miscleaved protein groups | Protein group |
-| Wrong ID Protein Groups at 0.01 | propDiffRegWrongIDProt0.01.FDR_PolySTest 2 vs 1 | \% Wrong-ID (protein groups, 0.01) | Protein group |
-| Wrong ID Protein Groups at 0.05 | propDiffRegWrongIDProt0.05.FDR_PolySTest 2 vs 1 | \% Wrong-ID (protein groups, 0.05) | Protein group |
-| Skewness | skewnessProts | Skewness (protein groups) | Protein group |
-| Kurtosis | kurtosisProts | Kurtosis (protein groups) | Protein group |
-| Overall SD | sdProts | Overall SD (protein groups) | Protein group |
-| Total Proteoforms | numProteoforms | #Proteoforms | Proteoform |
-| Mean Proteoforms per Protein | meanProteoformsPerProt | Proteoforms per protein | Proteoform |
-| Number of Modified Peptidoforms | numModPeptides | #Modified peptidoforms | Proteoform |
-| Modified with Unmodified Match | propModAndUnmodPep | \% Modified with unmodified match | Proteoform |
-| AUC (Adj. Modified Peptidoforms) | aucDiffRegAdjModPep.FDR_limma 2 vs 1.AUC | AUC (adj. mod. peptidoforms) | Proteoform |
-| TPR (Adj. Mod Peptidoforms) at 0.01 | tprAdjModPep0.01.FDR_limma 2 vs 1.TPR | TPR (adj. mod. peptidoforms, 0.01) | Proteoform |
-| TPR (Adj. Mod Peptidoforms) at 0.05 | tprAdjModPep0.05.FDR_limma 2 vs 1.TPR | TPR (adj. mod. peptidoforms, 0.05) | Proteoform |
-| True FDR (Adj. Mod Peptidoforms) at 0.01 | tFDRAdjModPep0.01.FDR_limma 2 vs 1.tFDR | True FDR (mod. peptidoforms, 0.01) | Proteoform |
-| True FDR (Adj. Mod Peptidoforms) at 0.05 | tFDRAdjModPep0.05.FDR_limma 2 vs 1.tFDR | True FDR (mod. peptidoforms, 0.05) | Proteoform |
-| Wrongly Significant Mod Peptidoforms (0.01) | propDiffRegPepWrong0.01.FDR_PolySTest 2 vs 1 | \% Wrongly significant (mod. peptidoforms, 0.01) | Proteoform |
-| Wrongly Significant Mod Peptidoforms (0.05) | propDiffRegPepWrong0.05.FDR_PolySTest 2 vs 1 | \% Wrongly significant (mod. peptidoforms, 0.05) | Proteoform |
-| Modified Peptidoforms with Protein Quant | percOverlapModPepProt | \% Mod peptidoforms with protein quant | Proteoform |
-| Fold-Change Error (Mod Peptidoforms) | meanSquareDiffFCModPep | Fold-change error (mod. peptidoforms) | Proteoform |
+- **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCModPep`, label: *Fold-change error (mod. peptidoforms)*): Same fold-change error calculation as `meanSquareDiffFCPep`, restricted to peptidoforms with non-empty `PTMType`.
