@@ -67,7 +67,7 @@ list_purpose <- c(
 
 parameter_table <- function(df) {
   out <- df[, c("Parameter", "Default", "Range", "Description"), drop = FALSE]
-  knitr::kable(out, align = c("l", "l", "l", "l"))
+  knitr::kable(out, align = c("l", "l", "l", "l"), row.names = FALSE)
 }
 ```
 
@@ -81,12 +81,14 @@ table {
 th, td {
   vertical-align: top;
   padding: 0.35rem 0.5rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
-table td:nth-child(1), table th:nth-child(1) { width: 22%; }
-table td:nth-child(2), table th:nth-child(2) { width: 14%; }
-table td:nth-child(3), table th:nth-child(3) { width: 16%; }
-table td:nth-child(4), table th:nth-child(4) { width: 48%; }
-code { white-space: nowrap; }
+table td:nth-child(1), table th:nth-child(1) { width: 30%; }
+table td:nth-child(2), table th:nth-child(2) { width: 8%; }
+table td:nth-child(3), table th:nth-child(3) { width: 10%; }
+table td:nth-child(4), table th:nth-child(4) { width: 52%; }
+code { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 </style>
 ```
 
@@ -94,6 +96,22 @@ This vignette describes the parameters used by ProteoMaker. The parameters are s
 
 - `set_proteomaker()` controls paths, parallelization, and which downstream work is run.
 - `def_param()` returns the simulation parameters used by the pipeline stages.
+
+## Parameter Flow
+
+```{mermaid}
+flowchart LR
+  config["set_proteomaker()<br/>paths and runtime"]
+  params["def_param()<br/>simulation settings"]
+  run["run_sims()"]
+  gt["Ground truth"]
+  sim["Abundance, digest, MS"]
+  out["Analysis and benchmarks"]
+
+  config --> run
+  params --> run
+  run --> gt --> sim --> out
+```
 
 ## Summary
 
@@ -122,7 +140,7 @@ summary_df <- do.call(rbind, lapply(names(list_labels), function(list_name) {
     stringsAsFactors = FALSE
   )
 }))
-knitr::kable(summary_df, align = c("l", "l", "r", "l"))
+knitr::kable(summary_df, align = c("l", "l", "r", "l"), row.names = FALSE)
 ```
 
 ### Section Map
@@ -137,7 +155,7 @@ names(section_df)[names(section_df) == "Parameter"] <- "Parameters"
 section_df$List <- factor(section_df$List, levels = names(list_labels))
 section_df <- section_df[order(section_df$List, section_df$Section), ]
 section_df$List <- as.character(section_df$List)
-knitr::kable(section_df, align = c("l", "l", "r"))
+knitr::kable(section_df, align = c("l", "l", "r"), row.names = FALSE)
 ```
 
 ## Using the Parameters

@@ -19,15 +19,35 @@ th, td {
   vertical-align: top;
   padding: 0.35rem 0.5rem;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 table td:nth-child(1), table th:nth-child(1) { width: 34%; }
 table td:nth-child(2), table th:nth-child(2) { width: 36%; }
 table td:nth-child(3), table th:nth-child(3) { width: 30%; }
-code { white-space: normal; overflow-wrap: anywhere; }
+code { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 </style>
 ```
 
 This document provides a detailed description of the benchmarks used in the ProteoMaker pipeline. ProteoMaker is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. These benchmarks are essential for comparing the results and evaluating the performance of the pipeline. For more information about the project, visit [ProteoMaker on GitHub](https://github.com/computproteomics/ProteoMaker).
+
+## Benchmark Flow
+
+```{mermaid}
+flowchart LR
+  statspep["StatsPep"]
+  stats["Stats"]
+  calc["calcBenchmarks()"]
+  pep["Peptidoform metrics"]
+  prot["Protein-group metrics"]
+  mod["Modified peptidoform metrics"]
+  bm["Benchmarks$globalBMs"]
+
+  statspep --> calc
+  stats --> calc
+  calc --> pep --> bm
+  calc --> prot --> bm
+  calc --> mod --> bm
+```
 
 ## Summary
 
