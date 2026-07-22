@@ -33,6 +33,9 @@ ul.task-list li input[type="checkbox"] {
 <script src="Benchmarks_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="Benchmarks_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="Benchmarks_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="Benchmarks_files/libs/quarto-diagram/mermaid.min.js"></script>
+<script src="Benchmarks_files/libs/quarto-diagram/mermaid-init.js"></script>
+<link href="Benchmarks_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 </head>
@@ -45,7 +48,8 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
 
   <ul>
-  <li><a href="#summary" id="toc-summary" class="nav-link active" data-scroll-target="#summary">Summary</a></li>
+  <li><a href="#benchmark-flow" id="toc-benchmark-flow" class="nav-link active" data-scroll-target="#benchmark-flow">Benchmark Flow</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   <li><a href="#metric-details" id="toc-metric-details" class="nav-link" data-scroll-target="#metric-details">Metric Details</a>
   <ul class="collapse">
   <li><a href="#peptidoform-level" id="toc-peptidoform-level" class="nav-link" data-scroll-target="#peptidoform-level">Peptidoform Level</a></li>
@@ -88,13 +92,42 @@ th, td {
   vertical-align: top;
   padding: 0.35rem 0.5rem;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 table td:nth-child(1), table th:nth-child(1) { width: 34%; }
 table td:nth-child(2), table th:nth-child(2) { width: 36%; }
 table td:nth-child(3), table th:nth-child(3) { width: 30%; }
-code { white-space: normal; overflow-wrap: anywhere; }
+code { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 </style>
 <p>This document provides a detailed description of the benchmarks used in the ProteoMaker pipeline. ProteoMaker is a tool for generating an in-silico bottom-up LC-MS dataset from proteoforms. The pipeline simulates various stages of the experimental process, from the generation of ground truth data to mass spectrometry (MS) analysis and statistical testing. These benchmarks are essential for comparing the results and evaluating the performance of the pipeline. For more information about the project, visit <a href="https://github.com/computproteomics/ProteoMaker">ProteoMaker on GitHub</a>.</p>
+<section id="benchmark-flow" class="level2">
+<h2 class="anchored" data-anchor-id="benchmark-flow">Benchmark Flow</h2>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  statspep["StatsPep"]
+  stats["Stats"]
+  calc["calcBenchmarks()"]
+  pep["Peptidoform metrics"]
+  prot["Protein-group metrics"]
+  mod["Modified peptidoform metrics"]
+  bm["Benchmarks$globalBMs"]
+
+  statspep --&gt; calc
+  stats --&gt; calc
+  calc --&gt; pep --&gt; bm
+  calc --&gt; prot --&gt; bm
+  calc --&gt; mod --&gt; bm
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
 <section id="summary" class="level2">
 <h2 class="anchored" data-anchor-id="summary">Summary</h2>
 <p>The following values and distributions are collected and used for assessing quantitative and statistical fidelity of the simulation and benchmarking pipeline. The summary table lists the benchmark names used in output objects and figures; the detailed sections below describe how each metric is calculated and how it should be interpreted.</p>
