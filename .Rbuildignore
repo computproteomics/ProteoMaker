@@ -17,3 +17,4 @@
 ^\.Rhistory$
 ^tests/testthat/Rplots\.pdf$
 ^AGENTS\.md$
+^\.posit/assistant$
