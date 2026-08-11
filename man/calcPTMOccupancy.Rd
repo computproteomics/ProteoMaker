@@ -31,7 +31,8 @@ A data frame with one row per protein PTM site that has both a
   \describe{
     \item{Sequence}{Stripped modified peptide sequence(s).}
     \item{Accession}{Protein accession(s) (list column).}
-    \item{PTMPos}{Modification positions within the peptide (list column).}
+    \item{PTMPos}{Modification positions within the peptide, semicolon-aligned
+to \code{Sequence}.}
     \item{ProteinPTMPos}{Modification positions within the protein sequence
       (list column), or \code{NA} when peptide start positions are not
       available.}

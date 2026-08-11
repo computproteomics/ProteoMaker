@@ -139,7 +139,7 @@ test_that("ProteinPTMPos reports protein-level modification positions when Start
 
   occ <- calcPTMOccupancy(pep, make_params())
 
-  expect_identical(occ$PTMPos[[1]], 3L)
+  expect_identical(occ$PTMPos[[1]], "3")
   expect_identical(occ$ProteinPTMPos[[1]], 12L)
 })
 
@@ -411,6 +411,7 @@ test_that("multiple modified peptides for the same PTM site are averaged", {
   expect_equal(nrow(occ), 1L)
   expect_equal(occ$ProteinPTMPos[[1]], 10L)
   expect_equal(sort(occ$Sequence), "SITEMOD_A;SITEMOD_B")
+  expect_equal(occ$PTMPos[[1]], "1;3")
   expect_equal(as.numeric(occ[1, "C_1"]), 0.5, tolerance = 1e-9)
   expect_equal(as.numeric(occ[1, "C_2"]), 2/3, tolerance = 1e-9)
 })

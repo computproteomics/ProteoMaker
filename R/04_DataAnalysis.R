@@ -379,7 +379,8 @@ proteinSummarisation <- function(peptable, parameters) {
 #'   \describe{
 #'     \item{Sequence}{Stripped modified peptide sequence(s).}
 #'     \item{Accession}{Protein accession(s) (list column).}
-#'     \item{PTMPos}{Modification positions within the peptide (list column).}
+#'     \item{PTMPos}{Modification positions within the peptide, semicolon-aligned
+#'       to \code{Sequence}.}
 #'     \item{ProteinPTMPos}{Modification positions within the protein sequence
 #'       (list column), or \code{NA} when peptide start positions are not
 #'       available.}
@@ -652,7 +653,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
   n_sites <- length(site_groups)
   out_seq        <- vector("character", n_sites)
   out_acc        <- vector("list", n_sites)
-  out_ptmpos     <- vector("list", n_sites)
+  out_ptmpos     <- vector("character", n_sites)
   out_protptmpos <- vector("list", n_sites)
   out_ptmtype    <- vector("list", n_sites)
   out_quant      <- vector("list", n_sites)
@@ -663,10 +664,15 @@ calcPTMOccupancy <- function(peptable, parameters) {
     estimate <- site_estimate(site_group)
     if (is.null(estimate)) next
 
+    seqs <- unique(site_group$Sequence)
+    seq_ptmpos <- vapply(seqs, function(seq) {
+      paste(unique(site_group$PTMPos[site_group$Sequence == seq]), collapse = ",")
+    }, character(1))
+
     out_n <- out_n + 1L
-    out_seq[[out_n]]        <- paste(unique(site_group$Sequence), collapse = ";")
+    out_seq[[out_n]]        <- paste(seqs, collapse = ";")
     out_acc[[out_n]]        <- unique(site_group$Accession)
-    out_ptmpos[[out_n]]     <- unique(site_group$PTMPos)
+    out_ptmpos[[out_n]]     <- paste(seq_ptmpos, collapse = ";")
     out_protptmpos[[out_n]] <- unique(site_group$ProteinPTMPos)
     out_ptmtype[[out_n]]    <- unique(site_group$PTMType)
     out_quant[[out_n]]      <- setNames(as.list(estimate$occ), out_cond_names)
