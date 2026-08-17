@@ -378,6 +378,8 @@ proteinSummarisation <- function(peptable, parameters) {
 #'   site.  Columns are:
 #'   \describe{
 #'     \item{Sequence}{Stripped modified peptide sequence(s).}
+#'     \item{Peptidoform}{Annotated modified peptidoform sequence(s) supporting
+#'       the PTM site.}
 #'     \item{Accession}{Protein accession(s) (list column).}
 #'     \item{PTMPos}{Modification positions within the peptide, semicolon-aligned
 #'       to \code{Sequence}.}
@@ -468,6 +470,11 @@ calcPTMOccupancy <- function(peptable, parameters) {
     ptm_pos <- unlist(peptable$PTMPos[[i]])
     ptm_type <- unlist(peptable$PTMType[[i]])
     if (length(ptm_pos) == 0L || length(ptm_pos) != length(ptm_type)) return(NULL)
+    peptidoform <- if ("Peptidoform" %in% names(peptable)) {
+      peptable$Peptidoform[[i]]
+    } else {
+      .pm_annotate_peptidoform(peptable$Sequence[[i]], peptable$PTMPos[[i]], peptable$PTMType[[i]])
+    }
 
     protein_pos <- protein_ptm_pos(peptable$Start[[i]], ptm_pos)
     if (any(is.na(protein_pos))) return(NULL)
@@ -476,6 +483,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
     data.frame(
       row_index = rep(i, length(ptm_pos)),
       Sequence = rep(peptable$Sequence[[i]], length(ptm_pos)),
+      Peptidoform = rep(peptidoform, length(ptm_pos)),
       Accession = rep(acc, length(ptm_pos)),
       PTMType = ptm_type,
       PTMPos = ptm_pos,
@@ -652,6 +660,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
   # Pre-allocate output vectors to avoid repeated memory reallocation
   n_sites <- length(site_groups)
   out_seq        <- vector("character", n_sites)
+  out_peptidoform <- vector("character", n_sites)
   out_acc        <- vector("list", n_sites)
   out_ptmpos     <- vector("character", n_sites)
   out_protptmpos <- vector("list", n_sites)
@@ -671,6 +680,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
     out_n <- out_n + 1L
     out_seq[[out_n]]        <- paste(seqs, collapse = ";")
+    out_peptidoform[[out_n]] <- paste(unique(site_group$Peptidoform), collapse = ";")
     out_acc[[out_n]]        <- unique(site_group$Accession)
     out_ptmpos[[out_n]]     <- paste(seq_ptmpos, collapse = ";")
     out_protptmpos[[out_n]] <- unique(site_group$ProteinPTMPos)
@@ -686,6 +696,7 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
   # Trim pre-allocated vectors to actual output size
   out_seq        <- out_seq[seq_len(out_n)]
+  out_peptidoform <- out_peptidoform[seq_len(out_n)]
   out_acc        <- out_acc[seq_len(out_n)]
   out_ptmpos     <- out_ptmpos[seq_len(out_n)]
   out_protptmpos <- out_protptmpos[seq_len(out_n)]
@@ -695,7 +706,8 @@ calcPTMOccupancy <- function(peptable, parameters) {
 
   quant_df               <- as.data.frame(do.call(rbind, lapply(out_quant, as.data.frame)))
   prob_df                <- as.data.frame(do.call(rbind, lapply(out_prob, as.data.frame)))
-  result                 <- data.frame(Sequence = out_seq, stringsAsFactors = FALSE)
+  result                 <- data.frame(Sequence = out_seq, Peptidoform = out_peptidoform,
+                                      stringsAsFactors = FALSE)
   result[out_cond_names] <- quant_df
   result[out_comp_names] <- prob_df
   result$Accession       <- out_acc
