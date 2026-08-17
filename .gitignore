@@ -5,3 +5,4 @@ SimulatedDataSets/*
 .Rhistory
 inst/shiny/SimulatedDataSets/
 *.Rcheck/
+.posit/assistant
