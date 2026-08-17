@@ -126,11 +126,11 @@ test_that("occupancy approaches 0 when modified ratio << protein ratio", {
 # Output structure
 # ──────────────────────────────────────────────────────────────────────────────
 
-test_that("output contains expected columns (Sequence, Accession, PTMPos, ProteinPTMPos, PTMType, C_1, C_2)", {
+test_that("output contains expected columns (Sequence, Peptidoform, Accession, PTMPos, ProteinPTMPos, PTMType, C_1, C_2)", {
   pep <- make_peptable(mod_vals = c(1, 1, 2, 2), unmod_vals = c(1, 1, 1, 1))
   occ <- calcPTMOccupancy(pep, make_params())
 
-  expect_true(all(c("Sequence", "Accession", "PTMPos", "ProteinPTMPos", "PTMType", "C_1", "C_2") %in% names(occ)))
+  expect_true(all(c("Sequence", "Peptidoform", "Accession", "PTMPos", "ProteinPTMPos", "PTMType", "C_1", "C_2") %in% names(occ)))
 })
 
 test_that("ProteinPTMPos reports protein-level modification positions when Start is available", {
@@ -452,6 +452,34 @@ test_that("sequence with multiple modified peptidoforms returns one row per PTM 
 
   expect_warning(occ <- calcPTMOccupancy(pep, params), NA)
   expect_equal(nrow(occ), 2L)
+})
+
+test_that("multiply modified peptidoform is retained as full supporting peptidoform", {
+  params <- make_params(num_cond = 2, num_reps = 1)
+  qc     <- params$QuantColnames
+
+  mod <- data.frame(Sequence = "STYPEP", stringsAsFactors = FALSE)
+  mod[qc] <- as.list(c(2, 3))
+  mod$PTMType <- list(c("ph", "ph")); mod$PTMPos <- list(c(1L, 2L))
+  mod$Accession <- list("P22222")
+
+  unmod <- data.frame(Sequence = "STYPEP", stringsAsFactors = FALSE)
+  unmod[qc] <- as.list(c(2, 2))
+  unmod$PTMType <- list(character(0)); unmod$PTMPos <- list(integer(0))
+  unmod$Accession <- list("P22222")
+
+  other <- data.frame(Sequence = "OTHERPEP", stringsAsFactors = FALSE)
+  other[qc] <- as.list(c(2, 3))
+  other$PTMType <- list(character(0)); other$PTMPos <- list(integer(0))
+  other$Accession <- list("P22222")
+
+  pep <- rbind(mod, unmod, other)
+  pep$Start <- I(list(10L, 10L, 30L))
+  pep$Stop <- I(list(15L, 15L, 37L))
+
+  expect_warning(occ <- calcPTMOccupancy(pep, params), NA)
+  expect_equal(nrow(occ), 2L)
+  expect_true(all(occ$Peptidoform == "S[ph]T[ph]YPEP"))
 })
 
 # ──────────────────────────────────────────────────────────────────────────────
