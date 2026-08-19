@@ -6,3 +6,13 @@ SimulatedDataSets/*
 inst/shiny/SimulatedDataSets/
 *.Rcheck/
 .posit/assistant
+
+# IDE/editor files
+.idea/
+.vscode/
+.vs/
+*.code-workspace
+
+# Local non-package files
+package.json
+snowflake*

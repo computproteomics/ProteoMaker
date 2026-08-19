@@ -1426,27 +1426,40 @@ plot_params <- function(BenchMatrix, current_row = 1) {
   param_t <- param_table()
   param_names <- rownames(param_t)
 
-  # filter out every NA or NULL parameters
-  to_remove <- c()
-  for (i in which(colnames(BenchMatrix) %in% param_names)) {
-    val <- as.numeric(BenchMatrix[, i])
-    if (!(length(val) == 0)) {
-      if (all(is.na(val))) {
-        to_remove <- append(to_remove, i)
-      }
-    }
-  }
-  if (length(to_remove) > 0) {
-    BenchMatrix <- BenchMatrix[, -to_remove]
-  }
-  val[is.na(val)] <- 0
   param_names <- param_names[param_names %in% colnames(BenchMatrix)]
-  param_t <- param_t[param_names, ]
+  if (length(param_names) == 0) {
+    return(plot_ly(
+      type = "table",
+      header = list(values = c("Parameter", "Value")),
+      cells = list(values = list(character(0), character(0)))
+    ))
+  }
+  param_t <- param_t[param_names, , drop = FALSE]
+
+  if (!is.numeric(current_row)) {
+    current_row <- which(rownames(BenchMatrix) == current_row)
+  }
+
+  raw_values <- vapply(BenchMatrix[current_row, param_names, drop = FALSE], as.character, character(1))
+  raw_values[is.na(raw_values)] <- "NA"
+  num_values <- suppressWarnings(as.numeric(raw_values))
+  min_values <- if ("MinValue" %in% colnames(param_t)) {
+    suppressWarnings(as.numeric(unlist(param_t$MinValue)))
+  } else {
+    rep(NA_real_, length(param_names))
+  }
+  max_values <- if ("MaxValue" %in% colnames(param_t)) {
+    suppressWarnings(as.numeric(unlist(param_t$MaxValue)))
+  } else {
+    rep(NA_real_, length(param_names))
+  }
+  numeric_param <- !is.na(num_values) & !is.na(min_values) & !is.na(max_values) & min_values != max_values
+  table_param <- !numeric_param
 
   # Set the number of columns
   ncols <- 4
   # Calculate number of rows based on number of plots and columns
-  nrows <- ceiling(length(param_names) / ncols)
+  nrows <- ceiling(sum(numeric_param) / ncols)
 
   # Create an empty list to store meters
   meters <- list()
@@ -1454,19 +1467,15 @@ plot_params <- function(BenchMatrix, current_row = 1) {
   hspacing_factor <- 0.3
   vspacing_factor <- 0.3
 
-  # get position of the current row
-  if (!is.numeric(current_row)) {
-    current_row <- which(rownames(BenchMatrix) == current_row)
-  }
   nr <- 1
 
   # Loop to create each meter plot
-  for (i in 1:length(param_names)) {
-    curr_par <- param_t[i, ]
-    curr_par$MaxValue <- unlist(curr_par$MaxValue)
-    curr_par$MinValue <- unlist(curr_par$MinValue)
-    val <- as.numeric(BenchMatrix[current_row, param_names[i]])
-    val[is.na(val)] <- 0
+  numeric_names <- param_names[numeric_param]
+  for (i in seq_along(numeric_names)) {
+    param_i <- match(numeric_names[i], param_names)
+    val <- num_values[param_i]
+    min_value <- min_values[param_i]
+    max_value <- max_values[param_i]
     row_index <- ceiling(i / ncols)
     col_index <- (i - 1) %% ncols + 1
     x_domain <- c((col_index - 1 + hspacing_factor) / ncols, (col_index - hspacing_factor) / ncols)
@@ -1475,30 +1484,57 @@ plot_params <- function(BenchMatrix, current_row = 1) {
     # x_domain <- x_domain/2 + 0.5
     y_domain <- y_domain / 2 + 0.5
     # y_domain <- y_domain/(nrow(BenchMatrix)*1.1) + (current_row-1)*1.05 / nrow(BenchMatrix)
+    color_idx <- round((val - min_value) / (max_value - min_value) * 99) + 1
+    color_idx <- max(1, min(100, color_idx))
     fig1 <- plot_ly(
       domain = list(x = x_domain, y = y_domain),
       value = val,
-      title = list(text = param_names[i], align = "center", font = list(size = 10 / nr)),
+      title = list(text = numeric_names[i], align = "center", font = list(size = 10 / nr)),
       type = "indicator",
       mode = "gauge",
       gauge = list(
         shape = "bullet",
         axis = list(
-          range = list(curr_par$MinValue, curr_par$MaxValue),
+          range = list(min_value, max_value),
           tickmode = "auto",
           ticks = "inside", # Position ticks inside
           tickfont = list(size = 10 / nr, color = "black") # Adjust tickfont size and color for better visibility
         ),
         bar = list(
-          color = colorpanel(100, "#33CC33", "#999966", "#CC3333")[(val - curr_par$MinValue) / (curr_par$MaxValue - curr_par$MinValue) * 100 + 1],
+          color = colorpanel(100, "#33CC33", "#999966", "#CC3333")[color_idx],
           thickness = 0.8 # Adjust this value to make the gauge bar thicker
         )
       )
     )
     meters[[i]] <- fig1
   }
-  # Combine all meter plots
-  subplot(meters, nrows = nrows, margin = 0.01)
+
+  text_table <- NULL
+  if (any(table_param)) {
+    text_table <- plot_ly(
+      type = "table",
+      domain = list(x = c(0, 1), y = if (length(meters) > 0) c(0, 0.45) else c(0, 1)),
+      header = list(values = c("Parameter", "Value")),
+      cells = list(values = list(param_names[table_param], raw_values[table_param]))
+    )
+  }
+
+  if (length(meters) == 0) {
+    return(text_table)
+  }
+  meter_plot <- subplot(meters, nrows = nrows, margin = 0.01)
+  meter_plot$x$layout[["NA"]] <- NULL
+  if (is.null(text_table)) {
+    return(meter_plot)
+  }
+  plotly::add_trace(
+    meter_plot,
+    type = "table",
+    inherit = FALSE,
+    domain = list(x = c(0, 1), y = c(0, 0.45)),
+    header = list(values = c("Parameter", "Value")),
+    cells = list(values = list(param_names[table_param], raw_values[table_param]))
+  )
 }
 
 
