@@ -99,11 +99,24 @@ protein-background peptide is available for \eqn{R_{prot}}, or when the
 modified peptide maps to more than one accession or protein start position.
 }
 \examples{
-\dontrun{
-# After running the ProteoMaker pipeline and obtaining StatsPep:
-occ <- calcPTMOccupancy(StatsPep, Param)
-head(occ)
-}
+quant_cols <- c("C_1_R_1", "C_1_R_2", "C_2_R_1", "C_2_R_2")
+params <- list(QuantColnames = quant_cols, NumCond = 2, NumReps = 2)
+
+pep <- data.frame(
+  Sequence = c("AASPEPR", "AASPEPR", "BGPEPTIDE"),
+  C_1_R_1 = c(10, 10, 10),
+  C_1_R_2 = c(10, 10, 10),
+  C_2_R_1 = c(11, 10, 10.5),
+  C_2_R_2 = c(11, 10, 10.5),
+  stringsAsFactors = FALSE
+)
+pep$PTMType <- I(list("ph", character(0), character(0)))
+pep$PTMPos <- I(list(3L, integer(0), integer(0)))
+pep$Accession <- I(list("P12345", "P12345", "P12345"))
+pep$Start <- I(list(10L, 10L, 30L))
+pep$Stop <- I(list(16L, 16L, 38L))
+
+calcPTMOccupancy(pep, params)
 
 }
 \references{

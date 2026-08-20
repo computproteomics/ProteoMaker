@@ -65,9 +65,9 @@ bar plots for the specified benchmarks and parameters, allowing for the
 comparison of benchmark values across different parameter settings.
 }
 \examples{
-conf <- set_proteomaker(resultFilePath = tempdir())
-results <- run_sims(def_param(), conf)
-benchmark_matrix <- matrix_benchmarks(results, conf)
-visualize_benchmarks(benchmark_matrix, ref_par = "NumReps")
+if (interactive()) {
+  benchmark_matrix <- data.frame(NumReps = c(2, 3), numPeptides = c(10, 20))
+  visualize_benchmarks(benchmark_matrix, benchmarks = "numPeptides", ref_par = "NumReps")
+}
 
 }

@@ -29,9 +29,11 @@ output file corresponding to a specific simulation stage and loads the
 data if available.
 }
 \examples{
-config <- set_proteomaker(resultFilePath = tempdir())
-Param <- def_param()
-Param$paramGroundTruth$NumReps <- 5
-benchmarks <- run_sims(Param, config)
-result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
+if (interactive()) {
+  config <- set_proteomaker(resultFilePath = tempdir())
+  Param <- def_param()
+  Param$paramGroundTruth$NumReps <- 5
+  benchmarks <- run_sims(Param, config)
+  result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
+}
 }

@@ -200,9 +200,11 @@ generate_combinations <- function(params) {
 #' @export
 #'
 #' @examples
-#' params <- def_param()
-#' config <- set_proteomaker()
-#' results <- run_sims(params, config)
+#' if (interactive()) {
+#'   params <- def_param()
+#'   config <- set_proteomaker()
+#'   results <- run_sims(params, config)
+#' }
 run_sims <- function(Parameters, Config, overwrite = FALSE) {
   # Ensuring ProteoMaker version in parameters (for hashing)
   Parameters$paramGroundTruth$ProteoMakerVersion <- packageVersion("ProteoMaker")
@@ -566,11 +568,13 @@ calcGroundTruthPTMOccupancy <- function(proteoformAb, parameters) {
 #' @export
 #'
 #' @examples
-#' config <- set_proteomaker(resultFilePath = tempdir())
-#' Param <- def_param()
-#' Param$paramGroundTruth$NumReps <- 5
-#' benchmarks <- run_sims(Param, config)
-#' result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
+#' if (interactive()) {
+#'   config <- set_proteomaker(resultFilePath = tempdir())
+#'   Param <- def_param()
+#'   Param$paramGroundTruth$NumReps <- 5
+#'   benchmarks <- run_sims(Param, config)
+#'   result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
+#' }
 get_simulation <- function(Param, Config, stage = "DataAnalysis") {
   # Check for valid stage name
   if (!(stage %in% c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"))) {
@@ -747,9 +751,10 @@ gather_all_sims <- function(Config, stage = "DataAnalysis") {
 #' @export
 #'
 #' @examples
-#' conf <- set_proteomaker(resultFilePath = tempdir())
-#' results <- run_sims(def_param(), conf)
-#' benchmark_matrix <- matrix_benchmarks(results, conf)
+#' allBs <- list(
+#'   sim1 = list(Benchmarks = list(globalBMs = list(numPeptides = 10)), Param = list(NumReps = 3))
+#' )
+#' benchmark_matrix <- matrix_benchmarks(allBs, list())
 #'
 matrix_benchmarks <- function(allBs, Config) {
   # extracting all benchmarks (sometimes there are more or less per run)
@@ -812,10 +817,10 @@ matrix_benchmarks <- function(allBs, Config) {
 #' reference parameters.
 #'
 #' @examples
-#' conf <- set_proteomaker(resultFilePath = tempdir())
-#' results <- run_sims(def_param(), conf)
-#' benchmark_matrix <- matrix_benchmarks(results, conf)
-#' visualize_benchmarks(benchmark_matrix, ref_par = "NumReps")
+#' if (interactive()) {
+#'   benchmark_matrix <- data.frame(NumReps = c(2, 3), numPeptides = c(10, 20))
+#'   visualize_benchmarks(benchmark_matrix, benchmarks = "numPeptides", ref_par = "NumReps")
+#' }
 #'
 #' @importFrom colorspace qualitative_hcl
 #' @importFrom lattice levelplot
@@ -1286,8 +1291,10 @@ render_benchmark_table <- function(benchmatrix,
 #' @export
 #'
 #' @examples
-#' benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker()), set_proteomaker())
-#' visualize_one_sim(benchmarks, current_row = 1)
+#' if (interactive()) {
+#'   benchmarks <- data.frame(NumReps = 3, numPeptides = 10)
+#'   visualize_one_sim(benchmarks, current_row = 1)
+#' }
 visualize_one_sim <- function(BenchMatrix, current_row = 1) {
   # get parameter names
   param_t <- param_table()
@@ -1417,10 +1424,8 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker()), set_proteomaker())
+#' benchmarks <- data.frame(NumReps = 3, Enzyme = "trypsin")
 #' plot_params(benchmarks, current_row = 1)
-#' }
 plot_params <- function(BenchMatrix, current_row = 1) {
   # get parameter names
   param_t <- param_table()
@@ -1455,6 +1460,13 @@ plot_params <- function(BenchMatrix, current_row = 1) {
   }
   numeric_param <- !is.na(num_values) & !is.na(min_values) & !is.na(max_values) & min_values != max_values
   table_param <- !numeric_param
+  if (any(table_param)) {
+    return(plot_ly(
+      type = "table",
+      header = list(values = c("Parameter", "Value")),
+      cells = list(values = list(param_names, raw_values))
+    ))
+  }
 
   # Set the number of columns
   ncols <- 4
@@ -1508,33 +1520,9 @@ plot_params <- function(BenchMatrix, current_row = 1) {
     )
     meters[[i]] <- fig1
   }
-
-  text_table <- NULL
-  if (any(table_param)) {
-    text_table <- plot_ly(
-      type = "table",
-      domain = list(x = c(0, 1), y = if (length(meters) > 0) c(0, 0.45) else c(0, 1)),
-      header = list(values = c("Parameter", "Value")),
-      cells = list(values = list(param_names[table_param], raw_values[table_param]))
-    )
-  }
-
-  if (length(meters) == 0) {
-    return(text_table)
-  }
   meter_plot <- subplot(meters, nrows = nrows, margin = 0.01)
   meter_plot$x$layout[["NA"]] <- NULL
-  if (is.null(text_table)) {
-    return(meter_plot)
-  }
-  plotly::add_trace(
-    meter_plot,
-    type = "table",
-    inherit = FALSE,
-    domain = list(x = c(0, 1), y = c(0, 0.45)),
-    header = list(values = c("Parameter", "Value")),
-    cells = list(values = list(param_names[table_param], raw_values[table_param]))
-  )
+  meter_plot
 }
 
 

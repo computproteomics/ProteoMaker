@@ -24,8 +24,6 @@ values of parameters, providing an intuitive understanding of the simulation
 setup.
 }
 \examples{
-\dontrun{
-benchmarks <- matrix_benchmarks(run_sims(def_param(), set_proteomaker()), set_proteomaker())
+benchmarks <- data.frame(NumReps = 3, Enzyme = "trypsin")
 plot_params(benchmarks, current_row = 1)
-}
 }
