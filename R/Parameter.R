@@ -111,9 +111,21 @@ render_parameter_table <- function(Param,
   } else {
     NA_character_
   }
-  meta$Description <- if ("Explanation" %in% colnames(meta)) meta$Explanation else NA_character_
-  meta$List <- if ("Group" %in% colnames(meta)) meta$Group else NA_character_
-  meta$Section <- if ("Category" %in% colnames(meta)) meta$Category else NA_character_
+  meta$Description <- if ("Explanation" %in% colnames(meta)) {
+    vapply(meta$Explanation, format_value, character(1))
+  } else {
+    NA_character_
+  }
+  meta$List <- if ("Group" %in% colnames(meta)) {
+    vapply(meta$Group, format_value, character(1))
+  } else {
+    NA_character_
+  }
+  meta$Section <- if ("Category" %in% colnames(meta)) {
+    vapply(meta$Category, format_value, character(1))
+  } else {
+    NA_character_
+  }
 
   available <- c("Parameter", "Value", "Description", "Default", "Range", "List", "Section")
   bad_columns <- setdiff(columns, available)

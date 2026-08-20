@@ -38,6 +38,7 @@ test_that("render_parameter_table returns selected parameter columns", {
   expect_named(result, c("Parameter", "Value", "Description"))
   expect_equal(result$Parameter, c("NumReps", "Enzyme"))
   expect_equal(result$Value, c("2", "trypsin"))
+  expect_false(any(vapply(result, is.list, logical(1))))
 })
 
 
