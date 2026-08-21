@@ -76,6 +76,7 @@ test_that("run_sims with PTMs and lambda=0 completes without error", {
   params <- def_param()
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
+  params$paramDataAnalysis$ProtSummarization <- "mean"
   params <- make_ptm_params(params, lambda = 0)
 
   results <- run_sims(params, config)
@@ -92,6 +93,7 @@ test_that("flat PTMTypesDistr format list(ph=1) runs without error", {
   params <- def_param()
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
+  params$paramDataAnalysis$ProtSummarization <- "mean"
   # Use the flat format documented in the YAML description
   params$paramGroundTruth$FracModProt <- 0.5
   params$paramGroundTruth$PropModPerProt <- 1
@@ -117,6 +119,7 @@ test_that("PropModPerProt=1 and RemoveNonModFormFrac=0 yields 2 proteoforms per 
   params <- def_param()
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
+  params$paramDataAnalysis$ProtSummarization <- "mean"
   params <- make_ptm_params(params, lambda = 0)
 
   results <- run_sims(params, config)

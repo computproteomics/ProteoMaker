@@ -1,5 +1,6 @@
 library(testthat)
 test_that("set_proteomaker returns correct default configuration", {
+  on.exit(unlink("SimulatedDatasets", recursive = TRUE), add = TRUE)
   config <- set_proteomaker()
 
   expect_equal(grepl("Proteome", config$fastaFilePath), TRUE)
@@ -11,6 +12,7 @@ test_that("set_proteomaker returns correct default configuration", {
 })
 
 test_that("set_proteomaker allows custom configuration", {
+  on.exit(unlink("Results", recursive = TRUE), add = TRUE)
   config <- set_proteomaker(
     fastaFilePath = "CustomProteomes", resultFilePath = "Results",
     cores = 4, clusterType = "FORK", runStatTests = FALSE,

@@ -59,7 +59,7 @@ params:
     group: "Ground Truth Data"
     type: "paramGroundTruth"
     description: "Multiplier for generating additional modified proteoforms per selected protein. Values >= 1 create distribute that many independently modified proteoforms per protein."
-    min: 1
+    min: 0
     max: 500
     class: "numeric"
     default: 1

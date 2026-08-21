@@ -50,3 +50,16 @@ test_that("def_param uses default YAML file if none provided", {
   # Check that params are non-null
   expect_true(length(params) > 0)
 })
+
+test_that("def_param reads configured PTM maps", {
+  params <- def_param(system.file("config", "parameters_human_ph_ox_baseline.yaml",
+                                  package = "ProteoMaker"))
+  ptm <- params$paramGroundTruth
+
+  expect_equal(ptm$PTMTypes$mods, c("ph", "ox"))
+  expect_equal(names(ptm$PTMTypesDistr[[1]]), c("ph", "ox"))
+  expect_equal(ptm$PTMTypesDistr[[1]]$ph, 0.5)
+  expect_equal(ptm$PTMTypesMass[[1]]$ox, 15.994915)
+  expect_equal(ptm$ModifiableResidues[[1]]$ph, c("S", "T", "Y"))
+  expect_equal(ptm$ModifiableResiduesDistr[[1]]$ox, 1)
+})

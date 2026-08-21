@@ -14,6 +14,7 @@ test_that("get_simulation returns the correct loaded data", {
   config <- test_proteomaker_config(resultFilePath = tempdir())
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- c(3)
+  Param$paramDataAnalysis$ProtSummarization <- "mean"
   benchmarks <- run_sims(Param, config)
 
   result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
@@ -40,6 +41,7 @@ test_that("get_simulation returns the correct loaded data, no stats", {
   config <- test_proteomaker_config(resultFilePath = tempdir(), runStatTests = FALSE)
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- 5
+  Param$paramDataAnalysis$ProtSummarization <- "mean"
   benchmarks <- run_sims(Param, config)
 
   result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
@@ -65,6 +67,7 @@ test_that("get_simulation returns the correct loaded data, no benchmarks", {
   config <- test_proteomaker_config(resultFilePath = tempdir(), calcAllBenchmarks = FALSE)
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- 5
+  Param$paramDataAnalysis$ProtSummarization <- "mean"
   benchmarks <- run_sims(Param, config)
 
   result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
@@ -92,6 +95,7 @@ test_that("get_simulation returns the correct loaded data, no stats, not benchma
   config <- test_proteomaker_config(resultFilePath = tempdir(), calcAllBenchmarks = FALSE, runStatTests = FALSE)
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- 5
+  Param$paramDataAnalysis$ProtSummarization <- "mean"
   benchmarks <- run_sims(Param, config)
 
   result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")

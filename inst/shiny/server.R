@@ -119,7 +119,7 @@ server <- function(input, output, session) {
       }
     } else if (class == "list" || class == "string") {
       # Ensure the selected value is in the list of choices (if defined)
-      if (!is.null(choices) && !input_value %in% choices) {
+      if (!all(is.na(unlist(input_value))) && !is.null(choices) && !input_value %in% choices) {
         valid <- FALSE
         error_message <- paste("Error: Value for", param_name, "is not a valid option. Available choices:",
                                paste(choices, collapse = ", "))
@@ -160,22 +160,23 @@ server <- function(input, output, session) {
     ptms <- up_params$PTMTypes$value[[1]]
     ptms <- ptms[!is.na(ptms)]
     if (is.null(ptms) || length(ptms) == 0) {
+      parameters(params)
       return(list(valid = TRUE, message = "No PTMs defined."))
     }
     if (!is.null(ptms) && length(ptms) > 0) {
       # check distr
-      if (!all(sort(names(up_params$PTMTypesDistr$value[[1]])) == sort(ptms))) {
+      if (!identical(sort(names(up_params$PTMTypesDistr$value[[1]])), sort(ptms))) {
         valid <- FALSE
         error_message <- "Error: PTMTypesDistr needs to be list of named vector/list containing the relative
           frequency of each PTM."
-      } else if (!all(sort(names(up_params$PTMTypesMass$value[[1]])) == sort(ptms))) {
+      } else if (!identical(sort(names(up_params$PTMTypesMass$value[[1]])), sort(ptms))) {
         valid <- FALSE
         error_message <- "Error: PTMTypesMass needs to be list of named vector/list containing the mass of each PTM."
-      } else if (!all(sort(names(up_params$ModifiableResidues$value[[1]])) == sort(ptms))) {
+      } else if (!identical(sort(names(up_params$ModifiableResidues$value[[1]])), sort(ptms))) {
         valid <- FALSE
         error_message <- "Error: ModifiableResidues needs to be list of named vector/list containing the amino acids
           that can be modified by each PTM."
-      } else if (!all(sort(names(up_params$ModifiableResiduesDistr$value[[1]])) == sort(ptms))) {
+      } else if (!identical(sort(names(up_params$ModifiableResiduesDistr$value[[1]])), sort(ptms))) {
         valid <- FALSE
         error_message <- "Error: ModifiableResiduesDistr needs to be list of named vector/list containing the relative
           frequency of each amino acid that can be modified by each PTM."
@@ -217,7 +218,45 @@ server <- function(input, output, session) {
     }
   }
 
+  fix_na <- function(x) {
+    if (is.list(x)) return(lapply(x, fix_na))
+    if (is.character(x)) x[x == "NA"] <- NA_character_
+    x
+  }
+
+  normalize_ptms <- function(params) {
+    unwrap <- function(x) {
+      while (is.list(x) && identical(names(x), "mods")) x <- x$mods
+      if (!is.list(x) && length(x) == 1 && is.na(x)) list() else x
+    }
+    squash <- function(x) if (is.list(x) && length(x) == 1 && is.null(names(x))) x[[1]] else x
+
+    ptm_names <- c("PTMTypes", "PTMTypesDistr", "PTMTypesMass",
+                   "ModifiableResidues", "ModifiableResiduesDistr")
+    for (param_name in intersect(ptm_names, names(params))) {
+      value <- squash(unwrap(params[[param_name]]$value))
+      if (param_name == "PTMTypes") {
+        value <- unlist(value, use.names = FALSE)
+        value <- value[!is.na(value)]
+      } else if (is.list(value)) {
+        value <- lapply(value, squash)
+      }
+      params[[param_name]]$value <- if (param_name == "PTMTypes") list(mods = value) else list(value)
+    }
+    params
+  }
+
   normalize_uploaded_params <- function(up_params, template) {
+    value_of <- function(x) {
+      fix_na(if (is.list(x) && !is.null(x$value)) {
+        x$value
+      } else if (is.list(x) && !is.null(x$default)) {
+        x$default
+      } else {
+        x
+      })
+    }
+
     if (!is.null(up_params$params)) up_params <- up_params$params
     param_groups <- c("paramGroundTruth", "paramProteoformAb", "paramDigest", "paramMSRun",
                       "paramDataAnalysis")
@@ -225,12 +264,12 @@ server <- function(input, output, session) {
       up_params <- do.call(c, unname(up_params[names(up_params) %in% param_groups]))
     }
 
-    out <- lapply(template, function(x) list(value = if (!is.null(x$value)) x$value else x$default))
+    out <- lapply(template, function(x) list(value = value_of(x)))
+    names(out) <- names(template)
     for (param_name in intersect(names(up_params), names(template))) {
-      entry <- up_params[[param_name]]
-      out[[param_name]]$value <- if (is.list(entry) && !is.null(entry$value)) entry$value else entry
+      out[[param_name]]$value <- value_of(up_params[[param_name]])
     }
-    out
+    normalize_ptms(out)
   }
 
   # set global parameters
@@ -292,6 +331,7 @@ server <- function(input, output, session) {
   # Add PTM config to params and update PTM details in "ptm_table" (textOutput)
   observeEvent(input$add_ptm, {
     params <- parameters()
+    params <- normalize_ptms(params)
     # Add PTM to params
     ptm_name <- input$ptm_types
     if (ptm_name %in% unlist(params$PTMTypes$value)) {
@@ -392,7 +432,7 @@ server <- function(input, output, session) {
                 output[[paste0(up_param_name, "_file")]] <- renderText({
                   basename(value)
                 })
-                if (!is.null(value$datapath))
+                if (is.list(value) && !is.null(value$datapath))
                   value <- value$datapath
               } else if (params[[up_param_name]]$class == "boolean") {
                 # update checkboxInput
@@ -414,6 +454,7 @@ server <- function(input, output, session) {
         }
         checked <- validate_ptm_params(params, up_params)
         if (checked$valid) {
+          ptm_info(NULL)
           update_ptm_info <- NULL
           ptms <- up_params$PTMTypes$value[[1]]
           ptms[ptms == "NA"] <- NA
@@ -510,10 +551,12 @@ server <- function(input, output, session) {
     params <- parameters()
     print(params$PTMTypesDistr)
     # Normalize PTM fractions to total of one
-    if(!is.null(params$PTMTypesDistr$value)) {
-      if (!all(is.na(params$PTMTypesDistr$value))) {
-        total_fractions <- sum(unlist(params$PTMTypesDistr$value))
-        for(i in 1:length(unlist(params$PTMTypesDistr$value)))
+    if (!is.null(params$PTMTypesDistr$value)) {
+      ptm_fractions <- unlist(params$PTMTypesDistr$value, use.names = FALSE)
+      ptm_fractions <- ptm_fractions[!is.na(ptm_fractions)]
+      if (length(ptm_fractions) > 0) {
+        total_fractions <- sum(ptm_fractions)
+        for (i in seq_along(params$PTMTypesDistr$value[[1]]))
           params$PTMTypesDistr$value[[1]][[i]] <- params$PTMTypesDistr$value[[1]][[i]] / total_fractions
       }
     }
@@ -527,7 +570,8 @@ server <- function(input, output, session) {
       value <- param_info$value
       if (is.null(value))
         value <- param_info$default
-      value[value == "NA"] <- NA
+      if (is.character(value))
+        value[value == "NA"] <- NA
       if (!is.null(category)) {
         Param[[category]][[param_name]] <- value
       }

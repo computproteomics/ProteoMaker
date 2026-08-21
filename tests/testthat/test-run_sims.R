@@ -8,6 +8,7 @@ test_that("run_sims completes without errors for minimal input", {
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
   params$paramDigest$DigestionEnzyme <- "Trypsin"
+  params$paramDataAnalysis$ProtSummarization <- "mean"
 
   results <- run_sims(params, config)
 
@@ -22,6 +23,7 @@ test_that("run_sims creates expected result files", {
   params$paramGroundTruth$NumReps <- 2
   params$paramGroundTruth$NumCond <- 2
   params$paramDigest$DigestionEnzyme <- "Trypsin"
+  params$paramDataAnalysis$ProtSummarization <- "mean"
 
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)

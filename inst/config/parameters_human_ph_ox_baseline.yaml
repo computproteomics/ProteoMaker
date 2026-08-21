@@ -35,7 +35,7 @@ params:
     min: NA
     max: NA
     default: fasta_example.fasta
-    value: fasta_full_human.fasta_2b1989dc.fasta
+    value: fasta_full_human.fasta
   PathToProteinList:
     group: Input Data
     type: paramGroundTruth
@@ -44,6 +44,7 @@ params:
     max: NA
     class: file
     default: NA
+    value: .na.character
   PercExpressedProt:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -61,18 +62,18 @@ params:
     max: 1
     class: numeric
     default: 0
-    value: 0.5
+    value: 1
   PropModPerProt:
     group: Ground Truth Data
     type: paramGroundTruth
     description: Multiplier for generating additional modified proteoforms per selected
       protein. Values >= 1 create distribute that many independently modified proteoforms
       per protein.
-    min: 1
+    min: 0
     max: 500
     class: numeric
     default: 1
-    value: 2
+    value: 0
   PTMMultipleLambda:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -82,7 +83,7 @@ params:
     max: 10
     class: numeric
     default: 0
-    value: 0
+    value: 0.5
   RemoveNonModFormFrac:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -136,8 +137,8 @@ params:
     - NA
     default: NA
     value:
-    - ph: 1
-      ox: 0.1
+    - ph: 0.5
+      ox: 0.04
   PTMTypesMass:
     group: Ground Truth Data
     type: paramGroundTruth
@@ -510,7 +511,7 @@ params:
     - rlm
     class: string
     default: medpolish
-    value: medpolish
+    value: median
   MinUniquePep:
     group: Protein Summarization
     type: paramDataAnalysis

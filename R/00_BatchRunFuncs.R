@@ -99,7 +99,7 @@ def_param <- function(yaml_file = NULL) {
   for (l in names(params)) {
     params[[l]]$class <- params[[l]]$choices <- NULL
     for (k in names(params[[l]])) {
-      if (params[[l]][[k]] == "NA") {
+      if (identical(params[[l]][[k]], "NA")) {
         params[[l]][[k]] <- NA
       }
     }
@@ -131,17 +131,19 @@ def_param <- function(yaml_file = NULL) {
     }
   }
 
+  print_tree <- function(x) try(Hmisc::list.tree(x, maxcomp = 100, maxlen = 100), silent = TRUE)
+
   # Provide a nice printout for each category
   base::message("--------------------\nGround truth generation parameters:")
-  Hmisc::list.tree(Param$paramGroundTruth, maxcomp = 100, maxlen = 100)
+  print_tree(Param$paramGroundTruth)
   base::message("--------------------\nProteoform abundance parameters:")
-  Hmisc::list.tree(Param$paramProteoformAb, maxcomp = 100, maxlen = 100)
+  print_tree(Param$paramProteoformAb)
   base::message("--------------------\nDigestion parameters:")
-  Hmisc::list.tree(Param$paramDigest, maxcomp = 100, maxlen = 100)
+  print_tree(Param$paramDigest)
   base::message("--------------------\nMSRun parameters:")
-  Hmisc::list.tree(Param$paramMSRun, maxcomp = 100, maxlen = 100)
+  print_tree(Param$paramMSRun)
   base::message("--------------------\nData analysis parameters:")
-  Hmisc::list.tree(Param$paramDataAnalysis, maxcomp = 100, maxlen = 100)
+  print_tree(Param$paramDataAnalysis)
   base::message("--------------------")
   return(Param)
 }
@@ -868,9 +870,6 @@ visualize_benchmarks <- function(benchmatrix,
   )
 
   metric_colors <- colorspace::qualitative_hcl(n = length(titles), palette = "Dark 3")
-  color_idx <- matrix(seq_along(metric_colors), nrow = 10, byrow = TRUE)
-  color_idx <- as.vector(color_idx[color_idx <= length(metric_colors)])
-  metric_colors <- metric_colors[color_idx]
   names(metric_colors) <- names(titles)
   pch.vals <- rep(c(1, 16, 17, 15, 3, 4, 8), length.out = length(titles))
   names(pch.vals) <- names(titles)

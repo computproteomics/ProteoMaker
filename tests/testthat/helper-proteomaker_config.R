@@ -11,9 +11,12 @@ test_proteomaker_config <- function(...) {
 
   # In restricted R CMD check sandboxes, socket-based clusters may be blocked.
   # Keep parallel defaults for normal test runs, but force serial in check unless explicitly overridden.
+  socket <- try(parallel::serverSocket(0L), silent = TRUE)
+  sockets_unavailable <- inherits(socket, "try-error")
+  if (!sockets_unavailable) close(socket)
   in_r_cmd_check <- nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_"))
   force_parallel <- identical(Sys.getenv("PROTEOMAKER_TEST_FORCE_PARALLEL"), "1")
-  if (in_r_cmd_check && !force_parallel && !has_user_cores) {
+  if ((in_r_cmd_check || sockets_unavailable) && !force_parallel && !has_user_cores) {
     config$cores <- NULL
   }
 

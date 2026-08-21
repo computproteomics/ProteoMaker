@@ -18,3 +18,9 @@
 ^tests/testthat/Rplots\.pdf$
 ^AGENTS\.md$
 ^\.posit/assistant$
+^\.lintr$
+^\.vscode$
+^package\.json$
+^package-lock\.json$
+^snowflake\.log$
+^man/Benchmarks\.qmd$

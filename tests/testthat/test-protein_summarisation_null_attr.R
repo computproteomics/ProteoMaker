@@ -33,6 +33,9 @@ test_that("proteinSummarisation does not error when a group is below MinUniquePe
 
 test_that("proteinSummarisation does not error when a group is below MinUniquePep (parallel PSOCK)", {
   skip_on_cran()
+  socket <- try(parallel::serverSocket(0L), silent = TRUE)
+  skip_if(inherits(socket, "try-error"), "parallel sockets unavailable")
+  close(socket)
   peptable <- make_peptable_below_threshold()
   params <- list(
     ProtSummarization = "mean",

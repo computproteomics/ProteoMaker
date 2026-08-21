@@ -4,6 +4,7 @@ library(testthat)
 test_that("gather_all_sims returns correct structure", {
   Param <- def_param()
   Param$paramGroundTruth$NumReps <- 5
+  Param$paramDataAnalysis$ProtSummarization <- "mean"
   ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
   unlink(ll, recursive = TRUE)
   proteomaker_config <- test_proteomaker_config(resultFilePath = tempdir())

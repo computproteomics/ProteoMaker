@@ -1,13 +1,18 @@
 library(testthat)
 
 test_that("visualize_benchmarks returns a plotly object", {
-  Param <- def_param()
-  ll <- list.files(tempdir(), pattern = "output", full.names = TRUE)
-  unlink(ll, recursive = TRUE)
-  proteomaker_config <- test_proteomaker_config(resultFilePath = tempdir())
-  benchmarks <- run_sims(Param, proteomaker_config)
-  benchmatrix <- matrix_benchmarks(benchmarks, proteomaker_config)
-  result <- visualize_benchmarks(benchmatrix)
+  benchmatrix <- data.frame(
+    WrongIDs = c(0.01, 0.05),
+    numPeptides = c(100, 90)
+  )
+
+  expect_no_error(
+    visualize_benchmarks(
+      benchmatrix,
+      benchmarks = "numPeptides",
+      ref_par = "WrongIDs"
+    )
+  )
 })
 
 test_that("visualize_benchmarks supports shared compare_par colors", {
