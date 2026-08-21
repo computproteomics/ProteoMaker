@@ -217,6 +217,22 @@ server <- function(input, output, session) {
     }
   }
 
+  normalize_uploaded_params <- function(up_params, template) {
+    if (!is.null(up_params$params)) up_params <- up_params$params
+    param_groups <- c("paramGroundTruth", "paramProteoformAb", "paramDigest", "paramMSRun",
+                      "paramDataAnalysis")
+    if (any(names(up_params) %in% param_groups)) {
+      up_params <- do.call(c, unname(up_params[names(up_params) %in% param_groups]))
+    }
+
+    out <- lapply(template, function(x) list(value = if (!is.null(x$value)) x$value else x$default))
+    for (param_name in intersect(names(up_params), names(template))) {
+      entry <- up_params[[param_name]]
+      out[[param_name]]$value <- if (is.list(entry) && !is.null(entry$value)) entry$value else entry
+    }
+    out
+  }
+
   # set global parameters
   observeEvent(input$run_stat, proteomaker_config$runStatTests <<- input$run_stat)
   observeEvent(input$run_benchmarks, proteomaker_config$calcAllBenchmarks <<- input$run_benchmarks)
@@ -360,14 +376,11 @@ server <- function(input, output, session) {
         if (is.null(up_params) || length(up_params) == 0) {
           shinyalert("The params object is empty or invalid.")
         }
-        if (is.null(up_params$params)) {
-          shinyalert("Yaml file main item should be 'params
-                     '")
-        }
-        up_params <- up_params$params
+        up_params <- normalize_uploaded_params(up_params, params)
         # Fill all fields
         all_valid(TRUE)
         for (up_param_name in names(up_params)) {
+          if (is.null(params[[up_param_name]])) next
           # validate parameter values
           value <- up_params[[up_param_name]]$value
           checked <- validate_param_values(up_param_name, params[[up_param_name]], value)
