@@ -1,7 +1,7 @@
 SimulatedDataSets/*
 /doc/
 /Meta/
-.Rproj.user
+.Rproj.user/
 .Rhistory
 inst/shiny/SimulatedDataSets/
 *.Rcheck/
@@ -10,6 +10,7 @@ inst/shiny/SimulatedDataSets/
 # IDE/editor files
 .idea/
 .vscode/
+.posit/
 .vs/
 *.code-workspace
 
