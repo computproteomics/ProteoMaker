@@ -54,7 +54,7 @@ flowchart LR
 The following values and distributions are collected and used for assessing quantitative and statistical fidelity of the simulation and benchmarking pipeline. The summary table lists the benchmark names used in output objects and figures; the detailed sections below describe how each metric is calculated and how it should be interpreted.
 
 | Benchmarking Metrics | Name | Label (for figures) |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | **Peptidoform** |  |  |
 | Total Number of Peptidoforms | numPeptides | #Total peptidoforms (mod+unmod) |
 | Number of Protein Accessions | numProteins | #Protein accessions (all peptidoforms) |

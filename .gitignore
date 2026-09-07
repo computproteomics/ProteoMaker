@@ -16,3 +16,5 @@ inst/shiny/SimulatedDataSets/
 # Local non-package files
 package.json
 snowflake*
+
+AGENTS.md
