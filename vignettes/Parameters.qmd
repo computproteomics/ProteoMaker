@@ -120,7 +120,7 @@ flowchart LR
 These parameters are not part of the simulation hash. They control where files are read and written, how much parallelism is used, and whether optional downstream steps run.
 
 | Parameter | Default | Purpose |
-|----|---:|----|
+|------------------------|-----------------------:|------------------------|
 | `fastaFilePath` | package `Proteomes` folder | Directory containing FASTA files referenced by `PathToFasta`. |
 | `resultFilePath` | `SimulatedDatasets` | Output directory for cached simulation stages and benchmark results. |
 | `cores` | `2` | Number of CPU cores used by parallel steps. |
@@ -185,14 +185,14 @@ Each top-level element in `Param` corresponds to one pipeline stage. Parameters 
 ### Paths
 
 | Parameter | Description |
-|----|----|
+|------------------------------------|------------------------------------|
 | `fastaFilePath` | Directory containing FASTA files. `PathToFasta` values from `Param$paramGroundTruth` are resolved relative to this directory. |
 | `resultFilePath` | Directory used for saved stage files, retrieved simulations, and benchmark tables. The directory is created if needed. |
 
 ### Runtime
 
 | Parameter | Description |
-|----|----|
+|------------------------------------|------------------------------------|
 | `cores` | Number of cores used by parallelized steps. Larger values can substantially increase RAM use. |
 | `clusterType` | Parallel backend. `PSOCK` is portable; `FORK` can be faster on Unix-like systems but is not available everywhere. |
 | `runStatTests` | If `FALSE`, simulation can stop before statistical testing and occupancy/benchmark calculation. |
