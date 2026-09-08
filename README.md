@@ -74,3 +74,53 @@ Important remarks:
 - Be aware that changing downstream parameters (ground truth, digestion) can immensely increase the number of possible parameter settings
 - Keep always the result files in the respective folder (`resultFilePath`) if you didn't change anything in the pipeline such as any of the methods in the sourced files. This will allow you to run the full batch without re-running the data set generation and analysis.
 - Benchmarking results are skipped for data sets with fewer than 100 quantified proteins.
+
+## Functions
+
+<details>
+<summary>Simulated gene expression data generation, Statistical calculation</summary>
+
+```yaml
+# biotools-function
+operation:
+- term: Simulated gene expression data generation
+  uri: http://edamontology.org/operation_3566
+- term: Statistical calculation
+  uri: http://edamontology.org/operation_2238
+input:
+- data:
+    term: Protein sequence
+    uri: http://edamontology.org/data_2976
+  format:
+  - term: FASTA
+    uri: http://edamontology.org/format_1929
+output:
+- data:
+    term: Gene expression matrix
+    uri: http://edamontology.org/data_3112
+  format:
+  - term: CSV
+    uri: http://edamontology.org/format_3752
+- data:
+    term: Proteolytic digest
+    uri: http://edamontology.org/data_1238
+  format:
+  - term: CSV
+    uri: http://edamontology.org/format_3752
+- data:
+    term: Quality control report
+    uri: http://edamontology.org/data_3914
+  format:
+  - term: YAML
+    uri: http://edamontology.org/format_3750
+- data:
+    term: Statistical estimate score
+    uri: http://edamontology.org/data_0951
+  format:
+  - term: CSV
+    uri: http://edamontology.org/format_3752
+
+```
+
+</details>
+
