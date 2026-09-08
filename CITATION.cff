@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: ProteoMaker
+type: software
+repository: https://github.com/computproteomics/ProteoMaker
+identifiers:
+- type: other
+  value: proteomaker
+  description: bio.tools
+license: MIT
+keywords:
+- term: Proteomics
+  uri: http://edamontology.org/topic_0121
+- term: Proteomics experiment
+  uri: http://edamontology.org/topic_3520
+- term: Simulation experiment
+  uri: http://edamontology.org/topic_3524
+abstract: ProteoMaker is a platform for the generation of an in-silico bottom-up proteomics
+  data set with a ground truth on the level of proteoforms.
+message: If you use this software, please cite it using this CITATION.cff.
