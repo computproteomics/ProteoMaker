@@ -35,11 +35,13 @@ runPolySTest <- function(fullData, Param, refCond, onlyLIMMA = F, cores = 1) {
   cores_eff <- if (is.null(cores) || length(cores) == 0 || is.na(cores)) 1 else cores
   Sys.setenv(SHINY_THREADS = cores_eff)
 
-  # In restricted R CMD check sandboxes, some PolySTest methods spawn socket
+  # In restricted test/check sandboxes, some PolySTest methods spawn socket
   # clusters that may be unavailable. Keep full test suite for normal runs.
   in_r_cmd_check <- nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_"))
+  in_testthat <- identical(tolower(Sys.getenv("TESTTHAT")), "true") ||
+    nzchar(Sys.getenv("TESTTHAT_PKG"))
   force_full_stats <- identical(Sys.getenv("PROTEOMAKER_TEST_FORCE_FULL_STATS"), "1")
-  if (in_r_cmd_check && !force_full_stats) {
+  if ((in_r_cmd_check || in_testthat) && !force_full_stats) {
     onlyLIMMA <- TRUE
   }
 

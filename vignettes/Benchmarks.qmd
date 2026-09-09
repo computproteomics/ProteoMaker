@@ -161,7 +161,7 @@ Protein-group regulation benchmarks use the regulation metadata retained on the 
 
 - **True FDR for Estimated FDR** (`tFDRProt0.01.FDR_PolySTest 2 vs 1.tFDR`, `tFDRProt0.05.FDR_PolySTest 2 vs 1.tFDR`, label: *True FDR (protein groups)*): Realized false-discovery proportion at the ROC point whose estimated FDR is closest to 0.01 or 0.05.
 
-- **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCProt`, label: *Fold-change error (protein groups)*): Average squared error between measured protein-group log2 fold changes and the programmed proteoform-regulation proxy described above. Treat this as an approximate protein-group benchmark, especially when proteins contain both regulated and unchanged proteoforms.
+- **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCProt`, label: *Fold-change error (protein groups)*): Average squared error between measured protein-group log2 fold changes and the programmed proteoform-regulation proxy described above. Treat this as an approximate protein-group benchmark, especially when proteins contain both regulated and unchanged proteoforms. Protein groups without regulated proteoforms are not considered.
 
 - **Dynamic Range** (`dynRangeProt`, label: *Dynamic range (protein groups)*): Log2 range of protein-group intensities.
 
@@ -195,4 +195,4 @@ Protein-group regulation benchmarks use the regulation metadata retained on the 
 
 - **Proportion of Modified Peptidoforms with Quantified Protein Group** (`percOverlapModPepProt`, label: **% Mod peptidoforms with protein quant**): Fraction of modified peptidoforms whose merged accession string exactly matches a quantified protein-group row name.
 
-- **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCModPep`, label: *Fold-change error (mod. peptidoforms)*): Same fold-change error calculation as `meanSquareDiffFCPep`, restricted to peptidoforms with non-empty `PTMType`.
+- **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCModPep`, label: *Fold-change error (mod. peptidoforms)*): Same fold-change error calculation as `meanSquareDiffFCPep`, restricted to peptidoforms with non-empty `PTMType`, and peptidoforms with at least one regulation.
