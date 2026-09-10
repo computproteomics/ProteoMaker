@@ -51,12 +51,12 @@ set_proteomaker <- function(fastaFilePath = system.file("Proteomes", package = "
                             resultFilePath = "SimulatedDatasets",
                             cores = 2, clusterType = "PSOCK",
                             runStatTests = TRUE, calcAllBenchmarks = TRUE) {
-  dir.create(resultFilePath, showWarnings = FALSE)
-  return(list(
-    fastaFilePath = fastaFilePath, resultFilePath = resultFilePath,
-    cores = cores, clusterType = clusterType,
-    runStatTests = runStatTests, calcAllBenchmarks = calcAllBenchmarks
-  ))
+    dir.create(resultFilePath, showWarnings = FALSE)
+    return(list(
+        fastaFilePath = fastaFilePath, resultFilePath = resultFilePath,
+        cores = cores, clusterType = clusterType,
+        runStatTests = runStatTests, calcAllBenchmarks = calcAllBenchmarks
+    ))
 }
 
 
@@ -89,63 +89,63 @@ set_proteomaker <- function(fastaFilePath = system.file("Proteomes", package = "
 #' yaml_path <- system.file("config", "params.yaml", package = "ProteoMaker")
 #' params <- def_param(yaml_path)
 def_param <- function(yaml_file = NULL) {
-  if (is.null(yaml_file)) {
-    yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
-  }
-  # Read the YAML file
-  params <- yaml::yaml.load_file(yaml_file)$params
-
-  # Convert NA values from strings to real NA
-  for (l in names(params)) {
-    params[[l]]$class <- params[[l]]$choices <- NULL
-    for (k in names(params[[l]])) {
-      if (identical(params[[l]][[k]], "NA")) {
-        params[[l]][[k]] <- NA
-      }
+    if (is.null(yaml_file)) {
+        yaml_file <- system.file("config", "parameters.yaml", package = "ProteoMaker")
     }
-  }
-
-
-  # Initialize empty lists for each category
-  Param <- list(
-    paramGroundTruth = list(),
-    paramProteoformAb = list(),
-    paramDigest = list(),
-    paramMSRun = list(),
-    paramDataAnalysis = list()
-  )
-
-  # Iterate over each parameter and place it into the correct category based on "type"
-  for (param_name in names(params)) {
-    param_info <- params[[param_name]]
-    category <- param_info$type
-    default_value <- param_info$default
-    value <- param_info$value
-
-    if (!is.null(category)) {
-      if (!is.null(value)) {
-        Param[[category]][[param_name]] <- value
-      } else {
-        Param[[category]][[param_name]] <- default_value
-      }
+    # Read the YAML file
+    params <- yaml::yaml.load_file(yaml_file)$params
+    
+    # Convert NA values from strings to real NA
+    for (l in names(params)) {
+        params[[l]]$class <- params[[l]]$choices <- NULL
+        for (k in names(params[[l]])) {
+            if (identical(params[[l]][[k]], "NA")) {
+                params[[l]][[k]] <- NA
+            }
+        }
     }
-  }
-
-  print_tree <- function(x) try(Hmisc::list.tree(x, maxcomp = 100, maxlen = 100), silent = TRUE)
-
-  # Provide a nice printout for each category
-  base::message("--------------------\nGround truth generation parameters:")
-  print_tree(Param$paramGroundTruth)
-  base::message("--------------------\nProteoform abundance parameters:")
-  print_tree(Param$paramProteoformAb)
-  base::message("--------------------\nDigestion parameters:")
-  print_tree(Param$paramDigest)
-  base::message("--------------------\nMSRun parameters:")
-  print_tree(Param$paramMSRun)
-  base::message("--------------------\nData analysis parameters:")
-  print_tree(Param$paramDataAnalysis)
-  base::message("--------------------")
-  return(Param)
+    
+    
+    # Initialize empty lists for each category
+    Param <- list(
+        paramGroundTruth = list(),
+        paramProteoformAb = list(),
+        paramDigest = list(),
+        paramMSRun = list(),
+        paramDataAnalysis = list()
+    )
+    
+    # Iterate over each parameter and place it into the correct category based on "type"
+    for (param_name in names(params)) {
+        param_info <- params[[param_name]]
+        category <- param_info$type
+        default_value <- param_info$default
+        value <- param_info$value
+        
+        if (!is.null(category)) {
+            if (!is.null(value)) {
+                Param[[category]][[param_name]] <- value
+            } else {
+                Param[[category]][[param_name]] <- default_value
+            }
+        }
+    }
+    
+    print_tree <- function(x) try(Hmisc::list.tree(x, maxcomp = 100, maxlen = 100), silent = TRUE)
+    
+    # Provide a nice printout for each category
+    base::message("--------------------\nGround truth generation parameters:")
+    print_tree(Param$paramGroundTruth)
+    base::message("--------------------\nProteoform abundance parameters:")
+    print_tree(Param$paramProteoformAb)
+    base::message("--------------------\nDigestion parameters:")
+    print_tree(Param$paramDigest)
+    base::message("--------------------\nMSRun parameters:")
+    print_tree(Param$paramMSRun)
+    base::message("--------------------\nData analysis parameters:")
+    print_tree(Param$paramDataAnalysis)
+    base::message("--------------------")
+    return(Param)
 }
 
 
@@ -170,13 +170,13 @@ def_param <- function(yaml_file = NULL) {
 #' params$paramGroundTruth$NumReps <- c(2, 4, 6)
 #' combinations <- generate_combinations(params)
 generate_combinations <- function(params) {
-  combinations <- expand.grid(params, stringsAsFactors = FALSE)
-  # seems to be the only way to get to a list of lists
-  out_comb <- list()
-  for (i in seq_len(nrow(combinations))) {
-    out_comb[[i]] <- combinations[i, ]
-  }
-  out_comb
+    combinations <- expand.grid(params, stringsAsFactors = FALSE)
+    # seems to be the only way to get to a list of lists
+    out_comb <- list()
+    for (i in seq_len(nrow(combinations))) {
+        out_comb[[i]] <- combinations[i, ]
+    }
+    out_comb
 }
 
 
@@ -208,214 +208,214 @@ generate_combinations <- function(params) {
 #'   results <- run_sims(params, config)
 #' }
 run_sims <- function(Parameters, Config, overwrite = FALSE) {
-  # Ensuring ProteoMaker version in parameters (for hashing)
-  Parameters$paramGroundTruth$ProteoMakerVersion <- packageVersion("ProteoMaker")
-
-  # Generate combinations for each parameter set
-  listtogroundtruth <- generate_combinations(Parameters$paramGroundTruth)
-  listtoproteoformab <- generate_combinations(Parameters$paramProteoformAb)
-  listtodigestion <- generate_combinations(Parameters$paramDigest)
-  listtomsrun <- generate_combinations(Parameters$paramMSRun)
-  listtodatanalysis <- generate_combinations(Parameters$paramDataAnalysis)
-
-  all_params <- c(
-    Parameters$paramGroundTruth,
-    Parameters$paramProteoformAb,
-    Parameters$paramDataAnalysis,
-    Parameters$paramDigest,
-    Parameters$paramMSRun
-  )
-
-  # Generate combinations for all parameters
-  listall <- generate_combinations(all_params)
-  totalbench <- length(listall)
-  message("Total number of simulations to run: ", totalbench)
-
-  # Gather always benchmarking data
-  allBs <- list()
-  for (hh in seq_len(length(listtogroundtruth))) {
-    ## Running ground thruth generations
-    # check whether file with correct parameters exists
-    tParam <- listtogroundtruth[[hh]]
-    # turn into list
-    tParam <- lapply(tParam, function(x) x)
-    Param <- "none"
-    groundTruth <- NULL
-    md5 <- digest::digest(tParam, algo = "md5")
-    filename <- paste0(Config$resultFilePath, "/outputGroundTruth_", md5, ".RData")
-    if (!overwrite & file.exists(filename)) {
-      load(filename)
-    } else {
-      Param <- tParam
-      # Add path to fasta file
-      ttParam <- Param
-      ttParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
-      groundTruth <- samplePreparation(parameters = ttParam)
-      if (!is.null(groundTruth)) {
-        save(groundTruth, Param, file = filename)
-      }
-    }
-    gtParam <- Param
-    ## quantitative proteoform abundances
-    for (ii in 1:length(listtoproteoformab)) {
-      Param <- "none"
-      proteoformAb <- NULL
-      # create combined parameterfile
-      tParam <- c(gtParam, listtoproteoformab[[ii]])
-      # hash code to represent parameter configuration
-      md5 <- digest::digest(tParam, algo = "md5")
-      tParam <- c(
-        tParam,
-        list(QuantColnames = paste0(
-          "C_",
-          rep(1:tParam$NumCond, each = tParam$NumReps),
-          "_R_",
-          rep(1:tParam$NumReps, tParam$NumCond)
-        ))
-      )
-      filename <- paste0(Config$resultFilePath, "/outputProteoformAb_", md5, ".RData")
-      if (!overwrite & file.exists(filename)) {
-        load(filename)
-      } else {
-        Param <- tParam
-        proteoformAb <- addProteoformAbundance(proteoforms = groundTruth, parameters = Param)
-        save(proteoformAb, Param, file = filename)
-      }
-      pfParam <- Param
-      gc()
-
-      ### Digestion
-      for (jj in 1:length(listtodigestion)) {
+    # Ensuring ProteoMaker version in parameters (for hashing)
+    Parameters$paramGroundTruth$ProteoMakerVersion <- packageVersion("ProteoMaker")
+    
+    # Generate combinations for each parameter set
+    listtogroundtruth <- generate_combinations(Parameters$paramGroundTruth)
+    listtoproteoformab <- generate_combinations(Parameters$paramProteoformAb)
+    listtodigestion <- generate_combinations(Parameters$paramDigest)
+    listtomsrun <- generate_combinations(Parameters$paramMSRun)
+    listtodatanalysis <- generate_combinations(Parameters$paramDataAnalysis)
+    
+    all_params <- c(
+        Parameters$paramGroundTruth,
+        Parameters$paramProteoformAb,
+        Parameters$paramDataAnalysis,
+        Parameters$paramDigest,
+        Parameters$paramMSRun
+    )
+    
+    # Generate combinations for all parameters
+    listall <- generate_combinations(all_params)
+    totalbench <- length(listall)
+    message("Total number of simulations to run: ", totalbench)
+    
+    # Gather always benchmarking data
+    allBs <- list()
+    for (hh in seq_len(length(listtogroundtruth))) {
+        ## Running ground thruth generations
+        # check whether file with correct parameters exists
+        tParam <- listtogroundtruth[[hh]]
+        # turn into list
+        tParam <- lapply(tParam, function(x) x)
         Param <- "none"
-        BeforeMS <- NULL
-        SearchIndex <- NULL
-        tParam <- c(pfParam, listtodigestion[[jj]])
+        groundTruth <- NULL
         md5 <- digest::digest(tParam, algo = "md5")
-        filename <- paste0(Config$resultFilePath, "/outputDigest_", md5, ".RData")
+        filename <- paste0(Config$resultFilePath, "/outputGroundTruth_", md5, ".RData")
         if (!overwrite & file.exists(filename)) {
-          load(filename)
-          # Backward compatibility: older digest files may not contain SearchIndex.
-          if (!exists("SearchIndex") || is.null(SearchIndex)) {
-            idxParam <- Param
-            idxParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
-            idxParam$Cores <- Config$cores
-            idxParam$ClusterType <- Config$clusterType
-            SearchIndex <- buildSearchIndexFromFasta(parameters = idxParam)
-          }
-        } else {
-          Param <- tParam
-          # Build full FASTA search index for later reuse (per digestion parameter set)
-          idxParam <- Param
-          idxParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
-          idxParam$Cores <- Config$cores
-          idxParam$ClusterType <- Config$clusterType
-          SearchIndex <- buildSearchIndexFromFasta(parameters = idxParam)
-          peptable <- digestGroundTruth(
-            proteoforms = proteoformAb,
-            parameters = c(
-              Param, list(
-                Cores = Config$cores,
-                ClusterType = Config$clusterType
-              )
-            ),
-            searchIndex = SearchIndex
-          )
-          peptable <- digestionProductSummarization(
-            peptides = peptable,
-            parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType))
-          )
-          BeforeMS <- filterDigestedProt(
-            DigestedProt = peptable,
-            parameters = Param
-          )
-          save(Param, BeforeMS, SearchIndex, file = filename)
-        }
-        dgParam <- Param
-        gc()
-
-        ### MS run
-        for (kk in 1:length(listtomsrun)) {
-          Param <- "none"
-          AfterMSRun <- NULL
-          tParam <- c(dgParam, listtomsrun[[kk]])
-          md5 <- digest::digest(tParam, algo = "md5")
-          filename <- paste0(Config$resultFilePath, "/outputMSRun_", md5, ".RData")
-          if (!overwrite & file.exists(filename)) {
             load(filename)
-          } else {
+        } else {
             Param <- tParam
-            AfterMSRun <- vector(mode = "list")
-            for (i in which(sapply(BeforeMS, length) > 0)) {
-              AfterMSRun[[length(AfterMSRun) + 1]] <- MSRunSim(
-                Digested = BeforeMS[[i]],
-                parameters = c(
-                  Param,
-                  list(
-                    Cores = Config$cores,
-                    ClusterType = Config$clusterType
-                  )
-                ),
-                searchIndex = SearchIndex
-              )
+            # Add path to fasta file
+            ttParam <- Param
+            ttParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
+            groundTruth <- samplePreparation(parameters = ttParam)
+            if (!is.null(groundTruth)) {
+                save(groundTruth, Param, file = filename)
             }
-            names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
-            save(Param, AfterMSRun, file = filename)
-          }
-          msParam <- Param
-          gc()
-
-          ### Protein abundance
-          for (ll in 1:length(listtodatanalysis)) {
+        }
+        gtParam <- Param
+        ## quantitative proteoform abundances
+        for (ii in 1:length(listtoproteoformab)) {
             Param <- "none"
-            tParam <- c(msParam, listtodatanalysis[[ll]])
-            Benchmarks <- Occupancies <- NULL
+            proteoformAb <- NULL
+            # create combined parameterfile
+            tParam <- c(gtParam, listtoproteoformab[[ii]])
+            # hash code to represent parameter configuration
             md5 <- digest::digest(tParam, algo = "md5")
-            filename <- paste0(Config$resultFilePath, "/outputDataAnalysis_", md5, ".RData")
+            tParam <- c(
+                tParam,
+                list(QuantColnames = paste0(
+                    "C_",
+                    rep(1:tParam$NumCond, each = tParam$NumReps),
+                    "_R_",
+                    rep(1:tParam$NumReps, tParam$NumCond)
+                ))
+            )
+            filename <- paste0(Config$resultFilePath, "/outputProteoformAb_", md5, ".RData")
             if (!overwrite & file.exists(filename)) {
-              load(filename)
-            } else if (Config$runStatTests) {
-              # counter
-              Param <- tParam
-              Prots <- proteinSummarisation(
-                peptable = AfterMSRun$NonEnriched,
-                parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType))
-              )
-              # Don't accept anything below 100 proteins
-              if (nrow(Prots) > 99) {
-                # Filter for having at least 1 actual value per protein group and peptide
-                Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames])) < length(Param$QuantColnames), ]
-                allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
-                allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames])) < length(Param$QuantColnames), ]
-                rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
-                Stats <- runPolySTest(Prots, Param, refCond = 1, onlyLIMMA = F, cores = Config$cores)
-                # much faster with only LIMMA tests
-                StatsPep <- runPolySTest(allPeps, Param, refCond = 1, onlyLIMMA = T, cores = Config$cores)
-                # get occupancies for all PTM types (for later benchmarking)
-                Occupancies <- calcPTMOccupancy(allPeps, Param)
-                save(Param, Stats, StatsPep, Occupancies, Benchmarks, file = filename)
-              } else {
-                message("Too few proteins or no statistical tests requested.
+                load(filename)
+            } else {
+                Param <- tParam
+                proteoformAb <- addProteoformAbundance(proteoforms = groundTruth, parameters = Param)
+                save(proteoformAb, Param, file = filename)
+            }
+            pfParam <- Param
+            gc()
+            
+            ### Digestion
+            for (jj in 1:length(listtodigestion)) {
+                Param <- "none"
+                BeforeMS <- NULL
+                SearchIndex <- NULL
+                tParam <- c(pfParam, listtodigestion[[jj]])
+                md5 <- digest::digest(tParam, algo = "md5")
+                filename <- paste0(Config$resultFilePath, "/outputDigest_", md5, ".RData")
+                if (!overwrite & file.exists(filename)) {
+                    load(filename)
+                    # Backward compatibility: older digest files may not contain SearchIndex.
+                    if (!exists("SearchIndex") || is.null(SearchIndex)) {
+                        idxParam <- Param
+                        idxParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
+                        idxParam$Cores <- Config$cores
+                        idxParam$ClusterType <- Config$clusterType
+                        SearchIndex <- buildSearchIndexFromFasta(parameters = idxParam)
+                    }
+                } else {
+                    Param <- tParam
+                    # Build full FASTA search index for later reuse (per digestion parameter set)
+                    idxParam <- Param
+                    idxParam$PathToFasta <- paste0(Config$fastaFilePath, ifelse(Config$fastaFilePath == "", "", "/"), Param$PathToFasta)
+                    idxParam$Cores <- Config$cores
+                    idxParam$ClusterType <- Config$clusterType
+                    SearchIndex <- buildSearchIndexFromFasta(parameters = idxParam)
+                    peptable <- digestGroundTruth(
+                        proteoforms = proteoformAb,
+                        parameters = c(
+                            Param, list(
+                                Cores = Config$cores,
+                                ClusterType = Config$clusterType
+                            )
+                        ),
+                        searchIndex = SearchIndex
+                    )
+                    peptable <- digestionProductSummarization(
+                        peptides = peptable,
+                        parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType))
+                    )
+                    BeforeMS <- filterDigestedProt(
+                        DigestedProt = peptable,
+                        parameters = Param
+                    )
+                    save(Param, BeforeMS, SearchIndex, file = filename)
+                }
+                dgParam <- Param
+                gc()
+                
+                ### MS run
+                for (kk in 1:length(listtomsrun)) {
+                    Param <- "none"
+                    AfterMSRun <- NULL
+                    tParam <- c(dgParam, listtomsrun[[kk]])
+                    md5 <- digest::digest(tParam, algo = "md5")
+                    filename <- paste0(Config$resultFilePath, "/outputMSRun_", md5, ".RData")
+                    if (!overwrite & file.exists(filename)) {
+                        load(filename)
+                    } else {
+                        Param <- tParam
+                        AfterMSRun <- vector(mode = "list")
+                        for (i in which(sapply(BeforeMS, length) > 0)) {
+                            AfterMSRun[[length(AfterMSRun) + 1]] <- MSRunSim(
+                                Digested = BeforeMS[[i]],
+                                parameters = c(
+                                    Param,
+                                    list(
+                                        Cores = Config$cores,
+                                        ClusterType = Config$clusterType
+                                    )
+                                ),
+                                searchIndex = SearchIndex
+                            )
+                        }
+                        names(AfterMSRun) <- names(BeforeMS)[which(sapply(BeforeMS, length) > 0)]
+                        save(Param, AfterMSRun, file = filename)
+                    }
+                    msParam <- Param
+                    gc()
+                    
+                    ### Protein abundance
+                    for (ll in 1:length(listtodatanalysis)) {
+                        Param <- "none"
+                        tParam <- c(msParam, listtodatanalysis[[ll]])
+                        Benchmarks <- Occupancies <- NULL
+                        md5 <- digest::digest(tParam, algo = "md5")
+                        filename <- paste0(Config$resultFilePath, "/outputDataAnalysis_", md5, ".RData")
+                        if (!overwrite & file.exists(filename)) {
+                            load(filename)
+                        } else if (Config$runStatTests) {
+                            # counter
+                            Param <- tParam
+                            Prots <- proteinSummarisation(
+                                peptable = AfterMSRun$NonEnriched,
+                                parameters = c(Param, list(Cores = Config$cores, ClusterType = Config$clusterType))
+                            )
+                            # Don't accept anything below 100 proteins
+                            if (nrow(Prots) > 99) {
+                                # Filter for having at least 1 actual value per protein group and peptide
+                                Prots <- Prots[rowSums(is.na(Prots[, Param$QuantColnames])) < length(Param$QuantColnames), ]
+                                allPeps <- as.data.frame(do.call("rbind", AfterMSRun))
+                                allPeps <- allPeps[rowSums(is.na(allPeps[, Param$QuantColnames])) < length(Param$QuantColnames), ]
+                                rownames(allPeps) <- paste0("pep", 1:nrow(allPeps))
+                                Stats <- runPolySTest(Prots, Param, refCond = 1, onlyLIMMA = F, cores = Config$cores)
+                                # much faster with only LIMMA tests
+                                StatsPep <- runPolySTest(allPeps, Param, refCond = 1, onlyLIMMA = T, cores = Config$cores)
+                                # get occupancies for all PTM types (for later benchmarking)
+                                Occupancies <- calcPTMOccupancy(allPeps, Param)
+                                save(Param, Stats, StatsPep, Occupancies, Benchmarks, file = filename)
+                            } else {
+                                message("Too few proteins or no statistical tests requested.
                                         Skipping this protein summarization, statistical testing and
                                         benchmark calculation.")
-                Benchmarks <- Stats <- StatsPep <- NULL
-              }
-
-              if (Config$calcAllBenchmarks & !is.null(Stats)) {
-                Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
-                save(Param, Stats, StatsPep, Occupancies, Benchmarks, file = filename)
-              }
-            } else {
-              Param <- tParam
+                                Benchmarks <- Stats <- StatsPep <- NULL
+                            }
+                            
+                            if (Config$calcAllBenchmarks & !is.null(Stats)) {
+                                Benchmarks <- calcBenchmarks(Stats, StatsPep, Param)
+                                save(Param, Stats, StatsPep, Occupancies, Benchmarks, file = filename)
+                            }
+                        } else {
+                            Param <- tParam
+                        }
+                        allBs[[md5]] <- list(Benchmarks = Benchmarks, Param = Param)
+                    }
+                }
+                gc()
             }
-            allBs[[md5]] <- list(Benchmarks = Benchmarks, Param = Param)
-          }
         }
-        gc()
-      }
     }
-  }
-  return(allBs)
-  message("###### Finished data set generation")
+    return(allBs)
+    message("###### Finished data set generation")
 }
 
 
@@ -452,97 +452,97 @@ run_sims <- function(Parameters, Config, overwrite = FALSE) {
 #'
 #' @export
 calcGroundTruthPTMOccupancy <- function(proteoformAb, parameters) {
-  QuantColnames <- parameters$QuantColnames
-
-  if (is.null(proteoformAb) || nrow(proteoformAb) == 0) {
-    return(data.frame())
-  }
-
-  has_ptm <- lengths(proteoformAb$PTMType) > 0
-  if (sum(has_ptm) == 0) {
-    message("calcGroundTruthPTMOccupancy: no modified proteoforms found; returning empty table.")
-    return(data.frame())
-  }
-
-  canonical_sites <- function(pos, type) {
-    pos <- unlist(pos)
-    type <- unlist(type)
-    if (length(pos) == 0) {
-      return(data.frame(pos = integer(0), type = character(0), key = character(0)))
+    QuantColnames <- parameters$QuantColnames
+    
+    if (is.null(proteoformAb) || nrow(proteoformAb) == 0) {
+        return(data.frame())
     }
-    ord <- order(pos, type)
-    pos <- pos[ord]
-    type <- type[ord]
-    data.frame(
-      pos = pos,
-      type = type,
-      key = paste(type, pos, sep = "@"),
-      stringsAsFactors = FALSE
-    )
-  }
-
-  ptm_info <- mapply(canonical_sites, proteoformAb$PTMPos, proteoformAb$PTMType, SIMPLIFY = FALSE)
-  acc_key <- vapply(proteoformAb$Accession, function(x) paste(sort(unique(unlist(x))), collapse = ";"),
-                    character(1))
-
-  # Row indices per accession for fast denominator lookup inside the loop
-  acc_denom_idx <- split(seq_len(nrow(proteoformAb)), acc_key)
-
-  # Row indices and site metadata per (accession|site_key) for fast numerator lookup
-  numerator_idx_map <- list()
-  for (.i in which(has_ptm)) {
-    for (.r in seq_len(nrow(ptm_info[[.i]]))) {
-      .k        <- ptm_info[[.i]]$key[.r]
-      .full_key <- paste(acc_key[[.i]], .k, sep = "|")
-      if (is.null(numerator_idx_map[[.full_key]])) {
-        numerator_idx_map[[.full_key]] <- list(
-          rows      = .i,
-          acc       = acc_key[[.i]],
-          site_pos  = ptm_info[[.i]]$pos[.r],
-          site_type = ptm_info[[.i]]$type[.r],
-          first_row = .i
+    
+    has_ptm <- lengths(proteoformAb$PTMType) > 0
+    if (sum(has_ptm) == 0) {
+        message("calcGroundTruthPTMOccupancy: no modified proteoforms found; returning empty table.")
+        return(data.frame())
+    }
+    
+    canonical_sites <- function(pos, type) {
+        pos <- unlist(pos)
+        type <- unlist(type)
+        if (length(pos) == 0) {
+            return(data.frame(pos = integer(0), type = character(0), key = character(0)))
+        }
+        ord <- order(pos, type)
+        pos <- pos[ord]
+        type <- type[ord]
+        data.frame(
+            pos = pos,
+            type = type,
+            key = paste(type, pos, sep = "@"),
+            stringsAsFactors = FALSE
         )
-      } else {
-        numerator_idx_map[[.full_key]]$rows <- c(numerator_idx_map[[.full_key]]$rows, .i)
-      }
     }
-  }
-
-  # Linear-scale abundance matrix; computed once so colSums can be used in the loop
-  lin_mat <- 2^as.matrix(proteoformAb[, QuantColnames, drop = FALSE])
-
-  mod_keys <- names(numerator_idx_map)
-  out <- vector("list", length(mod_keys))
-
-  for (i in seq_along(mod_keys)) {
-    meta          <- numerator_idx_map[[mod_keys[[i]]]]
-    numerator_idx <- meta$rows
-    denominator_idx <- acc_denom_idx[[meta$acc]]
-    first_idx <- meta$first_row
-
-    num_sums   <- colSums(lin_mat[numerator_idx, , drop = FALSE], na.rm = TRUE)
-    denom_vals <- lin_mat[denominator_idx, , drop = FALSE]
-    all_na     <- colSums(!is.na(denom_vals)) == 0L
-    denom_sums <- colSums(denom_vals, na.rm = TRUE)
-    denom_sums[all_na | !is.finite(denom_sums) | denom_sums <= 0] <- NA_real_
-    occupancy  <- num_sums / denom_sums
-
-    row <- data.frame(
-      Sequence = proteoformAb$Sequence[[first_idx]],
-      as.list(occupancy),
-      stringsAsFactors = FALSE
-    )
-    names(row)[seq_along(QuantColnames) + 1L] <- QuantColnames
-    row$Accession <- list(unlist(proteoformAb$Accession[first_idx]))
-    row$PTMPos <- list(meta$site_pos)
-    row$PTMType <- list(meta$site_type)
-    out[[i]] <- row
-  }
-
-  result <- do.call(rbind, out)
-  rownames(result) <- seq_len(nrow(result))
-  message("  - Ground-truth occupancy calculated for ", nrow(result), " PTM sites.")
-  result
+    
+    ptm_info <- mapply(canonical_sites, proteoformAb$PTMPos, proteoformAb$PTMType, SIMPLIFY = FALSE)
+    acc_key <- vapply(proteoformAb$Accession, function(x) paste(sort(unique(unlist(x))), collapse = ";"),
+                      character(1))
+    
+    # Row indices per accession for fast denominator lookup inside the loop
+    acc_denom_idx <- split(seq_len(nrow(proteoformAb)), acc_key)
+    
+    # Row indices and site metadata per (accession|site_key) for fast numerator lookup
+    numerator_idx_map <- list()
+    for (.i in which(has_ptm)) {
+        for (.r in seq_len(nrow(ptm_info[[.i]]))) {
+            .k        <- ptm_info[[.i]]$key[.r]
+            .full_key <- paste(acc_key[[.i]], .k, sep = "|")
+            if (is.null(numerator_idx_map[[.full_key]])) {
+                numerator_idx_map[[.full_key]] <- list(
+                    rows      = .i,
+                    acc       = acc_key[[.i]],
+                    site_pos  = ptm_info[[.i]]$pos[.r],
+                    site_type = ptm_info[[.i]]$type[.r],
+                    first_row = .i
+                )
+            } else {
+                numerator_idx_map[[.full_key]]$rows <- c(numerator_idx_map[[.full_key]]$rows, .i)
+            }
+        }
+    }
+    
+    # Linear-scale abundance matrix; computed once so colSums can be used in the loop
+    lin_mat <- 2^as.matrix(proteoformAb[, QuantColnames, drop = FALSE])
+    
+    mod_keys <- names(numerator_idx_map)
+    out <- vector("list", length(mod_keys))
+    
+    for (i in seq_along(mod_keys)) {
+        meta          <- numerator_idx_map[[mod_keys[[i]]]]
+        numerator_idx <- meta$rows
+        denominator_idx <- acc_denom_idx[[meta$acc]]
+        first_idx <- meta$first_row
+        
+        num_sums   <- colSums(lin_mat[numerator_idx, , drop = FALSE], na.rm = TRUE)
+        denom_vals <- lin_mat[denominator_idx, , drop = FALSE]
+        all_na     <- colSums(!is.na(denom_vals)) == 0L
+        denom_sums <- colSums(denom_vals, na.rm = TRUE)
+        denom_sums[all_na | !is.finite(denom_sums) | denom_sums <= 0] <- NA_real_
+        occupancy  <- num_sums / denom_sums
+        
+        row <- data.frame(
+            Sequence = proteoformAb$Sequence[[first_idx]],
+            as.list(occupancy),
+            stringsAsFactors = FALSE
+        )
+        names(row)[seq_along(QuantColnames) + 1L] <- QuantColnames
+        row$Accession <- list(unlist(proteoformAb$Accession[first_idx]))
+        row$PTMPos <- list(meta$site_pos)
+        row$PTMType <- list(meta$site_type)
+        out[[i]] <- row
+    }
+    
+    result <- do.call(rbind, out)
+    rownames(result) <- seq_len(nrow(result))
+    message("  - Ground-truth occupancy calculated for ", nrow(result), " PTM sites.")
+    result
 }
 
 
@@ -578,46 +578,46 @@ calcGroundTruthPTMOccupancy <- function(proteoformAb, parameters) {
 #'   result <- get_simulation(benchmarks[[1]]$Param, config, stage = "MSRun")
 #' }
 get_simulation <- function(Param, Config, stage = "DataAnalysis") {
-  # Check for valid stage name
-  if (!(stage %in% c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"))) {
-    stop("Invalid stage name. Please provide a valid stage name.")
-  }
-
-  # Get all parameter names
-  param_names <- param_table()
-
-  # Reduce the parameter set to the relevant stage
-  param_names <- param_names[1:max(which(param_names$Group == paste0("param", stage))), ]
-  # max of which is the last element of the vector
-  max_pname <- max(which(names(Param) %in% rownames(param_names)))
-  tParam <- Param[1:max_pname]
-  # print(tParam)
-
-  # check whether file with correct parameters exists
-  md5 <- digest::digest(as.list(tParam), algo = "md5")
-
-  filename <- paste0(Config$resultFilePath, "/output", stage, "_", md5, ".RData")
-
-  if (file.exists(filename)) {
-    # Create a temporary environment to load the objects
-    temp_env <- new.env()
-    # Load the objects into the temporary environment
-    load(filename, envir = temp_env)
-
-    # Get the names of the objects loaded into the temporary environment
-    object_names <- ls(temp_env)
-
-    # Create a list to store the objects
-    objects_list <- lapply(object_names, function(x) get(x, envir = temp_env))
-
-    # Set the names of the list elements
-    names(objects_list) <- object_names
-
-    # Return the list of objects
-    return(objects_list)
-  } else {
-    message("No simulation found with these parameters.")
-  }
+    # Check for valid stage name
+    if (!(stage %in% c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"))) {
+        stop("Invalid stage name. Please provide a valid stage name.")
+    }
+    
+    # Get all parameter names
+    param_names <- param_table()
+    
+    # Reduce the parameter set to the relevant stage
+    param_names <- param_names[1:max(which(param_names$Group == paste0("param", stage))), ]
+    # max of which is the last element of the vector
+    max_pname <- max(which(names(Param) %in% rownames(param_names)))
+    tParam <- Param[1:max_pname]
+    # print(tParam)
+    
+    # check whether file with correct parameters exists
+    md5 <- digest::digest(as.list(tParam), algo = "md5")
+    
+    filename <- paste0(Config$resultFilePath, "/output", stage, "_", md5, ".RData")
+    
+    if (file.exists(filename)) {
+        # Create a temporary environment to load the objects
+        temp_env <- new.env()
+        # Load the objects into the temporary environment
+        load(filename, envir = temp_env)
+        
+        # Get the names of the objects loaded into the temporary environment
+        object_names <- ls(temp_env)
+        
+        # Create a list to store the objects
+        objects_list <- lapply(object_names, function(x) get(x, envir = temp_env))
+        
+        # Set the names of the list elements
+        names(objects_list) <- object_names
+        
+        # Return the list of objects
+        return(objects_list)
+    } else {
+        message("No simulation found with these parameters.")
+    }
 }
 
 #' Retrieve hashes for intermediate simulation stages
@@ -643,37 +643,37 @@ get_simulation <- function(Param, Config, stage = "DataAnalysis") {
 #' hashes <- get_stage_hashes(Param)
 #' hashes["MSRun"]
 get_stage_hashes <- function(Param, stages = c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis")) {
-  if (any(!stages %in% c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"))) {
-    stop("Invalid stage name. Please provide a valid stage name.")
-  }
-
-  param_names <- param_table()
-
-  # Accept both nested (def_param) and flat (run_sims) parameter lists
-  if (all(c("paramGroundTruth", "paramProteoformAb", "paramDigest", "paramMSRun", "paramDataAnalysis") %in% names(Param))) {
-    param_flat <- c(
-      Param$paramGroundTruth,
-      Param$paramProteoformAb,
-      Param$paramDigest,
-      Param$paramMSRun,
-      Param$paramDataAnalysis
-    )
-  } else {
-    param_flat <- Param
-  }
-
-  hashes <- vapply(stages, function(stage) {
-    stage_names <- param_names[1:max(which(param_names$Group == paste0("param", stage))), ]
-    stage_order <- rownames(stage_names)
-    stage_order <- stage_order[stage_order %in% names(param_flat)]
-    if (length(stage_order) == 0) {
-      stop("No parameters found for stage: ", stage)
+    if (any(!stages %in% c("GroundTruth", "ProteoformAb", "Digest", "MSRun", "DataAnalysis"))) {
+        stop("Invalid stage name. Please provide a valid stage name.")
     }
-    tParam <- param_flat[stage_order]
-    digest::digest(as.list(tParam), algo = "md5")
-  }, character(1))
-
-  hashes
+    
+    param_names <- param_table()
+    
+    # Accept both nested (def_param) and flat (run_sims) parameter lists
+    if (all(c("paramGroundTruth", "paramProteoformAb", "paramDigest", "paramMSRun", "paramDataAnalysis") %in% names(Param))) {
+        param_flat <- c(
+            Param$paramGroundTruth,
+            Param$paramProteoformAb,
+            Param$paramDigest,
+            Param$paramMSRun,
+            Param$paramDataAnalysis
+        )
+    } else {
+        param_flat <- Param
+    }
+    
+    hashes <- vapply(stages, function(stage) {
+        stage_names <- param_names[1:max(which(param_names$Group == paste0("param", stage))), ]
+        stage_order <- rownames(stage_names)
+        stage_order <- stage_order[stage_order %in% names(param_flat)]
+        if (length(stage_order) == 0) {
+            stop("No parameters found for stage: ", stage)
+        }
+        tParam <- param_flat[stage_order]
+        digest::digest(as.list(tParam), algo = "md5")
+    }, character(1))
+    
+    hashes
 }
 
 #' Gather parameters and benchmarks from all available runs
@@ -696,42 +696,42 @@ get_stage_hashes <- function(Param, stages = c("GroundTruth", "ProteoformAb", "D
 #' all_results <- gather_all_sims(config)
 #'
 gather_all_sims <- function(Config, stage = "DataAnalysis") {
-  # Get all files in the result directory
-  all_files <- list.files(Config$resultFilePath, full.names = TRUE)
-
-  # Filter for RData files
-  rdata_files <- all_files[grep(".RData", all_files)]
-  rdata_files <- rdata_files[grep(paste0("output", stage), rdata_files)]
-
-  # Initialize an empty list to store the results
-  all_results <- list()
-
-  # Iterate over each RData file
-  for (file in rdata_files) {
-    # Load the RData file
-    load(file)
-
-    # get hash
-    hash <- gsub(paste0(Config$resultFilePath, "/output", stage, "_"), "", file)
-    hash <- gsub(".RData", "", hash)
-
-    # Get the parameter and benchmark objects
-    param <- get("Param")
-
-    if (exists("Benchmarks")) {
-      benchmarks <- get("Benchmarks")
-
-      # Create a list of the objects
-      result_list <- list(Param = param, Benchmarks = benchmarks)
-    } else {
-      result_list <- list(Param = param)
+    # Get all files in the result directory
+    all_files <- list.files(Config$resultFilePath, full.names = TRUE)
+    
+    # Filter for RData files
+    rdata_files <- all_files[grep(".RData", all_files)]
+    rdata_files <- rdata_files[grep(paste0("output", stage), rdata_files)]
+    
+    # Initialize an empty list to store the results
+    all_results <- list()
+    
+    # Iterate over each RData file
+    for (file in rdata_files) {
+        # Load the RData file
+        load(file)
+        
+        # get hash
+        hash <- gsub(paste0(Config$resultFilePath, "/output", stage, "_"), "", file)
+        hash <- gsub(".RData", "", hash)
+        
+        # Get the parameter and benchmark objects
+        param <- get("Param")
+        
+        if (exists("Benchmarks")) {
+            benchmarks <- get("Benchmarks")
+            
+            # Create a list of the objects
+            result_list <- list(Param = param, Benchmarks = benchmarks)
+        } else {
+            result_list <- list(Param = param)
+        }
+        # Append the list to the results list
+        all_results[[hash]] <- result_list
     }
-    # Append the list to the results list
-    all_results[[hash]] <- result_list
-  }
-
-  # Return the list of results
-  return(all_results)
+    
+    # Return the list of results
+    return(all_results)
 }
 
 
@@ -759,26 +759,26 @@ gather_all_sims <- function(Config, stage = "DataAnalysis") {
 #' benchmark_matrix <- matrix_benchmarks(allBs, list())
 #'
 matrix_benchmarks <- function(allBs, Config) {
-  # extracting all benchmarks (sometimes there are more or less per run)
-  t_allbnames <- NULL
-  for (i in names(allBs)) {
-    t_allbnames <- c(t_allbnames, names(unlist(allBs[[i]][[1]]$globalBMs)))
-  }
-  benchNames <- unique(t_allbnames)
-  parNames <- unique(names(allBs[[1]]$Param))
-  BenchMatrix <- data.frame(matrix(NA, ncol = length(benchNames) + length(parNames), nrow = length(allBs)))
-  colnames(BenchMatrix) <- c(benchNames, parNames)
-  rownames(BenchMatrix) <- names(allBs)
-
-  # writing all results and parameters into matrix
-  for (i in names(allBs)) {
-    tglob <- unlist(allBs[[i]]$Benchmarks$globalBMs)
-    BenchMatrix[i, names(tglob)] <- tglob
-    tpar <- allBs[[i]]$Param
-    tpar <- lapply(tpar, function(x) paste0(unlist(x), collapse = ";"))
-    BenchMatrix[i, names(tpar)] <- sapply(tpar, function(x) ifelse(length(x) > 1, paste0(x, collapse = "_"), x))
-  }
-  BenchMatrix
+    # extracting all benchmarks (sometimes there are more or less per run)
+    t_allbnames <- NULL
+    for (i in names(allBs)) {
+        t_allbnames <- c(t_allbnames, names(unlist(allBs[[i]][[1]]$globalBMs)))
+    }
+    benchNames <- unique(t_allbnames)
+    parNames <- unique(names(allBs[[1]]$Param))
+    BenchMatrix <- data.frame(matrix(NA, ncol = length(benchNames) + length(parNames), nrow = length(allBs)))
+    colnames(BenchMatrix) <- c(benchNames, parNames)
+    rownames(BenchMatrix) <- names(allBs)
+    
+    # writing all results and parameters into matrix
+    for (i in names(allBs)) {
+        tglob <- unlist(allBs[[i]]$Benchmarks$globalBMs)
+        BenchMatrix[i, names(tglob)] <- tglob
+        tpar <- allBs[[i]]$Param
+        tpar <- lapply(tpar, function(x) paste0(unlist(x), collapse = ";"))
+        BenchMatrix[i, names(tpar)] <- sapply(tpar, function(x) ifelse(length(x) > 1, paste0(x, collapse = "_"), x))
+    }
+    BenchMatrix
 }
 
 #' Visualize benchmarks vs 1 or two parameters
@@ -838,370 +838,353 @@ visualize_benchmarks <- function(benchmatrix,
                                  errorbar = FALSE,
                                  errorstyle = "bar",
                                  compare_par = NULL) {
-  if (nrow(benchmatrix) < 1) {
-    stop("No data available for visualization.")
-  }
-
-  ref_par <- make.names(ref_par)
-  if (length(ref_par) > 2) {
-    stop("Please provide at most two parameters for visualization.")
-  }
-  colnames(benchmatrix) <- make.names(colnames(benchmatrix))
-  errorstyle <- match.arg(errorstyle, c("bar", "area"))
-
-  bm_meta <- get_bmmeta()
-  titles <- stats::setNames(bm_meta$title, bm_meta$benchmark)
-  axis_labels <- stats::setNames(bm_meta$axis_label, bm_meta$benchmark)
-  ranges <- set_bmranges(titles)
-  titles_params <- get_paramtitles()
-  level_order <- c("peptidoform", "protein_group", "ptm_proteoform")
-  category_order <- c(
-    "coverage", "completeness", "quantification_quality",
-    "differential_performance", "artifact_sensitivity",
-    "ptm_adjusted_performance"
-  )
-  category_colors <- c(
-    coverage = "#1B6CA8",
-    completeness = "#2A9D8F",
-    quantification_quality = "#E9C46A",
-    differential_performance = "#F4A261",
-    artifact_sensitivity = "#D95D39",
-    ptm_adjusted_performance = "#7A8E3A"
-  )
-
-  metric_colors <- colorspace::qualitative_hcl(n = length(titles), palette = "Dark 3")
-  names(metric_colors) <- names(titles)
-  pch.vals <- rep(c(1, 16, 17, 15, 3, 4, 8), length.out = length(titles))
-  names(pch.vals) <- names(titles)
-
-  bad_ref <- setdiff(ref_par, names(titles_params))
-  if (length(bad_ref) > 0) {
-    stop(paste("Parameter name", bad_ref[1], "is not correct."))
-  }
-  params <- titles_params[ref_par]
-
-  if (!is.null(compare_par)) {
-    compare_par <- make.names(compare_par)
-    if (!(compare_par %in% names(titles_params))) {
-      stop(paste("Compare parameter name", compare_par, "is not correct."))
+    if (nrow(benchmatrix) < 1) {
+        stop("No data available for visualization.")
     }
-    if (!(compare_par %in% colnames(benchmatrix))) {
-      stop(paste("Compare parameter", compare_par, "not found in benchmark matrix."))
+    
+    ref_par <- make.names(ref_par)
+    if (length(ref_par) > 2) {
+        stop("Please provide at most two parameters for visualization.")
     }
-  }
-
-  titles <- resolve_benchmark_titles(
-    benchmarks = benchmarks,
-    benchmark_level = benchmark_level,
-    benchmark_category = benchmark_category,
-    available_names = names(benchmatrix)
-  )
-  benchmarks <- names(titles)
-  if (length(benchmarks) == 0) {
-    stop("No benchmarks selected for visualization.")
-  }
-  group_meta <- bm_meta[bm_meta$benchmark %in% benchmarks, c("benchmark", "level", "category"), drop = FALSE]
-  group_meta$level <- factor(group_meta$level, levels = level_order)
-  group_meta$category <- factor(group_meta$category, levels = category_order)
-  group_meta <- group_meta[order(group_meta$category, group_meta$level, group_meta$benchmark), , drop = FALSE]
-  benchmarks <- group_meta$benchmark
-  titles <- titles[benchmarks]
-  axis_labels <- axis_labels[benchmarks]
-  metric_colors <- metric_colors[benchmarks]
-  pch.vals <- pch.vals[benchmarks]
-  pretty_label <- function(x) {
-    gsub("\\b([a-z])", "\\U\\1", gsub("_", " ", x), perl = TRUE)
-  }
-
-  # Draw a plain text header strip without panel boxes.
-  draw_header <- function(label, col, cex = 1, right_label = NULL,
-                          legend_title = NULL, legend_labels = NULL, legend_cols = NULL, legend_pch = NULL) {
-    par(mar = c(0.2, 0.8, 0.2, 0.8))
-    plot.new()
-    plot.window(xlim = c(0, 1), ylim = c(0, 1))
-    segments(0.04, 0.18, 0.96, 0.18, col = grDevices::adjustcolor(col, alpha.f = 0.45), lwd = 1)
-    text(
-      x = 0.07, y = 0.58,
-      labels = label,
-      adj = c(0, 0.5), cex = cex, font = 2, col = col
+    colnames(benchmatrix) <- make.names(colnames(benchmatrix))
+    errorstyle <- match.arg(errorstyle, c("bar", "area"))
+    
+    bm_meta <- get_bmmeta()
+    titles <- stats::setNames(bm_meta$title, bm_meta$benchmark)
+    axis_labels <- stats::setNames(bm_meta$axis_label, bm_meta$benchmark)
+    ranges <- set_bmranges(titles)
+    titles_params <- get_paramtitles()
+    level_order <- c("peptidoform", "protein_group", "ptm_proteoform")
+    category_order <- c(
+        "coverage", "completeness", "quantification_quality",
+        "differential_performance", "artifact_sensitivity",
+        "ptm_adjusted_performance"
     )
-    if (!is.null(right_label)) {
-      text(x = 0.93, y = 0.58, labels = right_label, adj = c(1, 0.5), cex = 0.76, col = "#333333")
-    }
-    if (!is.null(legend_labels) && length(legend_labels) > 0) {
-      legend(
-        "bottom",
-        title = legend_title,
-        legend = legend_labels,
-        col = legend_cols,
-        pch = legend_pch,
-        horiz = TRUE,
-        xpd = NA,
-        cex = 0.72,
-        pt.cex = 0.72,
-        x.intersp = 0.6,
-        y.intersp = 0.7,
-        bty = "n",
-        inset = c(0, 0.02)
-      )
-    }
-    par(mar = c(3, 3, 1.5, 1.5))
-  }
-  # Split one category into pages while keeping level blocks intact.
-  build_pages <- function(category_meta, n_cols = 4, max_rows = 3) {
-    # Keep category pages compact by carrying whole level blocks together.
-    level_rows <- setNames(
-      vapply(unique(as.character(category_meta$level)),
-             function(level_id) ceiling(sum(category_meta$level == level_id) / n_cols),
-             numeric(1)),
-      unique(as.character(category_meta$level))
+    category_colors <- c(
+        coverage = "#1B6CA8",
+        completeness = "#2A9D8F",
+        quantification_quality = "#E9C46A",
+        differential_performance = "#F4A261",
+        artifact_sensitivity = "#D95D39",
+        ptm_adjusted_performance = "#7A8E3A"
     )
-    pages <- list()
-    keep_levels <- character()
-    row_count <- 0
-    for (level_id in names(level_rows)) {
-      if (length(keep_levels) > 0 && row_count + level_rows[[level_id]] > max_rows) {
-        pages[[length(pages) + 1]] <- category_meta[category_meta$level %in% keep_levels, , drop = FALSE]
+    
+    metric_colors <- colorspace::qualitative_hcl(n = length(titles), palette = "Dark 3")
+    names(metric_colors) <- names(titles)
+    pch.vals <- rep(c(1, 16, 17, 15, 3, 4, 8), length.out = length(titles))
+    names(pch.vals) <- names(titles)
+    
+    bad_ref <- setdiff(ref_par, names(titles_params))
+    if (length(bad_ref) > 0) {
+        stop(paste("Parameter name", bad_ref[1], "is not correct."))
+    }
+    params <- titles_params[ref_par]
+    
+    if (!is.null(compare_par)) {
+        compare_par <- make.names(compare_par)
+        if (!(compare_par %in% names(titles_params))) {
+            stop(paste("Compare parameter name", compare_par, "is not correct."))
+        }
+        if (!(compare_par %in% colnames(benchmatrix))) {
+            stop(paste("Compare parameter", compare_par, "not found in benchmark matrix."))
+        }
+    }
+    
+    titles <- resolve_benchmark_titles(
+        benchmarks = benchmarks,
+        benchmark_level = benchmark_level,
+        benchmark_category = benchmark_category,
+        available_names = names(benchmatrix)
+    )
+    benchmarks <- names(titles)
+    if (length(benchmarks) == 0) {
+        stop("No benchmarks selected for visualization.")
+    }
+    group_meta <- bm_meta[bm_meta$benchmark %in% benchmarks, c("benchmark", "level", "category"), drop = FALSE]
+    group_meta$level <- factor(group_meta$level, levels = level_order)
+    group_meta$category <- factor(group_meta$category, levels = category_order)
+    group_meta <- group_meta[order(group_meta$category, group_meta$level, group_meta$benchmark), , drop = FALSE]
+    benchmarks <- group_meta$benchmark
+    titles <- titles[benchmarks]
+    axis_labels <- axis_labels[benchmarks]
+    metric_colors <- metric_colors[benchmarks]
+    pch.vals <- pch.vals[benchmarks]
+    pretty_label <- function(x) {
+        gsub("\\b([a-z])", "\\U\\1", gsub("_", " ", x), perl = TRUE)
+    }
+    
+    # Draw a plain text header strip without panel boxes.
+    draw_header <- function(label, col, cex = 1, right_label = NULL,
+                            legend_title = NULL, legend_labels = NULL, legend_cols = NULL, legend_pch = NULL) {
+        par(mar = c(0.2, 0.8, 0.2, 0.8))
+        plot.new()
+        plot.window(xlim = c(0, 1), ylim = c(0, 1))
+        segments(0.04, 0.18, 0.96, 0.18, col = grDevices::adjustcolor(col, alpha.f = 0.45), lwd = 1)
+        text(
+            x = 0.07, y = 0.58,
+            labels = label,
+            adj = c(0, 0.5), cex = cex, font = 2, col = col
+        )
+        if (!is.null(right_label)) {
+            text(x = 0.93, y = 0.58, labels = right_label, adj = c(1, 0.5), cex = 0.76, col = "#333333")
+        }
+        if (!is.null(legend_labels) && length(legend_labels) > 0) {
+            legend(
+                "bottom",
+                title = legend_title,
+                legend = legend_labels,
+                col = legend_cols,
+                pch = legend_pch,
+                horiz = TRUE,
+                xpd = NA,
+                cex = 0.72,
+                pt.cex = 0.72,
+                x.intersp = 0.6,
+                y.intersp = 0.7,
+                bty = "n",
+                inset = c(0, 0.02)
+            )
+        }
+        par(mar = c(3, 3, 1.5, 1.5))
+    }
+    # Split one category into pages while keeping level blocks intact.
+    build_pages <- function(category_meta, n_cols = 4, max_rows = 3) {
+        # Keep category pages compact by carrying whole level blocks together.
+        level_rows <- setNames(
+            vapply(unique(as.character(category_meta$level)),
+                   function(level_id) ceiling(sum(category_meta$level == level_id) / n_cols),
+                   numeric(1)),
+            unique(as.character(category_meta$level))
+        )
+        pages <- list()
         keep_levels <- character()
         row_count <- 0
-      }
-      keep_levels <- c(keep_levels, level_id)
-      row_count <- row_count + level_rows[[level_id]]
-    }
-    if (length(keep_levels) > 0) {
-      pages[[length(pages) + 1]] <- category_meta[category_meta$level %in% keep_levels, , drop = FALSE]
-    }
-    pages
-  }
-  # Build the layout matrix for one page of grouped benchmark panels.
-  build_layout <- function(page_meta, category_key, n_cols = 4, max_rows = 3) {
-    # Each page starts with a category banner, then inserts one level strip
-    # before the corresponding 4-column metric rows. Blank rows pad short
-    # pages so metric panels keep the same size across pages.
-    level_ids <- unique(as.character(page_meta$level))
-    mat <- heights <- NULL
-    items <- character()
-    id <- 1L
-    metric_rows_used <- 0L
-    level_headers_used <- 0L
-    mat <- rbind(mat, rep(id, n_cols))
-    heights <- c(heights, 0.22)
-    items <- c(items, paste0("page::", category_key))
-    id <- id + 1L
-    for (level_id in level_ids) {
-      level_meta <- page_meta[page_meta$level == level_id, , drop = FALSE]
-      mat <- rbind(mat, rep(id, n_cols))
-      heights <- c(heights, 0.18)
-      items <- c(items, paste0("level::", level_id))
-      id <- id + 1L
-      level_headers_used <- level_headers_used + 1L
-      for (start_idx in seq(1, nrow(level_meta), by = n_cols)) {
-        row_items <- level_meta$benchmark[start_idx:min(start_idx + n_cols - 1L, nrow(level_meta))]
-        row <- rep(0L, n_cols)
-        for (col_idx in seq_along(row_items)) {
-          row[col_idx] <- id
-          items <- c(items, row_items[col_idx])
-          id <- id + 1L
+        for (level_id in names(level_rows)) {
+            if (length(keep_levels) > 0 && row_count + level_rows[[level_id]] > max_rows) {
+                pages[[length(pages) + 1]] <- category_meta[category_meta$level %in% keep_levels, , drop = FALSE]
+                keep_levels <- character()
+                row_count <- 0
+            }
+            keep_levels <- c(keep_levels, level_id)
+            row_count <- row_count + level_rows[[level_id]]
         }
-        mat <- rbind(mat, row)
-        heights <- c(heights, 1)
-        metric_rows_used <- metric_rows_used + 1L
-      }
+        if (length(keep_levels) > 0) {
+            pages[[length(pages) + 1]] <- category_meta[category_meta$level %in% keep_levels, , drop = FALSE]
+        }
+        pages
     }
-    if (level_headers_used < max_rows) {
-      for (i in seq_len(max_rows - level_headers_used)) {
-        mat <- rbind(mat, rep(0L, n_cols))
-        heights <- c(heights, 0.18)
-      }
+    # Build the layout matrix for one page of grouped benchmark panels.
+    build_layout <- function(page_meta, category_key, n_cols = 4, max_rows = 3) {
+        # Each page starts with a category banner, then inserts one level strip
+        # before the corresponding 4-column metric rows. Blank rows pad short
+        # pages so metric panels keep the same size across pages.
+        level_ids <- unique(as.character(page_meta$level))
+        mat <- heights <- NULL
+        items <- character()
+        id <- 1L
+        metric_rows_used <- 0L
+        level_headers_used <- 0L
+        mat <- rbind(mat, rep(id, n_cols))
+        heights <- c(heights, 0.22)
+        items <- c(items, paste0("page::", category_key))
+        id <- id + 1L
+        for (level_id in level_ids) {
+            level_meta <- page_meta[page_meta$level == level_id, , drop = FALSE]
+            mat <- rbind(mat, rep(id, n_cols))
+            heights <- c(heights, 0.18)
+            items <- c(items, paste0("level::", level_id))
+            id <- id + 1L
+            level_headers_used <- level_headers_used + 1L
+            for (start_idx in seq(1, nrow(level_meta), by = n_cols)) {
+                row_items <- level_meta$benchmark[start_idx:min(start_idx + n_cols - 1L, nrow(level_meta))]
+                row <- rep(0L, n_cols)
+                for (col_idx in seq_along(row_items)) {
+                    row[col_idx] <- id
+                    items <- c(items, row_items[col_idx])
+                    id <- id + 1L
+                }
+                mat <- rbind(mat, row)
+                heights <- c(heights, 1)
+                metric_rows_used <- metric_rows_used + 1L
+            }
+        }
+        if (level_headers_used < max_rows) {
+            for (i in seq_len(max_rows - level_headers_used)) {
+                mat <- rbind(mat, rep(0L, n_cols))
+                heights <- c(heights, 0.18)
+            }
+        }
+        if (metric_rows_used < max_rows) {
+            for (i in seq_len(max_rows - metric_rows_used)) {
+                mat <- rbind(mat, rep(0L, n_cols))
+                heights <- c(heights, 1)
+            }
+        }
+        list(layout = matrix(as.integer(mat), nrow = nrow(mat)), heights = heights, items = items)
     }
-    if (metric_rows_used < max_rows) {
-      for (i in seq_len(max_rows - metric_rows_used)) {
-        mat <- rbind(mat, rep(0L, n_cols))
-        heights <- c(heights, 1)
-      }
-    }
-    list(layout = matrix(as.integer(mat), nrow = nrow(mat)), heights = heights, items = items)
-  }
-  compare_values <- compare_colors <- NULL
-  if (!is.null(compare_par)) {
-    compare_values <- unique(benchmatrix[, compare_par])
-    compare_values <- if (is.numeric(compare_values)) sort(compare_values) else sort(as.character(compare_values))
-    compare_colors <- colorspace::qualitative_hcl(n = length(compare_values), palette = "Dark 3")
-    if (!is.null(cols)) {
-      compare_colors <- rep(cols, length.out = length(compare_values))
-    }
-  } else if (!is.null(cols)) {
-    metric_colors <- rep(cols, length.out = length(metric_colors))
-  }
-
-  category_pages <- split(group_meta, factor(as.character(group_meta$category), levels = category_order))
-  category_pages <- lapply(category_pages[vapply(category_pages, nrow, integer(1)) > 0], build_pages)
-  old_par <- par(no.readonly = TRUE)
-  on.exit({
-    layout(matrix(1L))
-    par(old_par)
-  }, add = TRUE)
-
-  # Draw points, error bars, or uncertainty bands on 1D benchmark panels.
-  draw_uncertainty <- function(x, y, sd, col, pch, lty = 1) {
-    ok <- is.finite(x) & is.finite(y)
-    ok_sd <- is.finite(sd)
-    if (errorbar && errorstyle == "area" && sum(ok & ok_sd) >= 2) {
-      ord <- order(x)
-      polygon(
-        c(x[ord][ok_sd[ord] & ok[ord]], rev(x[ord][ok_sd[ord] & ok[ord]])),
-        c((y - sd)[ord][ok_sd[ord] & ok[ord]], rev((y + sd)[ord][ok_sd[ord] & ok[ord]])),
-        col = grDevices::adjustcolor(col, alpha.f = 0.2),
-        border = col, lty = lty, lwd = 0.6
-      )
-    }
-    if (errorbar && errorstyle == "bar" && any(ok & ok_sd)) {
-      segments(
-        x[ok & ok_sd], y[ok & ok_sd] - sd[ok & ok_sd],
-        x[ok & ok_sd], y[ok & ok_sd] + sd[ok & ok_sd],
-        col = grDevices::adjustcolor(col, alpha.f = 0.6),
-        lwd = 1
-      )
-    }
-    if (sum(ok) >= 2) {
-      ord <- order(x)
-      lines(x[ord][ok[ord]], y[ord][ok[ord]], col = col, lty = lty)
-    }
-    points(x[ok], y[ok], pch = pch, col = col)
-  }
-  # Set the plotting range for one metric, optionally using predefined bounds.
-  get_range <- function(metric) {
-    out <- range(benchmatrix[, metric], na.rm = TRUE)
-    if (fullrange) {
-      if (!is.na(ranges[[metric]][1])) out[1] <- ranges[[metric]][1]
-      if (!is.na(ranges[[metric]][2])) out[2] <- ranges[[metric]][2]
-    }
-    out
-  }
-  # Draw a single benchmark against one reference parameter.
-  draw_metric_1d <- function(metric, col, pch) {
-    x <- benchmatrix[, ref_par]
-    y <- benchmatrix[, metric]
-    yr <- get_range(metric)
-    if (!all(is.finite(range(y, na.rm = TRUE)))) {
-      plot.new()
-      title(main = titles[metric], col.main = "black", font.main = 2)
-      return(invisible())
-    }
+    compare_values <- compare_colors <- NULL
     if (!is.null(compare_par)) {
-      # Compare mode overlays subsets for a second parameter on the same panel.
-      x_base <- unique(x)
-      x_pos <- if (is.numeric(x_base)) as.numeric(x_base) else seq_along(x_base)
-      pch_comp <- rep(pch.vals, length.out = length(compare_values))
-      plot(x_pos, rep(NA, length(x_pos)), type = "n", xaxt = "n", xlab = params, ylab = axis_labels[metric], ylim = yr)
-      axis(1, at = x_pos, labels = x_base, las = 1)
-      title(main = titles[metric], col.main = "black", font.main = 2)
-      for (j in seq_along(compare_values)) {
-        sel <- as.character(benchmatrix[, compare_par]) == compare_values[j]
-        x_raw <- benchmatrix[sel, ref_par]
-        y_raw <- benchmatrix[sel, metric]
-        x_plot <- x_pos[match(as.character(x_raw), as.character(x_base))]
-        if (errorbar) {
-          y_mean <- tapply(y_raw, x_raw, mean, na.rm = TRUE)
-          y_sd <- tapply(y_raw, x_raw, sd, na.rm = TRUE)
-          y_sd[!is.finite(y_sd)] <- 0
-          draw_uncertainty(x_pos[match(names(y_mean), as.character(x_base))], y_mean, y_sd, compare_colors[j], pch_comp[j], j)
-        } else {
-          points(x_plot, y_raw, pch = pch_comp[j], col = compare_colors[j])
+        compare_values <- unique(benchmatrix[, compare_par])
+        compare_values <- if (is.numeric(compare_values)) sort(compare_values) else sort(as.character(compare_values))
+        compare_colors <- colorspace::qualitative_hcl(n = length(compare_values), palette = "Dark 3")
+        if (!is.null(cols)) {
+            compare_colors <- rep(cols, length.out = length(compare_values))
         }
-      }
-      return(invisible())
+    } else if (!is.null(cols)) {
+        metric_colors <- rep(cols, length.out = length(metric_colors))
     }
-    if (errorbar) {
-      # Error bars summarize repeated runs at each x value.
-      y_sd <- tapply(y, x, sd, na.rm = TRUE)
-      y_mean <- tapply(y, x, mean, na.rm = TRUE)
-      x_ord <- names(y_mean)
-      x_plot <- if (is.numeric(x_ord)) as.numeric(x_ord) else seq_along(x_ord)
-      plot(x_plot, y_mean, type = "n", xaxt = "n", xlab = params, ylab = axis_labels[metric], ylim = yr)
-      draw_uncertainty(x_plot, y_mean, y_sd, col, pch)
-      axis(1, at = x_plot, labels = x_ord, las = 1)
-    } else {
-      x_plot <- x
-      axis_at <- x
-      if (any(is.character(x_plot))) {
-        xf <- factor(x, levels = unique(x))
-        names(xf) <- x
-        x_plot <- xf[x_plot]
-        axis_at <- x_plot
-      }
-      plot(x_plot, y, xaxt = "n",
-           xlab = params, ylab = axis_labels[metric], pch = pch, col = col,
-           cex = 1.2, cex.lab = 0.9, cex.axis = 0.85, ylim = yr)
-      axis(1, at = axis_at, labels = unique(x), las = 1)
-    }
-    title(main = titles[metric], col.main = "black", font.main = 2)
-  }
-  # Draw a single benchmark against two reference parameters as a heatmap.
-  draw_metric_2d <- function(metric, col) {
-    # Two reference parameters are shown as a heatmap plus a compact side scale.
-    x_vals <- sort(unique(benchmatrix[, ref_par[1]]))
-    y_vals <- sort(unique(benchmatrix[, ref_par[2]]))
-    z_mat <- matrix(NA, nrow = length(x_vals), ncol = length(y_vals))
-    for (j in seq_len(nrow(benchmatrix))) {
-      z_mat[which(x_vals == benchmatrix[j, ref_par[1]]), which(y_vals == benchmatrix[j, ref_par[2]])] <- benchmatrix[j, metric]
-    }
-    image_colors <- colorRampPalette(c("white", col))(100)
-    zlim <- range(z_mat, na.rm = TRUE)
-    if (any(!is.finite(zlim))) zlim <- c(0, 0)
-    image(x_vals, y_vals, z_mat, col = image_colors, zlim = zlim, xlab = params[1], ylab = params[2], axes = TRUE)
-    title(main = titles[metric], col.main = "black", font.main = 2)
-    if (length(x_vals) == 1) x_vals <- x_vals + c(-0.5, 0.5)
-    if (length(y_vals) == 1) y_vals <- y_vals + c(-0.5, 0.5)
-    bar_x <- max(x_vals) - diff(range(x_vals)) * 0.5
-    bar_w <- diff(range(x_vals)) * 0.03
-    bar_y <- seq(min(y_vals), max(y_vals), length.out = length(image_colors) + 1)
-    for (k in seq_along(image_colors)) {
-      rect(bar_x, bar_y[k], bar_x + bar_w, bar_y[k + 1], col = image_colors[k], border = NA)
-    }
-    rect(bar_x, min(y_vals), bar_x + bar_w, max(y_vals), col = NA, border = "#333333", lwd = 0.5)
-    if (diff(zlim) > 0) {
-      labels <- pretty(zlim, n = 3)
-      label_y <- approx(zlim, range(bar_y), xout = labels)$y
-      text(bar_x + bar_w + 0.02 * diff(range(x_vals)), label_y, labels = round(labels, 2), cex = 0.6, adj = 0)
-    }
-  }
-
-  for (category_key in names(category_pages)) {
-    pages <- category_pages[[category_key]]
-    for (page_idx in seq_along(pages)) {
-      page_meta <- pages[[page_idx]]
-      lay <- build_layout(page_meta, category_key)
-      # layout() is needed here because the category and level headers span full rows.
-      layout(matrix(1L))
-      layout(lay$layout, heights = lay$heights)
-      par(cex.main = 0.9, cex.lab = 0.75, cex.axis = 0.7,
-          mgp = c(1.5, 0.3, 0), mar = c(2.2, 2.2, 1.2, 0.8), xpd = FALSE, font.main = 2)
-      for (item in lay$items) {
-        if (startsWith(item, "page::")) {
-          cc <- category_colors[sub("^page::", "", item)]
-          draw_header(pretty_label(sub("^page::", "", item)),
-                      cc,
-                      cex = 1.02,
-                      right_label = paste0("Page ", page_idx, "/", length(pages)),
-                      legend_title = if (!is.null(compare_par)) compare_par else NULL,
-                      legend_labels = if (!is.null(compare_par)) compare_values else NULL,
-                      legend_cols = if (!is.null(compare_par)) compare_colors else NULL,
-                      legend_pch = if (!is.null(compare_par)) rep(pch.vals, length.out = length(compare_values)) else NULL)
-        } else if (startsWith(item, "level::")) {
-          cc <- category_colors[category_key]
-          draw_header(pretty_label(sub("^level::", "", item)),
-                      cc,
-                      cex = 0.82)
-        } else if (length(ref_par) == 1) {
-          draw_metric_1d(item, "black", pch.vals[[item]])
-        } else {
-          draw_metric_2d(item, metric_colors[[item]])
+    
+    category_pages <- split(group_meta, factor(as.character(group_meta$category), levels = category_order))
+    category_pages <- lapply(category_pages[vapply(category_pages, nrow, integer(1)) > 0], build_pages)
+    old_par <- par(no.readonly = TRUE)
+    on.exit({
+        layout(matrix(1L))
+        par(old_par)
+    }, add = TRUE)
+    
+    # Draw points, error bars, or uncertainty bands on 1D benchmark panels.
+    draw_uncertainty <- function(x, y, sd, col, pch, lty = 1) {
+        ok <- is.finite(x) & is.finite(y)
+        ok_sd <- is.finite(sd)
+        if (errorbar && errorstyle == "area" && sum(ok & ok_sd) >= 2) {
+            ord <- order(x)
+            polygon(
+                c(x[ord][ok_sd[ord] & ok[ord]], rev(x[ord][ok_sd[ord] & ok[ord]])),
+                c((y - sd)[ord][ok_sd[ord] & ok[ord]], rev((y + sd)[ord][ok_sd[ord] & ok[ord]])),
+                col = grDevices::adjustcolor(col, alpha.f = 0.2),
+                border = col, lty = lty, lwd = 0.6
+            )
         }
-      }
+        if (errorbar && errorstyle == "bar" && any(ok & ok_sd)) {
+            segments(
+                x[ok & ok_sd], y[ok & ok_sd] - sd[ok & ok_sd],
+                x[ok & ok_sd], y[ok & ok_sd] + sd[ok & ok_sd],
+                col = grDevices::adjustcolor(col, alpha.f = 0.6),
+                lwd = 1
+            )
+        }
+        if (sum(ok) >= 2) {
+            ord <- order(x)
+            lines(x[ord][ok[ord]], y[ord][ok[ord]], col = col, lty = lty)
+        }
+        points(x[ok], y[ok], pch = pch, col = col)
     }
-  }
-  invisible(NULL)
+    # Set the plotting range for one metric, optionally using predefined bounds.
+    get_range <- function(metric) {
+        out <- range(benchmatrix[, metric], na.rm = TRUE)
+        if (fullrange) {
+            if (!is.na(ranges[[metric]][1])) out[1] <- ranges[[metric]][1]
+            if (!is.na(ranges[[metric]][2])) out[2] <- ranges[[metric]][2]
+        }
+        out
+    }
+    # Draw a single benchmark against one reference parameter.
+    draw_metric_1d <- function(metric, col, pch) {
+        x <- benchmatrix[, ref_par]
+        y <- benchmatrix[, metric]
+        yr <- get_range(metric)
+        if (!all(is.finite(range(y, na.rm = TRUE)))) {
+            plot.new()
+            title(main = titles[metric], col.main = "black", font.main = 2)
+            print(paste("No valid data for benchmark", metric, "with parameter", ref_par))
+            return(invisible())
+        }
+        x_base <- unique(x)
+        x_pos <- if (is.numeric(x_base)) as.numeric(x_base) else seq_along(x_base)
+        if(is.null(compare_values)) {
+            compare_values <- "all"
+            compare_colors <- col
+        }
+        # Compare mode overlays subsets for a second parameter on the same panel.
+        pch_comp <- rep(pch.vals, length.out = length(compare_values))
+        plot(x_pos, rep(NA, length(x_pos)), type = "n", xaxt = "n", xlab = params, ylab = axis_labels[metric], ylim = yr)
+        axis(1, at = x_pos, labels = x_base, las = 1)
+        title(main = titles[metric], col.main = "black", font.main = 2)
+        for (j in seq_along(compare_values)) {
+            if (compare_values[j] == "all") {
+                sel <- rep(TRUE, nrow(benchmatrix))
+            } else {
+                sel <- as.character(benchmatrix[, compare_par]) == compare_values[j]
+            }
+            x_raw <- benchmatrix[sel, ref_par]
+            y_raw <- benchmatrix[sel, metric]
+            x_plot <- x_pos[match(as.character(x_raw), as.character(x_base))]
+            if (errorbar) {
+                y_mean <- tapply(y_raw, x_raw, mean, na.rm = TRUE)
+                y_sd <- tapply(y_raw, x_raw, sd, na.rm = TRUE)
+                y_sd[!is.finite(y_sd)] <- 0
+                draw_uncertainty(x_pos[match(names(y_mean), as.character(x_base))], y_mean, y_sd, compare_colors[j], pch_comp[j], j)
+            } else {
+                points(x_plot, y_raw, pch = pch_comp[j], col = compare_colors[j])
+            }
+        }
+        return(invisible())
+    }
+    # Draw a single benchmark against two reference parameters as a heatmap.
+    draw_metric_2d <- function(metric, col) {
+        # Two reference parameters are shown as a heatmap plus a compact side scale.
+        x_vals <- sort(unique(benchmatrix[, ref_par[1]]))
+        y_vals <- sort(unique(benchmatrix[, ref_par[2]]))
+        z_mat <- matrix(NA, nrow = length(x_vals), ncol = length(y_vals))
+        for (j in seq_len(nrow(benchmatrix))) {
+            z_mat[which(x_vals == benchmatrix[j, ref_par[1]]), which(y_vals == benchmatrix[j, ref_par[2]])] <- benchmatrix[j, metric]
+        }
+        image_colors <- colorRampPalette(c("white", col))(100)
+        zlim <- range(z_mat, na.rm = TRUE)
+        if (any(!is.finite(zlim))) zlim <- c(0, 0)
+        image(x_vals, y_vals, z_mat, col = image_colors, zlim = zlim, xlab = params[1], ylab = params[2], axes = TRUE)
+        title(main = titles[metric], col.main = "black", font.main = 2)
+        if (length(x_vals) == 1) x_vals <- x_vals + c(-0.5, 0.5)
+        if (length(y_vals) == 1) y_vals <- y_vals + c(-0.5, 0.5)
+        bar_x <- max(x_vals) - diff(range(x_vals)) * 0.5
+        bar_w <- diff(range(x_vals)) * 0.03
+        bar_y <- seq(min(y_vals), max(y_vals), length.out = length(image_colors) + 1)
+        for (k in seq_along(image_colors)) {
+            rect(bar_x, bar_y[k], bar_x + bar_w, bar_y[k + 1], col = image_colors[k], border = NA)
+        }
+        rect(bar_x, min(y_vals), bar_x + bar_w, max(y_vals), col = NA, border = "#333333", lwd = 0.5)
+        if (diff(zlim) > 0) {
+            labels <- pretty(zlim, n = 3)
+            label_y <- approx(zlim, range(bar_y), xout = labels)$y
+            text(bar_x + bar_w + 0.02 * diff(range(x_vals)), label_y, labels = round(labels, 2), cex = 0.6, adj = 0)
+        }
+    }
+    
+    for (category_key in names(category_pages)) {
+        pages <- category_pages[[category_key]]
+        for (page_idx in seq_along(pages)) {
+            page_meta <- pages[[page_idx]]
+            lay <- build_layout(page_meta, category_key)
+            # layout() is needed here because the category and level headers span full rows.
+            layout(matrix(1L))
+            layout(lay$layout, heights = lay$heights)
+            par(cex.main = 0.9, cex.lab = 0.75, cex.axis = 0.7,
+                mgp = c(1.5, 0.3, 0), mar = c(2.2, 2.2, 1.2, 0.8), xpd = FALSE, font.main = 2)
+            for (item in lay$items) {
+                if (startsWith(item, "page::")) {
+                    cc <- category_colors[sub("^page::", "", item)]
+                    draw_header(pretty_label(sub("^page::", "", item)),
+                                cc,
+                                cex = 1.02,
+                                right_label = paste0("Page ", page_idx, "/", length(pages)),
+                                legend_title = if (!is.null(compare_par)) compare_par else NULL,
+                                legend_labels = if (!is.null(compare_par)) compare_values else NULL,
+                                legend_cols = if (!is.null(compare_par)) compare_colors else NULL,
+                                legend_pch = if (!is.null(compare_par)) rep(pch.vals, length.out = length(compare_values)) else NULL)
+                } else if (startsWith(item, "level::")) {
+                    cc <- category_colors[category_key]
+                    draw_header(pretty_label(sub("^level::", "", item)),
+                                cc,
+                                cex = 0.82)
+                } else if (length(ref_par) == 1) {
+                    draw_metric_1d(item, "black", pch.vals[[item]])
+                } else {
+                    draw_metric_2d(item, metric_colors[[item]])
+                }
+            }
+        }
+    }
+    invisible(NULL)
 }
 
 
@@ -1226,46 +1209,46 @@ render_benchmark_table <- function(benchmatrix,
                                    benchmarks = NULL,
                                    benchmark_level = NULL,
                                    benchmark_category = NULL) {
-  colnames(benchmatrix) <- make.names(colnames(benchmatrix))
-
-  titles <- resolve_benchmark_titles(
-    benchmarks = benchmarks,
-    benchmark_level = benchmark_level,
-    benchmark_category = benchmark_category,
-    available_names = colnames(benchmatrix)
-  )
-
-  selected_cols <- intersect(names(titles), colnames(benchmatrix))
-  if (length(selected_cols) == 0) {
-    stop("No benchmarks selected for the summary table.")
-  }
-  out_data <- benchmatrix[, selected_cols, drop = FALSE]
-
-  # Create summary output
-  summarize_column <- function(x) {
-    if (length(x) == 1 || nrow(benchmatrix) == 1) {
-      round(x[1], 4)
-    } else {
-      rng <- range(x, na.rm = TRUE)
-      if (isTRUE(all.equal(rng[1], rng[2], tolerance = 1e-6))) {
-        round(rng[1], 4)
-      } else {
-        paste0(round(rng[1], 4), "-", round(rng[2], 4))
-      }
+    colnames(benchmatrix) <- make.names(colnames(benchmatrix))
+    
+    titles <- resolve_benchmark_titles(
+        benchmarks = benchmarks,
+        benchmark_level = benchmark_level,
+        benchmark_category = benchmark_category,
+        available_names = colnames(benchmatrix)
+    )
+    
+    selected_cols <- intersect(names(titles), colnames(benchmatrix))
+    if (length(selected_cols) == 0) {
+        stop("No benchmarks selected for the summary table.")
     }
-  }
-
-  summary_df <- as.data.frame(lapply(out_data, summarize_column))
-  colnames(summary_df) <- titles[selected_cols]
-
-  # Print markdown table if requested
-  if (requireNamespace("knitr", quietly = TRUE)) {
-    print(knitr::kable(summary_df, format = "markdown", align = "c"))
-  } else {
-    warning("knitr package not installed. Install it or set print_table = FALSE.")
-  }
-
-  return(summary_df)
+    out_data <- benchmatrix[, selected_cols, drop = FALSE]
+    
+    # Create summary output
+    summarize_column <- function(x) {
+        if (length(x) == 1 || nrow(benchmatrix) == 1) {
+            round(x[1], 4)
+        } else {
+            rng <- range(x, na.rm = TRUE)
+            if (isTRUE(all.equal(rng[1], rng[2], tolerance = 1e-6))) {
+                round(rng[1], 4)
+            } else {
+                paste0(round(rng[1], 4), "-", round(rng[2], 4))
+            }
+        }
+    }
+    
+    summary_df <- as.data.frame(lapply(out_data, summarize_column))
+    colnames(summary_df) <- titles[selected_cols]
+    
+    # Print markdown table if requested
+    if (requireNamespace("knitr", quietly = TRUE)) {
+        print(knitr::kable(summary_df, format = "markdown", align = "c"))
+    } else {
+        warning("knitr package not installed. Install it or set print_table = FALSE.")
+    }
+    
+    return(summary_df)
 }
 
 
@@ -1295,113 +1278,113 @@ render_benchmark_table <- function(benchmatrix,
 #'   visualize_one_sim(benchmarks, current_row = 1)
 #' }
 visualize_one_sim <- function(BenchMatrix, current_row = 1) {
-  # get parameter names
-  param_t <- param_table()
-  param_names <- rownames(param_t)
-  bm_titles <- get_bmtitles()
-
-  # Visualize roughly
-  par(mfrow = c(nrow(BenchMatrix), 1), mar = c(2, 5, 2, 1), xpd = T, oma = c(5, 1, 1, 1))
-  # Separate parameters and filter for actual values
-  reds <- colnames(BenchMatrix) %in% param_names
-  param_values <- BenchMatrix[, reds]
-  BenchMatrix <- BenchMatrix[, !reds]
-  to_del <- c()
-  if (is.null(ncol(BenchMatrix))) {
-    message("No benchmarks have been calculated for this simulation.")
-    return()
-  }
-  for (i in 1:ncol(BenchMatrix)) {
-    tt <- unlist(BenchMatrix[, i])
-    if (all(is.na(tt))) {
-      to_del <- c(to_del, i)
+    # get parameter names
+    param_t <- param_table()
+    param_names <- rownames(param_t)
+    bm_titles <- get_bmtitles()
+    
+    # Visualize roughly
+    par(mfrow = c(nrow(BenchMatrix), 1), mar = c(2, 5, 2, 1), xpd = T, oma = c(5, 1, 1, 1))
+    # Separate parameters and filter for actual values
+    reds <- colnames(BenchMatrix) %in% param_names
+    param_values <- BenchMatrix[, reds]
+    BenchMatrix <- BenchMatrix[, !reds]
+    to_del <- c()
+    if (is.null(ncol(BenchMatrix))) {
+        message("No benchmarks have been calculated for this simulation.")
+        return()
     }
-  }
-  if (length(to_del) > 0) {
-    BenchMatrix <- BenchMatrix[, -to_del]
-  }
-  BenchMatrix[is.na(BenchMatrix)] <- 0
-  # remove column QuantColnames if it exists
-  if ("QuantColnames" %in% colnames(BenchMatrix)) {
-    BenchMatrix <- BenchMatrix[, -which(colnames(BenchMatrix) == "QuantColnames")]
-  }
-  tBenchMatrix <- BenchMatrix
-  nr <- 2 # nrow(BenchMatrix)
-  # convert characters to factors
-  if (is.null(ncol(BenchMatrix))) {
-    message("No benchmarks available for this simulation.")
-    return()
-  }
-  for (i in 1:ncol(BenchMatrix)) {
-    tt <- BenchMatrix[, i]
-    if (is.numeric(tt)) {
-      BenchMatrix[, i] <- round(tt, 2)
+    for (i in 1:ncol(BenchMatrix)) {
+        tt <- unlist(BenchMatrix[, i])
+        if (all(is.na(tt))) {
+            to_del <- c(to_del, i)
+        }
     }
-    if (is.character(tt) || is.factor(tt)) {
-      tt <- as.numeric(as.factor(tt))
+    if (length(to_del) > 0) {
+        BenchMatrix <- BenchMatrix[, -to_del]
     }
-    tt <- tt - min(tt, 0)
-    tt <- tt / max(tt, na.rm = T)
-    tt[is.na(tt)] <- 0
-    tBenchMatrix[, i] <- unlist(tt)
-  }
-
-  # Define color palette
-  color_palette <- colorpanel(100, "#AA3333", "#3333AA")
-
-  # Create plots
-  plots <- list()
-  sim <- current_row
-  if (is.numeric(sim)) {
-    sim <- rownames(BenchMatrix)[sim]
-  }
-  dat <- tBenchMatrix[sim, ]
-  dat <- sapply(dat, function(x) {
-    if (is.numeric(x)) {
-      dat <- round(x, 2)
+    BenchMatrix[is.na(BenchMatrix)] <- 0
+    # remove column QuantColnames if it exists
+    if ("QuantColnames" %in% colnames(BenchMatrix)) {
+        BenchMatrix <- BenchMatrix[, -which(colnames(BenchMatrix) == "QuantColnames")]
     }
-    if (!is.numeric(x)) {
-      x <- 0
+    tBenchMatrix <- BenchMatrix
+    nr <- 2 # nrow(BenchMatrix)
+    # convert characters to factors
+    if (is.null(ncol(BenchMatrix))) {
+        message("No benchmarks available for this simulation.")
+        return()
     }
-    x
-  })
-  dat2 <- BenchMatrix[sim, ]
-  dat2 <- sapply(dat2, function(x) {
-    if (is.numeric(x)) {
-      x <- round(x, 2)
+    for (i in 1:ncol(BenchMatrix)) {
+        tt <- BenchMatrix[, i]
+        if (is.numeric(tt)) {
+            BenchMatrix[, i] <- round(tt, 2)
+        }
+        if (is.character(tt) || is.factor(tt)) {
+            tt <- as.numeric(as.factor(tt))
+        }
+        tt <- tt - min(tt, 0)
+        tt <- tt / max(tt, na.rm = T)
+        tt[is.na(tt)] <- 0
+        tBenchMatrix[, i] <- unlist(tt)
     }
-    x
-  })
-  x_labels <- names(dat)
-  matching_titles <- bm_titles[x_labels]
-  x_labels[!is.na(matching_titles)] <- matching_titles[!is.na(matching_titles)]
-  plot <- plotly::plot_ly(
-    x = x_labels,
-    y = as.numeric(dat),
-    type = "bar",
-    marker = list(
-      color = color_palette[as.numeric(dat) * 99 + 1]
-    ),
-    text = as.character(dat2),
-    textposition = "auto",
-    hoverinfo = "text"
-  ) %>%
-    plotly::layout(
-      title = paste("hash:", sim),
-      yaxis = list(title = "Normalized values", range = c(0, 1), tickfont = list(size = 18 / nr), titlefont = list(size = 20 / nr)),
-      xaxis = list(title = "", tickangle = -45, tickfont = list(size = 16 / nr)),
-      margin = list(t = 100, b = 100, l = 100, r = 100),
-      showlegend = FALSE
-    )
-  param_plot <- plot_params(param_values, sim)
-
-
-  # Combine all plots into a subplot
-  subplot(param_plot, plot,
-          nrows = 2, shareX = TRUE, shareY = TRUE,
-          margin = 0.01, titleX = TRUE, titleY = TRUE
-  ) %>%
-    plotly::layout(showlegend = FALSE)
+    
+    # Define color palette
+    color_palette <- colorpanel(100, "#AA3333", "#3333AA")
+    
+    # Create plots
+    plots <- list()
+    sim <- current_row
+    if (is.numeric(sim)) {
+        sim <- rownames(BenchMatrix)[sim]
+    }
+    dat <- tBenchMatrix[sim, ]
+    dat <- sapply(dat, function(x) {
+        if (is.numeric(x)) {
+            dat <- round(x, 2)
+        }
+        if (!is.numeric(x)) {
+            x <- 0
+        }
+        x
+    })
+    dat2 <- BenchMatrix[sim, ]
+    dat2 <- sapply(dat2, function(x) {
+        if (is.numeric(x)) {
+            x <- round(x, 2)
+        }
+        x
+    })
+    x_labels <- names(dat)
+    matching_titles <- bm_titles[x_labels]
+    x_labels[!is.na(matching_titles)] <- matching_titles[!is.na(matching_titles)]
+    plot <- plotly::plot_ly(
+        x = x_labels,
+        y = as.numeric(dat),
+        type = "bar",
+        marker = list(
+            color = color_palette[as.numeric(dat) * 99 + 1]
+        ),
+        text = as.character(dat2),
+        textposition = "auto",
+        hoverinfo = "text"
+    ) %>%
+        plotly::layout(
+            title = paste("hash:", sim),
+            yaxis = list(title = "Normalized values", range = c(0, 1), tickfont = list(size = 18 / nr), titlefont = list(size = 20 / nr)),
+            xaxis = list(title = "", tickangle = -45, tickfont = list(size = 16 / nr)),
+            margin = list(t = 100, b = 100, l = 100, r = 100),
+            showlegend = FALSE
+        )
+    param_plot <- plot_params(param_values, sim)
+    
+    
+    # Combine all plots into a subplot
+    subplot(param_plot, plot,
+            nrows = 2, shareX = TRUE, shareY = TRUE,
+            margin = 0.01, titleX = TRUE, titleY = TRUE
+    ) %>%
+        plotly::layout(showlegend = FALSE)
 }
 
 #' Plot parameters for a specific simulation
@@ -1426,102 +1409,102 @@ visualize_one_sim <- function(BenchMatrix, current_row = 1) {
 #' benchmarks <- data.frame(NumReps = 3, Enzyme = "trypsin")
 #' plot_params(benchmarks, current_row = 1)
 plot_params <- function(BenchMatrix, current_row = 1) {
-  # get parameter names
-  param_t <- param_table()
-  param_names <- rownames(param_t)
-
-  param_names <- param_names[param_names %in% colnames(BenchMatrix)]
-  if (length(param_names) == 0) {
-    return(plot_ly(
-      type = "table",
-      header = list(values = c("Parameter", "Value")),
-      cells = list(values = list(character(0), character(0)))
-    ))
-  }
-  param_t <- param_t[param_names, , drop = FALSE]
-
-  if (!is.numeric(current_row)) {
-    current_row <- which(rownames(BenchMatrix) == current_row)
-  }
-
-  raw_values <- vapply(BenchMatrix[current_row, param_names, drop = FALSE], as.character, character(1))
-  raw_values[is.na(raw_values)] <- "NA"
-  num_values <- suppressWarnings(as.numeric(raw_values))
-  min_values <- if ("MinValue" %in% colnames(param_t)) {
-    suppressWarnings(as.numeric(unlist(param_t$MinValue)))
-  } else {
-    rep(NA_real_, length(param_names))
-  }
-  max_values <- if ("MaxValue" %in% colnames(param_t)) {
-    suppressWarnings(as.numeric(unlist(param_t$MaxValue)))
-  } else {
-    rep(NA_real_, length(param_names))
-  }
-  numeric_param <- !is.na(num_values) & !is.na(min_values) & !is.na(max_values) & min_values != max_values
-  table_param <- !numeric_param
-  if (any(table_param)) {
-    return(plot_ly(
-      type = "table",
-      header = list(values = c("Parameter", "Value")),
-      cells = list(values = list(param_names, raw_values))
-    ))
-  }
-
-  # Set the number of columns
-  ncols <- 4
-  # Calculate number of rows based on number of plots and columns
-  nrows <- ceiling(sum(numeric_param) / ncols)
-
-  # Create an empty list to store meters
-  meters <- list()
-  # Adjust spacing factors for left/right and top/bottom margins
-  hspacing_factor <- 0.3
-  vspacing_factor <- 0.3
-
-  nr <- 1
-
-  # Loop to create each meter plot
-  numeric_names <- param_names[numeric_param]
-  for (i in seq_along(numeric_names)) {
-    param_i <- match(numeric_names[i], param_names)
-    val <- num_values[param_i]
-    min_value <- min_values[param_i]
-    max_value <- max_values[param_i]
-    row_index <- ceiling(i / ncols)
-    col_index <- (i - 1) %% ncols + 1
-    x_domain <- c((col_index - 1 + hspacing_factor) / ncols, (col_index - hspacing_factor) / ncols)
-    y_domain <- c(1 - (row_index - vspacing_factor) / nrows, 1 - ((row_index - 1 + vspacing_factor) / nrows))
-    # Scale to row position
-    # x_domain <- x_domain/2 + 0.5
-    y_domain <- y_domain / 2 + 0.5
-    # y_domain <- y_domain/(nrow(BenchMatrix)*1.1) + (current_row-1)*1.05 / nrow(BenchMatrix)
-    color_idx <- round((val - min_value) / (max_value - min_value) * 99) + 1
-    color_idx <- max(1, min(100, color_idx))
-    fig1 <- plot_ly(
-      domain = list(x = x_domain, y = y_domain),
-      value = val,
-      title = list(text = numeric_names[i], align = "center", font = list(size = 10 / nr)),
-      type = "indicator",
-      mode = "gauge",
-      gauge = list(
-        shape = "bullet",
-        axis = list(
-          range = list(min_value, max_value),
-          tickmode = "auto",
-          ticks = "inside", # Position ticks inside
-          tickfont = list(size = 10 / nr, color = "black") # Adjust tickfont size and color for better visibility
-        ),
-        bar = list(
-          color = colorpanel(100, "#33CC33", "#999966", "#CC3333")[color_idx],
-          thickness = 0.8 # Adjust this value to make the gauge bar thicker
+    # get parameter names
+    param_t <- param_table()
+    param_names <- rownames(param_t)
+    
+    param_names <- param_names[param_names %in% colnames(BenchMatrix)]
+    if (length(param_names) == 0) {
+        return(plot_ly(
+            type = "table",
+            header = list(values = c("Parameter", "Value")),
+            cells = list(values = list(character(0), character(0)))
+        ))
+    }
+    param_t <- param_t[param_names, , drop = FALSE]
+    
+    if (!is.numeric(current_row)) {
+        current_row <- which(rownames(BenchMatrix) == current_row)
+    }
+    
+    raw_values <- vapply(BenchMatrix[current_row, param_names, drop = FALSE], as.character, character(1))
+    raw_values[is.na(raw_values)] <- "NA"
+    num_values <- suppressWarnings(as.numeric(raw_values))
+    min_values <- if ("MinValue" %in% colnames(param_t)) {
+        suppressWarnings(as.numeric(unlist(param_t$MinValue)))
+    } else {
+        rep(NA_real_, length(param_names))
+    }
+    max_values <- if ("MaxValue" %in% colnames(param_t)) {
+        suppressWarnings(as.numeric(unlist(param_t$MaxValue)))
+    } else {
+        rep(NA_real_, length(param_names))
+    }
+    numeric_param <- !is.na(num_values) & !is.na(min_values) & !is.na(max_values) & min_values != max_values
+    table_param <- !numeric_param
+    if (any(table_param)) {
+        return(plot_ly(
+            type = "table",
+            header = list(values = c("Parameter", "Value")),
+            cells = list(values = list(param_names, raw_values))
+        ))
+    }
+    
+    # Set the number of columns
+    ncols <- 4
+    # Calculate number of rows based on number of plots and columns
+    nrows <- ceiling(sum(numeric_param) / ncols)
+    
+    # Create an empty list to store meters
+    meters <- list()
+    # Adjust spacing factors for left/right and top/bottom margins
+    hspacing_factor <- 0.3
+    vspacing_factor <- 0.3
+    
+    nr <- 1
+    
+    # Loop to create each meter plot
+    numeric_names <- param_names[numeric_param]
+    for (i in seq_along(numeric_names)) {
+        param_i <- match(numeric_names[i], param_names)
+        val <- num_values[param_i]
+        min_value <- min_values[param_i]
+        max_value <- max_values[param_i]
+        row_index <- ceiling(i / ncols)
+        col_index <- (i - 1) %% ncols + 1
+        x_domain <- c((col_index - 1 + hspacing_factor) / ncols, (col_index - hspacing_factor) / ncols)
+        y_domain <- c(1 - (row_index - vspacing_factor) / nrows, 1 - ((row_index - 1 + vspacing_factor) / nrows))
+        # Scale to row position
+        # x_domain <- x_domain/2 + 0.5
+        y_domain <- y_domain / 2 + 0.5
+        # y_domain <- y_domain/(nrow(BenchMatrix)*1.1) + (current_row-1)*1.05 / nrow(BenchMatrix)
+        color_idx <- round((val - min_value) / (max_value - min_value) * 99) + 1
+        color_idx <- max(1, min(100, color_idx))
+        fig1 <- plot_ly(
+            domain = list(x = x_domain, y = y_domain),
+            value = val,
+            title = list(text = numeric_names[i], align = "center", font = list(size = 10 / nr)),
+            type = "indicator",
+            mode = "gauge",
+            gauge = list(
+                shape = "bullet",
+                axis = list(
+                    range = list(min_value, max_value),
+                    tickmode = "auto",
+                    ticks = "inside", # Position ticks inside
+                    tickfont = list(size = 10 / nr, color = "black") # Adjust tickfont size and color for better visibility
+                ),
+                bar = list(
+                    color = colorpanel(100, "#33CC33", "#999966", "#CC3333")[color_idx],
+                    thickness = 0.8 # Adjust this value to make the gauge bar thicker
+                )
+            )
         )
-      )
-    )
-    meters[[i]] <- fig1
-  }
-  meter_plot <- subplot(meters, nrows = nrows, margin = 0.01)
-  meter_plot$x$layout[["NA"]] <- NULL
-  meter_plot
+        meters[[i]] <- fig1
+    }
+    meter_plot <- subplot(meters, nrows = nrows, margin = 0.01)
+    meter_plot$x$layout[["NA"]] <- NULL
+    meter_plot
 }
 
 
@@ -1529,100 +1512,100 @@ plot_params <- function(BenchMatrix, current_row = 1) {
 #' Function to get human-readable titles for the different parameters
 #'
 get_bmmeta <- function() {
-  meta <- data.frame(
-    benchmark = c(
-      "numPeptides", "numProteins", "propUniquePep", "uniqueStrippedPep", "percMissingPep",
-      "aucDiffRegPeptides.FDR_limma.2.vs.1.AUC", "tprPep0.01.FDR_limma.2.vs.1.TPR", "tprPep0.05.FDR_limma.2.vs.1.TPR",
-      "tFDRPep0.01.FDR_limma.2.vs.1.tFDR", "tFDRPep0.05.FDR_limma.2.vs.1.tFDR", "propMisCleavedPeps.0", "dynRangePep",
-      "meanSquareDiffFCPep", "sdWithinRepsPep", "skewnessPeps", "kurtosisPeps", "sdPeps",
-      "numQuantProtGroups", "propUniqueProts", "percMissingProt", "meanPepPerProt",
-      "aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC", "tprProt0.01.FDR_PolySTest.2.vs.1.TPR", "tprProt0.05.FDR_PolySTest.2.vs.1.TPR",
-      "tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR", "tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR", "meanSquareDiffFCProt",
-      "sdWithinRepsProt", "propMisCleavedProts", "propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1",
-      "propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1", "skewnessProts", "kurtosisProts", "sdProts",
-      "numProteoforms", "meanProteoformsPerProt", "numModPeptides", "propModAndUnmodPep",
-      "aucDiffRegAdjModPep", "tprAdjModPep0.01", "tprAdjModPep0.05", "tFDRAdjModPep0.01", "tFDRAdjModPep0.05",
-      "propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1", "propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1",
-      "percOverlapModPepProt", "meanSquareDiffFCModPep"
-    ),
-    title = c(
-      "#Total peptidoforms (mod+unmod)", "#Protein accessions (all peptidoforms)", "Fraction unique peptidoforms (single protein)",
-      "#Unique peptide sequences", "% Missing peptidoform values", "Peptidoform AUC (truth vs FDR)",
-      "TPR peptidoforms (FDR < 0.01)", "TPR peptidoforms (FDR < 0.05)", "True FDR (peptidoforms, 0.01)",
-      "True FDR (peptidoforms, 0.05)", "No miscleavage fraction", "Dynamic range (peptidoforms)",
-      "Fold-change error (peptidoforms)", "Replicate SD (regulated peptidoforms)", "Skewness (peptidoforms)",
-      "Kurtosis (peptidoforms)", "Overall SD (peptidoforms)", "#Quantified protein groups", "Fraction single-protein groups",
-      "Fraction missing protein-group values", "Peptide sequences per protein group", "Protein-group AUC (truth vs FDR)",
-      "TPR protein groups (FDR < 0.01)", "TPR protein groups (FDR < 0.05)", "True FDR (protein groups, 0.01)",
-      "True FDR (protein groups, 0.05)", "Fold-change error (protein groups)", "Replicate SD (regulated protein groups)",
-      "Fraction miscleaved protein groups", "Wrong-ID fraction (protein groups, FDR<0.01)", "Wrong-ID fraction (protein groups, FDR<0.05)",
-      "Skewness (protein groups)", "Kurtosis (protein groups)", "Overall SD (protein groups)", "#Proteoforms",
-      "Proteoforms per protein", "#Modified peptidoforms", "Fraction modified with unmodified match",
-      "AUC (adj. mod. peptidoforms)", "TPR (adj. mod. peptidoforms, 0.01)", "TPR (adj. mod. peptidoforms, 0.05)",
-      "True FDR (mod. peptidoforms, 0.01)", "True FDR (mod. peptidoforms, 0.05)",
-      "Wrong-signif. fraction (mod. peptidoforms, FDR<0.01)", "Wrong-signif. fraction (mod. peptidoforms, FDR<0.05)",
-      "Fraction mod peptidoforms with protein quant", "Fold-change error (mod. peptidoforms)"
-    ),
-    axis_label = c(
-      "Count", "Count", "Fraction", "Count", "% Missing", "AUC", "TPR", "TPR", "True FDR", "True FDR",
-      "Fraction", "log2 Range", "FC Error", "SD", "Skewness", "Kurtosis", "SD",
-      "Count", "Fraction", "% Missing", "Count", "AUC", "TPR", "TPR", "True FDR", "True FDR",
-      "FC Error", "SD", "Fraction", "Fraction", "Fraction", "Skewness", "Kurtosis", "SD",
-      "Count", "Count", "Count", "Fraction", "AUC", "TPR", "TPR", "True FDR", "True FDR",
-      "Fraction", "Fraction", "Fraction", "FC Error"
-    ),
-    level = c(rep("peptidoform", 17), rep("protein_group", 17), rep("ptm_proteoform", 13)),
-    category = c(
-      "coverage", "coverage", "coverage", "coverage", "completeness",
-      "differential_performance", "differential_performance", "differential_performance",
-      "differential_performance", "differential_performance", "coverage", "quantification_quality",
-      "differential_performance", "quantification_quality", "quantification_quality", "quantification_quality", "quantification_quality",
-      "coverage", "coverage", "completeness", "coverage", "differential_performance", "differential_performance",
-      "differential_performance", "differential_performance", "differential_performance", "differential_performance",
-      "quantification_quality", "coverage", "artifact_sensitivity", "artifact_sensitivity", "quantification_quality",
-      "quantification_quality", "quantification_quality", "coverage", "coverage", "coverage", "coverage",
-      "ptm_adjusted_performance", "ptm_adjusted_performance", "ptm_adjusted_performance", "ptm_adjusted_performance",
-      "ptm_adjusted_performance", "artifact_sensitivity", "artifact_sensitivity", "coverage", "ptm_adjusted_performance"
-    ),
-    direction = c(
-      "higher_better", "higher_better", "higher_better", "higher_better", "lower_better",
-      "higher_better", "higher_better", "higher_better", "lower_better", "lower_better", "depends", "higher_better",
-      "lower_better", "lower_better", "depends", "depends", "depends",
-      "higher_better", "higher_better", "lower_better", "higher_better", "higher_better", "higher_better", "higher_better",
-      "lower_better", "lower_better", "lower_better", "lower_better", "lower_better", "lower_better", "lower_better",
-      "depends", "depends", "depends", "higher_better", "higher_better", "higher_better", "higher_better",
-      "higher_better", "higher_better", "higher_better", "lower_better", "lower_better", "lower_better", "lower_better",
-      "higher_better", "lower_better"
-    ),
-    range_min = c(
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA, NA, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA, NA, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    ),
-    range_max = c(
-      NA, NA, 1, NA, 100, 1, 1, 1, 1, 1, 1, NA, NA, NA, NA, NA, NA,
-      NA, 1, NA, NA, 1, 1, 1, 1, 1, NA, NA, 1, 1, 1, NA, NA, NA,
-      NA, NA, NA, 1, NA, NA, NA, NA, NA, 1, 1, NA, NA
-    ),
-    stringsAsFactors = FALSE
-  )
-  rownames(meta) <- meta$benchmark
-  meta
+    meta <- data.frame(
+        benchmark = c(
+            "numPeptides", "numProteins", "propUniquePep", "uniqueStrippedPep", "percMissingPep",
+            "aucDiffRegPeptides.FDR_limma.2.vs.1.AUC", "tprPep0.01.FDR_limma.2.vs.1.TPR", "tprPep0.05.FDR_limma.2.vs.1.TPR",
+            "tFDRPep0.01.FDR_limma.2.vs.1.tFDR", "tFDRPep0.05.FDR_limma.2.vs.1.tFDR", "propMisCleavedPeps.0", "dynRangePep",
+            "meanSquareDiffFCPep", "sdWithinRepsPep", "skewnessPeps", "kurtosisPeps", "sdPeps",
+            "numQuantProtGroups", "propUniqueProts", "percMissingProt", "meanPepPerProt",
+            "aucDiffRegProteins.FDR_PolySTest.2.vs.1.AUC", "tprProt0.01.FDR_PolySTest.2.vs.1.TPR", "tprProt0.05.FDR_PolySTest.2.vs.1.TPR",
+            "tFDRProt0.01.FDR_PolySTest.2.vs.1.tFDR", "tFDRProt0.05.FDR_PolySTest.2.vs.1.tFDR", "meanSquareDiffFCProt",
+            "sdWithinRepsProt", "propMisCleavedProts", "propDiffRegWrongIDProt0.01.FDR_PolySTest.2.vs.1",
+            "propDiffRegWrongIDProt0.05.FDR_PolySTest.2.vs.1", "skewnessProts", "kurtosisProts", "sdProts",
+            "numProteoforms", "meanProteoformsPerProt", "numModPeptides", "propModAndUnmodPep",
+            "aucDiffRegAdjModPep", "tprAdjModPep0.01", "tprAdjModPep0.05", "tFDRAdjModPep0.01", "tFDRAdjModPep0.05",
+            "propDiffRegPepWrong0.01.FDR_PolySTest.2.vs.1", "propDiffRegPepWrong0.05.FDR_PolySTest.2.vs.1",
+            "percOverlapModPepProt", "meanSquareDiffFCModPep"
+        ),
+        title = c(
+            "#Total peptidoforms (mod+unmod)", "#Protein accessions (all peptidoforms)", "Fraction unique peptidoforms (single protein)",
+            "#Unique peptide sequences", "% Missing peptidoform values", "Peptidoform AUC (truth vs FDR)",
+            "TPR peptidoforms (FDR < 0.01)", "TPR peptidoforms (FDR < 0.05)", "True FDR (peptidoforms, 0.01)",
+            "True FDR (peptidoforms, 0.05)", "No miscleavage fraction", "Dynamic range (peptidoforms)",
+            "Fold-change error (peptidoforms)", "Replicate SD (regulated peptidoforms)", "Skewness (peptidoforms)",
+            "Kurtosis (peptidoforms)", "Overall SD (peptidoforms)", "#Quantified protein groups", "Fraction single-protein groups",
+            "Fraction missing protein-group values", "Peptide sequences per protein group", "Protein-group AUC (truth vs FDR)",
+            "TPR protein groups (FDR < 0.01)", "TPR protein groups (FDR < 0.05)", "True FDR (protein groups, 0.01)",
+            "True FDR (protein groups, 0.05)", "Fold-change error (protein groups)", "Replicate SD (regulated protein groups)",
+            "Fraction miscleaved protein groups", "Wrong-ID fraction (protein groups, FDR<0.01)", "Wrong-ID fraction (protein groups, FDR<0.05)",
+            "Skewness (protein groups)", "Kurtosis (protein groups)", "Overall SD (protein groups)", "#Proteoforms",
+            "Proteoforms per protein", "#Modified peptidoforms", "Fraction modified with unmodified match",
+            "AUC (adj. mod. peptidoforms)", "TPR (adj. mod. peptidoforms, 0.01)", "TPR (adj. mod. peptidoforms, 0.05)",
+            "True FDR (mod. peptidoforms, 0.01)", "True FDR (mod. peptidoforms, 0.05)",
+            "Wrong-signif. fraction (mod. peptidoforms, FDR<0.01)", "Wrong-signif. fraction (mod. peptidoforms, FDR<0.05)",
+            "Fraction mod peptidoforms with protein quant", "Fold-change error (mod. peptidoforms)"
+        ),
+        axis_label = c(
+            "Count", "Count", "Fraction", "Count", "% Missing", "AUC", "TPR", "TPR", "True FDR", "True FDR",
+            "Fraction", "log2 Range", "FC Error", "SD", "Skewness", "Kurtosis", "SD",
+            "Count", "Fraction", "% Missing", "Count", "AUC", "TPR", "TPR", "True FDR", "True FDR",
+            "FC Error", "SD", "Fraction", "Fraction", "Fraction", "Skewness", "Kurtosis", "SD",
+            "Count", "Count", "Count", "Fraction", "AUC", "TPR", "TPR", "True FDR", "True FDR",
+            "Fraction", "Fraction", "Fraction", "FC Error"
+        ),
+        level = c(rep("peptidoform", 17), rep("protein_group", 17), rep("ptm_proteoform", 13)),
+        category = c(
+            "coverage", "coverage", "coverage", "coverage", "completeness",
+            "differential_performance", "differential_performance", "differential_performance",
+            "differential_performance", "differential_performance", "coverage", "quantification_quality",
+            "differential_performance", "quantification_quality", "quantification_quality", "quantification_quality", "quantification_quality",
+            "coverage", "coverage", "completeness", "coverage", "differential_performance", "differential_performance",
+            "differential_performance", "differential_performance", "differential_performance", "differential_performance",
+            "quantification_quality", "coverage", "artifact_sensitivity", "artifact_sensitivity", "quantification_quality",
+            "quantification_quality", "quantification_quality", "coverage", "coverage", "coverage", "coverage",
+            "ptm_adjusted_performance", "ptm_adjusted_performance", "ptm_adjusted_performance", "ptm_adjusted_performance",
+            "ptm_adjusted_performance", "artifact_sensitivity", "artifact_sensitivity", "coverage", "ptm_adjusted_performance"
+        ),
+        direction = c(
+            "higher_better", "higher_better", "higher_better", "higher_better", "lower_better",
+            "higher_better", "higher_better", "higher_better", "lower_better", "lower_better", "depends", "higher_better",
+            "lower_better", "lower_better", "depends", "depends", "depends",
+            "higher_better", "higher_better", "lower_better", "higher_better", "higher_better", "higher_better", "higher_better",
+            "lower_better", "lower_better", "lower_better", "lower_better", "lower_better", "lower_better", "lower_better",
+            "depends", "depends", "depends", "higher_better", "higher_better", "higher_better", "higher_better",
+            "higher_better", "higher_better", "higher_better", "lower_better", "lower_better", "lower_better", "lower_better",
+            "higher_better", "lower_better"
+        ),
+        range_min = c(
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA, NA, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA, NA, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ),
+        range_max = c(
+            NA, NA, 1, NA, 100, 1, 1, 1, 1, 1, 1, NA, NA, NA, NA, NA, NA,
+            NA, 1, NA, NA, 1, 1, 1, 1, 1, NA, NA, 1, 1, 1, NA, NA, NA,
+            NA, NA, NA, 1, NA, NA, NA, NA, NA, 1, 1, NA, NA
+        ),
+        stringsAsFactors = FALSE
+    )
+    rownames(meta) <- meta$benchmark
+    meta
 }
 
 get_bmtitles <- function() {
-  meta <- get_bmmeta()
-  stats::setNames(meta$title, meta$benchmark)
+    meta <- get_bmmeta()
+    stats::setNames(meta$title, meta$benchmark)
 }
 
 get_bmgroups <- function() {
-  meta <- get_bmmeta()
-  meta[, c("benchmark", "level", "category", "direction", "title", "axis_label"), drop = FALSE]
+    meta <- get_bmmeta()
+    meta[, c("benchmark", "level", "category", "direction", "title", "axis_label"), drop = FALSE]
 }
 
 get_bmaxislabels <- function() {
-  meta <- get_bmmeta()
-  stats::setNames(meta$axis_label, meta$benchmark)
+    meta <- get_bmmeta()
+    stats::setNames(meta$axis_label, meta$benchmark)
 }
 
 resolve_benchmark_titles <- function(benchmarks = NULL,
@@ -1630,60 +1613,60 @@ resolve_benchmark_titles <- function(benchmarks = NULL,
                                      benchmark_category = NULL,
                                      available_names = NULL,
                                      default_first = NULL) {
-  meta <- get_bmmeta()
-  titles <- stats::setNames(meta$title, meta$benchmark)
-  groups <- meta[, c("benchmark", "level", "category"), drop = FALSE]
-
-  if (!is.null(benchmark_level)) {
-    benchmark_level <- unique(as.character(benchmark_level))
-    invalid_levels <- setdiff(benchmark_level, unique(groups$level))
-    if (length(invalid_levels) > 0) {
-      stop(paste("Unknown benchmark level(s):", paste(invalid_levels, collapse = ", ")))
+    meta <- get_bmmeta()
+    titles <- stats::setNames(meta$title, meta$benchmark)
+    groups <- meta[, c("benchmark", "level", "category"), drop = FALSE]
+    
+    if (!is.null(benchmark_level)) {
+        benchmark_level <- unique(as.character(benchmark_level))
+        invalid_levels <- setdiff(benchmark_level, unique(groups$level))
+        if (length(invalid_levels) > 0) {
+            stop(paste("Unknown benchmark level(s):", paste(invalid_levels, collapse = ", ")))
+        }
+        titles <- titles[groups$benchmark[groups$level %in% benchmark_level]]
     }
-    titles <- titles[groups$benchmark[groups$level %in% benchmark_level]]
-  }
-
-  if (!is.null(benchmark_category)) {
-    benchmark_category <- unique(as.character(benchmark_category))
-    invalid_categories <- setdiff(benchmark_category, unique(groups$category))
-    if (length(invalid_categories) > 0) {
-      stop(paste("Unknown benchmark category(s):", paste(invalid_categories, collapse = ", ")))
+    
+    if (!is.null(benchmark_category)) {
+        benchmark_category <- unique(as.character(benchmark_category))
+        invalid_categories <- setdiff(benchmark_category, unique(groups$category))
+        if (length(invalid_categories) > 0) {
+            stop(paste("Unknown benchmark category(s):", paste(invalid_categories, collapse = ", ")))
+        }
+        groups <- groups[groups$benchmark %in% names(titles), , drop = FALSE]
+        titles <- titles[groups$benchmark[groups$category %in% benchmark_category]]
     }
-    groups <- groups[groups$benchmark %in% names(titles), , drop = FALSE]
-    titles <- titles[groups$benchmark[groups$category %in% benchmark_category]]
-  }
-
-  if (is.null(benchmarks) || length(benchmarks) == 0) {
-    groups <- groups[groups$benchmark %in% names(titles), , drop = FALSE]
-    titles <- titles[groups$benchmark]
-  } else if (is.character(benchmarks)) {
-    benchmarks <- make.names(benchmarks)
-    invalid_benchmarks <- setdiff(benchmarks, names(titles))
-    if (length(invalid_benchmarks) > 0) {
-      stop(paste("Benchmark name(s)", paste(invalid_benchmarks, collapse = ", "), "are not correct."))
+    
+    if (is.null(benchmarks) || length(benchmarks) == 0) {
+        groups <- groups[groups$benchmark %in% names(titles), , drop = FALSE]
+        titles <- titles[groups$benchmark]
+    } else if (is.character(benchmarks)) {
+        benchmarks <- make.names(benchmarks)
+        invalid_benchmarks <- setdiff(benchmarks, names(titles))
+        if (length(invalid_benchmarks) > 0) {
+            stop(paste("Benchmark name(s)", paste(invalid_benchmarks, collapse = ", "), "are not correct."))
+        }
+        titles <- titles[benchmarks]
+    } else if (is.numeric(benchmarks)) {
+        if (length(titles) == 0 || max(benchmarks) > length(titles)) {
+            stop(paste("Too many benchmarks selected. Please select a maximum of", length(titles)))
+        }
+        titles <- titles[benchmarks]
+    } else {
+        stop("Please provide a character vector of benchmark names or numeric vector of indices.")
     }
-    titles <- titles[benchmarks]
-  } else if (is.numeric(benchmarks)) {
-    if (length(titles) == 0 || max(benchmarks) > length(titles)) {
-      stop(paste("Too many benchmarks selected. Please select a maximum of", length(titles)))
+    
+    if (!is.null(available_names)) {
+        missing_benchmarks <- setdiff(names(titles), available_names)
+        if (length(missing_benchmarks) > 0) {
+            warning(paste(
+                "Benchmark name(s)", paste(missing_benchmarks, collapse = ", "),
+                "are not available in the benchmark matrix. They will be removed."
+            ))
+            titles <- titles[intersect(names(titles), available_names)]
+        }
     }
-    titles <- titles[benchmarks]
-  } else {
-    stop("Please provide a character vector of benchmark names or numeric vector of indices.")
-  }
-
-  if (!is.null(available_names)) {
-    missing_benchmarks <- setdiff(names(titles), available_names)
-    if (length(missing_benchmarks) > 0) {
-      warning(paste(
-        "Benchmark name(s)", paste(missing_benchmarks, collapse = ", "),
-        "are not available in the benchmark matrix. They will be removed."
-      ))
-      titles <- titles[intersect(names(titles), available_names)]
-    }
-  }
-
-  titles
+    
+    titles
 }
 
 #' setting maximal ranges for benchmarking metrics
@@ -1693,59 +1676,59 @@ resolve_benchmark_titles <- function(benchmarks = NULL,
 #' @return A named list of numeric vectors specifying the \code{c(min, max)}
 #'   display range for each benchmark metric.
 set_bmranges <- function(titles) {
-  meta <- get_bmmeta()
-  selected <- meta[names(titles), c("range_min", "range_max"), drop = FALSE]
-  stats::setNames(lapply(seq_len(nrow(selected)), function(i) as.numeric(selected[i, ])), rownames(selected))
+    meta <- get_bmmeta()
+    selected <- meta[names(titles), c("range_min", "range_max"), drop = FALSE]
+    stats::setNames(lapply(seq_len(nrow(selected)), function(i) as.numeric(selected[i, ])), rownames(selected))
 }
 
 get_paramtitles <- function() {
-  titles_params <- c(
-    NumCond = "Number of conditions",
-    NumReps = "Number of replicates",
-    PathToFasta = "Path to FASTA file",
-    PathToProteinList = "Path to protein list (optional)",
-    PercExpressedProt = "Fraction of expressed proteins",
-    FracModProt = "Fraction of proteins to be modified",
-    PropModPerProt = "Max #Modifications per protein",
-    PTMMultipleLambda = "Poisson lambda for multiple PTMs",
-    RemoveNonModFormFrac = "Fraction without non-modified form",
-    PTMTypes = "PTM types",
-    PTMTypesDistr = "PTM type distribution",
-    PTMTypesMass = "PTM mass shifts",
-    ModifiableResidues = "Modifiable residues",
-    ModifiableResiduesDistr = "Modifiable residue distribution",
-    QuantNoise = "Quantification noise (SD)",
-    DiffRegFrac = "Fraction of differentially regulated",
-    DiffRegMax = "Max fold-change (log2)",
-    UserInputFoldChanges_NumRegProteoforms = "#User-specified regulated proteoforms",
-    UserInputFoldChanges_RegulationFC = "User-defined fold change",
-    AbsoluteQuanMean = "Mean absolute quantity",
-    AbsoluteQuanSD = "SD of absolute quantity",
-    ThreshRemoveProteoforms = "Proteoform removal threshold",
-    Enzyme = "Digestion enzyme",
-    PropMissedCleavages = "Proportion with missed cleavages",
-    MaxNumMissedCleavages = "Max missed cleavages",
-    PepMinLength = "Min peptide length",
-    PepMaxLength = "Max peptide length",
-    LeastAbundantLoss = "Fraction of least abundant removed",
-    EnrichPTM = "Enriched PTM type",
-    EnrichmentLoss = "Enrichment loss",
-    EnrichmentEfficiency = "Enrichment efficiency",
-    EnrichmentQuantDiff = "Quant difference due to enrichment",
-    EnrichmentNoise = "Enrichment noise",
-    ModificationLoss = "Loss of modified peptides",
-    PercDetectability = "Fraction of peptides detected (model)",
-    PercDetectedVal = "Fraction of detected intensities",
-    WeightDetectVal = "Intensity-dependence of detection",
-    MSNoise = "Instrumental noise",
-    WrongIDs = "Wrong identification rate",
-    WrongLocalizations = "Wrong localization rate",
-    MaxNAPerPep = "Max NAs per peptide",
-    ProtSummarization = "Protein summarization method",
-    MinUniquePep = "Min unique peptides per protein",
-    IncludeModPep = "Include modified peptidoforms in protein quantification",
-    SharedPep = "Include shared peptides in protein inference",
-    StatPaired = "Paired testing enabled"
-  )
-  titles_params
+    titles_params <- c(
+        NumCond = "Number of conditions",
+        NumReps = "Number of replicates",
+        PathToFasta = "Path to FASTA file",
+        PathToProteinList = "Path to protein list (optional)",
+        PercExpressedProt = "Fraction of expressed proteins",
+        FracModProt = "Fraction of proteins to be modified",
+        PropModPerProt = "Max #Modifications per protein",
+        PTMMultipleLambda = "Poisson lambda for multiple PTMs",
+        RemoveNonModFormFrac = "Fraction without non-modified form",
+        PTMTypes = "PTM types",
+        PTMTypesDistr = "PTM type distribution",
+        PTMTypesMass = "PTM mass shifts",
+        ModifiableResidues = "Modifiable residues",
+        ModifiableResiduesDistr = "Modifiable residue distribution",
+        QuantNoise = "Quantification noise (SD)",
+        DiffRegFrac = "Fraction of differentially regulated",
+        DiffRegMax = "Max fold-change (log2)",
+        UserInputFoldChanges_NumRegProteoforms = "#User-specified regulated proteoforms",
+        UserInputFoldChanges_RegulationFC = "User-defined fold change",
+        AbsoluteQuanMean = "Mean absolute quantity",
+        AbsoluteQuanSD = "SD of absolute quantity",
+        ThreshRemoveProteoforms = "Proteoform removal threshold",
+        Enzyme = "Digestion enzyme",
+        PropMissedCleavages = "Proportion with missed cleavages",
+        MaxNumMissedCleavages = "Max missed cleavages",
+        PepMinLength = "Min peptide length",
+        PepMaxLength = "Max peptide length",
+        LeastAbundantLoss = "Fraction of least abundant removed",
+        EnrichPTM = "Enriched PTM type",
+        EnrichmentLoss = "Enrichment loss",
+        EnrichmentEfficiency = "Enrichment efficiency",
+        EnrichmentQuantDiff = "Quant difference due to enrichment",
+        EnrichmentNoise = "Enrichment noise",
+        ModificationLoss = "Loss of modified peptides",
+        PercDetectability = "Fraction of peptides detected (model)",
+        PercDetectedVal = "Fraction of detected intensities",
+        WeightDetectVal = "Intensity-dependence of detection",
+        MSNoise = "Instrumental noise",
+        WrongIDs = "Wrong identification rate",
+        WrongLocalizations = "Wrong localization rate",
+        MaxNAPerPep = "Max NAs per peptide",
+        ProtSummarization = "Protein summarization method",
+        MinUniquePep = "Min unique peptides per protein",
+        IncludeModPep = "Include modified peptidoforms in protein quantification",
+        SharedPep = "Include shared peptides in protein inference",
+        StatPaired = "Paired testing enabled"
+    )
+    titles_params
 }
