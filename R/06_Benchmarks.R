@@ -279,7 +279,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   # Calculating mean of peptide sds within replicates (only peptides with regulations)
   sds <- 0
   for (c in 1:Param$NumCond) {
-    tquants <- as.matrix(StatsPep[StatsPep$min1Reg, Param$QuantColnames][, (c - 1) * Param$NumReps + (1:Param$NumReps)])
+    tquants <- as.matrix(StatsPep[, Param$QuantColnames][, (c - 1) * Param$NumReps + (1:Param$NumReps)])
     if (nrow(tquants) > 0) {
       tsds <- matrixStats::rowSds(tquants, na.rm = T)
       sds <- sds + sum(tsds, na.rm = T) / length(na.omit(tsds))
@@ -291,7 +291,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
 
   sds <- 0
   for (c in 1:Param$NumCond) {
-    tquants <- as.matrix(Stats[Stats$allReg, Param$QuantColnames][, (c - 1) * Param$NumReps + (1:Param$NumReps)])
+    tquants <- as.matrix(Stats[, Param$QuantColnames][, (c - 1) * Param$NumReps + (1:Param$NumReps)])
     if (nrow(tquants) > 0) {
       tsds <- matrixStats::rowSds(tquants, na.rm = T)
       sds <- sds + sum(tsds, na.rm = T) / length(na.omit(tsds))
