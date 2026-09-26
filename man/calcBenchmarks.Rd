@@ -31,7 +31,7 @@ A list containing the following elements:
     \item{tFDRPep0.05}{True FDR at 0.05 threshold for peptidoforms.}
     \item{propMisCleavedPeps}{Proportion of miscleaved peptidoforms.}
     \item{meanSquareDiffFCPep}{Mean of squared differences in fold changes for peptidoforms.}
-    \item{sdWithinRepsPep}{Standard deviation within replicates for peptidoforms.}
+    \item{sdWithinRepsPep}{Mean within-condition replicate standard deviation over all quantified peptidoforms (no regulation filter).}
     \item{skewnessPeps}{Skewness of peptide intensities.}
     \item{kurtosisPeps}{Kurtosis of peptide intensities.}
     \item{sdPeps}{Standard deviation of peptide intensities.}
@@ -46,7 +46,7 @@ A list containing the following elements:
     \item{tprProt0.01}{True positive rate at FDR < 0.01 for protein groups.}
     \item{tprProt0.05}{True positive rate at FDR < 0.05 for protein groups.}
     \item{meanSquareDiffFCProt}{Mean of squared differences in fold changes for protein groups.}
-    \item{sdWithinRepsProt}{Standard deviation within replicates for protein groups.}
+    \item{sdWithinRepsProt}{Mean within-condition replicate standard deviation over all quantified protein groups (no regulation filter).}
     \item{propMisCleavedProts}{Proportion of miscleaved protein groups.}
     \item{skewnessProts}{Skewness of protein intensities.}
     \item{kurtosisProts}{Kurtosis of protein intensities.}

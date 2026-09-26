@@ -86,7 +86,7 @@ calcROC <- function(Stats, columnName, groundtruthColumn = "min1Reg") {
 #'     \item{tFDRPep0.05}{True FDR at 0.05 threshold for peptidoforms.}
 #'     \item{propMisCleavedPeps}{Proportion of miscleaved peptidoforms.}
 #'     \item{meanSquareDiffFCPep}{Mean of squared differences in fold changes for peptidoforms.}
-#'     \item{sdWithinRepsPep}{Standard deviation within replicates for peptidoforms.}
+#'     \item{sdWithinRepsPep}{Mean within-condition replicate standard deviation over all quantified peptidoforms (no regulation filter).}
 #'     \item{skewnessPeps}{Skewness of peptide intensities.}
 #'     \item{kurtosisPeps}{Kurtosis of peptide intensities.}
 #'     \item{sdPeps}{Standard deviation of peptide intensities.}
@@ -101,7 +101,7 @@ calcROC <- function(Stats, columnName, groundtruthColumn = "min1Reg") {
 #'     \item{tprProt0.01}{True positive rate at FDR < 0.01 for protein groups.}
 #'     \item{tprProt0.05}{True positive rate at FDR < 0.05 for protein groups.}
 #'     \item{meanSquareDiffFCProt}{Mean of squared differences in fold changes for protein groups.}
-#'     \item{sdWithinRepsProt}{Standard deviation within replicates for protein groups.}
+#'     \item{sdWithinRepsProt}{Mean within-condition replicate standard deviation over all quantified protein groups (no regulation filter).}
 #'     \item{propMisCleavedProts}{Proportion of miscleaved protein groups.}
 #'     \item{skewnessProts}{Skewness of protein intensities.}
 #'     \item{kurtosisProts}{Kurtosis of protein intensities.}
@@ -239,22 +239,33 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   Benchmarks$ProtStat <- ROC
 
   ## Calculating differences between actual and "measured" fold-changes (proteins)
-  patterns <- lapply(Stats$Regulation_Pattern, function(x) matrix(as.numeric(unlist(stringr::str_split(x, ";"))), byrow = T, ncol = Param$NumCond))
+  # Cells hold NumCond-valued chunks per regulated proteoform (NULL chunks are dropped upstream),
+  # e.g. "-0.5;0.5;-0.5;0.5" for two regulated proteoforms; unregulated groups are ""
+  patterns <- lapply(Stats$Regulation_Pattern, function(x) {
+    toks <- stringr::str_split(x, ";")[[1]]
+    toks[toks %in% c("", "NULL", "NA")] <- NA_character_
+    toks <- as.numeric(toks)
+    if (all(is.na(toks)) || length(toks) %% Param$NumCond != 0) return(NULL)
+    matrix(toks, ncol = Param$NumCond, byrow = TRUE) # one row per regulated proteoform
+  })
 
   amplitudes <- lapply(Stats$Regulation_Amplitude, function(x) {
-    values <- unlist(stringr::str_split(x, ";"))
+    values <- stringr::str_split(x, ";")[[1]]
+    values[values == "NULL"] <- 0
     values[values == "NA"] <- NA # Replace "NA" strings with actual NA values
     as.numeric(values)
   })
   lr_cols_stats <- grep("^log-ratios", colnames(Stats), value = TRUE)
   diffs <- vector("numeric", length(patterns))
-  sumsquare <- 0
-  for (i in 1:length(patterns)) {
-    tampl <- na.omit(amplitudes[i][[1]])
-    if (length(tampl) > 0) {
-      tval <- patterns[i][[1]] * tampl
+  sumsquare <- n_fc <- 0
+  for (i in seq_len(length(patterns))) {
+    tampl <- as.numeric(na.omit(amplitudes[[i]])) # one amplitude per regulated proteoform, row-aligned
+    pat <- patterns[[i]]
+    if (!is.null(pat) && length(tampl) == nrow(pat)) {
+      tval <- pat * tampl # row-wise: column-major recycling scales each proteoform row by its amplitude
       ok_lr <- length(lr_cols_stats) > 0 && any(!is.na(Stats[i, lr_cols_stats]))
-      if (length(tval) > 2 & all(!is.na(tval) & tval != 0 & !is.infinite(tval) & !is.nan(tval)) & ok_lr) {
+      # ground truth needs at least one non-zero finite FC; all-zero/all-NA rows are skipped
+      if (any(is.finite(tval) & tval != 0) && ok_lr) {
         tval <- colMeans(tval[, 2:ncol(tval), drop = F] - tval[, 1], na.rm = T)
         n_compare <- min(length(tval), length(lr_cols_stats))
         meas_lr <- as.numeric(Stats[i, lr_cols_stats[seq_len(n_compare)]])
@@ -262,6 +273,7 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
         if (any(valid)) {
           diffs[i] <- mean(tval[seq_len(n_compare)][valid])
           sumsquare <- sumsquare + mean((tval[seq_len(n_compare)][valid] - meas_lr[valid])^2)
+          n_fc <- n_fc + 1
         }
       } else {
         diffs[i] <- 0
@@ -274,9 +286,9 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   #     type="n", xlab="Ground truth", ylab="Measured ratios")
   # points(diffs, Stats$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
   # abline(0,1)
-  globalBMs["meanSquareDiffFCProt"] <- sumsquare / sum(diffs != 0, na.rm = T)
+  globalBMs["meanSquareDiffFCProt"] <- sumsquare / max(n_fc, 1)
 
-  # Calculating mean of peptide sds within replicates (only peptides with regulations)
+  # Calculating mean of sds within replicates (all peptidoforms, no regulation filter)
   sds <- 0
   for (c in 1:Param$NumCond) {
     tquants <- as.matrix(StatsPep[, Param$QuantColnames][, (c - 1) * Param$NumReps + (1:Param$NumReps)])
@@ -302,34 +314,45 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
 
 
   ## Calculating differences between actual and "measured" fold-changes (peptides)
-  patterns <- lapply(StatsPep$Regulation_Pattern, function(x) gsub("NULL", "0", x))
-  patterns <- lapply(patterns, function(x) (do.call("rbind", lapply(unlist(stringr::str_split(x, ";")), function(y) eval(parse(text = y))))))
+  patterns <- lapply(StatsPep$Regulation_Pattern, function(x) {
+    do.call(rbind, lapply(strsplit(x, ";")[[1]], function(y) {
+      if (y %in% c("NULL", "NA", "")) rep(0, Param$NumCond) else eval(parse(text = y))
+    }))
+  })
   amplitudes <- lapply(StatsPep$Regulation_Amplitude, function(x) {
     values <- unlist(stringr::str_split(x, ";"))
     values[values == "NA"] <- NA # Replace "NA" strings with actual NA values
     as.numeric(values)
   })
   diffs <- diffsmod <- vector("numeric", length(patterns))
-  sumsquare <- sumsquaremod <- 0
+  sumsquare <- sumsquaremod <- n_fc_pep <- n_fc_mod <- 0
   lr_cols_pep <- grep("^log-ratios", colnames(StatsPep), value = TRUE)
-  for (i in 1:length(patterns)) {
+  for (i in seq_along(patterns)) {
     tampl <- amplitudes[[i]]
-    diffs[i] <- diffsmod[i] <- 0
     pat <- patterns[[i]]
-    if (length(na.omit(tampl)) > 0 && is.matrix(pat) && ncol(pat) > 1) {
+    diffs[i] <- diffsmod[i] <- 0
+    if (!is.null(pat)) {
+      # align one amplitude per proteoform row; missing (unregulated) -> 0
+      tampl <- tampl[seq_len(min(length(tampl), nrow(pat)))]
+      if (length(tampl) < nrow(pat)) tampl <- c(tampl, rep(0, nrow(pat) - length(tampl)))
       tampl[is.na(tampl)] <- 0
-      tval <- pat * tampl
-      tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
-      n_compare <- min(length(tval), length(lr_cols_pep))
-      sdata <- as.numeric(StatsPep[i, lr_cols_pep[seq_len(n_compare)]])
-      valid <- !is.na(sdata)
-      if (any(valid)) {
-        tdiff <- mean((tval[seq_len(n_compare)][valid] - sdata[valid])^2)
-        sumsquare <- sumsquare + tdiff
-        diffs[i] <- mean(tval[seq_len(n_compare)][valid])
-        if (length(StatsPep$PTMType[i][[1]]) > 0) {
-          sumsquaremod <- sumsquaremod + tdiff
-          diffsmod[i] <- diffs[i]
+      tval <- pat * tampl # row-wise: column-major recycling scales each proteoform row by its amplitude
+      # ground truth needs at least one non-zero finite FC; fully unregulated rows are skipped
+      if (any(is.finite(tval) & tval != 0)) {
+        tval <- colMeans(tval[, 2:ncol(pat), drop = FALSE] - tval[, 1], na.rm = TRUE)
+        n_compare <- min(length(tval), length(lr_cols_pep))
+        sdata <- as.numeric(StatsPep[i, lr_cols_pep[seq_len(n_compare)]])
+        valid <- !is.na(sdata)
+        if (any(valid)) {
+          tdiff <- mean((tval[seq_len(n_compare)][valid] - sdata[valid])^2)
+          sumsquare <- sumsquare + tdiff
+          n_fc_pep <- n_fc_pep + 1
+          diffs[i] <- mean(tval[seq_len(n_compare)][valid])
+          if (length(StatsPep$PTMType[i][[1]]) > 0) {
+            sumsquaremod <- sumsquaremod + tdiff
+            n_fc_mod <- n_fc_mod + 1
+            diffsmod[i] <- diffs[i]
+          }
         }
       }
     }
@@ -337,8 +360,8 @@ calcBenchmarks <- function(Stats, StatsPep, Param) {
   # plot(0, xlim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), ylim=range(StatsPep$`log-ratios 2 vs 1`, na.rm=T), type="n", xlab="Ground truth", ylab="Measured ratios")
   # points(diffs, StatsPep$`log-ratios 2 vs 1`, pch=15, cex=0.7, col="#00000055")
   # abline(0,1)
-  globalBMs["meanSquareDiffFCPep"] <- sumsquare / sum(diffs != 0)
-  globalBMs["meanSquareDiffFCModPep"] <- sumsquaremod / sum(diffsmod != 0)
+  globalBMs["meanSquareDiffFCPep"] <- sumsquare / max(n_fc_pep, 1)
+  globalBMs["meanSquareDiffFCModPep"] <- sumsquaremod / max(n_fc_mod, 1)
 
   # Counting miscleavages
   if (sum(!is.na(Stats$MC)) > 0) {

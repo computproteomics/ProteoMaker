@@ -135,7 +135,7 @@ For ROC-derived metrics, ProteoMaker uses the `min1Reg` column as the ground-tru
 
 - **Mean of Squared Residuals Towards Actual Fold-Changes** (`meanSquareDiffFCPep`, label: *Fold-change error (peptidoforms)*): Average squared difference between measured peptidoform log2 fold changes and the programmed fold changes reconstructed from `Regulation_Pattern * Regulation_Amplitude`. Features with zero reconstructed truth are excluded from the denominator.
 
-- **Mean of Std. Dev. Within Replicates** (`sdWithinRepsPep`, label: *Replicate SD (peptidoforms)*): Mean within-condition replicate standard deviation for peptidoforms marked as regulated by `min1Reg`.
+- **Mean of Std. Dev. Within Replicates** (`sdWithinRepsPep`, label: *Replicate SD (peptidoforms)*): Mean within-condition replicate standard deviation across all quantified peptidoforms, without filtering for regulated features.
 
 - **Skewness** (`skewnessPeps`, label: *Skewness (peptidoforms)*): Asymmetry of peptidoform intensity distribution.
 
@@ -165,7 +165,7 @@ Protein-group regulation benchmarks use the regulation metadata retained on the 
 
 - **Dynamic Range** (`dynRangeProt`, label: *Dynamic range (protein groups)*): Log2 range of protein-group intensities.
 
-- **Mean of Std. Dev. Within Replicates** (`sdWithinRepsProt`, label: *Replicate SD (protein groups)*): Mean within-condition replicate standard deviation for protein groups marked as regulated in all contributing entries by `allReg`.
+- **Mean of Std. Dev. Within Replicates** (`sdWithinRepsProt`, label: *Replicate SD (protein groups)*): Mean within-condition replicate standard deviation across all quantified protein groups, without filtering for regulated features.
 
 - **Proportion of Protein Groups with Miscleaved Peptides** (`propMisCleavedProts`, label: **% Miscleaved protein groups**): Fraction of quantified protein groups that contain at least one peptide with a missed cleavage.
 
