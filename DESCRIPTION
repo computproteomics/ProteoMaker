@@ -3,7 +3,7 @@ Type: Package
 Title: Simulations of LC-MS Data from Proteoforms
 Version: 0.7.1
 Date: 2026-02-28
-Author: Veit Schwämmle, Marie Locard-Paulet
+Author: Veit Schwämmle, Marie Locard-Paulet, Vasileios Tsiamis
 Maintainer: Your Name <veits@bmb.sdu.dk>
 Description: ProteoMaker is a package designed to simulate proteomics data from liquid-chromatography experiments. 
     It provides functions for generating ground truth data, simulating proteoform abundances, and performing 
